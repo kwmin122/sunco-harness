@@ -115,12 +115,35 @@ SUN is an independent workspace OS for agent-era builders. In an era where AI ag
 | Intent Reconstruction | Salesforce Prizm | diff 아닌 의도 대비 결과 검증 |
 | Next Best Action | CRM 패턴 | 대시보드에 최적 다음 행동 추천 |
 
+### 에이전틱 엔지니어링 9가지 스킬 — SUN이 시스템으로 해결하는 것
+Karpathy가 명명한 에이전틱 엔지니어링 시대에 필요한 9가지 스킬(Flowkater.io, Tony Cho). SUN은 이 스킬들을 개인의 역량에 의존하지 않고 **시스템으로 해결**한다.
+
+| # | 스킬 | 문제 | SUN의 시스템적 해결 |
+|---|------|------|-------------------|
+| 1 | **분해 능력** (Decomposition) | 큰 작업을 에이전트 한 턴에 가능한 크기로 쪼개야 함. 분해 실패 → 모든 에이전트가 삽질 | `sun plan`: BDD 시나리오 기반 자동 분해 + plan-checker 검증. 수동 분해 불필요 |
+| 2 | **컨텍스트 설계** (Context Architecture) | 에이전트에게 필요한 맥락을 어떻게 전달하느냐가 결과 품질 결정. AGENTS.md 150개 넘으면 따르는 비율 급락 | `sun init`: 프로젝트 자동 분석→규칙 생성. `sun agents`: 안내문 60줄 이하 강제. 계층적 TOML 설정으로 디렉토리별 컨텍스트 자동 제공 |
+| 3 | **완료 정의** (Definition of Done) | 에이전트의 "완료"는 사람의 "완료"와 다름. 스텁만 남기고 "완료" 보고. 테스트 조작 | `sun verify`: 5겹 필터로 진짜 완료 검증. Holdout 시나리오는 코딩 에이전트가 볼 수 없음. BDD 수용 기준이 기본 산출물 |
+| 4 | **실패 복구** (Failure Recovery Loop) | 같은 프롬프트 재시도 = 벽에 머리 박기. A↔B 무한루프 | `sun debug`/`sun diagnose`: 실패 유형 자동 분류 (컨텍스트 부족/방향 오류/구조 충돌). `sun guard`: Must NOT Have 가드레일로 루프 차단 |
+| 5 | **관찰 가능성** (Observability) | "이상한데 그냥 두자"가 가장 비싼 판단. 에이전트 방치 → 20개 파일 엉킴 | SUN Terminal: 에이전트 PTY 실시간 관찰 + 대시보드. `sun health`: 패턴 확산 추적. 원자적 커밋으로 롤백 포인트 확보 |
+| 6 | **메모리 설계** (Memory Architecture) | 매 세션이 첫 만남. 15분씩 맥락 설명 | .sun/ State Engine: 상태 자동 저장/복원. .sun/tribal/: 부족 지식 누적. 세션 간 컨텍스트 자동 연결 |
+| 7 | **병렬 관리** (Parallel Orchestration) | 5개 에이전트 동시 실행 시 충돌/중복/방향 분산 | `sun execute`: 웨이브 기반 병렬 실행 + Git worktree 격리. Agent Router: 에이전트 권한 스코핑으로 컨텍스트 분리 |
+| 8 | **추상화 계층** (Abstraction Layering) | 같은 지시 반복 = Level 1에 머무름. 레버리지 낭비 | Skill System: 반복을 스킬로 승격. TypeScript 스킬(결정적) + Prompt 스킬(에이전트) 하이브리드. ctx.run() 체이닝 |
+| 9 | **감각** (Taste) | AI 결과물 80%는 "무난". 나머지 20%가 차별화. "동작한다" ≠ "훌륭하다" | `sun discuss`: 구현 전에 비전 추출. 6단계 리뷰 파이프라인: 아이디어→스펙→플랜→실행→검증→배포. 사람은 의도와 감각에 집중 |
+
+**핵심 통찰**: "에이전트가 잘 작동하는 조건을 설계하는 능력이 핵심" (Karpathy). SUN은 그 조건 자체를 OS로 만드는 것.
+- 위임 패러독스: 개발자 60% AI 사용, 완전 위임은 0-20% (2026 Agentic Coding Trends Report)
+- SUN이 위임 패러독스를 해결: 하네스가 신뢰를 만들고, 신뢰가 위임을 가능하게 함
+- "Do you trust your agents?" (IndyDevDan) → SUN의 답: 시스템이 신뢰를 보장하면 된다
+
 ### 핵심 인용
 - "Agents aren't hard; the Harness is hard." — OpenAI Codex팀
 - "에이전트가 똑똑해질수록 중요한 건 자유도가 아니라 정리정돈이다." — 빌더 본인
 - "AI가 안전망을 제거한 게 아니다. 안전망이 처음부터 영웅에 의존하고 있었다는 것을 드러냈을 뿐." — Bryan Finster
 - "검증되지 않은 문제는 생성이 아니라 검증이다." — Addy Osmani
 - "코드가 아니라 의도를 리뷰하라." — Ankit Jain, latent.space
+- "The highest leverage is in designing a long-running orchestrator with the right tools, memory, and instructions." — Karpathy
+- "끝난 건 타이핑이지 엔지니어링이 아니다." — Tony Cho (Flowkater)
+- "Do you trust your agents?" — IndyDevDan
 
 ### 기술적 기반
 - smux R&D: HOST_MANAGED PTY, forkpty, Korean IME, Split pane — SUN Terminal에 재활용
