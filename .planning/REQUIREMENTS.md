@@ -149,7 +149,7 @@
 
 ### Workflow -- 설정
 
-- [ ] **SET-01**: `sunco settings` -- TOML 설정 조회/변경 인터랙티브 UI
+- [x] **SET-01**: `sunco settings` -- TOML 설정 조회/변경 인터랙티브 UI
 
 ### Review Architecture (전 영역 관통)
 
@@ -261,7 +261,7 @@
 | PHZ-01 | Phase 3: Standalone TS Skills | Complete |
 | PHZ-02 | Phase 3: Standalone TS Skills | Complete |
 | PHZ-03 | Phase 3: Standalone TS Skills | Complete |
-| SET-01 | Phase 3: Standalone TS Skills | Pending |
+| SET-01 | Phase 3: Standalone TS Skills | Complete |
 | WF-08 | Phase 3: Standalone TS Skills | Complete |
 | WF-01 | Phase 4: Project Initialization | Pending |
 | WF-02 | Phase 4: Project Initialization | Pending |
