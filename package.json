@@ -19,5 +19,16 @@
   "devDependencies": {
     "turbo": "2.5.4",
     "typescript": "6.0.2"
+  },
+  "overrides": {
+    "typescript-eslint": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "typescript": "$typescript"
+    },
+    "@typescript-eslint/parser": {
+      "typescript": "$typescript"
+    }
   }
 }
