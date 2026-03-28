@@ -30,11 +30,11 @@
 
 ### Core Platform -- State Engine
 
-- [ ] **STE-01**: .sun/ 디렉토리 구조 관리 (state/, rules/, tribal/, scenarios/, planning/)
-- [ ] **STE-02**: SQLite WAL 모드로 구조화 상태 저장 (better-sqlite3, busy_timeout=5000)
-- [ ] **STE-03**: 플랫 파일로 사람이 읽을 수 있는 아티팩트 (규칙, 부족 지식, 계획 등)
-- [ ] **STE-04**: 병렬 에이전트 쓰기 시 데이터 손상 방지 (파일 잠금 + SQLite WAL)
-- [ ] **STE-05**: 상태 저장/복원 API (세션 간 연속성)
+- [x] **STE-01**: .sun/ 디렉토리 구조 관리 (state/, rules/, tribal/, scenarios/, planning/)
+- [x] **STE-02**: SQLite WAL 모드로 구조화 상태 저장 (better-sqlite3, busy_timeout=5000)
+- [x] **STE-03**: 플랫 파일로 사람이 읽을 수 있는 아티팩트 (규칙, 부족 지식, 계획 등)
+- [x] **STE-04**: 병렬 에이전트 쓰기 시 데이터 손상 방지 (파일 잠금 + SQLite WAL)
+- [x] **STE-05**: 상태 저장/복원 API (세션 간 연속성)
 
 ### Core Platform -- Agent Router
 
@@ -215,11 +215,11 @@
 | SKL-04 | Phase 1: Core Platform | Pending |
 | SKL-05 | Phase 1: Core Platform | Pending |
 | SKL-06 | Phase 1: Core Platform | Pending |
-| STE-01 | Phase 1: Core Platform | Pending |
-| STE-02 | Phase 1: Core Platform | Pending |
-| STE-03 | Phase 1: Core Platform | Pending |
-| STE-04 | Phase 1: Core Platform | Pending |
-| STE-05 | Phase 1: Core Platform | Pending |
+| STE-01 | Phase 1: Core Platform | Complete |
+| STE-02 | Phase 1: Core Platform | Complete |
+| STE-03 | Phase 1: Core Platform | Complete |
+| STE-04 | Phase 1: Core Platform | Complete |
+| STE-05 | Phase 1: Core Platform | Complete |
 | AGT-01 | Phase 1: Core Platform | Pending |
 | AGT-02 | Phase 1: Core Platform | Pending |
 | AGT-03 | Phase 1: Core Platform | Pending |
