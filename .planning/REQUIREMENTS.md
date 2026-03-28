@@ -65,8 +65,8 @@
 - [ ] **HRN-09**: `sunco health` -- 문서 위생: 코드와 동기 안 되는 문서 감지, 교차참조 깨짐, 문서 나이
 - [ ] **HRN-10**: `sunco health` -- 패턴 건강도: 안티패턴 확산 추적 ("any 타입이 3파일->12파일"), 트렌드
 - [ ] **HRN-11**: `sunco health` -- 점수 기반 리포트 (숫자로 보여줌)
-- [ ] **HRN-12**: `sunco agents` -- CLAUDE.md/agents.md/AGENTS.md 분석, 효율성 점수, 60줄 이하 검증
-- [ ] **HRN-13**: `sunco agents` -- 분석+제안만, 자동 생성 안 함 (ETH Zurich 연구 반영)
+- [x] **HRN-12**: `sunco agents` -- CLAUDE.md/agents.md/AGENTS.md 분석, 효율성 점수, 60줄 이하 검증
+- [x] **HRN-13**: `sunco agents` -- 분석+제안만, 자동 생성 안 함 (ETH Zurich 연구 반영)
 - [ ] **HRN-14**: `sunco guard` -- 안티패턴 감지 -> 린터 규칙 자동 승격 제안
 - [ ] **HRN-15**: `sunco guard` -- 매 에이전트 변경 후 자동 린트 (auto-lint-after-change)
 - [ ] **HRN-16**: `sunco guard` -- `sunco watch` 모드: 파일 변경 실시간 감시
@@ -244,8 +244,8 @@
 | HRN-09 | Phase 2: Harness Skills | Pending |
 | HRN-10 | Phase 2: Harness Skills | Pending |
 | HRN-11 | Phase 2: Harness Skills | Pending |
-| HRN-12 | Phase 2: Harness Skills | Pending |
-| HRN-13 | Phase 2: Harness Skills | Pending |
+| HRN-12 | Phase 2: Harness Skills | Complete |
+| HRN-13 | Phase 2: Harness Skills | Complete |
 | HRN-14 | Phase 2: Harness Skills | Pending |
 | HRN-15 | Phase 2: Harness Skills | Pending |
 | HRN-16 | Phase 2: Harness Skills | Pending |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-03-28T08:07:55.323Z"
+stopped_at: Completed 02-06-PLAN.md
+last_updated: "2026-03-28T08:08:58.773Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 10
   completed_phases: 1
   total_plans: 20
-  completed_plans: 14
+  completed_plans: 15
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (harness-skills) — EXECUTING
-Plan: 3 of 8
+Plan: 4 of 8
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -66,6 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-core-platform P11 | 2min | 2 tasks | 2 files |
 | Phase 02-harness-skills P01 | 7min | 2 tasks | 13 files |
 | Phase 02-harness-skills P02 | 5min | 2 tasks | 6 files |
+| Phase 02 P06 | 5min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,8 @@ Recent decisions affecting current work:
 - [Phase 02-harness-skills]: Init detection modules as pure async functions with {cwd} opts for isolation
 - [Phase 02-harness-skills]: Completeness-weighted preset scoring: matchCount * 1000 + completeness_ratio * 100 prevents partial match overshadowing exact match
 - [Phase 02-harness-skills]: smol-toml as direct skills-harness dep for TOML config generation via stringify
+- [Phase 02]: Directive extraction uses positive/negative verb pairs with word-overlap similarity for contradiction detection
+- [Phase 02]: 4-component weighted efficiency scoring: brevity 30%, clarity 25%, coverage 25%, contradiction-free 20% per ETH Zurich insight
 
 ### Pending Todos
 
@@ -121,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T08:07:55.319Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-03-28T08:08:58.769Z
+Stopped at: Completed 02-06-PLAN.md
 Resume file: None
