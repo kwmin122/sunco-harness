@@ -12,14 +12,18 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "echo 'no tests yet'",
+    "test": "vitest run",
     "lint": "echo 'lint not configured yet'"
   },
   "dependencies": {
-    "@sunco/core": "*"
+    "@sunco/core": "*",
+    "chalk": "5.6.2",
+    "simple-git": "3.33.0",
+    "smol-toml": "1.6.1"
   },
   "devDependencies": {
     "tsup": "8.5.0",
-    "typescript": "6.0.2"
+    "typescript": "6.0.2",
+    "vitest": "3.1.2"
   }
 }

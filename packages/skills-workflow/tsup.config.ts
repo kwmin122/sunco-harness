@@ -6,4 +6,8 @@ export default defineConfig({
   target: 'node22',
   dts: true,
   clean: true,
+  external: [
+    '@sunco/core',
+    'simple-git',
+  ],
 });

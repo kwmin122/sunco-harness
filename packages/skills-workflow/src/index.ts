@@ -5,4 +5,21 @@
  * and verification workflows.
  */
 
-export {};
+// Shared types
+export type {
+  ParsedPhase,
+  ParsedProgress,
+  ParsedState,
+  GitState,
+  TodoItem,
+  SeedItem,
+  BacklogItem,
+} from './shared/types.js';
+
+// Shared utilities
+export { parseRoadmap } from './shared/roadmap-parser.js';
+export { addPhase, insertPhase, removePhase } from './shared/roadmap-writer.js';
+export { parseStateMd } from './shared/state-reader.js';
+export { HandoffSchema, readHandoff, writeHandoff } from './shared/handoff.js';
+export type { Handoff } from './shared/handoff.js';
+export { captureGitState } from './shared/git-state.js';
