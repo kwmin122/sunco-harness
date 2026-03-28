@@ -100,7 +100,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User runs `sunco new` with an idea and gets guided through interactive questions, parallel research runs, auto-generated requirements, and a roadmap -- all in one flow
   2. User runs `sunco scan` on an existing codebase and gets 7 analysis documents (stack, architecture, structure, conventions, tests, integrations, concerns) written to .sun/
-**Plans:** 3/4 plans executed
+**Plans:** 4 plans
 
 Plans:
 - [x] 04-01-PLAN.md -- askText() UI infrastructure, detectEcosystems export, pre-scan + planning-writer utilities
@@ -116,7 +116,14 @@ Plans:
   1. User runs `sunco discuss` and extracts vision, design decisions, and acceptance criteria into CONTEXT.md with holdout scenarios written to .sun/scenarios/
   2. User runs `sunco assume` and sees what the agent would do before it does it, with an opportunity to correct the approach
   3. User runs `sunco plan` and gets an execution plan with BDD scenario-based completion criteria that passes the built-in plan-checker validation loop
-**Plans**: TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 05-01-PLAN.md -- Shared phase-reader utility + sunco discuss skill (multi-step conversation + holdout scenarios)
+- [ ] 05-02-PLAN.md -- sunco assume skill (approach preview + CONTEXT.md correction append)
+- [ ] 05-03-PLAN.md -- sunco research skill (parallel agent dispatch + synthesis into RESEARCH.md)
+- [ ] 05-04-PLAN.md -- sunco plan skill (plan-checker validation loop + BDD completion criteria)
+- [ ] 05-05-PLAN.md -- CLI wiring, barrel exports, tsup config, build verification
 
 ### Phase 6: Execution + Review
 **Goal**: Users can execute plans with parallel agents in isolated worktrees and get independent cross-provider code review
@@ -179,8 +186,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 | 1. Core Platform | 12/12 | Complete |  |
 | 2. Harness Skills | 0/8 | Not started | - |
 | 3. Standalone TS Skills | 0/6 | Not started | - |
-| 4. Project Initialization | 3/4 | In Progress|  |
-| 5. Context + Planning | 0/? | Not started | - |
+| 4. Project Initialization | 4/4 | Complete |  |
+| 5. Context + Planning | 0/5 | Not started | - |
 | 6. Execution + Review | 0/? | Not started | - |
 | 7. Verification Pipeline | 0/? | Not started | - |
 | 8. Shipping + Milestones | 0/? | Not started | - |
