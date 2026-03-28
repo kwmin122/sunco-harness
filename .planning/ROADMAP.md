@@ -150,7 +150,13 @@ Plans:
   3. User runs `sunco validate` and gets a deterministic test coverage audit; `sunco test-gen` generates unit/E2E tests including Digital Twin mock servers for external APIs
   4. Scenario holdout tests in .sun/scenarios/ are invisible to coding agents but automatically loaded by verification agents
   5. The 6-stage review pipeline (idea to deploy) auto-connects the right skill at each stage; tribal knowledge from .sun/tribal/ is loaded during verification; human gates block only for tribal knowledge and regulatory paths
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 07-01-PLAN.md -- Foundation: verify types, coverage parser, 9 prompt builders (7 verify expert + 2 test-gen)
+- [ ] 07-02-PLAN.md -- sunco verify skill (5-layer Swiss cheese model with parallel expert agents)
+- [ ] 07-03-PLAN.md -- sunco validate (coverage audit) + sunco test-gen (test generation + Digital Twin)
+- [ ] 07-04-PLAN.md -- Recommender rules for verification pipeline + CLI wiring + build verification
 
 ### Phase 8: Shipping + Milestones
 **Goal**: Users can ship PRs through quality gates, publish releases, and manage full milestone lifecycles
@@ -195,7 +201,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 | 4. Project Initialization | 4/4 | Complete |  |
 | 5. Context + Planning | 0/5 | Not started | - |
 | 6. Execution + Review | 0/4 | Not started | - |
-| 7. Verification Pipeline | 0/? | Not started | - |
+| 7. Verification Pipeline | 0/4 | Not started | - |
 | 8. Shipping + Milestones | 0/? | Not started | - |
 | 9. Composition Skills | 0/? | Not started | - |
 | 10. Debugging | 0/? | Not started | - |
