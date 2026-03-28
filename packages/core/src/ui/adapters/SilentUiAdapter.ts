@@ -37,6 +37,17 @@ export class SilentUiAdapter implements UiAdapter {
       };
     }
 
+    if (pattern.kind === 'askText') {
+      const data = pattern.data as { message: string; defaultValue?: string };
+      return {
+        kind: 'askText',
+        data: {
+          text: data.defaultValue ?? '',
+          source: 'noninteractive' as const,
+        },
+      };
+    }
+
     // entry, progress, result: resolve with no output data
     return { kind: pattern.kind };
   }

@@ -12,7 +12,7 @@
 // ---------------------------------------------------------------------------
 
 /** Kinds of UI patterns that can be mounted */
-export type UiPatternKind = 'entry' | 'ask' | 'progress' | 'result';
+export type UiPatternKind = 'entry' | 'ask' | 'askText' | 'progress' | 'result';
 
 /**
  * A UI pattern to mount in the adapter.

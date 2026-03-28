@@ -66,6 +66,27 @@ export interface UiChoiceResult {
   source: 'keyboard' | 'default' | 'noninteractive';
 }
 
+/** Input for ctx.ui.askText() -- freeform text prompt */
+export interface AskTextInput {
+  /** Question/prompt message */
+  message: string;
+
+  /** Placeholder text shown in input field */
+  placeholder?: string;
+
+  /** Default value (used in non-interactive mode) */
+  defaultValue?: string;
+}
+
+/** Result from ctx.ui.askText() */
+export interface UiTextResult {
+  /** User-entered text */
+  text: string;
+
+  /** How the text was obtained */
+  source: 'keyboard' | 'default' | 'noninteractive' | 'cli-arg';
+}
+
 /** Input for ctx.ui.progress() -- long-running operation display (D-35) */
 export interface ProgressInput {
   /** Progress title (e.g., 'Scanning...') */
@@ -128,6 +149,9 @@ export interface SkillUi {
 
   /** Present an interactive choice to the user. Returns the selection. */
   ask(input: AskInput): Promise<UiChoiceResult>;
+
+  /** Present a freeform text input prompt to the user. Returns the entered text. */
+  askText(input: AskTextInput): Promise<UiTextResult>;
 
   /** Start a progress display. Returns a handle for updates. */
   progress(input: ProgressInput): ProgressHandle;

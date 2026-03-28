@@ -62,6 +62,9 @@ export class InkUiAdapter implements UiAdapter {
       case 'ask':
         return this.renderAsk(pattern);
 
+      case 'askText':
+        return this.renderAskText(pattern);
+
       case 'progress':
         return this.renderProgress(pattern);
 
@@ -173,6 +176,79 @@ export class InkUiAdapter implements UiAdapter {
     } catch {
       // Fallback to auto-select
       return this.autoSelectAsk(data);
+    }
+  }
+
+  private async renderAskText(pattern: UiPattern): Promise<UiOutcome> {
+    const data = pattern.data as {
+      message: string;
+      placeholder?: string;
+      defaultValue?: string;
+    };
+
+    // In non-TTY environments, return defaultValue
+    if (!this.isTTY) {
+      return {
+        kind: 'askText',
+        data: {
+          text: data.defaultValue ?? '',
+          source: 'default' as const,
+        },
+      };
+    }
+
+    try {
+      const { render, Text, Box } = await import('ink');
+      const { default: TextInput } = await import('ink-text-input');
+
+      const result = await new Promise<UiOutcome>((resolve) => {
+        let currentValue = data.defaultValue ?? '';
+
+        const AskTextComponent = (): React.ReactElement => {
+          const [value, setValue] = React.useState(currentValue);
+
+          const handleChange = (newValue: string): void => {
+            currentValue = newValue;
+            setValue(newValue);
+          };
+
+          const handleSubmit = (): void => {
+            instance.unmount();
+            resolve({
+              kind: 'askText',
+              data: {
+                text: currentValue,
+                source: 'keyboard' as const,
+              },
+            });
+          };
+
+          return React.createElement(
+            Box,
+            { flexDirection: 'column' },
+            React.createElement(Text, null, data.message),
+            React.createElement(TextInput, {
+              value,
+              onChange: handleChange,
+              onSubmit: handleSubmit,
+              placeholder: data.placeholder ?? '',
+            }),
+          );
+        };
+
+        const instance = render(React.createElement(AskTextComponent));
+      });
+
+      return result;
+    } catch {
+      // Fallback to returning default value
+      return {
+        kind: 'askText',
+        data: {
+          text: data.defaultValue ?? '',
+          source: 'default' as const,
+        },
+      };
     }
   }
 

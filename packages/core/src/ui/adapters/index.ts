@@ -14,6 +14,8 @@ import type {
   SkillEntryInput,
   AskInput,
   UiChoiceResult,
+  AskTextInput,
+  UiTextResult,
   ProgressInput,
   ProgressHandle,
   ResultInput,
@@ -34,6 +36,8 @@ export type {
   AskInput,
   AskOption,
   UiChoiceResult,
+  AskTextInput,
+  UiTextResult,
   ProgressInput,
   ProgressHandle,
   ResultInput,
@@ -83,6 +87,17 @@ export function createSkillUi(adapter: UiAdapter): SkillUi {
         selectedLabel: data.selectedLabel,
         source: data.source,
       };
+    },
+
+    async askText(input: AskTextInput): Promise<UiTextResult> {
+      const pattern: UiPattern = {
+        handleId: nextHandleId(),
+        kind: 'askText',
+        data: input as unknown as Record<string, unknown>,
+      };
+      const outcome = await adapter.mountPattern(pattern);
+      const data = outcome.data as unknown as UiTextResult;
+      return { text: data.text, source: data.source };
     },
 
     progress(input: ProgressInput): ProgressHandle {
