@@ -85,7 +85,7 @@
 ### Workflow -- 맥락 + 계획
 
 - [ ] **WF-09**: `sunco discuss` -- 비전 추출, 디자인 결정, 수용 기준 + Holdout 시나리오 생성 -> CONTEXT.md
-- [ ] **WF-10**: `sunco assume` -- 에이전트 접근 방식 미리보기 (교정 기회)
+- [x] **WF-10**: `sunco assume` -- 에이전트 접근 방식 미리보기 (교정 기회)
 - [ ] **WF-11**: `sunco research` -- 병렬 에이전트 도메인 리서치
 - [ ] **WF-12**: `sunco plan` -- 실행 계획 + BDD 시나리오 기반 완료 조건 + plan-checker 검증 루프
 
@@ -266,7 +266,7 @@
 | WF-01 | Phase 4: Project Initialization | Complete |
 | WF-02 | Phase 4: Project Initialization | Complete |
 | WF-09 | Phase 5: Context + Planning | Pending |
-| WF-10 | Phase 5: Context + Planning | Pending |
+| WF-10 | Phase 5: Context + Planning | Complete |
 | WF-11 | Phase 5: Context + Planning | Pending |
 | WF-12 | Phase 5: Context + Planning | Pending |
 | WF-13 | Phase 6: Execution + Review | Pending |

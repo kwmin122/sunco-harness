@@ -120,7 +120,7 @@ Plans:
 
 Plans:
 - [ ] 05-01-PLAN.md -- Shared phase-reader utility + sunco discuss skill (multi-step conversation + holdout scenarios)
-- [ ] 05-02-PLAN.md -- sunco assume skill (approach preview + CONTEXT.md correction append)
+- [x] 05-02-PLAN.md -- sunco assume skill (approach preview + CONTEXT.md correction append)
 - [ ] 05-03-PLAN.md -- sunco research skill (parallel agent dispatch + synthesis into RESEARCH.md)
 - [ ] 05-04-PLAN.md -- sunco plan skill (plan-checker validation loop + BDD completion criteria)
 - [ ] 05-05-PLAN.md -- CLI wiring, barrel exports, tsup config, build verification
