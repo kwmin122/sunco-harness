@@ -38,12 +38,12 @@
 
 ### Core Platform -- Agent Router
 
-- [ ] **AGT-01**: Provider 추상화 레이어: AgentProvider 인터페이스
-- [ ] **AGT-02**: Claude Code CLI 첫 번째 provider 구현
-- [ ] **AGT-03**: 에이전트 권한 스코핑: PermissionSet (read/write/execute/deny 글롭 패턴)
-- [ ] **AGT-04**: 연구=읽기전용, 계획=.planning/만, 실행=src/만, 검증=읽기+테스트만
-- [ ] **AGT-05**: 크로스 검증: 여러 provider에게 독립적으로 검증 요청 가능
-- [ ] **AGT-06**: 토큰/비용 추적 (provider별 사용량 기록)
+- [x] **AGT-01**: Provider 추상화 레이어: AgentProvider 인터페이스
+- [x] **AGT-02**: Claude Code CLI 첫 번째 provider 구현
+- [x] **AGT-03**: 에이전트 권한 스코핑: PermissionSet (read/write/execute/deny 글롭 패턴)
+- [x] **AGT-04**: 연구=읽기전용, 계획=.planning/만, 실행=src/만, 검증=읽기+테스트만
+- [x] **AGT-05**: 크로스 검증: 여러 provider에게 독립적으로 검증 요청 가능
+- [x] **AGT-06**: 토큰/비용 추적 (provider별 사용량 기록)
 
 ### Core Platform -- Proactive Recommender
 
@@ -220,12 +220,12 @@
 | STE-03 | Phase 1: Core Platform | Complete |
 | STE-04 | Phase 1: Core Platform | Complete |
 | STE-05 | Phase 1: Core Platform | Complete |
-| AGT-01 | Phase 1: Core Platform | Pending |
-| AGT-02 | Phase 1: Core Platform | Pending |
-| AGT-03 | Phase 1: Core Platform | Pending |
-| AGT-04 | Phase 1: Core Platform | Pending |
-| AGT-05 | Phase 1: Core Platform | Pending |
-| AGT-06 | Phase 1: Core Platform | Pending |
+| AGT-01 | Phase 1: Core Platform | Complete |
+| AGT-02 | Phase 1: Core Platform | Complete |
+| AGT-03 | Phase 1: Core Platform | Complete |
+| AGT-04 | Phase 1: Core Platform | Complete |
+| AGT-05 | Phase 1: Core Platform | Complete |
+| AGT-06 | Phase 1: Core Platform | Complete |
 | REC-01 | Phase 1: Core Platform | Pending |
 | REC-02 | Phase 1: Core Platform | Pending |
 | REC-03 | Phase 1: Core Platform | Pending |
