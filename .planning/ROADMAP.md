@@ -83,7 +83,15 @@ Plans:
   3. User runs `sunco phase add/insert/remove` and the roadmap updates correctly with proper numbering (including decimal insertion)
   4. User runs `sunco settings` and gets an interactive UI to browse and modify TOML configuration across all layers
   5. User runs `sunco resume` after a previous `sunco pause` and the session restores exactly where they left off via HANDOFF.json
-**Plans**: TBD
+**Plans:** 6 plans
+
+Plans:
+- [ ] 03-01-PLAN.md -- Package scaffold, shared utilities (roadmap-parser, state-reader, handoff, git-state)
+- [ ] 03-02-PLAN.md -- Status + progress alias + next + context skills
+- [ ] 03-03-PLAN.md -- Note + todo + seed + backlog (idea capture skills)
+- [ ] 03-04-PLAN.md -- Pause + resume (session persistence skills)
+- [ ] 03-05-PLAN.md -- Phase management (add/insert/remove subcommands)
+- [ ] 03-06-PLAN.md -- Enhanced settings + CLI wiring + integration
 
 ### Phase 4: Project Initialization
 **Goal**: Users can bootstrap a new project or onboard an existing codebase through agent-powered analysis
@@ -164,7 +172,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 |-------|----------------|--------|-----------|
 | 1. Core Platform | 12/12 | Complete |  |
 | 2. Harness Skills | 0/8 | Not started | - |
-| 3. Standalone TS Skills | 0/? | Not started | - |
+| 3. Standalone TS Skills | 0/6 | Not started | - |
 | 4. Project Initialization | 0/? | Not started | - |
 | 5. Context + Planning | 0/? | Not started | - |
 | 6. Execution + Review | 0/? | Not started | - |
