@@ -401,7 +401,162 @@ const contextAwareRules: RecommendationRule[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Category 7: Fallback Rules (rules 29-30)
+// Category 7: Verification Pipeline Rules (rules 29-40)
+// Transitions for verify, validate, test-gen skills (D-19, D-20)
+// ---------------------------------------------------------------------------
+
+/** Helper: check if lastResult.data has a specific verdict */
+function lastVerdict(state: RecommendationState, verdict: string): boolean {
+  const data = state.lastResult?.data as Record<string, unknown> | undefined;
+  return data?.verdict === verdict;
+}
+
+/** Helper: check if validate coverage is below threshold */
+function coverageBelow(state: RecommendationState, threshold: number): boolean {
+  const data = state.lastResult?.data as Record<string, unknown> | undefined;
+  const overall = data?.overall as Record<string, unknown> | undefined;
+  const lines = overall?.lines as Record<string, unknown> | undefined;
+  const pct = lines?.pct;
+  return typeof pct === 'number' && pct < threshold;
+}
+
+/** Helper: check if validate coverage is at or above threshold */
+function coverageAtOrAbove(state: RecommendationState, threshold: number): boolean {
+  const data = state.lastResult?.data as Record<string, unknown> | undefined;
+  const overall = data?.overall as Record<string, unknown> | undefined;
+  const lines = overall?.lines as Record<string, unknown> | undefined;
+  const pct = lines?.pct;
+  return typeof pct === 'number' && pct >= threshold;
+}
+
+const verificationPipelineRules: RecommendationRule[] = [
+  // Rule 29: After verify WARN -> suggest review for human analysis
+  rule(
+    'after-verify-warn-review',
+    'After verify WARN verdict, suggest human review',
+    (s) => lastWas(s, 'workflow.verify') && lastSucceeded(s) && lastVerdict(s, 'WARN'),
+    () => [
+      rec('workflow.review', 'Review warnings', 'Verify found warnings -- review them before shipping', 'medium'),
+      rec('workflow.ship', 'Ship anyway', 'Ship if warnings are acceptable', 'low'),
+    ],
+  ),
+
+  // Rule 30: After validate with low coverage -> suggest test-gen
+  rule(
+    'after-validate-low-coverage',
+    'After validate with low coverage, generate more tests',
+    (s) => lastWas(s, 'workflow.validate') && lastSucceeded(s) && coverageBelow(s, 80),
+    () => [
+      rec('workflow.test-gen', 'Generate tests', 'Coverage is below 80% -- generate more tests', 'high'),
+      rec('workflow.verify', 'Verify anyway', 'Run verification despite low coverage', 'low'),
+    ],
+  ),
+
+  // Rule 31: After validate with good coverage -> suggest verify
+  rule(
+    'after-validate-high-coverage',
+    'After validate with good coverage, proceed to verify',
+    (s) => lastWas(s, 'workflow.validate') && lastSucceeded(s) && coverageAtOrAbove(s, 80),
+    () => [
+      rec('workflow.verify', 'Verify output', 'Good coverage -- proceed to full verification', 'medium'),
+    ],
+  ),
+
+  // Rule 32: After validate failure -> suggest debug
+  rule(
+    'after-validate-fail',
+    'After validate failure, debug the coverage issues',
+    (s) => lastWas(s, 'workflow.validate') && lastFailed(s),
+    () => [
+      rec('workflow.debug', 'Debug validate', 'Validate failed -- investigate the issue', 'medium'),
+      rec('workflow.validate', 'Retry validate', 'Retry validation after fixing issues', 'low'),
+    ],
+  ),
+
+  // Rule 33: After test-gen success -> suggest validate to re-check coverage
+  rule(
+    'after-test-gen-success',
+    'After successful test generation, re-validate coverage',
+    (s) => lastWas(s, 'workflow.test-gen') && lastSucceeded(s),
+    () => [
+      rec('workflow.validate', 'Re-validate', 'Tests generated -- re-check coverage', 'high'),
+    ],
+  ),
+
+  // Rule 34: After test-gen failure -> suggest debug
+  rule(
+    'after-test-gen-fail',
+    'After test generation failure, debug the issues',
+    (s) => lastWas(s, 'workflow.test-gen') && lastFailed(s),
+    () => [
+      rec('workflow.debug', 'Debug test-gen', 'Test generation failed -- investigate', 'medium'),
+      rec('workflow.test-gen', 'Retry test-gen', 'Retry test generation', 'low'),
+    ],
+  ),
+
+  // Rule 35: After review success -> suggest execute
+  rule(
+    'after-review-success-execute',
+    'After successful review, execute the reviewed plan',
+    (s) => lastWas(s, 'workflow.review') && lastSucceeded(s),
+    () => [
+      rec('workflow.execute', 'Execute plan', 'Review passed -- execute the plan', 'high'),
+    ],
+  ),
+
+  // Rule 36: After review failure -> suggest plan revision
+  rule(
+    'after-review-failure',
+    'After review failure, revise the plan',
+    (s) => lastWas(s, 'workflow.review') && lastFailed(s),
+    () => [
+      rec('workflow.plan', 'Revise plan', 'Review found issues -- revise the plan', 'high'),
+      rec('workflow.discuss', 'Discuss issues', 'Discuss the review findings', 'medium'),
+    ],
+  ),
+
+  // Rule 37: After verify PASS with warnings -> suggest validate for coverage
+  rule(
+    'after-verify-pass-with-warnings',
+    'After verify PASS with warnings, check coverage',
+    (s) =>
+      lastWas(s, 'workflow.verify') &&
+      lastSucceeded(s) &&
+      lastVerdict(s, 'PASS') &&
+      Array.isArray(s.lastResult?.warnings) &&
+      s.lastResult!.warnings!.length > 0,
+    () => [
+      rec('workflow.validate', 'Check coverage', 'Verify passed with warnings -- check test coverage', 'low'),
+    ],
+  ),
+
+  // Rule 38: After guard with promotion suggestions -> suggest verify
+  rule(
+    'verify-after-guard-promotion',
+    'After guard success with promotions, run full verification',
+    (s) => {
+      if (!lastWas(s, 'harness.guard') || !lastSucceeded(s)) return false;
+      const data = s.lastResult?.data as Record<string, unknown> | undefined;
+      return Array.isArray(data?.promotions) && (data!.promotions as unknown[]).length > 0;
+    },
+    () => [
+      rec('workflow.verify', 'Run verification', 'Guard found promotion candidates -- verify against full pipeline', 'low'),
+    ],
+  ),
+
+  // Rule 39: After plan success -> also suggest review (lower than execute)
+  rule(
+    'after-plan-success-review',
+    'After planning, optionally review before executing',
+    (s) => lastWas(s, 'workflow.plan') && lastSucceeded(s),
+    () => [
+      rec('workflow.review', 'Review plan', 'Review the plan before executing', 'medium'),
+    ],
+  ),
+];
+
+// ---------------------------------------------------------------------------
+// Category 8: Fallback Rules (rules 41-42)
 // ---------------------------------------------------------------------------
 
 const fallbackRules: RecommendationRule[] = [
@@ -443,5 +598,6 @@ export const RECOMMENDATION_RULES: RecommendationRule[] = [
   ...errorRecoveryRules,
   ...milestoneRules,
   ...contextAwareRules,
+  ...verificationPipelineRules,
   ...fallbackRules,
 ];

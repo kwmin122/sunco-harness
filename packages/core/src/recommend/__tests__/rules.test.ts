@@ -21,6 +21,9 @@ const ALL_SKILLS = new Set([
   'workflow.plan',
   'workflow.execute',
   'workflow.verify',
+  'workflow.validate',
+  'workflow.test-gen',
+  'workflow.review',
   'workflow.ship',
   'workflow.debug',
   'workflow.research',
@@ -63,8 +66,8 @@ function getDefault(recs: Recommendation[]): Recommendation | undefined {
 // ---------------------------------------------------------------------------
 
 describe('RECOMMENDATION_RULES', () => {
-  it('exports at least 25 rules (REC-04)', () => {
-    expect(RECOMMENDATION_RULES.length).toBeGreaterThanOrEqual(25);
+  it('exports at least 35 rules (REC-04 + REV-01)', () => {
+    expect(RECOMMENDATION_RULES.length).toBeGreaterThanOrEqual(35);
   });
 
   it('every rule has an id, description, matches, and recommend', () => {
@@ -270,6 +273,129 @@ describe('Fallback rules', () => {
     expect(recs.length).toBeGreaterThanOrEqual(1);
     // Should contain at least status as fallback
     expect(hasSkill(recs, 'core.status')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Verification pipeline rules (D-19, D-20)
+// ---------------------------------------------------------------------------
+
+describe('Verification pipeline rules', () => {
+  it('after verify WARN -> recommend review', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.verify',
+      lastResult: { success: true, data: { verdict: 'WARN' } },
+    });
+
+    expect(hasSkill(recs, 'workflow.review')).toBe(true);
+  });
+
+  it('after validate low coverage -> recommend test-gen (default)', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.validate',
+      lastResult: {
+        success: true,
+        data: { overall: { lines: { pct: 45 } } },
+      },
+    });
+
+    expect(hasSkill(recs, 'workflow.test-gen')).toBe(true);
+    expect(getDefault(recs)!.skillId).toBe('workflow.test-gen');
+  });
+
+  it('after validate high coverage -> recommend verify', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.validate',
+      lastResult: {
+        success: true,
+        data: { overall: { lines: { pct: 92 } } },
+      },
+    });
+
+    expect(hasSkill(recs, 'workflow.verify')).toBe(true);
+  });
+
+  it('after validate failure -> recommend debug', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.validate',
+      lastResult: { success: false },
+    });
+
+    expect(hasSkill(recs, 'workflow.debug')).toBe(true);
+  });
+
+  it('after test-gen success -> recommend validate (default)', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.test-gen',
+      lastResult: { success: true },
+    });
+
+    expect(hasSkill(recs, 'workflow.validate')).toBe(true);
+    expect(getDefault(recs)!.skillId).toBe('workflow.validate');
+  });
+
+  it('after test-gen failure -> recommend debug', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.test-gen',
+      lastResult: { success: false },
+    });
+
+    expect(hasSkill(recs, 'workflow.debug')).toBe(true);
+  });
+
+  it('after review success -> recommend execute (default)', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.review',
+      lastResult: { success: true },
+    });
+
+    expect(hasSkill(recs, 'workflow.execute')).toBe(true);
+    expect(getDefault(recs)!.skillId).toBe('workflow.execute');
+  });
+
+  it('after review failure -> recommend plan revision', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.review',
+      lastResult: { success: false },
+    });
+
+    expect(hasSkill(recs, 'workflow.plan')).toBe(true);
+  });
+
+  it('after verify PASS with warnings -> recommend validate', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.verify',
+      lastResult: {
+        success: true,
+        data: { verdict: 'PASS' },
+        warnings: ['Minor issue found'],
+      },
+    });
+
+    expect(hasSkill(recs, 'workflow.validate')).toBe(true);
+  });
+
+  it('after guard success with promotions -> recommend verify', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'harness.guard',
+      lastResult: {
+        success: true,
+        data: { promotions: [{ rule: 'no-console', severity: 'error' }] },
+      },
+    });
+
+    expect(hasSkill(recs, 'workflow.verify')).toBe(true);
+  });
+
+  it('after plan success -> also recommend review', () => {
+    const recs = getRecsForState({
+      lastSkillId: 'workflow.plan',
+      lastResult: { success: true },
+    });
+
+    expect(hasSkill(recs, 'workflow.review')).toBe(true);
+    // Execute should still be the default (higher priority from existing rule)
+    expect(getDefault(recs)!.skillId).toBe('workflow.execute');
   });
 });
 
