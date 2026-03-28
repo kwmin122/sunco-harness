@@ -135,7 +135,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 06-01-PLAN.md -- Shared infrastructure: PLAN.md parser + Git worktree manager + tests
+- [x] 06-01-PLAN.md -- Shared infrastructure: PLAN.md parser + Git worktree manager + tests
 - [ ] 06-02-PLAN.md -- sunco execute skill (wave orchestration, worktree isolation, cherry-pick merge-back)
 - [ ] 06-03-PLAN.md -- sunco review skill (multi-provider cross-review, synthesis into REVIEWS.md)
 - [ ] 06-04-PLAN.md -- CLI wiring, barrel exports, tsup config, build verification

@@ -92,7 +92,7 @@
 ### Workflow -- 실행 + 리뷰
 
 - [ ] **WF-13**: `sunco review` -- 멀티에이전트 크로스 리뷰 (--codex --gemini 플래그)
-- [ ] **WF-14**: `sunco execute` -- 웨이브 기반 병렬 실행 + 원자적 커밋 + Git worktree 격리
+- [x] **WF-14**: `sunco execute` -- 웨이브 기반 병렬 실행 + 원자적 커밋 + Git worktree 격리
 
 ### Workflow -- 조합
 
@@ -270,7 +270,7 @@
 | WF-11 | Phase 5: Context + Planning | Complete |
 | WF-12 | Phase 5: Context + Planning | Complete |
 | WF-13 | Phase 6: Execution + Review | Pending |
-| WF-14 | Phase 6: Execution + Review | Pending |
+| WF-14 | Phase 6: Execution + Review | Complete |
 | VRF-01 | Phase 7: Verification Pipeline | Pending |
 | VRF-02 | Phase 7: Verification Pipeline | Pending |
 | VRF-03 | Phase 7: Verification Pipeline | Pending |
