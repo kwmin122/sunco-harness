@@ -60,8 +60,8 @@
 - [x] **HRN-04**: `sunco init` -- .sun/ 워크스페이스 초기화 + 규칙 자동 생성 + 프로젝트 타입별 기본 템플릿
 - [x] **HRN-05**: `sunco lint` -- init이 감지한 레이어 구조 -> ESLint rule 자동 생성 (eslint-plugin-boundaries)
 - [x] **HRN-06**: `sunco lint` -- 의존성 방향 위반 검사 (UI->DB 직접 import 잡음)
-- [ ] **HRN-07**: `sunco lint` -- 에러 메시지가 에이전트가 이해하는 수정 지시 형태 ("린터가 가르치면서 막는다")
-- [ ] **HRN-08**: `sunco lint` -- 100% 결정적, --fix 옵션으로 자동 수정
+- [x] **HRN-07**: `sunco lint` -- 에러 메시지가 에이전트가 이해하는 수정 지시 형태 ("린터가 가르치면서 막는다")
+- [x] **HRN-08**: `sunco lint` -- 100% 결정적, --fix 옵션으로 자동 수정
 - [x] **HRN-09**: `sunco health` -- 문서 위생: 코드와 동기 안 되는 문서 감지, 교차참조 깨짐, 문서 나이
 - [x] **HRN-10**: `sunco health` -- 패턴 건강도: 안티패턴 확산 추적 ("any 타입이 3파일->12파일"), 트렌드
 - [x] **HRN-11**: `sunco health` -- 점수 기반 리포트 (숫자로 보여줌)
@@ -239,8 +239,8 @@
 | HRN-04 | Phase 2: Harness Skills | Complete |
 | HRN-05 | Phase 2: Harness Skills | Complete |
 | HRN-06 | Phase 2: Harness Skills | Complete |
-| HRN-07 | Phase 2: Harness Skills | Pending |
-| HRN-08 | Phase 2: Harness Skills | Pending |
+| HRN-07 | Phase 2: Harness Skills | Complete |
+| HRN-08 | Phase 2: Harness Skills | Complete |
 | HRN-09 | Phase 2: Harness Skills | Complete |
 | HRN-10 | Phase 2: Harness Skills | Complete |
 | HRN-11 | Phase 2: Harness Skills | Complete |
