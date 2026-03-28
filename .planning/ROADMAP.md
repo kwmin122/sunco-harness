@@ -68,7 +68,7 @@ Plans:
 - [x] 02-02-PLAN.md -- Init presets, workspace initializer, sunco init skill
 - [ ] 02-03-PLAN.md -- Lint types, rule store, config generator, ESLint runner
 - [ ] 02-04-PLAN.md -- Lint formatter (agent-readable messages), fixer, sunco lint skill
-- [ ] 02-05-PLAN.md -- Health freshness checker, pattern tracker, reporter, sunco health skill
+- [x] 02-05-PLAN.md -- Health freshness checker, pattern tracker, reporter, sunco health skill
 - [x] 02-06-PLAN.md -- Agent doc analyzer, efficiency scorer, suggestion engine, sunco agents skill
 - [ ] 02-07-PLAN.md -- Guard analyzer, promoter, incremental linter, watcher, sunco guard skill
 - [ ] 02-08-PLAN.md -- Integration: barrel exports, CLI wiring, build verification, human-verify
