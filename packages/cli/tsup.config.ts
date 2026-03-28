@@ -21,5 +21,9 @@ export default defineConfig({
     'ai', '@ai-sdk/anthropic',
     // execa (dynamically imported by ClaudeCliProvider -- cross-spawn uses require())
     'execa',
+    // ESLint ecosystem (CJS packages, used by lint/guard skills at runtime)
+    'eslint', 'eslint-plugin-boundaries', 'typescript-eslint',
+    // File watcher (used by guard skill watch mode)
+    'chokidar',
   ],
 });
