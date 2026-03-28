@@ -49,6 +49,15 @@ export { default as planSkill } from './plan.skill.js';
 export { default as executeSkill } from './execute.skill.js';
 export { default as reviewSkill } from './review.skill.js';
 
+// Phase 7 verification pipeline skills
+export { default as verifySkill } from './verify.skill.js';
+export { default as validateSkill } from './validate.skill.js';
+export { default as testGenSkill } from './test-gen.skill.js';
+
+// Phase 7 shared utilities
+export type { VerifyFinding, VerifyReport, LayerResult, VerifyVerdict, CoverageMetric, FileCoverage, CoverageReport } from './shared/verify-types.js';
+export { parseCoverageSummary } from './shared/coverage-parser.js';
+
 // Phase 5 shared utilities
 export { resolvePhaseDir, readPhaseArtifact, writePhaseArtifact } from './shared/phase-reader.js';
 
