@@ -61,7 +61,17 @@ Plans:
   3. User runs `sunco health` and gets a numerical score report showing document staleness, anti-pattern spread trends, and pattern drift over time
   4. User runs `sunco agents` on a repo with CLAUDE.md and gets an efficiency score, 60-line limit check, and improvement suggestions (no auto-generation)
   5. User runs `sunco guard` in watch mode and sees real-time lint-on-change with anti-pattern-to-linter-rule promotion suggestions
-**Plans**: TBD
+**Plans:** 8 plans
+
+Plans:
+- [ ] 02-01-PLAN.md -- Dependencies, test infra, init detection modules (ecosystem, layer, convention)
+- [ ] 02-02-PLAN.md -- Init presets, workspace initializer, sunco init skill
+- [ ] 02-03-PLAN.md -- Lint types, rule store, config generator, ESLint runner
+- [ ] 02-04-PLAN.md -- Lint formatter (agent-readable messages), fixer, sunco lint skill
+- [ ] 02-05-PLAN.md -- Health freshness checker, pattern tracker, reporter, sunco health skill
+- [ ] 02-06-PLAN.md -- Agent doc analyzer, efficiency scorer, suggestion engine, sunco agents skill
+- [ ] 02-07-PLAN.md -- Guard analyzer, promoter, incremental linter, watcher, sunco guard skill
+- [ ] 02-08-PLAN.md -- Integration: barrel exports, CLI wiring, build verification, human-verify
 
 ### Phase 3: Standalone TS Skills
 **Goal**: Users can manage sessions, capture ideas, control phases, adjust settings, and track progress -- all deterministic, all instant
@@ -152,8 +162,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Platform | 11/12 | In Progress|  |
-| 2. Harness Skills | 0/? | Not started | - |
+| 1. Core Platform | 12/12 | Complete |  |
+| 2. Harness Skills | 0/8 | Not started | - |
 | 3. Standalone TS Skills | 0/? | Not started | - |
 | 4. Project Initialization | 0/? | Not started | - |
 | 5. Context + Planning | 0/? | Not started | - |
