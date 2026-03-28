@@ -16,6 +16,26 @@
     "./sample-prompt": {
       "import": "./dist/sample-prompt.skill.js",
       "types": "./dist/sample-prompt.skill.d.ts"
+    },
+    "./init": {
+      "import": "./dist/init.skill.js",
+      "types": "./dist/init.skill.d.ts"
+    },
+    "./lint": {
+      "import": "./dist/lint.skill.js",
+      "types": "./dist/lint.skill.d.ts"
+    },
+    "./health": {
+      "import": "./dist/health.skill.js",
+      "types": "./dist/health.skill.d.ts"
+    },
+    "./agents": {
+      "import": "./dist/agents.skill.js",
+      "types": "./dist/agents.skill.d.ts"
+    },
+    "./guard": {
+      "import": "./dist/guard.skill.js",
+      "types": "./dist/guard.skill.d.ts"
     }
   },
   "scripts": {

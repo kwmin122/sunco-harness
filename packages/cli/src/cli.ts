@@ -19,14 +19,30 @@
  */
 
 import { createProgram, registerSkills, createLifecycle } from '@sunco/core';
-import { settingsSkill, samplePromptSkill } from '@sunco/skills-harness';
+import {
+  settingsSkill,
+  samplePromptSkill,
+  initSkill,
+  lintSkill,
+  healthSkill,
+  agentsSkill,
+  guardSkill,
+} from '@sunco/skills-harness';
 
 /**
  * Pre-loaded skills: directly imported to ensure they are bundled by tsup.
  * These are registered BEFORE the filesystem scanner runs, so they take
  * priority over dynamically discovered duplicates.
  */
-const preloadedSkills = [settingsSkill, samplePromptSkill];
+const preloadedSkills = [
+  settingsSkill,
+  samplePromptSkill,
+  initSkill,
+  lintSkill,
+  healthSkill,
+  agentsSkill,
+  guardSkill,
+];
 
 async function main(): Promise<void> {
   const program = createProgram();

@@ -15,5 +15,11 @@ export default defineConfig({
   target: 'node22',
   dts: true,
   clean: true,
-  external: ['@sunco/core'],
+  external: [
+    '@sunco/core',
+    'eslint',
+    'eslint-plugin-boundaries',
+    'typescript-eslint',
+    'chokidar',
+  ],
 });
