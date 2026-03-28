@@ -231,3 +231,37 @@ describe('createLifecycle.teardown', () => {
     expect(mockClose).toHaveBeenCalled();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Provider Discovery
+// ---------------------------------------------------------------------------
+
+describe('Provider discovery', () => {
+  it('ClaudeCliProvider and ClaudeSdkProvider are importable from lifecycle deps', async () => {
+    const { ClaudeCliProvider } = await import('../../agent/providers/claude-cli.js');
+    const { ClaudeSdkProvider } = await import('../../agent/providers/claude-sdk.js');
+    expect(ClaudeCliProvider).toBeDefined();
+    expect(ClaudeSdkProvider).toBeDefined();
+    const cli = new ClaudeCliProvider();
+    const sdk = new ClaudeSdkProvider();
+    expect(cli.id).toBe('claude-code-cli');
+    expect(sdk.id).toBe('claude-sdk');
+    expect(typeof cli.isAvailable).toBe('function');
+    expect(typeof sdk.isAvailable).toBe('function');
+  });
+
+  it('lifecycle.ts imports ClaudeCliProvider for provider wiring', async () => {
+    // Verify the import exists in lifecycle.ts source
+    const { readFile } = await import('node:fs/promises');
+    const { fileURLToPath } = await import('node:url');
+    const { dirname, join } = await import('node:path');
+    const dir = dirname(fileURLToPath(import.meta.url));
+    const lifecycleSource = await readFile(join(dir, '..', 'lifecycle.ts'), 'utf-8');
+    expect(lifecycleSource).toContain('ClaudeCliProvider');
+    expect(lifecycleSource).toContain('ClaudeSdkProvider');
+    expect(lifecycleSource).toContain('new ClaudeCliProvider');
+    expect(lifecycleSource).toContain('new ClaudeSdkProvider');
+    expect(lifecycleSource).toContain('isAvailable');
+    expect(lifecycleSource).not.toContain("providers: []");
+  });
+});
