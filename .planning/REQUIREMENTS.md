@@ -80,7 +80,7 @@
 - [ ] **WF-05**: `sunco milestone complete` -- 아카이브 + 태그 + 다음 준비
 - [ ] **WF-06**: `sunco milestone summary` -- 종합 보고서 (온보딩/리뷰용)
 - [ ] **WF-07**: `sunco milestone gaps` -- audit 격차 -> 추가 페이즈 생성
-- [ ] **WF-08**: `sunco progress` -- 전체 진행 상황 + 다음 액션 라우팅
+- [x] **WF-08**: `sunco progress` -- 전체 진행 상황 + 다음 액션 라우팅
 
 ### Workflow -- 맥락 + 계획
 
@@ -123,10 +123,10 @@
 ### Workflow -- 세션 관리
 
 - [x] **SES-01**: `sunco status` -- 현재 상태 요약 (어디에 있는지, 뭐가 남았는지)
-- [ ] **SES-02**: `sunco next` -- 상태->다음 스킬 자동 라우팅
+- [x] **SES-02**: `sunco next` -- 상태->다음 스킬 자동 라우팅
 - [x] **SES-03**: `sunco resume` -- HANDOFF.json -> 이전 세션 복원
 - [x] **SES-04**: `sunco pause` -- 세션 중단 시 HANDOFF.json 생성
-- [ ] **SES-05**: `sunco context` -- 현재 결정/블로커/다음 액션 요약
+- [x] **SES-05**: `sunco context` -- 현재 결정/블로커/다음 액션 요약
 
 ### Workflow -- 디버깅
 
@@ -250,10 +250,10 @@
 | HRN-15 | Phase 2: Harness Skills | Complete |
 | HRN-16 | Phase 2: Harness Skills | Complete |
 | SES-01 | Phase 3: Standalone TS Skills | Complete |
-| SES-02 | Phase 3: Standalone TS Skills | Pending |
+| SES-02 | Phase 3: Standalone TS Skills | Complete |
 | SES-03 | Phase 3: Standalone TS Skills | Complete |
 | SES-04 | Phase 3: Standalone TS Skills | Complete |
-| SES-05 | Phase 3: Standalone TS Skills | Pending |
+| SES-05 | Phase 3: Standalone TS Skills | Complete |
 | IDX-01 | Phase 3: Standalone TS Skills | Pending |
 | IDX-02 | Phase 3: Standalone TS Skills | Pending |
 | IDX-03 | Phase 3: Standalone TS Skills | Pending |
@@ -262,7 +262,7 @@
 | PHZ-02 | Phase 3: Standalone TS Skills | Complete |
 | PHZ-03 | Phase 3: Standalone TS Skills | Complete |
 | SET-01 | Phase 3: Standalone TS Skills | Pending |
-| WF-08 | Phase 3: Standalone TS Skills | Pending |
+| WF-08 | Phase 3: Standalone TS Skills | Complete |
 | WF-01 | Phase 4: Project Initialization | Pending |
 | WF-02 | Phase 4: Project Initialization | Pending |
 | WF-09 | Phase 5: Context + Planning | Pending |
