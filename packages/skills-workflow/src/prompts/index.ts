@@ -15,6 +15,11 @@ export { buildScanTestsPrompt } from './scan-tests.js';
 export { buildScanIntegrationsPrompt } from './scan-integrations.js';
 export { buildScanConcernsPrompt } from './scan-concerns.js';
 
+// Discuss prompt builders (from plan 05-01)
+export { buildDiscussAnalyzePrompt } from './discuss-analyze.js';
+export { buildDiscussDeepDivePrompt } from './discuss-deepdive.js';
+export { buildDiscussScenarioPrompt } from './discuss-scenario.js';
+
 // Assume prompt builder (from plan 05-02)
 export { buildAssumePrompt } from './assume.js';
 
