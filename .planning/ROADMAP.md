@@ -71,7 +71,7 @@ Plans:
 - [x] 02-05-PLAN.md -- Health freshness checker, pattern tracker, reporter, sunco health skill
 - [x] 02-06-PLAN.md -- Agent doc analyzer, efficiency scorer, suggestion engine, sunco agents skill
 - [x] 02-07-PLAN.md -- Guard analyzer, promoter, incremental linter, watcher, sunco guard skill
-- [ ] 02-08-PLAN.md -- Integration: barrel exports, CLI wiring, build verification, human-verify
+- [x] 02-08-PLAN.md -- Integration: barrel exports, CLI wiring, build verification, human-verify
 
 ### Phase 3: Standalone TS Skills
 **Goal**: Users can manage sessions, capture ideas, control phases, adjust settings, and track progress -- all deterministic, all instant
