@@ -206,7 +206,7 @@ export async function runLayer1MultiAgent(
         timeout: COORDINATOR_TIMEOUT,
       });
 
-      const coordFindings = parseExpertFindings(coordResult.outputText, 'correctness', 1);
+      const coordFindings = parseExpertFindings(coordResult.outputText, 'coordinator', 1);
       // Prefer coordinator's deduplicated findings if available
       if (coordFindings.length > 0) {
         findings.push(...coordFindings);
@@ -220,7 +220,7 @@ export async function runLayer1MultiAgent(
   } catch (err) {
     findings.push({
       layer: 1,
-      source: 'correctness',
+      source: 'coordinator',
       severity: 'low',
       description: `Layer 1 execution error: ${err instanceof Error ? err.message : String(err)}`,
     });

@@ -277,13 +277,18 @@ export default defineSkill({
         .map((f) => `- [${f.severity}] ${f.source}: ${f.description}`)
         .join('\n');
 
-      await ctx.ui.ask({
+      const gateChoice = await ctx.ui.ask({
         message: `${humanFindings.length} finding(s) require human review:\n${humanSummary}\n\nApprove?`,
         options: [
           { id: 'approve', label: 'Approve' },
-          { id: 'reject', label: 'Reject' },
+          { id: 'reject', label: 'Reject — override verdict to FAIL' },
         ],
       });
+
+      if (gateChoice.selectedId === 'reject') {
+        verdict = 'FAIL';
+        ctx.log.warn('Human gate rejected — verdict overridden to FAIL');
+      }
     }
 
     // --- Step 8: Build report ---

@@ -2,10 +2,11 @@
  * Verification pipeline types for sunco verify / validate / test-gen.
  *
  * Shared type definitions used across all verification layers:
- * - Layer 1-2: Deterministic (lint, guard, acceptance)
- * - Layer 3: Expert agents (security, performance, architecture, correctness)
- * - Layer 4: Adversarial + intent reconstruction
- * - Layer 5: Coordinator synthesis
+ * - Layer 1: Multi-Agent Generation (4 expert agents + coordinator)
+ * - Layer 2: Deterministic Guardrails (lint + guard)
+ * - Layer 3: BDD Acceptance Criteria (holdout scenarios)
+ * - Layer 4: Permission Scoping (file path verification)
+ * - Layer 5: Adversarial Verification (intent reconstruction)
  *
  * Requirements: VRF-06, VRF-10
  * Decisions: D-01 (5-layer model), D-02 (layer structure), D-10 (expert agents),
@@ -26,6 +27,7 @@ export interface VerifyFinding {
     | 'performance'
     | 'architecture'
     | 'correctness'
+    | 'coordinator'
     | 'lint'
     | 'guard'
     | 'tribal'
