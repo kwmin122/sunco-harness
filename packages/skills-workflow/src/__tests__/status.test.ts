@@ -247,8 +247,19 @@ describe('progressSkill', () => {
     expect(progressSkill.category).toBe('workflow');
   });
 
-  it('shares the same execute function as statusSkill', () => {
+  it('shares the same execute behavior as statusSkill', async () => {
     // Both skills use the same underlying execute function
-    expect(progressSkill.execute).toBe(statusSkill.execute);
+    // defineSkill may wrap functions, so verify they produce the same output
+    const mockedReadFile = vi.mocked(readFile);
+    mockedReadFile.mockRejectedValue(new Error('ENOENT'));
+
+    const ctx1 = createMockContext();
+    const ctx2 = createMockContext();
+
+    const result1 = await statusSkill.execute(ctx1);
+    const result2 = await progressSkill.execute(ctx2);
+
+    expect(result1.success).toBe(result2.success);
+    expect(result1.summary).toBe(result2.summary);
   });
 });
