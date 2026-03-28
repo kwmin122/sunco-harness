@@ -17,7 +17,8 @@
 
 import { defineSkill } from '@sunco/core';
 import type { PermissionSet } from '@sunco/core';
-import { writeFile, mkdir, readdir } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { resolvePhaseDir, writePhaseArtifact } from './shared/phase-reader.js';
 import { join } from 'node:path';
 import { simpleGit } from 'simple-git';
 import { buildReviewPrompt, REVIEW_DIMENSIONS } from './prompts/review.js';
@@ -62,25 +63,6 @@ const PLANNING_PERMISSIONS: PermissionSet = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Resolve the phase directory path from the phases/ directory.
- * Scans .planning/phases/ for a directory starting with the padded phase number.
- */
-async function resolvePhaseDir(cwd: string, phaseNumber: number): Promise<string | null> {
-  const phasesDir = join(cwd, '.planning', 'phases');
-  try {
-    const entries = await readdir(phasesDir);
-    const padded = String(phaseNumber).padStart(2, '0');
-    const match = entries.find((e) => e.startsWith(`${padded}-`));
-    if (match) {
-      return join(phasesDir, match);
-    }
-  } catch {
-    // phases directory doesn't exist
-  }
-  return null;
-}
 
 // ---------------------------------------------------------------------------
 // Skill definition
@@ -186,11 +168,11 @@ export default defineSkill({
       return { success: false, summary: 'No changes to review' };
     }
 
-    // Truncate if needed (per RESEARCH Pitfall 6)
-    let truncated = false;
-    if (diff.length > MAX_DIFF_CHARS) {
-      truncated = true;
-      ctx.log.warn('Diff exceeds 50,000 chars, truncating', { length: diff.length });
+    // Diff truncation is handled inside prompt builders (buildReviewPrompt
+    // at 50K chars, buildReviewSynthesizePrompt at 20K chars). Track for reporting.
+    const truncated = diff.length > MAX_DIFF_CHARS;
+    if (truncated) {
+      ctx.log.warn('Diff exceeds 50,000 chars — prompt builders will truncate', { length: diff.length });
     }
 
     // --- Step 3: Resolve providers (D-09) ---

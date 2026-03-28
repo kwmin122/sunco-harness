@@ -265,7 +265,7 @@ export default defineSkill({
           ([planId, { plan, worktreePath }]) =>
             ctx.agent
               .run({
-                role: 'execution' as 'research',
+                role: 'execution',
                 prompt: buildExecutePrompt({
                   planContent: plan.raw,
                   planId,
@@ -279,32 +279,33 @@ export default defineSkill({
                 planId,
                 result,
                 plan,
+                error: null as string | null,
+              }))
+              .catch((err) => ({
+                planId,
+                result: null as null,
+                plan,
+                error: err instanceof Error ? err.message : String(err),
               })),
         );
 
-        const results = await Promise.allSettled(agentPromises);
+        const results = await Promise.all(agentPromises);
 
         // --- Evaluate results ---
         const succeeded: { planId: string; plan: ParsedPlan }[] = [];
         const failed: { planId: string; reason: string }[] = [];
 
-        for (const settled of results) {
-          if (settled.status === 'rejected') {
-            const reason =
-              settled.reason instanceof Error
-                ? settled.reason.message
-                : String(settled.reason);
-            // Extract planId from the rejected promise's context
-            failed.push({ planId: 'unknown', reason });
+        for (const { planId, result, plan, error } of results) {
+          if (error || !result) {
+            failed.push({ planId, reason: error ?? 'Agent returned no result' });
             continue;
           }
 
-          const { planId, result, plan } = settled.value;
           const summary = parseAgentSummary(result.outputText);
 
           if (summary && summary.success) {
             succeeded.push({ planId, plan });
-            allCommits.push(...summary.commits);
+            // Note: commits are tracked via cherry-pick hashes, not agent-reported
           } else {
             const reason = summary
               ? `${summary.tasksCompleted}/${summary.totalTasks} tasks completed`
@@ -338,21 +339,15 @@ export default defineSkill({
           const choice = await ctx.ui.ask({
             message: `${failed.length} plan(s) failed in wave ${waveIndex}:\n${failureReport}\n\nHow to proceed?`,
             options: [
-              { id: 'retry', label: 'Retry failed plans' },
-              { id: 'skip', label: 'Skip and continue' },
+              { id: 'skip', label: 'Skip and continue to next wave' },
               { id: 'abort', label: 'Abort execution' },
             ],
           });
 
           if (choice.selectedId === 'abort') {
             aborted = true;
-          } else if (choice.selectedId === 'skip') {
+          } else {
             failedPlans += failed.length;
-          }
-          // retry: would re-dispatch -- for now counted as failed
-          if (choice.selectedId === 'retry') {
-            failedPlans += failed.length;
-            ctx.log.warn('Retry not yet implemented -- counting as failed');
           }
         }
 
