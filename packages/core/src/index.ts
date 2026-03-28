@@ -221,6 +221,20 @@ export { StatusBar } from './ui/session/StatusBar.js';
 export type { StatusBarProps } from './ui/session/StatusBar.js';
 
 // ---------------------------------------------------------------------------
+// CLI Engine
+// ---------------------------------------------------------------------------
+export { createProgram, levenshtein, findClosestCommand } from './cli/program.js';
+export { registerSkills } from './cli/skill-router.js';
+export type { SkillExecuteHook } from './cli/skill-router.js';
+export { createLifecycle, createNoopRecommender } from './cli/lifecycle.js';
+export type { LifecycleServices, Lifecycle } from './cli/lifecycle.js';
+
+// ---------------------------------------------------------------------------
+// Recommendation Engine
+// ---------------------------------------------------------------------------
+export { createRecommender, RecommenderEngine } from './recommend/engine.js';
+
+// ---------------------------------------------------------------------------
 // Base Errors
 // ---------------------------------------------------------------------------
 export {
