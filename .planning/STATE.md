@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01b-PLAN.md
-last_updated: "2026-03-28T03:37:12.174Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-28T03:44:18.192Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 10
   completed_phases: 0
   total_plans: 11
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 01 (core-platform) — EXECUTING
-Plan: 3 of 11
+Plan: 4 of 11
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01-core-platform P01 | 6min | 1 tasks | 27 files |
 | Phase 01 P01b | 6min | 2 tasks | 12 files |
+| Phase 01 P02 | 4min | 7 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [Phase 01-core-platform]: npm workspace * refs (not workspace:*), glob@13.0.6 (not 11.x), ignoreDeprecations:6.0 for tsup DTS
 - [Phase 01]: Used Zod 3.24.4 (installed) instead of Zod 4.x -- API compatible for schema definitions
 - [Phase 01]: Two-layer UI contract: SkillUi (skill intent API) + UiAdapter (renderer pattern API) per D-38
+- [Phase 01]: Zod 3.24.4 ZodError.issues for error formatting (not v4 prettifyError)
+- [Phase 01]: loadConfig homeDir option for testability without mocking os.homedir()
+- [Phase 01]: findProjectRoot checks .sun/ first, package.json as fallback
 
 ### Pending Todos
 
@@ -82,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T03:37:12.171Z
-Stopped at: Completed 01-01b-PLAN.md
+Last session: 2026-03-28T03:44:18.189Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None

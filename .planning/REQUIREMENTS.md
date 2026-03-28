@@ -14,9 +14,9 @@
 
 ### Core Platform -- Config System
 
-- [ ] **CFG-01**: TOML 파일 파싱 (smol-toml), 계층적 오버라이드: global(~/.sun/config.toml) -> project(.sun/config.toml) -> directory(src/.sun.toml)
-- [ ] **CFG-02**: 배열 병합 시 상위 레벨 값을 대체(replace), 객체는 deep merge
-- [ ] **CFG-03**: 설정 값 타입 검증 (Zod 스키마)
+- [x] **CFG-01**: TOML 파일 파싱 (smol-toml), 계층적 오버라이드: global(~/.sun/config.toml) -> project(.sun/config.toml) -> directory(src/.sun.toml)
+- [x] **CFG-02**: 배열 병합 시 상위 레벨 값을 대체(replace), 객체는 deep merge
+- [x] **CFG-03**: 설정 값 타입 검증 (Zod 스키마)
 - [ ] **CFG-04**: `sunco settings` 스킬로 설정 조회/변경 가능
 
 ### Core Platform -- Skill System
@@ -205,9 +205,9 @@
 | CLI-02 | Phase 1: Core Platform | Pending |
 | CLI-03 | Phase 1: Core Platform | Pending |
 | CLI-04 | Phase 1: Core Platform | Pending |
-| CFG-01 | Phase 1: Core Platform | Pending |
-| CFG-02 | Phase 1: Core Platform | Pending |
-| CFG-03 | Phase 1: Core Platform | Pending |
+| CFG-01 | Phase 1: Core Platform | Complete |
+| CFG-02 | Phase 1: Core Platform | Complete |
+| CFG-03 | Phase 1: Core Platform | Complete |
 | CFG-04 | Phase 1: Core Platform | Pending |
 | SKL-01 | Phase 1: Core Platform | Pending |
 | SKL-02 | Phase 1: Core Platform | Pending |
