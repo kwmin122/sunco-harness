@@ -1,0 +1,89 @@
+/**
+ * @sunco/core - Convention-Based Skill Scanner
+ *
+ * Discovers skill files from convention paths (packages/skills-{name}/src/{name}.skill.ts).
+ * Each file is dynamically imported and its default export is extracted.
+ *
+ * Phase 1: Dynamic import approach.
+ * Production: Pre-built manifest (future optimization).
+ *
+ * Decision: SKL-03 (convention-based discovery)
+ */
+
+import { glob } from 'glob';
+import type { SkillDefinition } from './types.js';
+
+// ---------------------------------------------------------------------------
+// Scanner
+// ---------------------------------------------------------------------------
+
+/**
+ * Scan base paths for *.skill.ts files and dynamically import them.
+ *
+ * @param basePaths - Array of directory paths to scan (e.g., ['packages/skills-harness/src'])
+ * @returns Array of validated SkillDefinition objects
+ *
+ * Behavior:
+ * - Non-existent paths return empty array (no throw)
+ * - Files without a default export are skipped (warning logged)
+ * - Files that fail import are skipped (warning logged)
+ */
+export async function scanSkillFiles(
+  basePaths: string[],
+): Promise<SkillDefinition[]> {
+  const skills: SkillDefinition[] = [];
+
+  for (const basePath of basePaths) {
+    let files: string[];
+    try {
+      files = await glob('**/*.skill.ts', {
+        cwd: basePath,
+        absolute: true,
+        nodir: true,
+      });
+    } catch {
+      // Non-existent path or permission error -- skip silently
+      continue;
+    }
+
+    for (const file of files) {
+      try {
+        const mod = await import(file);
+        const skill = mod.default ?? mod;
+
+        // Validate it looks like a SkillDefinition
+        if (isSkillDefinition(skill)) {
+          skills.push(skill);
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn(`[sun:scanner] Skipped ${file}: no valid skill export`);
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[sun:scanner] Failed to import ${file}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }
+  }
+
+  return skills;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Type guard: check if a value has the shape of a SkillDefinition.
+ */
+function isSkillDefinition(value: unknown): value is SkillDefinition {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.command === 'string' &&
+    typeof obj.kind === 'string' &&
+    typeof obj.execute === 'function'
+  );
+}

@@ -51,6 +51,20 @@ export type {
 } from './skill/types.js';
 
 // ---------------------------------------------------------------------------
+// Skill System Implementation
+// ---------------------------------------------------------------------------
+export { defineSkill, SkillDefinitionSchema } from './skill/define.js';
+export { scanSkillFiles } from './skill/scanner.js';
+export { SkillRegistry, createRegistry } from './skill/registry.js';
+export { resolveActiveSkills } from './skill/resolver.js';
+export {
+  createSkillContext,
+  createBlockedAgentProxy,
+} from './skill/context.js';
+export type { CreateSkillContextParams } from './skill/context.js';
+export { expandPreset, PRESET_REGISTRY } from './skill/preset.js';
+
+// ---------------------------------------------------------------------------
 // State Engine
 // ---------------------------------------------------------------------------
 export { SUN_DIR_STRUCTURE } from './state/types.js';
@@ -166,6 +180,33 @@ export type { ErrorBoxProps } from './ui/components/ErrorBox.js';
 
 export { RecommendationCard } from './ui/components/RecommendationCard.js';
 export type { RecommendationCardProps } from './ui/components/RecommendationCard.js';
+
+// ---------------------------------------------------------------------------
+// UI Interaction Patterns (Layer 3)
+// ---------------------------------------------------------------------------
+export { SkillEntry } from './ui/patterns/SkillEntry.js';
+export type { SkillEntryProps } from './ui/patterns/SkillEntry.js';
+
+export { InteractiveChoice } from './ui/patterns/InteractiveChoice.js';
+export type { InteractiveChoiceProps } from './ui/patterns/InteractiveChoice.js';
+
+export { SkillProgress } from './ui/patterns/SkillProgress.js';
+export type { SkillProgressProps } from './ui/patterns/SkillProgress.js';
+
+export { SkillResult as SkillResultPattern } from './ui/patterns/SkillResult.js';
+export type { SkillResultProps } from './ui/patterns/SkillResult.js';
+
+// ---------------------------------------------------------------------------
+// UI Hooks
+// ---------------------------------------------------------------------------
+export { useSelection, useKeymap } from './ui/hooks/index.js';
+export type { UseSelectionOptions, UseSelectionResult } from './ui/hooks/index.js';
+
+// ---------------------------------------------------------------------------
+// UI Session
+// ---------------------------------------------------------------------------
+export { StatusBar } from './ui/session/StatusBar.js';
+export type { StatusBarProps } from './ui/session/StatusBar.js';
 
 // ---------------------------------------------------------------------------
 // Base Errors
