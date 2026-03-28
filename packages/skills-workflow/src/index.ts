@@ -26,3 +26,6 @@ export { captureGitState } from './shared/git-state.js';
 
 // Skills
 export { statusSkill, progressSkill } from './status.skill.js';
+export { default as phaseSkill } from './phase.skill.js';
+export { default as pauseSkill } from './pause.skill.js';
+export { default as resumeSkill } from './resume.skill.js';
