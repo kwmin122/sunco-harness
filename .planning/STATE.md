@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-03-28T08:23:19.402Z"
+stopped_at: Completed 02-07-PLAN.md
+last_updated: "2026-03-28T08:33:21.241Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 10
   completed_phases: 1
   total_plans: 20
-  completed_plans: 18
+  completed_plans: 19
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (harness-skills) — EXECUTING
-Plan: 7 of 8
+Plan: 8 of 8
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -70,6 +70,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02 P05 | 6min | 2 tasks | 10 files |
 | Phase 02-harness-skills P03 | 11min | 2 tasks | 7 files |
 | Phase 02-harness-skills PP04 | 5min | 2 tasks | 6 files |
+| Phase 02-harness-skills P07 | 6min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,9 @@ Recent decisions affecting current work:
 - [Phase 02-harness-skills]: chalk@5 added as direct dependency for terminal color output in formatter
 - [Phase 02-harness-skills]: Violations enriched through formatter pipeline: runner outputs basic violations, formatter adds layer-aware fix_instruction
 - [Phase 02-harness-skills]: lint.skill.ts stores lint.lastResult in state for recommender integration
+- [Phase 02-harness-skills]: Promotion is suggest-only per D-21: guard generates pre-built SunLintRule JSON but never auto-writes to .sun/rules/
+- [Phase 02-harness-skills]: ESLint lintText() for incremental single-file linting in guard watch mode hot path
+- [Phase 02-harness-skills]: chokidar 5.0.0 with awaitWriteFinish stabilityThreshold=300ms for watch mode debounce
 
 ### Pending Todos
 
@@ -135,6 +139,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T08:23:19.398Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-03-28T08:33:21.236Z
+Stopped at: Completed 02-07-PLAN.md
 Resume file: None

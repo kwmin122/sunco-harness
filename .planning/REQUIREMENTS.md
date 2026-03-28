@@ -67,9 +67,9 @@
 - [x] **HRN-11**: `sunco health` -- 점수 기반 리포트 (숫자로 보여줌)
 - [x] **HRN-12**: `sunco agents` -- CLAUDE.md/agents.md/AGENTS.md 분석, 효율성 점수, 60줄 이하 검증
 - [x] **HRN-13**: `sunco agents` -- 분석+제안만, 자동 생성 안 함 (ETH Zurich 연구 반영)
-- [ ] **HRN-14**: `sunco guard` -- 안티패턴 감지 -> 린터 규칙 자동 승격 제안
-- [ ] **HRN-15**: `sunco guard` -- 매 에이전트 변경 후 자동 린트 (auto-lint-after-change)
-- [ ] **HRN-16**: `sunco guard` -- `sunco watch` 모드: 파일 변경 실시간 감시
+- [x] **HRN-14**: `sunco guard` -- 안티패턴 감지 -> 린터 규칙 자동 승격 제안
+- [x] **HRN-15**: `sunco guard` -- 매 에이전트 변경 후 자동 린트 (auto-lint-after-change)
+- [x] **HRN-16**: `sunco guard` -- `sunco watch` 모드: 파일 변경 실시간 감시
 
 ### Workflow -- 초기화 + 마일스톤
 
@@ -246,9 +246,9 @@
 | HRN-11 | Phase 2: Harness Skills | Complete |
 | HRN-12 | Phase 2: Harness Skills | Complete |
 | HRN-13 | Phase 2: Harness Skills | Complete |
-| HRN-14 | Phase 2: Harness Skills | Pending |
-| HRN-15 | Phase 2: Harness Skills | Pending |
-| HRN-16 | Phase 2: Harness Skills | Pending |
+| HRN-14 | Phase 2: Harness Skills | Complete |
+| HRN-15 | Phase 2: Harness Skills | Complete |
+| HRN-16 | Phase 2: Harness Skills | Complete |
 | SES-01 | Phase 3: Standalone TS Skills | Pending |
 | SES-02 | Phase 3: Standalone TS Skills | Pending |
 | SES-03 | Phase 3: Standalone TS Skills | Pending |
