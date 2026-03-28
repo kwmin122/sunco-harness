@@ -136,10 +136,10 @@
 
 ### Workflow -- 아이디어 캡처
 
-- [ ] **IDX-01**: `sunco note` -- 마찰 없는 메모 + `--tribal` 부족 지식 저장
-- [ ] **IDX-02**: `sunco todo` -- 할 일 추가/목록/완료
-- [ ] **IDX-03**: `sunco seed` -- 미래 아이디어 + 트리거 조건 (조건 충족 시 자동 표면화)
-- [ ] **IDX-04**: `sunco backlog` -- 백로그 주차장
+- [x] **IDX-01**: `sunco note` -- 마찰 없는 메모 + `--tribal` 부족 지식 저장
+- [x] **IDX-02**: `sunco todo` -- 할 일 추가/목록/완료
+- [x] **IDX-03**: `sunco seed` -- 미래 아이디어 + 트리거 조건 (조건 충족 시 자동 표면화)
+- [x] **IDX-04**: `sunco backlog` -- 백로그 주차장
 
 ### Workflow -- 페이즈 관리
 
@@ -254,10 +254,10 @@
 | SES-03 | Phase 3: Standalone TS Skills | Complete |
 | SES-04 | Phase 3: Standalone TS Skills | Complete |
 | SES-05 | Phase 3: Standalone TS Skills | Complete |
-| IDX-01 | Phase 3: Standalone TS Skills | Pending |
-| IDX-02 | Phase 3: Standalone TS Skills | Pending |
-| IDX-03 | Phase 3: Standalone TS Skills | Pending |
-| IDX-04 | Phase 3: Standalone TS Skills | Pending |
+| IDX-01 | Phase 3: Standalone TS Skills | Complete |
+| IDX-02 | Phase 3: Standalone TS Skills | Complete |
+| IDX-03 | Phase 3: Standalone TS Skills | Complete |
+| IDX-04 | Phase 3: Standalone TS Skills | Complete |
 | PHZ-01 | Phase 3: Standalone TS Skills | Complete |
 | PHZ-02 | Phase 3: Standalone TS Skills | Complete |
 | PHZ-03 | Phase 3: Standalone TS Skills | Complete |
