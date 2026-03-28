@@ -34,3 +34,4 @@ export { default as noteSkill } from './note.skill.js';
 export { default as todoSkill } from './todo.skill.js';
 export { default as seedSkill } from './seed.skill.js';
 export { default as backlogSkill } from './backlog.skill.js';
+export { default as settingsSkill } from './settings.skill.js';
