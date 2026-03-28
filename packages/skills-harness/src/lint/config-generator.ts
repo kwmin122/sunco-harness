@@ -7,6 +7,10 @@
  * The default policy is 'disallow' (per D-07): all cross-layer imports are
  * forbidden unless explicitly allowed by canImportFrom rules.
  *
+ * Key insight: eslint-plugin-boundaries uses `mode: 'folder'` for directory-based
+ * element matching. Dependency rules use `{ from: { type }, allow: { to: { type } } }`
+ * format (not array-based).
+ *
  * Decisions: D-06 (hybrid ESLint approach), D-07 (layers -> boundaries mapping)
  */
 
@@ -15,15 +19,15 @@ import type { DetectedLayer } from '../init/types.js';
 import type { BoundariesConfig, BoundariesDependencyRule, BoundariesElement } from './types.js';
 
 // eslint-plugin-boundaries is CJS; use createRequire for reliable import in ESM
-// (Same pattern as picomatch in Phase 1 -- D-92 decision)
+// (Same pattern as picomatch in Phase 1)
 const require = createRequire(import.meta.url);
 
 /**
  * Generate a BoundariesConfig from detected architectural layers.
  *
  * Maps each DetectedLayer to:
- * - A BoundariesElement (type + pattern for file matching)
- * - A BoundariesDependencyRule (from this layer, allow imports to canImportFrom layers)
+ * - A BoundariesElement with `mode: 'folder'` for directory matching
+ * - A BoundariesDependencyRule in the plugin's native `from/allow` format
  *
  * @param layers - Detected layers from init detection
  * @returns BoundariesConfig ready for ESLint flat config generation
@@ -32,11 +36,16 @@ export function generateBoundariesConfig(layers: DetectedLayer[]): BoundariesCon
   const elements: BoundariesElement[] = layers.map((layer) => ({
     type: layer.name,
     pattern: layer.pattern,
+    mode: 'folder' as const,
   }));
 
   const dependencyRules: BoundariesDependencyRule[] = layers.map((layer) => ({
-    from: [{ type: layer.name }],
-    allow: layer.canImportFrom.map((dep) => ({ type: dep })),
+    from: { type: layer.name },
+    allow: {
+      to: {
+        type: layer.canImportFrom.length > 0 ? layer.canImportFrom : [],
+      },
+    },
   }));
 
   return { elements, dependencyRules };
@@ -48,6 +57,7 @@ export function generateBoundariesConfig(layers: DetectedLayer[]): BoundariesCon
  * Produces a single config object with:
  * - `plugins.boundaries`: the eslint-plugin-boundaries plugin instance
  * - `settings['boundaries/elements']`: element type definitions
+ * - `settings['boundaries/include']`: file patterns to analyze
  * - `rules['boundaries/dependencies']`: dependency direction enforcement
  *
  * The default policy is 'disallow' -- only explicitly allowed imports pass.
@@ -64,6 +74,7 @@ export function generateEslintFlatConfig(config: BoundariesConfig): object[] {
       plugins: { boundaries: boundariesPlugin },
       settings: {
         'boundaries/elements': config.elements,
+        'boundaries/include': ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
       },
       rules: {
         'boundaries/dependencies': [

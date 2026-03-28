@@ -85,16 +85,28 @@ export interface LintResult {
 export interface BoundariesElement {
   /** Element type name matching DetectedLayer.name */
   readonly type: string;
-  /** Glob pattern matching this element's files */
+  /**
+   * Directory pattern matching this element's files.
+   * With mode:'folder', this is a relative path like 'src/ui'.
+   */
   readonly pattern: string;
+  /**
+   * Matching mode for the pattern.
+   * 'folder' matches files inside the directory.
+   * Default: 'folder' for directory-based layer detection.
+   */
+  readonly mode: 'folder' | 'file' | 'full';
 }
 
-/** A dependency direction rule for eslint-plugin-boundaries */
+/**
+ * A dependency direction rule for eslint-plugin-boundaries.
+ * Uses the plugin's native format: { from: { type }, allow: { to: { type } } }
+ */
 export interface BoundariesDependencyRule {
-  /** Source element types this rule applies to */
-  readonly from: Array<{ type: string }>;
-  /** Target element types that are allowed to be imported */
-  readonly allow: Array<{ type: string }>;
+  /** Source element type selector */
+  readonly from: { type: string };
+  /** Allowed target element type(s) */
+  readonly allow: { to: { type: string | string[] } };
 }
 
 /** Complete boundaries configuration generated from detected layers */

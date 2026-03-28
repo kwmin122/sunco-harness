@@ -3,7 +3,7 @@
  * Uses in-memory mock of FileStoreApi.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { FileStoreApi } from '@sunco/core/src/state/types.js';
+import type { FileStoreApi } from '@sunco/core';
 import type { SunLintRule } from '../types.js';
 import { loadRules, saveRule } from '../rule-store.js';
 

@@ -10,7 +10,7 @@
  * Decision: D-10 (lint rules in .sun/rules/ as JSON)
  */
 
-import type { FileStoreApi } from '@sunco/core/src/state/types.js';
+import type { FileStoreApi } from '@sunco/core';
 import type { SunLintRule } from './types.js';
 
 /** Category name for rules in the FileStore (.sun/rules/) */
