@@ -7,7 +7,9 @@
  * Skills:
  *   - core.settings: View and manage TOML configuration (CFG-04)
  *   - sample.prompt: Sample skill demonstrating agent dispatch (SKL-05)
+ *   - harness.agents: Analyze agent instruction files (HRN-12, HRN-13)
  */
 
 export { default as settingsSkill } from './settings.skill.js';
 export { default as samplePromptSkill } from './sample-prompt.skill.js';
+export { default as agentsSkill } from './agents.skill.js';
