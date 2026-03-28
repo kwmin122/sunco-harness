@@ -100,7 +100,13 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User runs `sunco new` with an idea and gets guided through interactive questions, parallel research runs, auto-generated requirements, and a roadmap -- all in one flow
   2. User runs `sunco scan` on an existing codebase and gets 7 analysis documents (stack, architecture, structure, conventions, tests, integrations, concerns) written to .sun/
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 04-01-PLAN.md -- askText() UI infrastructure, detectEcosystems export, pre-scan + planning-writer utilities
+- [ ] 04-02-PLAN.md -- sunco scan skill with 7 prompt templates and parallel agent dispatch
+- [ ] 04-03-PLAN.md -- sunco new skill with multi-step orchestration (idea -> questions -> research -> synthesis)
+- [ ] 04-04-PLAN.md -- CLI wiring, build config, integration verification
 
 ### Phase 5: Context + Planning
 **Goal**: Users can refine vision, preview agent approaches, research domains, and create BDD-driven execution plans before any code is written
@@ -173,7 +179,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 | 1. Core Platform | 12/12 | Complete |  |
 | 2. Harness Skills | 0/8 | Not started | - |
 | 3. Standalone TS Skills | 0/6 | Not started | - |
-| 4. Project Initialization | 0/? | Not started | - |
+| 4. Project Initialization | 0/4 | Not started | - |
 | 5. Context + Planning | 0/? | Not started | - |
 | 6. Execution + Review | 0/? | Not started | - |
 | 7. Verification Pipeline | 0/? | Not started | - |
