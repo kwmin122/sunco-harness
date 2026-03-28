@@ -39,5 +39,14 @@ export { default as settingsSkill } from './settings.skill.js';
 export { default as newSkill } from './new.skill.js';
 export { default as scanSkill } from './scan.skill.js';
 
+// Phase 5 context + planning skills
+export { default as discussSkill } from './discuss.skill.js';
+export { default as assumeSkill } from './assume.skill.js';
+export { default as researchSkill } from './research.skill.js';
+export { default as planSkill } from './plan.skill.js';
+
+// Phase 5 shared utilities
+export { resolvePhaseDir, readPhaseArtifact, writePhaseArtifact } from './shared/phase-reader.js';
+
 // Prompt builders (for extensibility)
 export { buildResearchPrompt, buildSynthesisPrompt } from './prompts/index.js';

@@ -23,6 +23,10 @@ export { buildDiscussScenarioPrompt } from './discuss-scenario.js';
 // Assume prompt builder (from plan 05-02)
 export { buildAssumePrompt } from './assume.js';
 
+// Phase 5 research prompts (distinct from Phase 4's research.ts)
+export { buildResearchDomainPrompt } from './research-domain.js';
+export { buildResearchSynthesizePrompt } from './research-synthesize.js';
+
 // Plan prompt builders (from plan 05-04)
 export { buildPlanCreatePrompt, buildPlanRevisePrompt } from './plan-create.js';
 export { buildPlanCheckerPrompt } from './plan-checker.js';

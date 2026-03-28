@@ -42,6 +42,10 @@ import {
   settingsSkill as workflowSettingsSkill,
   newSkill,
   scanSkill,
+  discussSkill,
+  assumeSkill,
+  researchSkill,
+  planSkill,
 } from '@sunco/skills-workflow';
 
 /**
@@ -76,6 +80,11 @@ const preloadedSkills = [
   // Phase 4 project initialization skills
   newSkill,
   scanSkill,
+  // Phase 5 context + planning skills
+  discussSkill,
+  assumeSkill,
+  researchSkill,
+  planSkill,
 ];
 
 async function main(): Promise<void> {

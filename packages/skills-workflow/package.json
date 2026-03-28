@@ -60,6 +60,22 @@
     "./scan": {
       "import": "./dist/scan.skill.js",
       "types": "./dist/scan.skill.d.ts"
+    },
+    "./discuss": {
+      "import": "./dist/discuss.skill.js",
+      "types": "./dist/discuss.skill.d.ts"
+    },
+    "./assume": {
+      "import": "./dist/assume.skill.js",
+      "types": "./dist/assume.skill.d.ts"
+    },
+    "./research-skill": {
+      "import": "./dist/research.skill.js",
+      "types": "./dist/research.skill.d.ts"
+    },
+    "./plan": {
+      "import": "./dist/plan.skill.js",
+      "types": "./dist/plan.skill.d.ts"
     }
   },
   "scripts": {

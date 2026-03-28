@@ -352,7 +352,7 @@ export default defineSkill({
       const result = await ctx.ui.ask({
         message: `[${assumption.confidence}] ${assumption.area}: ${assumption.assumption}`,
         options: [
-          { id: 'approve', label: 'Correct', recommended: true },
+          { id: 'approve', label: 'Correct', isRecommended: true },
           { id: 'correct', label: 'Needs correction' },
         ],
       });
