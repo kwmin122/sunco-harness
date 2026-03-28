@@ -38,7 +38,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 11 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Monorepo scaffold (Turborepo + npm workspaces + tsup bundling)
+- [x] 01-01-PLAN.md -- Monorepo scaffold (Turborepo + npm workspaces + tsup bundling)
 - [ ] 01-01b-PLAN.md -- TypeScript type contracts (all Phase 1 interfaces and Zod schemas)
 - [ ] 01-02-PLAN.md -- Config System (TOML loading, merge, Zod validation)
 - [ ] 01-03-PLAN.md -- State Engine (SQLite WAL, flat files, .sun/ directory)

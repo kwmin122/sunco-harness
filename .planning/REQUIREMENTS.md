@@ -7,7 +7,7 @@
 
 ### Core Platform -- CLI Engine
 
-- [ ] **CLI-01**: `sunco` 바이너리가 npm으로 설치 가능 (npx sunco / npm install -g sunco)
+- [x] **CLI-01**: `sunco` 바이너리가 npm으로 설치 가능 (npx sunco / npm install -g sunco)
 - [ ] **CLI-02**: Commander.js 기반 서브커맨드 라우팅, 스킬 자동 발견/등록
 - [ ] **CLI-03**: `sunco --help` / `sunco <skill> --help`로 도움말 표시
 - [ ] **CLI-04**: 스킬 미설치/미발견 시 명확한 에러 메시지 + 추천
@@ -201,7 +201,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLI-01 | Phase 1: Core Platform | Pending |
+| CLI-01 | Phase 1: Core Platform | Complete |
 | CLI-02 | Phase 1: Core Platform | Pending |
 | CLI-03 | Phase 1: Core Platform | Pending |
 | CLI-04 | Phase 1: Core Platform | Pending |
