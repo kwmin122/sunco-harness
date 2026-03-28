@@ -144,8 +144,8 @@ describe('FileStore', () => {
       await expect(store.read('rules', '../../../etc/passwd')).rejects.toThrow();
     });
 
-    it('throws on absolute path in category', async () => {
-      await expect(store.read('/etc', 'passwd')).rejects.toThrow();
+    it('throws on category that resolves outside via ..', async () => {
+      await expect(store.read('rules/../../..', 'passwd')).rejects.toThrow();
     });
 
     it('throws on write with path traversal', async () => {
