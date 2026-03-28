@@ -39,3 +39,16 @@ export type { ExecuteAgentSummary } from './execute.js';
 export { buildReviewPrompt, REVIEW_DIMENSIONS } from './review.js';
 export type { ReviewFinding } from './review.js';
 export { buildReviewSynthesizePrompt } from './review-synthesize.js';
+
+// Verify expert prompt builders (from plan 07-01)
+export { buildVerifySecurityPrompt } from './verify-security.js';
+export { buildVerifyPerformancePrompt } from './verify-performance.js';
+export { buildVerifyArchitecturePrompt } from './verify-architecture.js';
+export { buildVerifyCorrectnessPrompt } from './verify-correctness.js';
+export { buildVerifyCoordinatorPrompt } from './verify-coordinator.js';
+export { buildVerifyAdversarialPrompt } from './verify-adversarial.js';
+export { buildVerifyIntentPrompt } from './verify-intent.js';
+
+// Test generation prompt builders (from plan 07-01)
+export { buildTestGenPrompt } from './test-gen.js';
+export { buildTestGenMockPrompt } from './test-gen-mock.js';
