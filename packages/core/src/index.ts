@@ -51,7 +51,7 @@ export type {
 } from './skill/types.js';
 
 // ---------------------------------------------------------------------------
-// State Engine Types
+// State Engine
 // ---------------------------------------------------------------------------
 export { SUN_DIR_STRUCTURE } from './state/types.js';
 export type {
@@ -60,6 +60,10 @@ export type {
   StateEngine,
   SunDirKey,
 } from './state/types.js';
+export { createStateEngine } from './state/api.js';
+export { initSunDirectory, ensureSunDir } from './state/directory.js';
+export { createDatabase, StateDatabase } from './state/database.js';
+export { FileStore } from './state/file-store.js';
 
 // ---------------------------------------------------------------------------
 // Agent System Types
