@@ -138,7 +138,7 @@ Plans:
 - [x] 06-01-PLAN.md -- Shared infrastructure: PLAN.md parser + Git worktree manager + tests
 - [x] 06-02-PLAN.md -- sunco execute skill (wave orchestration, worktree isolation, cherry-pick merge-back)
 - [x] 06-03-PLAN.md -- sunco review skill (multi-provider cross-review, synthesis into REVIEWS.md)
-- [ ] 06-04-PLAN.md -- CLI wiring, barrel exports, tsup config, build verification
+- [x] 06-04-PLAN.md -- CLI wiring, barrel exports, tsup config, build verification
 
 ### Phase 7: Verification Pipeline
 **Goal**: Users can verify agent output through 5 independent safety layers, run test coverage audits, and generate tests with mock servers -- the Swiss cheese model is fully operational
