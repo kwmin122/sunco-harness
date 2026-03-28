@@ -103,15 +103,15 @@
 
 ### Workflow -- 검증 (Review Architecture)
 
-- [ ] **VRF-01**: `sunco verify` -- Layer 1: Multi-Agent Generation (여러 에이전트 독립 검증)
-- [ ] **VRF-02**: `sunco verify` -- Layer 2: Deterministic Guardrails (sunco lint + guard + pre-commit)
-- [ ] **VRF-03**: `sunco verify` -- Layer 3: Human-Defined Acceptance Criteria (BDD 시나리오)
-- [ ] **VRF-04**: `sunco verify` -- Layer 4: Agent Permission Scoping (역할별 권한)
-- [ ] **VRF-05**: `sunco verify` -- Layer 5: Adversarial Verification (실행 != 검증 에이전트)
+- [x] **VRF-01**: `sunco verify` -- Layer 1: Multi-Agent Generation (여러 에이전트 독립 검증)
+- [x] **VRF-02**: `sunco verify` -- Layer 2: Deterministic Guardrails (sunco lint + guard + pre-commit)
+- [x] **VRF-03**: `sunco verify` -- Layer 3: Human-Defined Acceptance Criteria (BDD 시나리오)
+- [x] **VRF-04**: `sunco verify` -- Layer 4: Agent Permission Scoping (역할별 권한)
+- [x] **VRF-05**: `sunco verify` -- Layer 5: Adversarial Verification (실행 != 검증 에이전트)
 - [x] **VRF-06**: `sunco verify` -- 전문가 에이전트: Security, Performance, Architecture, Correctness + Coordinator
-- [ ] **VRF-07**: `sunco verify` -- Intent Reconstruction: diff가 아닌 의도 대비 결과
-- [ ] **VRF-08**: `sunco verify` -- Scenario Holdout: .sun/scenarios/ (코딩 에이전트 접근 불가, 검증 에이전트만)
-- [ ] **VRF-09**: `sunco verify` -- 나이퀴스트 원칙: 태스크 단위(50-100줄) 즉시 검증
+- [x] **VRF-07**: `sunco verify` -- Intent Reconstruction: diff가 아닌 의도 대비 결과
+- [x] **VRF-08**: `sunco verify` -- Scenario Holdout: .sun/scenarios/ (코딩 에이전트 접근 불가, 검증 에이전트만)
+- [x] **VRF-09**: `sunco verify` -- 나이퀴스트 원칙: 태스크 단위(50-100줄) 즉시 검증
 - [x] **VRF-10**: `sunco validate` -- 테스트 커버리지 감사 (결정적)
 - [x] **VRF-11**: `sunco test-gen` -- 유닛/E2E 테스트 자동 생성 + --mock-external (Digital Twin Mock 서버)
 
@@ -154,8 +154,8 @@
 ### Review Architecture (전 영역 관통)
 
 - [ ] **REV-01**: 6단계 리뷰 파이프라인 (아이디어->스펙->플랜->실행->검증->배포) 각 단계에서 해당 스킬 자동 연결
-- [ ] **REV-02**: Tribal Knowledge Store (.sun/tribal/) -- sunco note --tribal로 캡처, sunco verify가 자동 로드
-- [ ] **REV-03**: Human Gate -- 부족 지식 + 규제 경로만 사람이 블로킹, 나머지 자동
+- [x] **REV-02**: Tribal Knowledge Store (.sun/tribal/) -- sunco note --tribal로 캡처, sunco verify가 자동 로드
+- [x] **REV-03**: Human Gate -- 부족 지식 + 규제 경로만 사람이 블로킹, 나머지 자동
 - [x] **REV-04**: Digital Twin -- sunco test-gen --mock-external이 API 문서->모방 서버 생성
 
 ### 인터랙티브 UX
@@ -271,20 +271,20 @@
 | WF-12 | Phase 5: Context + Planning | Complete |
 | WF-13 | Phase 6: Execution + Review | Complete |
 | WF-14 | Phase 6: Execution + Review | Complete |
-| VRF-01 | Phase 7: Verification Pipeline | Pending |
-| VRF-02 | Phase 7: Verification Pipeline | Pending |
-| VRF-03 | Phase 7: Verification Pipeline | Pending |
-| VRF-04 | Phase 7: Verification Pipeline | Pending |
-| VRF-05 | Phase 7: Verification Pipeline | Pending |
+| VRF-01 | Phase 7: Verification Pipeline | Complete |
+| VRF-02 | Phase 7: Verification Pipeline | Complete |
+| VRF-03 | Phase 7: Verification Pipeline | Complete |
+| VRF-04 | Phase 7: Verification Pipeline | Complete |
+| VRF-05 | Phase 7: Verification Pipeline | Complete |
 | VRF-06 | Phase 7: Verification Pipeline | Complete |
-| VRF-07 | Phase 7: Verification Pipeline | Pending |
-| VRF-08 | Phase 7: Verification Pipeline | Pending |
-| VRF-09 | Phase 7: Verification Pipeline | Pending |
+| VRF-07 | Phase 7: Verification Pipeline | Complete |
+| VRF-08 | Phase 7: Verification Pipeline | Complete |
+| VRF-09 | Phase 7: Verification Pipeline | Complete |
 | VRF-10 | Phase 7: Verification Pipeline | Complete |
 | VRF-11 | Phase 7: Verification Pipeline | Complete |
 | REV-01 | Phase 7: Verification Pipeline | Pending |
-| REV-02 | Phase 7: Verification Pipeline | Pending |
-| REV-03 | Phase 7: Verification Pipeline | Pending |
+| REV-02 | Phase 7: Verification Pipeline | Complete |
+| REV-03 | Phase 7: Verification Pipeline | Complete |
 | REV-04 | Phase 7: Verification Pipeline | Complete |
 | SHP-01 | Phase 8: Shipping + Milestones | Pending |
 | SHP-02 | Phase 8: Shipping + Milestones | Pending |
