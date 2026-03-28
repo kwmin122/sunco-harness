@@ -17,3 +17,7 @@ export { buildScanConcernsPrompt } from './scan-concerns.js';
 
 // Assume prompt builder (from plan 05-02)
 export { buildAssumePrompt } from './assume.js';
+
+// Plan prompt builders (from plan 05-04)
+export { buildPlanCreatePrompt, buildPlanRevisePrompt } from './plan-create.js';
+export { buildPlanCheckerPrompt } from './plan-checker.js';
