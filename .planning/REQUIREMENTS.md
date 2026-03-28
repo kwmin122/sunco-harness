@@ -153,7 +153,7 @@
 
 ### Review Architecture (전 영역 관통)
 
-- [ ] **REV-01**: 6단계 리뷰 파이프라인 (아이디어->스펙->플랜->실행->검증->배포) 각 단계에서 해당 스킬 자동 연결
+- [x] **REV-01**: 6단계 리뷰 파이프라인 (아이디어->스펙->플랜->실행->검증->배포) 각 단계에서 해당 스킬 자동 연결
 - [x] **REV-02**: Tribal Knowledge Store (.sun/tribal/) -- sunco note --tribal로 캡처, sunco verify가 자동 로드
 - [x] **REV-03**: Human Gate -- 부족 지식 + 규제 경로만 사람이 블로킹, 나머지 자동
 - [x] **REV-04**: Digital Twin -- sunco test-gen --mock-external이 API 문서->모방 서버 생성
@@ -282,7 +282,7 @@
 | VRF-09 | Phase 7: Verification Pipeline | Complete |
 | VRF-10 | Phase 7: Verification Pipeline | Complete |
 | VRF-11 | Phase 7: Verification Pipeline | Complete |
-| REV-01 | Phase 7: Verification Pipeline | Pending |
+| REV-01 | Phase 7: Verification Pipeline | Complete |
 | REV-02 | Phase 7: Verification Pipeline | Complete |
 | REV-03 | Phase 7: Verification Pipeline | Complete |
 | REV-04 | Phase 7: Verification Pipeline | Complete |

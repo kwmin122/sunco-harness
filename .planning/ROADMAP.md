@@ -156,7 +156,7 @@ Plans:
 - [x] 07-01-PLAN.md -- Foundation: verify types, coverage parser, 9 prompt builders (7 verify expert + 2 test-gen)
 - [x] 07-02-PLAN.md -- sunco verify skill (5-layer Swiss cheese model with parallel expert agents)
 - [x] 07-03-PLAN.md -- sunco validate (coverage audit) + sunco test-gen (test generation + Digital Twin)
-- [ ] 07-04-PLAN.md -- Recommender rules for verification pipeline + CLI wiring + build verification
+- [x] 07-04-PLAN.md -- Recommender rules for verification pipeline + CLI wiring + build verification
 
 ### Phase 8: Shipping + Milestones
 **Goal**: Users can ship PRs through quality gates, publish releases, and manage full milestone lifecycles
