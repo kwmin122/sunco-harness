@@ -132,7 +132,13 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User runs `sunco execute` and tasks run in parallel via Git worktrees with atomic commits per task; each task is isolated and rollback-safe
   2. User runs `sunco review --codex --gemini` and gets independent reviews from multiple providers that are synthesized into a unified report
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 06-01-PLAN.md -- Shared infrastructure: PLAN.md parser + Git worktree manager + tests
+- [ ] 06-02-PLAN.md -- sunco execute skill (wave orchestration, worktree isolation, cherry-pick merge-back)
+- [ ] 06-03-PLAN.md -- sunco review skill (multi-provider cross-review, synthesis into REVIEWS.md)
+- [ ] 06-04-PLAN.md -- CLI wiring, barrel exports, tsup config, build verification
 
 ### Phase 7: Verification Pipeline
 **Goal**: Users can verify agent output through 5 independent safety layers, run test coverage audits, and generate tests with mock servers -- the Swiss cheese model is fully operational
@@ -188,7 +194,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 | 3. Standalone TS Skills | 0/6 | Not started | - |
 | 4. Project Initialization | 4/4 | Complete |  |
 | 5. Context + Planning | 0/5 | Not started | - |
-| 6. Execution + Review | 0/? | Not started | - |
+| 6. Execution + Review | 0/4 | Not started | - |
 | 7. Verification Pipeline | 0/? | Not started | - |
 | 8. Shipping + Milestones | 0/? | Not started | - |
 | 9. Composition Skills | 0/? | Not started | - |
