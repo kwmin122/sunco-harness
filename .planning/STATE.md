@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-08-PLAN.md
-last_updated: "2026-03-28T04:09:11.263Z"
+stopped_at: Completed 01-10-PLAN.md
+last_updated: "2026-03-28T06:33:13.791Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 10
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 01 (core-platform) — EXECUTING
-Plan: 11 of 11
+Plan: 2 of 11
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-core-platform P07 | 10min | 2 tasks | 14 files |
 | Phase 01 P09 | 4min | 2 tasks | 5 files |
 | Phase 01-core-platform P08 | 5min | 2 tasks | 8 files |
+| Phase 01-core-platform P10 | 4min | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 01-core-platform]: Levenshtein distance inline (~15 lines) for unknown command suggestions
 - [Phase 01-core-platform]: createNoopRecommender() for graceful recommender degradation via dynamic import fallback
 - [Phase 01-core-platform]: Shebang managed by tsup banner config, not in source file
+- [Phase 01-core-platform]: Dual skill loading: direct imports for bundling + scanner for runtime extensibility, preloaded takes priority
+- [Phase 01-core-platform]: CLI externals: ink/react/ai-sdk external, workspace packages bundled via noExternal for npm distribution
 
 ### Pending Todos
 
@@ -109,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T04:09:11.260Z
-Stopped at: Completed 01-08-PLAN.md
+Last session: 2026-03-28T06:33:13.786Z
+Stopped at: Completed 01-10-PLAN.md
 Resume file: None

@@ -48,7 +48,7 @@ Plans:
 - [x] 01-07-PLAN.md -- UI Patterns (SkillEntry, InteractiveChoice, SkillProgress, SkillResult + tests)
 - [x] 01-08-PLAN.md -- CLI Engine (Commander.js, skill router, lifecycle with graceful recommender)
 - [x] 01-09-PLAN.md -- Proactive Recommender (rule engine, 25+ rules)
-- [ ] 01-10-PLAN.md -- Integration (settings skill, sample-prompt skill, E2E verification)
+- [x] 01-10-PLAN.md -- Integration (settings skill, sample-prompt skill, E2E verification)
 
 ### Phase 2: Harness Skills
 **Goal**: Users can analyze, lint, and guard any codebase with deterministic harness skills -- the zero-LLM-cost backbone that makes agents make fewer mistakes
