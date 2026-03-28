@@ -123,7 +123,7 @@ Plans:
 - [x] 05-02-PLAN.md -- sunco assume skill (approach preview + CONTEXT.md correction append)
 - [x] 05-03-PLAN.md -- sunco research skill (parallel agent dispatch + synthesis into RESEARCH.md)
 - [x] 05-04-PLAN.md -- sunco plan skill (plan-checker validation loop + BDD completion criteria)
-- [ ] 05-05-PLAN.md -- CLI wiring, barrel exports, tsup config, build verification
+- [x] 05-05-PLAN.md -- CLI wiring, barrel exports, tsup config, build verification
 
 ### Phase 6: Execution + Review
 **Goal**: Users can execute plans with parallel agents in isolated worktrees and get independent cross-provider code review
