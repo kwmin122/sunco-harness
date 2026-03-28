@@ -4,6 +4,11 @@
  * Wires all subsystems together: config, state, skills, agent router,
  * UI adapter, and recommender. Then parses CLI args via Commander.js.
  *
+ * Dual skill loading strategy:
+ * - Direct imports: skills are bundled into the CLI binary (production)
+ * - Scanner: discovers additional skill files at runtime (development/extensibility)
+ * Direct imports take priority; scanner skips already-registered skill IDs (D-14).
+ *
  * Usage:
  *   npx sunco          - run with npx
  *   sunco              - run globally installed
@@ -14,6 +19,14 @@
  */
 
 import { createProgram, registerSkills, createLifecycle } from '@sunco/core';
+import { settingsSkill, samplePromptSkill } from '@sunco/skills-harness';
+
+/**
+ * Pre-loaded skills: directly imported to ensure they are bundled by tsup.
+ * These are registered BEFORE the filesystem scanner runs, so they take
+ * priority over dynamically discovered duplicates.
+ */
+const preloadedSkills = [settingsSkill, samplePromptSkill];
 
 async function main(): Promise<void> {
   const program = createProgram();
@@ -22,7 +35,7 @@ async function main(): Promise<void> {
   let services: Awaited<ReturnType<typeof lifecycle.boot>> | undefined;
 
   try {
-    services = await lifecycle.boot(process.cwd());
+    services = await lifecycle.boot(process.cwd(), { preloadedSkills });
     const executeHook = lifecycle.createExecuteHook(services);
 
     registerSkills(program, services.registry, executeHook);

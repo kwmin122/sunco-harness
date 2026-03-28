@@ -2,8 +2,12 @@
   "name": "@sunco/cli",
   "version": "0.0.1",
   "type": "module",
+  "files": ["dist"],
   "bin": {
     "sunco": "./dist/cli.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",
@@ -12,6 +16,7 @@
   },
   "dependencies": {
     "@sunco/core": "*",
+    "@sunco/skills-harness": "*",
     "commander": "14.0.3"
   },
   "devDependencies": {

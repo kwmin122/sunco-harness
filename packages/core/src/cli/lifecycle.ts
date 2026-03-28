@@ -46,10 +46,16 @@ export interface LifecycleServices {
   sunDir: string;
 }
 
+/** Options for the lifecycle boot phase */
+export interface BootOptions {
+  /** Pre-loaded skill definitions (e.g., directly imported for bundling) */
+  preloadedSkills?: import('../skill/types.js').SkillDefinition[];
+}
+
 /** Lifecycle API returned by createLifecycle() */
 export interface Lifecycle {
   /** Boot all subsystems and return initialized services */
-  boot(cwd: string): Promise<LifecycleServices>;
+  boot(cwd: string, options?: BootOptions): Promise<LifecycleServices>;
   /** Create the execute hook for Commander.js skill actions */
   createExecuteHook(services: LifecycleServices): SkillExecuteHook;
   /** Tear down services (close DB connections, etc.) */
@@ -104,7 +110,7 @@ export function createNoopRecommender(): RecommenderApi {
  */
 export function createLifecycle(): Lifecycle {
   return {
-    async boot(cwd: string): Promise<LifecycleServices> {
+    async boot(cwd: string, options?: BootOptions): Promise<LifecycleServices> {
       // Step 1: Load config
       const config = await loadConfig(cwd);
 
@@ -115,7 +121,15 @@ export function createLifecycle(): Lifecycle {
       const stateEngine = createStateEngine();
       await stateEngine.initialize(cwd);
 
-      // Step 4: Scan for skill files
+      // Step 4a: Register pre-loaded skills (direct imports for bundling)
+      // These take priority over scanner-discovered skills (D-14 dedup)
+      const registry = new SkillRegistry();
+      const preloaded = options?.preloadedSkills ?? [];
+      for (const skill of preloaded) {
+        registry.register(skill);
+      }
+
+      // Step 4b: Scan for skill files (development mode extensibility)
       // Convention: packages/skills-*/src/ contains *.skill.ts files
       const skillBasePaths = [
         join(cwd, 'packages', 'skills-harness', 'src'),
@@ -125,12 +139,13 @@ export function createLifecycle(): Lifecycle {
       const discovered = await scanSkillFiles(skillBasePaths);
 
       // Step 5: Resolve active skills via policy
-      const activeIds = resolveActiveSkills(discovered, config.skills);
+      // Include both preloaded and discovered for resolution
+      const allSkills = [...preloaded, ...discovered];
+      const activeIds = resolveActiveSkills(allSkills, config.skills);
 
-      // Step 6: Create registry and register active skills
-      const registry = new SkillRegistry();
+      // Step 6: Register scanner-discovered active skills (skip already-registered per D-14)
       for (const skill of discovered) {
-        if (activeIds.has(skill.id)) {
+        if (activeIds.has(skill.id) && !registry.has(skill.id)) {
           registry.register(skill);
         }
       }
