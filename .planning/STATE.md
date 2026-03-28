@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-03-28T03:46:20.451Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-03-28T03:46:29.920Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 10
@@ -78,6 +78,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Async wrapper over sync better-sqlite3 for future migration to async drivers
 - [Phase 01]: Prepared statements for all SQL operations (performance + safety)
 - [Phase 01]: FileStore path traversal guard via resolve/relative boundary check
+- [Phase 01]: Used Omit<InkBoxProps> pattern for theme token type compatibility with Ink
+- [Phase 01]: InkUiAdapter uses console.log scaffold -- full Ink rendering deferred to Plan 07
 
 ### Pending Todos
 
@@ -91,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T03:46:10.329Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-03-28T03:46:29.917Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
