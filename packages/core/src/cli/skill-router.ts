@@ -57,7 +57,11 @@ export function registerSkills(
     // Add skill-specific options
     if (skill.options) {
       for (const opt of skill.options) {
-        sub.option(opt.flags, opt.description, opt.defaultValue);
+        sub.option(
+          opt.flags,
+          opt.description,
+          opt.defaultValue as string | boolean | string[] | undefined,
+        );
       }
     }
 

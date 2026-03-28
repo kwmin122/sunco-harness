@@ -8,6 +8,14 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./settings": {
+      "import": "./dist/settings.skill.js",
+      "types": "./dist/settings.skill.d.ts"
+    },
+    "./sample-prompt": {
+      "import": "./dist/sample-prompt.skill.js",
+      "types": "./dist/sample-prompt.skill.d.ts"
     }
   },
   "scripts": {

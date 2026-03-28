@@ -18,6 +18,13 @@
 export const PRESET_REGISTRY: Readonly<Record<string, readonly string[]>> = {
   none: [],
 
+  core: [
+    'core.settings',
+    'core.status',
+    'core.next',
+    'core.progress',
+  ],
+
   harness: [
     'harness.init',
     'harness.lint',
