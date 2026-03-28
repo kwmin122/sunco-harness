@@ -97,6 +97,18 @@ export type {
 } from './agent/types.js';
 
 // ---------------------------------------------------------------------------
+// Agent Router + Providers
+// ---------------------------------------------------------------------------
+export { createAgentRouter } from './agent/router.js';
+export type { AgentRouterConfig } from './agent/router.js';
+export { ROLE_PERMISSIONS, enforcePermissions } from './agent/permission.js';
+export { ClaudeCliProvider } from './agent/providers/claude-cli.js';
+export { ClaudeSdkProvider } from './agent/providers/claude-sdk.js';
+export { normalizeResult } from './agent/result.js';
+export type { RawProviderResult } from './agent/result.js';
+export { UsageTracker } from './agent/tracker.js';
+
+// ---------------------------------------------------------------------------
 // Agent Errors
 // ---------------------------------------------------------------------------
 export {
