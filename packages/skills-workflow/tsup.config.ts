@@ -1,7 +1,14 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/phase.skill.ts', 'src/pause.skill.ts', 'src/resume.skill.ts'],
+  entry: [
+    'src/index.ts',
+    'src/status.skill.ts',
+    'src/next.skill.ts',
+    'src/context.skill.ts',
+    'src/pause.skill.ts',
+    'src/resume.skill.ts',
+  ],
   format: ['esm'],
   target: 'node22',
   dts: true,
