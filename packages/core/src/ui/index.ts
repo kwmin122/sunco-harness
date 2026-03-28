@@ -39,3 +39,9 @@ export type {
   UiOutcome,
   UiPatch,
 } from './adapters/UiAdapter.js';
+
+// Adapter implementations + factories
+export { SilentUiAdapter } from './adapters/SilentUiAdapter.js';
+export { InkUiAdapter } from './adapters/InkUiAdapter.js';
+export { createSkillUi, createUiAdapter } from './adapters/index.js';
+export type { CreateUiAdapterFlags } from './adapters/index.js';

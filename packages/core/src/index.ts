@@ -130,6 +130,14 @@ export type {
 } from './ui/adapters/UiAdapter.js';
 
 // ---------------------------------------------------------------------------
+// UI Adapter Implementations + Factories
+// ---------------------------------------------------------------------------
+export { SilentUiAdapter } from './ui/adapters/SilentUiAdapter.js';
+export { InkUiAdapter } from './ui/adapters/InkUiAdapter.js';
+export { createSkillUi, createUiAdapter } from './ui/adapters/index.js';
+export type { CreateUiAdapterFlags } from './ui/adapters/index.js';
+
+// ---------------------------------------------------------------------------
 // UI Theme
 // ---------------------------------------------------------------------------
 export { theme } from './ui/theme/tokens.js';
