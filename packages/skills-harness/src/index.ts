@@ -23,6 +23,9 @@ export { default as healthSkill } from './health.skill.js';
 export { default as agentsSkill } from './agents.skill.js';
 export { default as guardSkill } from './guard.skill.js';
 
+// --- Value re-exports ---
+export { detectEcosystems } from './init/ecosystem-detector.js';
+
 // --- Type re-exports ---
 export type {
   InitResult,

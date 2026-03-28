@@ -61,7 +61,9 @@
   },
   "dependencies": {
     "@sunco/core": "*",
+    "@sunco/skills-harness": "*",
     "chalk": "5.6.2",
+    "glob": "13.0.6",
     "simple-git": "3.33.0",
     "smol-toml": "1.6.1"
   },
