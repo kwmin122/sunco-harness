@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-28T08:00:07.235Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-28T08:07:55.323Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 10
   completed_phases: 1
   total_plans: 20
-  completed_plans: 13
+  completed_plans: 14
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (harness-skills) — EXECUTING
-Plan: 2 of 8
+Plan: 3 of 8
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-core-platform P10 | 4min | 3 tasks | 14 files |
 | Phase 01-core-platform P11 | 2min | 2 tasks | 2 files |
 | Phase 02-harness-skills P01 | 7min | 2 tasks | 13 files |
+| Phase 02-harness-skills P02 | 5min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,8 @@ Recent decisions affecting current work:
 - [Phase 01-core-platform]: Conditional provider registration: only available providers passed to createAgentRouter
 - [Phase 02-harness-skills]: legacy-peer-deps in .npmrc for typescript-eslint TS 6.0 peer dep conflict
 - [Phase 02-harness-skills]: Init detection modules as pure async functions with {cwd} opts for isolation
+- [Phase 02-harness-skills]: Completeness-weighted preset scoring: matchCount * 1000 + completeness_ratio * 100 prevents partial match overshadowing exact match
+- [Phase 02-harness-skills]: smol-toml as direct skills-harness dep for TOML config generation via stringify
 
 ### Pending Todos
 
@@ -118,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T08:00:07.231Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-28T08:07:55.319Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
