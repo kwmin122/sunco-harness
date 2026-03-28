@@ -47,10 +47,10 @@
 
 ### Core Platform -- Proactive Recommender
 
-- [ ] **REC-01**: 룰 엔진 기반 (state, lastResult) -> Recommendation[] 매핑
-- [ ] **REC-02**: 모든 스킬 실행 끝에 Next Best Action 추천 표시
-- [ ] **REC-03**: 상태 기반 라우팅: execute 끝->verify, verify 실패->debug, verify 성공->ship
-- [ ] **REC-04**: 추천 규칙 20-50개, 결정적 (LLM 사용 안 함), sub-ms 응답
+- [x] **REC-01**: 룰 엔진 기반 (state, lastResult) -> Recommendation[] 매핑
+- [x] **REC-02**: 모든 스킬 실행 끝에 Next Best Action 추천 표시
+- [x] **REC-03**: 상태 기반 라우팅: execute 끝->verify, verify 실패->debug, verify 성공->ship
+- [x] **REC-04**: 추천 규칙 20-50개, 결정적 (LLM 사용 안 함), sub-ms 응답
 
 ### Harness Skills
 
@@ -226,10 +226,10 @@
 | AGT-04 | Phase 1: Core Platform | Complete |
 | AGT-05 | Phase 1: Core Platform | Complete |
 | AGT-06 | Phase 1: Core Platform | Complete |
-| REC-01 | Phase 1: Core Platform | Pending |
-| REC-02 | Phase 1: Core Platform | Pending |
-| REC-03 | Phase 1: Core Platform | Pending |
-| REC-04 | Phase 1: Core Platform | Pending |
+| REC-01 | Phase 1: Core Platform | Complete |
+| REC-02 | Phase 1: Core Platform | Complete |
+| REC-03 | Phase 1: Core Platform | Complete |
+| REC-04 | Phase 1: Core Platform | Complete |
 | UX-01 | Phase 1: Core Platform | Complete |
 | UX-02 | Phase 1: Core Platform | Complete |
 | UX-03 | Phase 1: Core Platform | Complete |
