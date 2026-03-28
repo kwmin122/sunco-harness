@@ -21,12 +21,12 @@
 
 ### Core Platform -- Skill System
 
-- [ ] **SKL-01**: Skill 인터페이스 정의: name, description, type(deterministic/prompt/hybrid), execute(ctx)
-- [ ] **SKL-02**: SkillContext 제공: config, state, agentRouter, recommend, run(skillName)
-- [ ] **SKL-03**: 스킬 로더가 packages/skills-*에서 자동 발견 + 레지스트리 등록
-- [ ] **SKL-04**: 결정적 스킬은 Agent Router를 사용하지 않음 (LLM 비용 0)
+- [x] **SKL-01**: Skill 인터페이스 정의: name, description, type(deterministic/prompt/hybrid), execute(ctx)
+- [x] **SKL-02**: SkillContext 제공: config, state, agentRouter, recommend, run(skillName)
+- [x] **SKL-03**: 스킬 로더가 packages/skills-*에서 자동 발견 + 레지스트리 등록
+- [x] **SKL-04**: 결정적 스킬은 Agent Router를 사용하지 않음 (LLM 비용 0)
 - [ ] **SKL-05**: Prompt 스킬은 Agent Router를 통해 에이전트 디스패치
-- [ ] **SKL-06**: ctx.run('lint') 형태로 스킬 간 직접 호출 가능
+- [x] **SKL-06**: ctx.run('lint') 형태로 스킬 간 직접 호출 가능
 
 ### Core Platform -- State Engine
 
@@ -209,12 +209,12 @@
 | CFG-02 | Phase 1: Core Platform | Complete |
 | CFG-03 | Phase 1: Core Platform | Complete |
 | CFG-04 | Phase 1: Core Platform | Pending |
-| SKL-01 | Phase 1: Core Platform | Pending |
-| SKL-02 | Phase 1: Core Platform | Pending |
-| SKL-03 | Phase 1: Core Platform | Pending |
-| SKL-04 | Phase 1: Core Platform | Pending |
+| SKL-01 | Phase 1: Core Platform | Complete |
+| SKL-02 | Phase 1: Core Platform | Complete |
+| SKL-03 | Phase 1: Core Platform | Complete |
+| SKL-04 | Phase 1: Core Platform | Complete |
 | SKL-05 | Phase 1: Core Platform | Pending |
-| SKL-06 | Phase 1: Core Platform | Pending |
+| SKL-06 | Phase 1: Core Platform | Complete |
 | STE-01 | Phase 1: Core Platform | Complete |
 | STE-02 | Phase 1: Core Platform | Complete |
 | STE-03 | Phase 1: Core Platform | Complete |
