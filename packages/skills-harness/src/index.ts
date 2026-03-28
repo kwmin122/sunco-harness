@@ -15,7 +15,7 @@
  */
 
 // --- Skill exports ---
-export { default as settingsSkill } from './settings.skill.js';
+// Note: settingsSkill moved to @sunco/skills-workflow (enhanced with write-back)
 export { default as samplePromptSkill } from './sample-prompt.skill.js';
 export { default as initSkill } from './init.skill.js';
 export { default as lintSkill } from './lint.skill.js';

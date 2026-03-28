@@ -17,6 +17,7 @@
   "dependencies": {
     "@sunco/core": "*",
     "@sunco/skills-harness": "*",
+    "@sunco/skills-workflow": "*",
     "commander": "14.0.3"
   },
   "devDependencies": {

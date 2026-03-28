@@ -20,7 +20,6 @@
 
 import { createProgram, registerSkills, createLifecycle } from '@sunco/core';
 import {
-  settingsSkill,
   samplePromptSkill,
   initSkill,
   lintSkill,
@@ -28,20 +27,50 @@ import {
   agentsSkill,
   guardSkill,
 } from '@sunco/skills-harness';
+import {
+  statusSkill,
+  progressSkill,
+  nextSkill,
+  contextSkill,
+  noteSkill,
+  todoSkill,
+  seedSkill,
+  backlogSkill,
+  pauseSkill,
+  resumeSkill,
+  phaseSkill,
+  settingsSkill as workflowSettingsSkill,
+} from '@sunco/skills-workflow';
 
 /**
  * Pre-loaded skills: directly imported to ensure they are bundled by tsup.
  * These are registered BEFORE the filesystem scanner runs, so they take
  * priority over dynamically discovered duplicates.
+ *
+ * Phase 2 harness skills (settings removed -- replaced by workflow version)
+ * Phase 3 workflow skills (enhanced settings + 11 new skills)
  */
 const preloadedSkills = [
-  settingsSkill,
+  // Phase 2 harness skills
   samplePromptSkill,
   initSkill,
   lintSkill,
   healthSkill,
   agentsSkill,
   guardSkill,
+  // Phase 3 workflow skills
+  workflowSettingsSkill,  // Enhanced settings replaces harness version
+  statusSkill,
+  progressSkill,
+  nextSkill,
+  contextSkill,
+  noteSkill,
+  todoSkill,
+  seedSkill,
+  backlogSkill,
+  pauseSkill,
+  resumeSkill,
+  phaseSkill,
 ];
 
 async function main(): Promise<void> {

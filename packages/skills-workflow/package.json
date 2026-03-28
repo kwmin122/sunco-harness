@@ -8,6 +8,50 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./status": {
+      "import": "./dist/status.skill.js",
+      "types": "./dist/status.skill.d.ts"
+    },
+    "./next": {
+      "import": "./dist/next.skill.js",
+      "types": "./dist/next.skill.d.ts"
+    },
+    "./context": {
+      "import": "./dist/context.skill.js",
+      "types": "./dist/context.skill.d.ts"
+    },
+    "./pause": {
+      "import": "./dist/pause.skill.js",
+      "types": "./dist/pause.skill.d.ts"
+    },
+    "./resume": {
+      "import": "./dist/resume.skill.js",
+      "types": "./dist/resume.skill.d.ts"
+    },
+    "./note": {
+      "import": "./dist/note.skill.js",
+      "types": "./dist/note.skill.d.ts"
+    },
+    "./todo": {
+      "import": "./dist/todo.skill.js",
+      "types": "./dist/todo.skill.d.ts"
+    },
+    "./seed": {
+      "import": "./dist/seed.skill.js",
+      "types": "./dist/seed.skill.d.ts"
+    },
+    "./backlog": {
+      "import": "./dist/backlog.skill.js",
+      "types": "./dist/backlog.skill.d.ts"
+    },
+    "./phase": {
+      "import": "./dist/phase.skill.js",
+      "types": "./dist/phase.skill.d.ts"
+    },
+    "./settings": {
+      "import": "./dist/settings.skill.js",
+      "types": "./dist/settings.skill.d.ts"
     }
   },
   "scripts": {

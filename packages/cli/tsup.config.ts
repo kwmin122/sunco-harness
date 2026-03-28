@@ -11,7 +11,7 @@ export default defineConfig({
   },
   // Bundle workspace packages into the CLI binary for npm distribution.
   // Only native modules and optional runtime dependencies remain external.
-  noExternal: ['@sunco/core', '@sunco/skills-harness'],
+  noExternal: ['@sunco/core', '@sunco/skills-harness', '@sunco/skills-workflow'],
   external: [
     'better-sqlite3',
     // Ink UI framework and its React dependencies (loaded dynamically at runtime)
@@ -25,5 +25,7 @@ export default defineConfig({
     'eslint', 'eslint-plugin-boundaries', 'typescript-eslint',
     // File watcher (used by guard skill watch mode)
     'chokidar',
+    // Git operations (used by workflow skills -- pause/resume/context)
+    'simple-git',
   ],
 });

@@ -12,6 +12,7 @@ export default defineConfig({
     'src/todo.skill.ts',
     'src/seed.skill.ts',
     'src/backlog.skill.ts',
+    'src/phase.skill.ts',
     'src/settings.skill.ts',
   ],
   format: ['esm'],
