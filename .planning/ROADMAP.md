@@ -106,7 +106,7 @@ Plans:
 - [x] 04-01-PLAN.md -- askText() UI infrastructure, detectEcosystems export, pre-scan + planning-writer utilities
 - [x] 04-02-PLAN.md -- sunco scan skill with 7 prompt templates and parallel agent dispatch
 - [x] 04-03-PLAN.md -- sunco new skill with multi-step orchestration (idea -> questions -> research -> synthesis)
-- [ ] 04-04-PLAN.md -- CLI wiring, build config, integration verification
+- [x] 04-04-PLAN.md -- CLI wiring, build config, integration verification
 
 ### Phase 5: Context + Planning
 **Goal**: Users can refine vision, preview agent approaches, research domains, and create BDD-driven execution plans before any code is written
