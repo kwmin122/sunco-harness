@@ -89,8 +89,8 @@ Plans:
 - [x] 03-01-PLAN.md -- Package scaffold, shared utilities (roadmap-parser, state-reader, handoff, git-state)
 - [ ] 03-02-PLAN.md -- Status + progress alias + next + context skills
 - [ ] 03-03-PLAN.md -- Note + todo + seed + backlog (idea capture skills)
-- [ ] 03-04-PLAN.md -- Pause + resume (session persistence skills)
-- [ ] 03-05-PLAN.md -- Phase management (add/insert/remove subcommands)
+- [x] 03-04-PLAN.md -- Pause + resume (session persistence skills)
+- [x] 03-05-PLAN.md -- Phase management (add/insert/remove subcommands)
 - [ ] 03-06-PLAN.md -- Enhanced settings + CLI wiring + integration
 
 ### Phase 4: Project Initialization
