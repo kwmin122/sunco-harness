@@ -35,7 +35,19 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can run a sample prompt skill that dispatches to Claude Code CLI with scoped permissions and returns a result
   4. After any skill execution, user sees a Next Best Action recommendation with 2-4 options and a Recommended tag
   5. User sees visual feedback (progress bars, status symbols, error boxes) during all skill operations
-**Plans**: TBD
+**Plans:** 10 plans
+
+Plans:
+- [ ] 01-01-PLAN.md -- Monorepo scaffold + TypeScript type contracts
+- [ ] 01-02-PLAN.md -- Config System (TOML loading, merge, Zod validation)
+- [ ] 01-03-PLAN.md -- State Engine (SQLite WAL, flat files, .sun/ directory)
+- [ ] 01-04-PLAN.md -- UI Foundation (primitives, components, adapters)
+- [ ] 01-05-PLAN.md -- Skill System (defineSkill, scanner, resolver, registry, context)
+- [ ] 01-06-PLAN.md -- Agent Router (providers, permissions, cross-verify, tracking)
+- [ ] 01-07-PLAN.md -- UI Patterns (SkillEntry, InteractiveChoice, SkillProgress, SkillResult)
+- [ ] 01-08-PLAN.md -- CLI Engine (Commander.js, skill router, lifecycle)
+- [ ] 01-09-PLAN.md -- Proactive Recommender (rule engine, 25+ rules)
+- [ ] 01-10-PLAN.md -- Integration (settings skill, sample-prompt skill, E2E verification)
 
 ### Phase 2: Harness Skills
 **Goal**: Users can analyze, lint, and guard any codebase with deterministic harness skills -- the zero-LLM-cost backbone that makes agents make fewer mistakes
@@ -138,7 +150,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Platform | 0/? | Not started | - |
+| 1. Core Platform | 0/10 | Planning complete | - |
 | 2. Harness Skills | 0/? | Not started | - |
 | 3. Standalone TS Skills | 0/? | Not started | - |
 | 4. Project Initialization | 0/? | Not started | - |
