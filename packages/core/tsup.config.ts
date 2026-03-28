@@ -7,4 +7,7 @@ export default defineConfig({
   dts: true,
   clean: true,
   external: ['better-sqlite3'],
+  esbuildOptions(options) {
+    options.jsx = 'automatic';
+  },
 });

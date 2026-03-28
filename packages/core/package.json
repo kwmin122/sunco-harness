@@ -16,19 +16,22 @@
     "lint": "echo 'lint not configured yet'"
   },
   "dependencies": {
-    "commander": "14.0.3",
-    "smol-toml": "1.6.1",
-    "zod": "3.24.4",
     "better-sqlite3": "12.8.0",
+    "chalk": "5.4.1",
+    "commander": "14.0.3",
     "execa": "9.6.1",
     "glob": "13.0.6",
+    "ink": "6.8.0",
     "picomatch": "4.0.2",
-    "chalk": "5.4.1"
+    "react": "19.1.0",
+    "smol-toml": "1.6.1",
+    "zod": "3.24.4"
   },
   "devDependencies": {
     "@types/better-sqlite3": "7.6.13",
-    "vitest": "3.1.2",
+    "@types/react": "19.1.2",
     "tsup": "8.5.0",
-    "typescript": "6.0.2"
+    "typescript": "6.0.2",
+    "vitest": "3.1.2"
   }
 }

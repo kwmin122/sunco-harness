@@ -128,6 +128,30 @@ export { theme } from './ui/theme/tokens.js';
 export type { Theme, ThemeColors, ThemeSymbols, ThemeSpacing } from './ui/theme/tokens.js';
 
 // ---------------------------------------------------------------------------
+// UI Primitives (Layer 1)
+// ---------------------------------------------------------------------------
+export { SunBox } from './ui/primitives/Box.js';
+export type { SunBoxProps } from './ui/primitives/Box.js';
+
+export { SunText } from './ui/primitives/Text.js';
+export type { SunTextProps } from './ui/primitives/Text.js';
+
+export { Badge } from './ui/primitives/Badge.js';
+export type { BadgeProps } from './ui/primitives/Badge.js';
+
+// ---------------------------------------------------------------------------
+// UI Components (Layer 2)
+// ---------------------------------------------------------------------------
+export { StatusSymbol } from './ui/components/StatusSymbol.js';
+export type { StatusType, StatusSymbolProps } from './ui/components/StatusSymbol.js';
+
+export { ErrorBox } from './ui/components/ErrorBox.js';
+export type { ErrorBoxProps } from './ui/components/ErrorBox.js';
+
+export { RecommendationCard } from './ui/components/RecommendationCard.js';
+export type { RecommendationCardProps } from './ui/components/RecommendationCard.js';
+
+// ---------------------------------------------------------------------------
 // Base Errors
 // ---------------------------------------------------------------------------
 export {
