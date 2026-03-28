@@ -20,6 +20,8 @@ import { resolveActiveSkills } from '../skill/resolver.js';
 import { SkillRegistry } from '../skill/registry.js';
 import { createSkillContext } from '../skill/context.js';
 import { createAgentRouter } from '../agent/router.js';
+import { ClaudeCliProvider } from '../agent/providers/claude-cli.js';
+import { ClaudeSdkProvider } from '../agent/providers/claude-sdk.js';
 import { createUiAdapter, createSkillUi } from '../ui/adapters/index.js';
 import type { SunConfig } from '../config/types.js';
 import type { StateEngine } from '../state/types.js';
@@ -150,9 +152,21 @@ export function createLifecycle(): Lifecycle {
         }
       }
 
-      // Step 7: Create agent router
+      // Step 7: Discover available providers and create agent router
+      // D-15: dual path (CLI + SDK as parallel providers)
+      // D-23: role-based defaults (router selects per role internally)
+      const cliProvider = new ClaudeCliProvider();
+      const sdkProvider = new ClaudeSdkProvider();
+      const [cliAvailable, sdkAvailable] = await Promise.all([
+        cliProvider.isAvailable(),
+        sdkProvider.isAvailable(),
+      ]);
+      const providers: import('../agent/types.js').AgentProvider[] = [];
+      if (cliAvailable) providers.push(cliProvider);
+      if (sdkAvailable) providers.push(sdkProvider);
+
       const agentRouter = createAgentRouter({
-        providers: [], // Providers are loaded dynamically by the agent system
+        providers,
         cwd,
       });
 
