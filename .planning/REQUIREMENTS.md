@@ -113,7 +113,7 @@
 - [ ] **VRF-08**: `sunco verify` -- Scenario Holdout: .sun/scenarios/ (코딩 에이전트 접근 불가, 검증 에이전트만)
 - [ ] **VRF-09**: `sunco verify` -- 나이퀴스트 원칙: 태스크 단위(50-100줄) 즉시 검증
 - [x] **VRF-10**: `sunco validate` -- 테스트 커버리지 감사 (결정적)
-- [ ] **VRF-11**: `sunco test-gen` -- 유닛/E2E 테스트 자동 생성 + --mock-external (Digital Twin Mock 서버)
+- [x] **VRF-11**: `sunco test-gen` -- 유닛/E2E 테스트 자동 생성 + --mock-external (Digital Twin Mock 서버)
 
 ### Workflow -- 출시
 
@@ -156,7 +156,7 @@
 - [ ] **REV-01**: 6단계 리뷰 파이프라인 (아이디어->스펙->플랜->실행->검증->배포) 각 단계에서 해당 스킬 자동 연결
 - [ ] **REV-02**: Tribal Knowledge Store (.sun/tribal/) -- sunco note --tribal로 캡처, sunco verify가 자동 로드
 - [ ] **REV-03**: Human Gate -- 부족 지식 + 규제 경로만 사람이 블로킹, 나머지 자동
-- [ ] **REV-04**: Digital Twin -- sunco test-gen --mock-external이 API 문서->모방 서버 생성
+- [x] **REV-04**: Digital Twin -- sunco test-gen --mock-external이 API 문서->모방 서버 생성
 
 ### 인터랙티브 UX
 
@@ -281,11 +281,11 @@
 | VRF-08 | Phase 7: Verification Pipeline | Pending |
 | VRF-09 | Phase 7: Verification Pipeline | Pending |
 | VRF-10 | Phase 7: Verification Pipeline | Complete |
-| VRF-11 | Phase 7: Verification Pipeline | Pending |
+| VRF-11 | Phase 7: Verification Pipeline | Complete |
 | REV-01 | Phase 7: Verification Pipeline | Pending |
 | REV-02 | Phase 7: Verification Pipeline | Pending |
 | REV-03 | Phase 7: Verification Pipeline | Pending |
-| REV-04 | Phase 7: Verification Pipeline | Pending |
+| REV-04 | Phase 7: Verification Pipeline | Complete |
 | SHP-01 | Phase 8: Shipping + Milestones | Pending |
 | SHP-02 | Phase 8: Shipping + Milestones | Pending |
 | WF-03 | Phase 8: Shipping + Milestones | Pending |
