@@ -1,0 +1,21 @@
+{
+  "name": "@sunco/cli",
+  "version": "0.0.1",
+  "type": "module",
+  "bin": {
+    "sunco": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "echo 'no tests yet'",
+    "lint": "echo 'lint not configured yet'"
+  },
+  "dependencies": {
+    "@sunco/core": "*",
+    "commander": "14.0.3"
+  },
+  "devDependencies": {
+    "tsup": "8.5.0",
+    "typescript": "6.0.2"
+  }
+}
