@@ -20,6 +20,8 @@ export default defineConfig({
     'src/assume.skill.ts',
     'src/research.skill.ts',
     'src/plan.skill.ts',
+    'src/execute.skill.ts',
+    'src/review.skill.ts',
   ],
   format: ['esm'],
   target: 'node22',

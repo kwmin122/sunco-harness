@@ -30,3 +30,12 @@ export { buildResearchSynthesizePrompt } from './research-synthesize.js';
 // Plan prompt builders (from plan 05-04)
 export { buildPlanCreatePrompt, buildPlanRevisePrompt } from './plan-create.js';
 export { buildPlanCheckerPrompt } from './plan-checker.js';
+
+// Execute prompt builders (from plan 06-02)
+export { buildExecutePrompt } from './execute.js';
+export type { ExecuteAgentSummary } from './execute.js';
+
+// Review prompt builders (from plan 06-03)
+export { buildReviewPrompt, REVIEW_DIMENSIONS } from './review.js';
+export type { ReviewFinding } from './review.js';
+export { buildReviewSynthesizePrompt } from './review-synthesize.js';

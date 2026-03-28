@@ -45,8 +45,18 @@ export { default as assumeSkill } from './assume.skill.js';
 export { default as researchSkill } from './research.skill.js';
 export { default as planSkill } from './plan.skill.js';
 
+// Phase 6 execution + review skills
+export { default as executeSkill } from './execute.skill.js';
+export { default as reviewSkill } from './review.skill.js';
+
 // Phase 5 shared utilities
 export { resolvePhaseDir, readPhaseArtifact, writePhaseArtifact } from './shared/phase-reader.js';
+
+// Phase 6 shared utilities
+export { parsePlanMd, groupPlansByWave } from './shared/plan-parser.js';
+export type { PlanFrontmatter, PlanTask, ParsedPlan } from './shared/plan-parser.js';
+export { WorktreeManager } from './shared/worktree-manager.js';
+export type { WorktreeInfo } from './shared/worktree-manager.js';
 
 // Prompt builders (for extensibility)
 export { buildResearchPrompt, buildSynthesisPrompt } from './prompts/index.js';
