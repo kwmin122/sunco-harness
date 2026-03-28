@@ -14,3 +14,6 @@ export { buildScanConventionsPrompt } from './scan-conventions.js';
 export { buildScanTestsPrompt } from './scan-tests.js';
 export { buildScanIntegrationsPrompt } from './scan-integrations.js';
 export { buildScanConcernsPrompt } from './scan-concerns.js';
+
+// Assume prompt builder (from plan 05-02)
+export { buildAssumePrompt } from './assume.js';
