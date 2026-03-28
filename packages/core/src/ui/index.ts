@@ -5,6 +5,9 @@
  * - Theme tokens (colors, symbols, spacing)
  * - Layer 1: Primitives (SunBox, SunText, Badge)
  * - Layer 2: Components (StatusSymbol, ErrorBox, RecommendationCard)
+ * - Layer 3: Interaction Patterns (SkillEntry, InteractiveChoice, SkillProgress, SkillResult)
+ * - Hooks: useSelection, useKeymap
+ * - Session: StatusBar
  * - Adapters: UiAdapter, SkillUi interfaces + implementations
  */
 
@@ -19,6 +22,23 @@ export type { SunBoxProps, SunTextProps, BadgeProps } from './primitives/index.j
 // Layer 2: Components
 export { StatusSymbol, ErrorBox, RecommendationCard } from './components/index.js';
 export type { StatusType, StatusSymbolProps, ErrorBoxProps, RecommendationCardProps } from './components/index.js';
+
+// Layer 3: Interaction Patterns
+export { SkillEntry, InteractiveChoice, SkillProgress, SkillResult } from './patterns/index.js';
+export type {
+  SkillEntryProps,
+  InteractiveChoiceProps,
+  SkillProgressProps,
+  SkillResultProps,
+} from './patterns/index.js';
+
+// Hooks
+export { useSelection, useKeymap } from './hooks/index.js';
+export type { UseSelectionOptions, UseSelectionResult } from './hooks/index.js';
+
+// Session
+export { StatusBar } from './session/StatusBar.js';
+export type { StatusBarProps } from './session/StatusBar.js';
 
 // Adapters (interfaces)
 export type {
