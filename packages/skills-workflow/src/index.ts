@@ -30,3 +30,7 @@ export { default as nextSkill } from './next.skill.js';
 export { default as contextSkill } from './context.skill.js';
 export { default as pauseSkill } from './pause.skill.js';
 export { default as resumeSkill } from './resume.skill.js';
+export { default as noteSkill } from './note.skill.js';
+export { default as todoSkill } from './todo.skill.js';
+export { default as seedSkill } from './seed.skill.js';
+export { default as backlogSkill } from './backlog.skill.js';
