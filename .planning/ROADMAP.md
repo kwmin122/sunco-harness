@@ -49,7 +49,7 @@ Plans:
 - [x] 01-08-PLAN.md -- CLI Engine (Commander.js, skill router, lifecycle with graceful recommender)
 - [x] 01-09-PLAN.md -- Proactive Recommender (rule engine, 25+ rules)
 - [x] 01-10-PLAN.md -- Integration (settings skill, sample-prompt skill, E2E verification)
-- [ ] 01-11-PLAN.md -- Gap closure: Wire AgentRouter providers in boot sequence
+- [x] 01-11-PLAN.md -- Gap closure: Wire AgentRouter providers in boot sequence
 
 ### Phase 2: Harness Skills
 **Goal**: Users can analyze, lint, and guard any codebase with deterministic harness skills -- the zero-LLM-cost backbone that makes agents make fewer mistakes
