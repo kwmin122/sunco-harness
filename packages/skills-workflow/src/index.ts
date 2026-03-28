@@ -23,3 +23,6 @@ export { parseStateMd } from './shared/state-reader.js';
 export { HandoffSchema, readHandoff, writeHandoff } from './shared/handoff.js';
 export type { Handoff } from './shared/handoff.js';
 export { captureGitState } from './shared/git-state.js';
+
+// Skills
+export { statusSkill, progressSkill } from './status.skill.js';
