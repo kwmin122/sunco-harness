@@ -73,8 +73,8 @@
 
 ### Workflow -- 초기화 + 마일스톤
 
-- [ ] **WF-01**: `sunco new` -- 아이디어->질문->병렬 리서치->요구사항->로드맵 자동 생성
-- [ ] **WF-02**: `sunco scan` -- 기존 코드베이스 7개 문서 분석
+- [x] **WF-01**: `sunco new` -- 아이디어->질문->병렬 리서치->요구사항->로드맵 자동 생성
+- [x] **WF-02**: `sunco scan` -- 기존 코드베이스 7개 문서 분석
 - [ ] **WF-03**: `sunco milestone new` -- 다음 마일스톤 시작 (질문->리서치->요구사항->로드맵)
 - [ ] **WF-04**: `sunco milestone audit` -- 마일스톤 달성도 검증 (의도 vs 실제)
 - [ ] **WF-05**: `sunco milestone complete` -- 아카이브 + 태그 + 다음 준비
@@ -263,8 +263,8 @@
 | PHZ-03 | Phase 3: Standalone TS Skills | Complete |
 | SET-01 | Phase 3: Standalone TS Skills | Complete |
 | WF-08 | Phase 3: Standalone TS Skills | Complete |
-| WF-01 | Phase 4: Project Initialization | Pending |
-| WF-02 | Phase 4: Project Initialization | Pending |
+| WF-01 | Phase 4: Project Initialization | Complete |
+| WF-02 | Phase 4: Project Initialization | Complete |
 | WF-09 | Phase 5: Context + Planning | Pending |
 | WF-10 | Phase 5: Context + Planning | Pending |
 | WF-11 | Phase 5: Context + Planning | Pending |
