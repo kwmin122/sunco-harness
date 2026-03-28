@@ -19,5 +19,7 @@ export default defineConfig({
     'react', 'react-devtools-core',
     // AI SDK (dynamically imported by agent router)
     'ai', '@ai-sdk/anthropic',
+    // execa (dynamically imported by ClaudeCliProvider -- cross-spawn uses require())
+    'execa',
   ],
 });

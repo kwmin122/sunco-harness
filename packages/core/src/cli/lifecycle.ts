@@ -20,8 +20,6 @@ import { resolveActiveSkills } from '../skill/resolver.js';
 import { SkillRegistry } from '../skill/registry.js';
 import { createSkillContext } from '../skill/context.js';
 import { createAgentRouter } from '../agent/router.js';
-import { ClaudeCliProvider } from '../agent/providers/claude-cli.js';
-import { ClaudeSdkProvider } from '../agent/providers/claude-sdk.js';
 import { createUiAdapter, createSkillUi } from '../ui/adapters/index.js';
 import type { SunConfig } from '../config/types.js';
 import type { StateEngine } from '../state/types.js';
@@ -155,6 +153,11 @@ export function createLifecycle(): Lifecycle {
       // Step 7: Discover available providers and create agent router
       // D-15: dual path (CLI + SDK as parallel providers)
       // D-23: role-based defaults (router selects per role internally)
+      // Dynamic imports to avoid pulling execa/cross-spawn into the ESM bundle eagerly
+      const [{ ClaudeCliProvider }, { ClaudeSdkProvider }] = await Promise.all([
+        import('../agent/providers/claude-cli.js'),
+        import('../agent/providers/claude-sdk.js'),
+      ]);
       const cliProvider = new ClaudeCliProvider();
       const sdkProvider = new ClaudeSdkProvider();
       const [cliAvailable, sdkAvailable] = await Promise.all([

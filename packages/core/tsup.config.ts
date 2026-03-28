@@ -6,7 +6,7 @@ export default defineConfig({
   target: 'node22',
   dts: true,
   clean: true,
-  external: ['better-sqlite3', 'ai', '@ai-sdk/anthropic'],
+  external: ['better-sqlite3', 'ai', '@ai-sdk/anthropic', 'execa'],
   esbuildOptions(options) {
     options.jsx = 'automatic';
   },
