@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-28T07:20:30.449Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-28T08:00:07.235Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 10
   completed_phases: 1
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 20
+  completed_plans: 13
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** Phase 01 — core-platform
+**Current focus:** Phase 02 — harness-skills
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (harness-skills) — EXECUTING
+Plan: 2 of 8
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -64,6 +64,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-core-platform P08 | 5min | 2 tasks | 8 files |
 | Phase 01-core-platform P10 | 4min | 3 tasks | 14 files |
 | Phase 01-core-platform P11 | 2min | 2 tasks | 2 files |
+| Phase 02-harness-skills P01 | 7min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Recent decisions affecting current work:
 - [Phase 01-core-platform]: CLI externals: ink/react/ai-sdk external, workspace packages bundled via noExternal for npm distribution
 - [Phase 01-core-platform]: Parallel provider availability checks via Promise.all for minimal boot latency
 - [Phase 01-core-platform]: Conditional provider registration: only available providers passed to createAgentRouter
+- [Phase 02-harness-skills]: legacy-peer-deps in .npmrc for typescript-eslint TS 6.0 peer dep conflict
+- [Phase 02-harness-skills]: Init detection modules as pure async functions with {cwd} opts for isolation
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T07:20:30.445Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-harness-skills/02-CONTEXT.md
+Last session: 2026-03-28T08:00:07.231Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

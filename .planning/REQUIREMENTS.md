@@ -54,9 +54,9 @@
 
 ### Harness Skills
 
-- [ ] **HRN-01**: `sunco init` -- 기술스택 감지 (package.json, tsconfig, Cargo.toml, go.mod 등 15+ 에코시스템)
-- [ ] **HRN-02**: `sunco init` -- 디렉토리 구조 -> 레이어 패턴 감지 (Types->Config->Service->Handler->UI)
-- [ ] **HRN-03**: `sunco init` -- 코드에서 컨벤션 추출 (네이밍, 패턴, import 스타일)
+- [x] **HRN-01**: `sunco init` -- 기술스택 감지 (package.json, tsconfig, Cargo.toml, go.mod 등 15+ 에코시스템)
+- [x] **HRN-02**: `sunco init` -- 디렉토리 구조 -> 레이어 패턴 감지 (Types->Config->Service->Handler->UI)
+- [x] **HRN-03**: `sunco init` -- 코드에서 컨벤션 추출 (네이밍, 패턴, import 스타일)
 - [ ] **HRN-04**: `sunco init` -- .sun/ 워크스페이스 초기화 + 규칙 자동 생성 + 프로젝트 타입별 기본 템플릿
 - [ ] **HRN-05**: `sunco lint` -- init이 감지한 레이어 구조 -> ESLint rule 자동 생성 (eslint-plugin-boundaries)
 - [ ] **HRN-06**: `sunco lint` -- 의존성 방향 위반 검사 (UI->DB 직접 import 잡음)
@@ -233,9 +233,9 @@
 | UX-01 | Phase 1: Core Platform | Complete |
 | UX-02 | Phase 1: Core Platform | Complete |
 | UX-03 | Phase 1: Core Platform | Complete |
-| HRN-01 | Phase 2: Harness Skills | Pending |
-| HRN-02 | Phase 2: Harness Skills | Pending |
-| HRN-03 | Phase 2: Harness Skills | Pending |
+| HRN-01 | Phase 2: Harness Skills | Complete |
+| HRN-02 | Phase 2: Harness Skills | Complete |
+| HRN-03 | Phase 2: Harness Skills | Complete |
 | HRN-04 | Phase 2: Harness Skills | Pending |
 | HRN-05 | Phase 2: Harness Skills | Pending |
 | HRN-06 | Phase 2: Harness Skills | Pending |
