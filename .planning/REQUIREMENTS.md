@@ -160,8 +160,8 @@
 
 ### 인터랙티브 UX
 
-- [ ] **UX-01**: 모든 의사결정 지점에서 선택지 제시 (옵션 2-4개 + 설명 + Recommended 태그)
-- [ ] **UX-02**: 프로액티브 추천: 모든 스킬 실행 끝에 다음 스킬 추천
+- [x] **UX-01**: 모든 의사결정 지점에서 선택지 제시 (옵션 2-4개 + 설명 + Recommended 태그)
+- [x] **UX-02**: 프로액티브 추천: 모든 스킬 실행 끝에 다음 스킬 추천
 - [x] **UX-03**: 시각적 피드백: 진행도 바, 상태 심볼, 스포닝 인디케이터, 에러 박스
 - [ ] **UX-04**: 상태바: 모델 사용량(토큰 %) + 세션 컨텍스트 사용량(%) + provider명 항상 표시 (Claude Code 하단바 패턴)
 - [ ] **UX-05**: 상태바: 에이전트 실행 중 실시간 업데이트, 비용 누적 표시
@@ -230,8 +230,8 @@
 | REC-02 | Phase 1: Core Platform | Pending |
 | REC-03 | Phase 1: Core Platform | Pending |
 | REC-04 | Phase 1: Core Platform | Pending |
-| UX-01 | Phase 1: Core Platform | Pending |
-| UX-02 | Phase 1: Core Platform | Pending |
+| UX-01 | Phase 1: Core Platform | Complete |
+| UX-02 | Phase 1: Core Platform | Complete |
 | UX-03 | Phase 1: Core Platform | Complete |
 | HRN-01 | Phase 2: Harness Skills | Pending |
 | HRN-02 | Phase 2: Harness Skills | Pending |
