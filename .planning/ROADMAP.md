@@ -46,7 +46,7 @@ Plans:
 - [x] 01-05-PLAN.md -- Skill System (defineSkill, scanner, resolver, registry, context)
 - [x] 01-06-PLAN.md -- Agent Router (providers, permissions, cross-verify, tracking)
 - [x] 01-07-PLAN.md -- UI Patterns (SkillEntry, InteractiveChoice, SkillProgress, SkillResult + tests)
-- [ ] 01-08-PLAN.md -- CLI Engine (Commander.js, skill router, lifecycle with graceful recommender)
+- [x] 01-08-PLAN.md -- CLI Engine (Commander.js, skill router, lifecycle with graceful recommender)
 - [x] 01-09-PLAN.md -- Proactive Recommender (rule engine, 25+ rules)
 - [ ] 01-10-PLAN.md -- Integration (settings skill, sample-prompt skill, E2E verification)
 

@@ -8,9 +8,9 @@
 ### Core Platform -- CLI Engine
 
 - [x] **CLI-01**: `sunco` 바이너리가 npm으로 설치 가능 (npx sunco / npm install -g sunco)
-- [ ] **CLI-02**: Commander.js 기반 서브커맨드 라우팅, 스킬 자동 발견/등록
-- [ ] **CLI-03**: `sunco --help` / `sunco <skill> --help`로 도움말 표시
-- [ ] **CLI-04**: 스킬 미설치/미발견 시 명확한 에러 메시지 + 추천
+- [x] **CLI-02**: Commander.js 기반 서브커맨드 라우팅, 스킬 자동 발견/등록
+- [x] **CLI-03**: `sunco --help` / `sunco <skill> --help`로 도움말 표시
+- [x] **CLI-04**: 스킬 미설치/미발견 시 명확한 에러 메시지 + 추천
 
 ### Core Platform -- Config System
 
@@ -25,7 +25,7 @@
 - [x] **SKL-02**: SkillContext 제공: config, state, agentRouter, recommend, run(skillName)
 - [x] **SKL-03**: 스킬 로더가 packages/skills-*에서 자동 발견 + 레지스트리 등록
 - [x] **SKL-04**: 결정적 스킬은 Agent Router를 사용하지 않음 (LLM 비용 0)
-- [ ] **SKL-05**: Prompt 스킬은 Agent Router를 통해 에이전트 디스패치
+- [x] **SKL-05**: Prompt 스킬은 Agent Router를 통해 에이전트 디스패치
 - [x] **SKL-06**: ctx.run('lint') 형태로 스킬 간 직접 호출 가능
 
 ### Core Platform -- State Engine
@@ -202,9 +202,9 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CLI-01 | Phase 1: Core Platform | Complete |
-| CLI-02 | Phase 1: Core Platform | Pending |
-| CLI-03 | Phase 1: Core Platform | Pending |
-| CLI-04 | Phase 1: Core Platform | Pending |
+| CLI-02 | Phase 1: Core Platform | Complete |
+| CLI-03 | Phase 1: Core Platform | Complete |
+| CLI-04 | Phase 1: Core Platform | Complete |
 | CFG-01 | Phase 1: Core Platform | Complete |
 | CFG-02 | Phase 1: Core Platform | Complete |
 | CFG-03 | Phase 1: Core Platform | Complete |
@@ -213,7 +213,7 @@
 | SKL-02 | Phase 1: Core Platform | Complete |
 | SKL-03 | Phase 1: Core Platform | Complete |
 | SKL-04 | Phase 1: Core Platform | Complete |
-| SKL-05 | Phase 1: Core Platform | Pending |
+| SKL-05 | Phase 1: Core Platform | Complete |
 | SKL-06 | Phase 1: Core Platform | Complete |
 | STE-01 | Phase 1: Core Platform | Complete |
 | STE-02 | Phase 1: Core Platform | Complete |
