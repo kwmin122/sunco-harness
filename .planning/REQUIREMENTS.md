@@ -108,11 +108,11 @@
 - [ ] **VRF-03**: `sunco verify` -- Layer 3: Human-Defined Acceptance Criteria (BDD 시나리오)
 - [ ] **VRF-04**: `sunco verify` -- Layer 4: Agent Permission Scoping (역할별 권한)
 - [ ] **VRF-05**: `sunco verify` -- Layer 5: Adversarial Verification (실행 != 검증 에이전트)
-- [ ] **VRF-06**: `sunco verify` -- 전문가 에이전트: Security, Performance, Architecture, Correctness + Coordinator
+- [x] **VRF-06**: `sunco verify` -- 전문가 에이전트: Security, Performance, Architecture, Correctness + Coordinator
 - [ ] **VRF-07**: `sunco verify` -- Intent Reconstruction: diff가 아닌 의도 대비 결과
 - [ ] **VRF-08**: `sunco verify` -- Scenario Holdout: .sun/scenarios/ (코딩 에이전트 접근 불가, 검증 에이전트만)
 - [ ] **VRF-09**: `sunco verify` -- 나이퀴스트 원칙: 태스크 단위(50-100줄) 즉시 검증
-- [ ] **VRF-10**: `sunco validate` -- 테스트 커버리지 감사 (결정적)
+- [x] **VRF-10**: `sunco validate` -- 테스트 커버리지 감사 (결정적)
 - [ ] **VRF-11**: `sunco test-gen` -- 유닛/E2E 테스트 자동 생성 + --mock-external (Digital Twin Mock 서버)
 
 ### Workflow -- 출시
@@ -276,11 +276,11 @@
 | VRF-03 | Phase 7: Verification Pipeline | Pending |
 | VRF-04 | Phase 7: Verification Pipeline | Pending |
 | VRF-05 | Phase 7: Verification Pipeline | Pending |
-| VRF-06 | Phase 7: Verification Pipeline | Pending |
+| VRF-06 | Phase 7: Verification Pipeline | Complete |
 | VRF-07 | Phase 7: Verification Pipeline | Pending |
 | VRF-08 | Phase 7: Verification Pipeline | Pending |
 | VRF-09 | Phase 7: Verification Pipeline | Pending |
-| VRF-10 | Phase 7: Verification Pipeline | Pending |
+| VRF-10 | Phase 7: Verification Pipeline | Complete |
 | VRF-11 | Phase 7: Verification Pipeline | Pending |
 | REV-01 | Phase 7: Verification Pipeline | Pending |
 | REV-02 | Phase 7: Verification Pipeline | Pending |
