@@ -52,6 +52,14 @@
     "./settings": {
       "import": "./dist/settings.skill.js",
       "types": "./dist/settings.skill.d.ts"
+    },
+    "./new": {
+      "import": "./dist/new.skill.js",
+      "types": "./dist/new.skill.d.ts"
+    },
+    "./scan": {
+      "import": "./dist/scan.skill.js",
+      "types": "./dist/scan.skill.d.ts"
     }
   },
   "scripts": {

@@ -14,6 +14,8 @@ export default defineConfig({
     'src/backlog.skill.ts',
     'src/phase.skill.ts',
     'src/settings.skill.ts',
+    'src/new.skill.ts',
+    'src/scan.skill.ts',
   ],
   format: ['esm'],
   target: 'node22',

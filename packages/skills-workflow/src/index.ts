@@ -36,3 +36,8 @@ export { default as seedSkill } from './seed.skill.js';
 export { default as backlogSkill } from './backlog.skill.js';
 export { default as phaseSkill } from './phase.skill.js';
 export { default as settingsSkill } from './settings.skill.js';
+export { default as newSkill } from './new.skill.js';
+export { default as scanSkill } from './scan.skill.js';
+
+// Prompt builders (for extensibility)
+export { buildResearchPrompt, buildSynthesisPrompt } from './prompts/index.js';
