@@ -122,10 +122,10 @@
 
 ### Workflow -- 세션 관리
 
-- [ ] **SES-01**: `sunco status` -- 현재 상태 요약 (어디에 있는지, 뭐가 남았는지)
+- [x] **SES-01**: `sunco status` -- 현재 상태 요약 (어디에 있는지, 뭐가 남았는지)
 - [ ] **SES-02**: `sunco next` -- 상태->다음 스킬 자동 라우팅
-- [ ] **SES-03**: `sunco resume` -- HANDOFF.json -> 이전 세션 복원
-- [ ] **SES-04**: `sunco pause` -- 세션 중단 시 HANDOFF.json 생성
+- [x] **SES-03**: `sunco resume` -- HANDOFF.json -> 이전 세션 복원
+- [x] **SES-04**: `sunco pause` -- 세션 중단 시 HANDOFF.json 생성
 - [ ] **SES-05**: `sunco context` -- 현재 결정/블로커/다음 액션 요약
 
 ### Workflow -- 디버깅
@@ -143,9 +143,9 @@
 
 ### Workflow -- 페이즈 관리
 
-- [ ] **PHZ-01**: `sunco phase add` -- 로드맵에 페이즈 추가
-- [ ] **PHZ-02**: `sunco phase insert` -- 페이즈 사이에 긴급 작업 삽입 (소수점 번호)
-- [ ] **PHZ-03**: `sunco phase remove` -- 미래 페이즈 제거 + 번호 재지정
+- [x] **PHZ-01**: `sunco phase add` -- 로드맵에 페이즈 추가
+- [x] **PHZ-02**: `sunco phase insert` -- 페이즈 사이에 긴급 작업 삽입 (소수점 번호)
+- [x] **PHZ-03**: `sunco phase remove` -- 미래 페이즈 제거 + 번호 재지정
 
 ### Workflow -- 설정
 
@@ -249,18 +249,18 @@
 | HRN-14 | Phase 2: Harness Skills | Complete |
 | HRN-15 | Phase 2: Harness Skills | Complete |
 | HRN-16 | Phase 2: Harness Skills | Complete |
-| SES-01 | Phase 3: Standalone TS Skills | Pending |
+| SES-01 | Phase 3: Standalone TS Skills | Complete |
 | SES-02 | Phase 3: Standalone TS Skills | Pending |
-| SES-03 | Phase 3: Standalone TS Skills | Pending |
-| SES-04 | Phase 3: Standalone TS Skills | Pending |
+| SES-03 | Phase 3: Standalone TS Skills | Complete |
+| SES-04 | Phase 3: Standalone TS Skills | Complete |
 | SES-05 | Phase 3: Standalone TS Skills | Pending |
 | IDX-01 | Phase 3: Standalone TS Skills | Pending |
 | IDX-02 | Phase 3: Standalone TS Skills | Pending |
 | IDX-03 | Phase 3: Standalone TS Skills | Pending |
 | IDX-04 | Phase 3: Standalone TS Skills | Pending |
-| PHZ-01 | Phase 3: Standalone TS Skills | Pending |
-| PHZ-02 | Phase 3: Standalone TS Skills | Pending |
-| PHZ-03 | Phase 3: Standalone TS Skills | Pending |
+| PHZ-01 | Phase 3: Standalone TS Skills | Complete |
+| PHZ-02 | Phase 3: Standalone TS Skills | Complete |
+| PHZ-03 | Phase 3: Standalone TS Skills | Complete |
 | SET-01 | Phase 3: Standalone TS Skills | Pending |
 | WF-08 | Phase 3: Standalone TS Skills | Pending |
 | WF-01 | Phase 4: Project Initialization | Pending |
