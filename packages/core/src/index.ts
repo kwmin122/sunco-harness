@@ -13,8 +13,12 @@ export const VERSION = '0.0.1';
 export type { SkillId, CommandName, Branded } from './types.js';
 
 // ---------------------------------------------------------------------------
-// Config System Types
+// Config System
 // ---------------------------------------------------------------------------
+export { loadConfig } from './config/loader.js';
+export type { LoadConfigOptions } from './config/loader.js';
+export { deepMerge } from './config/merger.js';
+export { validateConfig } from './config/schema.js';
 export {
   SunConfigSchema,
   SkillPolicySchema,
