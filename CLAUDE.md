@@ -1,9 +1,9 @@
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**SUN**
+**SUNCO**
 
-SUN is an independent workspace OS for agent-era builders. In an era where AI agents write code, the builder's job is not writing code — it's setting up the field so agents make fewer mistakes. SUN is that field. A standalone CLI runtime with a skill-based architecture, harness engineering at its core, a 6-stage review pipeline with 5-layer Swiss cheese verification, and a dedicated terminal for real-time agent observation. The first workspace OS for Korean developers. Zero competitors.
+SUNCO is an independent workspace OS for agent-era builders. In an era where AI agents write code, the builder's job is not writing code — it's setting up the field so agents make fewer mistakes. SUN is that field. A standalone CLI runtime with a skill-based architecture, harness engineering at its core, a 6-stage review pipeline with 5-layer Swiss cheese verification, and a dedicated terminal for real-time agent observation. The first workspace OS for Korean developers. Zero competitors.
 
 **Core Value:** **에이전트가 실수를 덜 하게 판을 깔아주는 OS** — 하네스 엔지니어링이 핵심이다. 린터가 가르치면서 막고, 코드가 아니라 의도를 검증하고, 모든 것을 스킬로 구성한다. 각 스킬이 완성품이며, 퀄리티와 디테일이 생명줄이다.
 
@@ -178,13 +178,73 @@ SUN is an independent workspace OS for agent-era builders. In an era where AI ag
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
-Conventions not yet established. Will populate as patterns emerge during development.
+### File Naming
+- Skill implementations: `*.skill.ts` with `export default defineSkill({...})`
+- Test files: `*.test.ts` in `__tests__/` directories
+- Shared utilities: `shared/` directory per package (e.g. `shared/phase-reader.ts`)
+- Prompt builders: `prompts/` directory (e.g. `prompts/debug-analyze.ts`)
+- Type contracts: `shared/*-types.ts` for cross-skill interfaces (e.g. `shared/debug-types.ts`)
+
+### Skill Patterns
+- Two kinds: `kind: 'deterministic'` (zero LLM cost) and `kind: 'prompt'` (agent-powered)
+- Every skill follows: entry → progress → gather → process → state.set → ui.result → return
+- Cross-skill invocation: `await ctx.run('workflow.diagnose')` via skill ID
+- State persistence: `ctx.state.set('skillName.lastResult', data)` for recommender integration
+- Graceful degradation: unstructured agent output returns `success: true` with `warnings[]`
+- Partial failure: `success: true` with `warnings[]` when at least 1 subtask succeeds
+- Agent output parsing: extract last JSON code block from `\`\`\`json ... \`\`\`` with raw JSON fallback
+- Permissions: `PermissionSet` with role, readPaths, writePaths, allowTests, allowNetwork, allowGitWrite
+
+### Import Patterns
+- ESM-only (`.js` extension in imports even for `.ts` files)
+- Dynamic imports for optional deps: `await import('execa')`, `await import('ai')`
+- CJS interop: `createRequire` for CJS-only packages (e.g. picomatch)
+- Barrel exports: `index.ts` per package with explicit re-exports
+
+### Testing
+- Vitest with in-source test colocation
+- Parser functions exported for unit testability (e.g. `export function parseDebugOutput()`)
+- Mock pattern: `vi.hoisted()` for mock variables in `vi.mock()` factories
+- State/config tests: in-memory adapters, no filesystem mocking
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
 ## Architecture
 
-Architecture not yet mapped. Follow existing patterns found in the codebase.
+### Monorepo Structure (Turborepo + npm workspaces)
+```
+packages/
+  core/          -- CLI engine, config (TOML), state (SQLite WAL + flat files),
+                    skill system (defineSkill, scanner, resolver, registry),
+                    agent router (provider-agnostic), proactive recommender,
+                    UI foundation (primitives, components, adapters)
+  skills-harness/ -- Deterministic backbone skills (zero LLM cost):
+                    init, lint, health, agents, guard, settings, sample-prompt
+  skills-workflow/ -- All workflow skills (33 skills):
+                    Session: status, progress, next, context, pause, resume
+                    Ideas: note, todo, seed, backlog
+                    Management: phase, settings (enhanced)
+                    Bootstrap: new, scan
+                    Planning: discuss, assume, research, plan
+                    Execution: execute, review
+                    Verification: verify, validate, test-gen
+                    Shipping: ship, release, milestone
+                    Composition: auto, quick, fast, do
+                    Debugging: debug, diagnose, forensics
+  skills-extension/ -- Extension point for user-defined skills
+  cli/           -- CLI entry point, Commander.js registration, preloaded skills
+```
+
+### Key Architecture Patterns
+- **Skill-Only**: All functionality delivered as skills via `defineSkill()`. No hardcoded commands
+- **Deterministic First**: Lint/test/health are deterministic. LLM only where judgment needed
+- **Agent Router**: Provider-agnostic abstraction over Claude/OpenAI/Google/Ollama via Vercel AI SDK
+- **Proactive Recommender**: 100+ rules engine suggesting next-best-action after every skill
+- **Config Hierarchy**: Global (~/.sun/config.toml) → Project (.sun/config.toml) → Directory
+- **State Engine**: SQLite WAL for structured data + FileStore for .sun/ flat files
+- **UI Contract**: SkillUi (skill intent API) + UiAdapter (Ink/console/silent renderers)
+- **6-Stage Review Pipeline**: idea → discuss → plan → execute → verify → ship
+- **5-Layer Swiss Cheese**: multi-agent → guardrails → BDD → permissions → adversarial
 <!-- GSD:architecture-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
