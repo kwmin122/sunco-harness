@@ -13,21 +13,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
-// Mock glob
+// Hoisted mocks (vi.hoisted ensures variables are available in vi.mock factory)
 // ---------------------------------------------------------------------------
 
-const mockGlob = vi.fn();
+const { mockGlob, mockReadFile, mockWriteFile } = vi.hoisted(() => ({
+  mockGlob: vi.fn(),
+  mockReadFile: vi.fn(),
+  mockWriteFile: vi.fn(),
+}));
 
 vi.mock('glob', () => ({
   glob: mockGlob,
 }));
-
-// ---------------------------------------------------------------------------
-// Mock node:fs/promises
-// ---------------------------------------------------------------------------
-
-const mockReadFile = vi.fn();
-const mockWriteFile = vi.fn();
 
 vi.mock('node:fs/promises', () => ({
   readFile: mockReadFile,
