@@ -52,3 +52,9 @@ export { buildVerifyIntentPrompt } from './verify-intent.js';
 // Test generation prompt builders (from plan 07-01)
 export { buildTestGenPrompt } from './test-gen.js';
 export { buildTestGenMockPrompt } from './test-gen-mock.js';
+
+// Ship and milestone prompt builders (from plan 08-01)
+export { buildShipPrBody } from './ship-pr-body.js';
+export { buildMilestoneAuditPrompt } from './milestone-audit.js';
+export { buildMilestoneSummaryPrompt } from './milestone-summary.js';
+export { buildMilestoneNewPrompt } from './milestone-new.js';
