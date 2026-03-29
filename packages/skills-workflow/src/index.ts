@@ -54,6 +54,11 @@ export { default as verifySkill } from './verify.skill.js';
 export { default as validateSkill } from './validate.skill.js';
 export { default as testGenSkill } from './test-gen.skill.js';
 
+// Phase 8 shipping + milestones skills
+export { default as shipSkill } from './ship.skill.js';
+export { default as releaseSkill } from './release.skill.js';
+export { default as milestoneSkill } from './milestone.skill.js';
+
 // Phase 7 shared utilities
 export type { VerifyFinding, VerifyReport, LayerResult, VerifyVerdict, CoverageMetric, FileCoverage, CoverageReport } from './shared/verify-types.js';
 export { parseCoverageSummary } from './shared/coverage-parser.js';
@@ -66,6 +71,12 @@ export { parsePlanMd, groupPlansByWave } from './shared/plan-parser.js';
 export type { PlanFrontmatter, PlanTask, ParsedPlan } from './shared/plan-parser.js';
 export { WorktreeManager } from './shared/worktree-manager.js';
 export type { WorktreeInfo } from './shared/worktree-manager.js';
+
+// Phase 8 shared utilities
+export { bumpVersion, updateAllVersions } from './shared/version-bumper.js';
+export { generateChangelog, parseGitLog, prependChangelog } from './shared/changelog-writer.js';
+export type { ChangelogEntry } from './shared/changelog-writer.js';
+export { archiveMilestone, resetStateForNewMilestone, parseMilestoneAudit, buildGapPhases } from './shared/milestone-helpers.js';
 
 // Prompt builders (for extensibility)
 export { buildResearchPrompt, buildSynthesisPrompt } from './prompts/index.js';

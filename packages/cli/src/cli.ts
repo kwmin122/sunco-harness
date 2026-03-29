@@ -51,6 +51,9 @@ import {
   verifySkill,
   validateSkill,
   testGenSkill,
+  shipSkill,
+  releaseSkill,
+  milestoneSkill,
 } from '@sunco/skills-workflow';
 
 /**
@@ -97,6 +100,10 @@ const preloadedSkills = [
   verifySkill,
   validateSkill,
   testGenSkill,
+  // Phase 8 shipping + milestones skills
+  shipSkill,
+  releaseSkill,
+  milestoneSkill,
 ];
 
 async function main(): Promise<void> {

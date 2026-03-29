@@ -167,8 +167,17 @@ async function handleNew(ctx: SkillContext): Promise<SkillResult> {
 
   // 6. Dispatch agent
   const agentResult = await ctx.agent.run({
+    role: 'planning',
     prompt,
-    permissions: { writePaths: ['.planning/**'] },
+    permissions: {
+      role: 'planning',
+      readPaths: ['**'],
+      writePaths: ['.planning/**'],
+      allowTests: false,
+      allowNetwork: false,
+      allowGitWrite: false,
+      allowCommands: [],
+    },
   });
 
   if (!agentResult.success) {
@@ -253,8 +262,17 @@ async function handleAudit(ctx: SkillContext): Promise<SkillResult> {
 
   // 5. Dispatch agent
   const agentResult = await ctx.agent.run({
+    role: 'verification',
     prompt,
-    permissions: { readPaths: ['.planning/**', '.sun/**'] },
+    permissions: {
+      role: 'verification',
+      readPaths: ['.planning/**', '.sun/**'],
+      writePaths: [],
+      allowTests: false,
+      allowNetwork: false,
+      allowGitWrite: false,
+      allowCommands: [],
+    },
   });
 
   if (!agentResult.success) {
@@ -388,8 +406,17 @@ async function handleSummary(ctx: SkillContext): Promise<SkillResult> {
 
   // 6. Dispatch agent with read-only permissions
   const agentResult = await ctx.agent.run({
+    role: 'research',
     prompt,
-    permissions: { readPaths: ['.planning/**'] },
+    permissions: {
+      role: 'research',
+      readPaths: ['.planning/**'],
+      writePaths: [],
+      allowTests: false,
+      allowNetwork: false,
+      allowGitWrite: false,
+      allowCommands: [],
+    },
   });
 
   if (!agentResult.success) {
