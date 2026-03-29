@@ -197,11 +197,11 @@ Plans:
   1. User runs `sunco debug` after a failure and gets automatic classification (context shortage / direction error / structural conflict), root cause analysis, and actionable fix suggestions
   2. User runs `sunco diagnose` for deterministic log analysis of build/test failures with structured output
   3. User runs `sunco forensics` and gets a full post-mortem of a workflow failure including git history analysis and .sun/ state reconstruction
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 10-01-PLAN.md -- Shared debug types, diagnose skill (deterministic), debug/forensics prompt builders
-- [ ] 10-02-PLAN.md -- sunco debug (agent failure classification) + sunco forensics (workflow post-mortem)
+- [x] 10-02-PLAN.md -- sunco debug (agent failure classification) + sunco forensics (workflow post-mortem)
 - [ ] 10-03-PLAN.md -- CLI wiring, barrel exports, tsup config, recommender rules, build verification
 
 ## Progress
@@ -220,4 +220,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 | 7. Verification Pipeline | 0/4 | Not started | - |
 | 8. Shipping + Milestones | 0/4 | Not started | - |
 | 9. Composition Skills | 3/3 | Complete   | 2026-03-29 |
-| 10. Debugging | 1/3 | In Progress|  |
+| 10. Debugging | 2/3 | In Progress|  |

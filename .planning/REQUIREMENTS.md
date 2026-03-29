@@ -130,9 +130,9 @@
 
 ### Workflow -- 디버깅
 
-- [ ] **DBG-01**: `sunco debug` -- 실패 유형 분류 (컨텍스트 부족/방향 오류/구조 충돌) + 근본 원인 + 수정 제안
+- [x] **DBG-01**: `sunco debug` -- 실패 유형 분류 (컨텍스트 부족/방향 오류/구조 충돌) + 근본 원인 + 수정 제안
 - [x] **DBG-02**: `sunco diagnose` -- 결정적 로그 분석 (빌드/테스트)
-- [ ] **DBG-03**: `sunco forensics` -- 워크플로우 실패 사후 분석 (git 히스토리 + .sun/)
+- [x] **DBG-03**: `sunco forensics` -- 워크플로우 실패 사후 분석 (git 히스토리 + .sun/)
 
 ### Workflow -- 아이디어 캡처
 
@@ -297,9 +297,9 @@
 | WF-16 | Phase 9: Composition Skills | Complete |
 | WF-17 | Phase 9: Composition Skills | Complete |
 | WF-18 | Phase 9: Composition Skills | Complete |
-| DBG-01 | Phase 10: Debugging | Pending |
+| DBG-01 | Phase 10: Debugging | Complete |
 | DBG-02 | Phase 10: Debugging | Complete |
-| DBG-03 | Phase 10: Debugging | Pending |
+| DBG-03 | Phase 10: Debugging | Complete |
 
 **Coverage:**
 - v1 requirements: 99 total
