@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 11: Planning Quality Pipeline** - research-integrated planning, revision loop, requirements coverage (completed 2026-03-29)
 - [x] **Phase 12: Operational Resilience** - crash recovery, stuck detection, cost dashboard, budget ceiling, 3-tier timeout (v1.1) (completed 2026-03-29)
 - [x] **Phase 13: Headless + CI/CD** - headless mode, JSON query, exit codes, HTML reports (v1.1) (completed 2026-03-29)
-- [ ] **Phase 14: Context Optimization** - context pre-injection, adaptive replanning, complexity routing, token profiles (v1.1)
+- [x] **Phase 14: Context Optimization** - context pre-injection, adaptive replanning, complexity routing, token profiles (v1.1) (completed 2026-03-29)
 - [ ] **Phase 15: Document Generation** - HWPX, markdown docs, template system (v1.1)
 - [ ] **Phase 16: Skill Marketplace** - install, publish, community registry (v1.1)
 
@@ -256,7 +256,7 @@ Plans:
   5. `sunco health --deep` detects code-doc mismatches, dead imports, stale TODOs via agent
   6. `sunco verify` auto-loads acceptance_criteria from PLAN.md
   7. verify PASS = 1-line summary, FAIL = full report with fix suggestions
-**Plans:** 0 plans (not yet planned)
+**Plans:** 1/1 plans complete
 
 ### Phase 15: Document Generation
 **Goal**: Generate project documents (HWPX, markdown) from project context — "한글파일로 작성해드릴까요?"
@@ -299,6 +299,6 @@ v1.1 Phases: 11 -> 12 -> 13 -> 14 -> 15
 | 11. Planning Quality Pipeline | 1/1 | Complete | 2026-03-29 |
 | 12. Operational Resilience | 2/2 | Complete   | 2026-03-29 |
 | 13. Headless + CI/CD | 1/1 | Complete   | 2026-03-29 |
-| 14. Context Optimization | 0/? | Not started | - |
+| 14. Context Optimization | 1/1 | Complete   | 2026-03-29 |
 | 15. Document Generation | 0/? | Not started | - |
 | 16. Skill Marketplace | 0/? | Not started | - |

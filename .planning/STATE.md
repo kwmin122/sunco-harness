@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 13-01-PLAN.md
-last_updated: "2026-03-29T06:10:35.091Z"
+stopped_at: Completed 14-01-PLAN.md
+last_updated: "2026-03-29T06:37:22.652Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 16
-  completed_phases: 12
-  total_plans: 56
-  completed_plans: 57
+  completed_phases: 13
+  total_plans: 57
+  completed_plans: 58
   percent: 0
 ---
 
@@ -108,6 +108,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 11 P01 | 2min | 1 tasks | 4 files |
 | Phase 12-operational-resilience P01 | 12min | 3 tasks | 6 files |
 | Phase 12 P02 | 20 | 3 tasks | 5 files |
+| Phase 14 P01 | 15 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -251,6 +252,8 @@ Recent decisions affecting current work:
 - [Phase 12]: Promise.race timeout resolves (not rejects) to SkillResult to avoid unhandled rejection
 - [Phase 13-01]: Headless uses lifecycle.boot normally then builds per-invocation SilentUiAdapter context to reuse all booted services without a second boot cycle
 - [Phase 13-01]: Exit code semantics: 0=success, 2=blocked (result.data.blocked=true), 1=error
+- [Phase 14]: health --deep uses inline prompt building to avoid cross-package dep; canonical buildHealthDeepPrompt in skills-workflow
+- [Phase 14]: acceptance_criteria auto-link via regex on raw PLAN.md text; GREPPABLE/EXPORTABLE patterns for deterministic checks
 
 ### Pending Todos
 
@@ -264,6 +267,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T06:10:35.088Z
-Stopped at: Completed 13-01-PLAN.md
+Last session: 2026-03-29T06:37:22.649Z
+Stopped at: Completed 14-01-PLAN.md
 Resume file: None
