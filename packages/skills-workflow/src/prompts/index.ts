@@ -61,3 +61,7 @@ export { buildMilestoneNewPrompt } from './milestone-new.js';
 
 // Do-route prompt builder (from plan 09-01)
 export { buildDoRoutePrompt } from './do-route.js';
+
+// Debug and forensics prompt builders (from plan 10-01)
+export { buildDebugAnalyzePrompt } from './debug-analyze.js';
+export { buildForensicsPostmortemPrompt } from './forensics-postmortem.js';

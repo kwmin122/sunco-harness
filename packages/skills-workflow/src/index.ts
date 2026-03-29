@@ -65,6 +65,15 @@ export { default as quickSkill } from './quick.skill.js';
 export { default as fastSkill } from './fast.skill.js';
 export { default as doSkill } from './do.skill.js';
 
+// Phase 10 debugging skills
+export { default as debugSkill } from './debug.skill.js';
+export { default as diagnoseSkill } from './diagnose.skill.js';
+export { default as forensicsSkill } from './forensics.skill.js';
+
+// Phase 10 shared types
+export type { FailureType, DiagnoseError, DiagnoseResult, DebugAnalysis, ForensicsReport } from './shared/debug-types.js';
+export { parseTestOutput, parseTypeErrors, parseLintErrors } from './diagnose.skill.js';
+
 // Phase 7 shared utilities
 export type { VerifyFinding, VerifyReport, LayerResult, VerifyVerdict, CoverageMetric, FileCoverage, CoverageReport } from './shared/verify-types.js';
 export { parseCoverageSummary } from './shared/coverage-parser.js';
