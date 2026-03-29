@@ -244,15 +244,18 @@ Plans:
   4. CI pipeline can run `sunco headless next` per cron tick, advancing one unit at a time
 **Plans:** 1/1 plans complete
 
-### Phase 14: Context Optimization
-**Goal**: Minimize token waste and maximize agent effectiveness through smart context management and model routing
+### Phase 14: Context Optimization + Quality Depth
+**Goal**: Minimize token waste, maximize agent effectiveness, close remaining quality gaps — KV-cache optimization, garbage collection, plan→verify auto-link, output discipline
 **Depends on**: Phase 1 (agent router), Phase 12 (cost tracking)
-**Requirements**: CTX-01, CTX-02, CTX-03, CTX-04
+**Requirements**: CTX-01, CTX-02, CTX-03, CTX-04, CTX-05, CTX-06, CTX-07
 **Success Criteria** (what must be TRUE):
-  1. Agent dispatch prompt includes relevant file contents inline — LLM uses 0 tool calls to read context
-  2. After plan execution, roadmap is automatically reassessed — outdated plans are flagged or updated
-  3. Simple tasks route to fast/cheap models, complex tasks to capable models — automatic, no user config
-  4. User sets `sunco.token_profile = "budget"` → 40-60% cost reduction with graceful quality tradeoff
+  1. Agent prompts use stable prefix + variable suffix — measured cache hit rate improvement
+  2. After plan execution, roadmap is automatically reassessed
+  3. Simple tasks route to cheap models, complex to capable — automatic
+  4. `sunco.token_profile = "budget"` → 40-60% cost reduction
+  5. `sunco health --deep` detects code-doc mismatches, dead imports, stale TODOs via agent
+  6. `sunco verify` auto-loads acceptance_criteria from PLAN.md
+  7. verify PASS = 1-line summary, FAIL = full report with fix suggestions
 **Plans:** 0 plans (not yet planned)
 
 ### Phase 15: Document Generation

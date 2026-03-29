@@ -192,12 +192,15 @@
 - **HLS-04**: `sunco headless --timeout <ms>` -- 최대 실행 시간 제한. CI 예산 보호
 - **HLS-05**: HTML 리포트 -- `sunco export --html` 마일스톤 완료 후 자체 포함 HTML 리포트 자동 생성. CSS/JS 인라인, 외부 의존 없음
 
-### Context Optimization (Phase 14)
+### Context Optimization + Quality Depth (Phase 14)
 
-- **CTX-01**: 컨텍스트 사전 주입 -- 에이전트 디스패치 시 관련 파일 내용을 프롬프트에 인라인. LLM이 파일 읽기에 토큰 낭비하지 않음
+- **CTX-01**: KV-cache 최적화 -- 에이전트 프롬프트를 stable prefix(AGENTS.md, 규칙, 스킬 정의) + variable suffix(현재 작업) 구조로 분리. cache hit rate 극대화. Manus AI 패턴 (10x 비용 절감)
 - **CTX-02**: 적응형 재계획 -- 각 plan 실행 완료 후 로드맵 자동 재평가. 새 정보가 계획을 바꿀 경우 plan 재정렬/추가/삭제
 - **CTX-03**: 복잡도 기반 모델 라우팅 -- 작업 복잡도 자동 분류 (simple/standard/complex) → 적절한 모델 자동 선택. sub-ms 휴리스틱, LLM 호출 없음
 - **CTX-04**: 토큰 프로파일 -- budget/balanced/quality 프리셋. budget=40-60% 절약 (저렴 모델, 리서치 스킵), quality=전체 파워
+- **CTX-05**: Garbage Collection 스킬 -- `sunco health --deep` 에이전트가 코드-문서 불일치, 죽은 import, 오래된 TODO, 아키텍처 엔트로피 탐지+수정 제안. OpenAI 3대 기둥 중 하나
+- **CTX-06**: Plan→Verify 자동 연결 -- verify Layer 3에서 해당 phase의 PLAN.md를 파싱하여 acceptance_criteria 자동 추출 → 검증. Opslane/Verify spec-first 패턴
+- **CTX-07**: fail loudly, succeed silently -- verify/lint 출력 패턴 개선. PASS=1줄 요약, FAIL=전체 상세 보고서+수정 제안. 컨텍스트 오염 방지. HumanLayer 패턴
 
 ### Document Generation (Phase 15)
 
