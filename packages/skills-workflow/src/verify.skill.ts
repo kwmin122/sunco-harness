@@ -53,19 +53,46 @@ const LAYER_NAMES = [
 // Helpers
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Quality Gate: configurable multi-dimensional thresholds
+// ---------------------------------------------------------------------------
+
+interface QualityGate {
+  maxCritical: number;
+  maxHigh: number;
+  maxMedium: number;
+}
+
+/** Default quality gate — zero tolerance for critical/high */
+const DEFAULT_QUALITY_GATE: QualityGate = {
+  maxCritical: 0,
+  maxHigh: 0,
+  maxMedium: 5,
+};
+
 /**
- * Compute verdict from findings.
- * FAIL: any critical or high severity.
- * WARN: any medium or low severity.
+ * Compute verdict from findings against quality gate thresholds.
+ *
+ * FAIL: any threshold exceeded.
+ * WARN: findings exist but within thresholds.
  * PASS: no findings.
+ *
+ * This is a deterministic, configurable gate — not an LLM judgment call.
+ * Inspired by SonarQube's Quality Gate model.
  */
-function computeVerdict(findings: VerifyFinding[]): VerifyVerdict {
-  if (findings.some((f) => f.severity === 'critical' || f.severity === 'high')) {
-    return 'FAIL';
-  }
-  if (findings.length > 0) {
-    return 'WARN';
-  }
+function computeVerdict(
+  findings: VerifyFinding[],
+  gate: QualityGate = DEFAULT_QUALITY_GATE,
+): VerifyVerdict {
+  const criticalCount = findings.filter((f) => f.severity === 'critical').length;
+  const highCount = findings.filter((f) => f.severity === 'high').length;
+  const mediumCount = findings.filter((f) => f.severity === 'medium').length;
+
+  if (criticalCount > gate.maxCritical) return 'FAIL';
+  if (highCount > gate.maxHigh) return 'FAIL';
+  if (mediumCount > gate.maxMedium) return 'FAIL';
+
+  if (findings.length > 0) return 'WARN';
   return 'PASS';
 }
 
@@ -257,8 +284,15 @@ export default defineSkill({
       allFindings.push(...layer.findings);
     }
 
-    // --- Step 6: Compute verdict ---
-    let verdict = computeVerdict(allFindings);
+    // --- Step 6: Compute verdict against quality gate ---
+    // Read quality gate from state (user can configure via sunco settings)
+    const gateConfig = await ctx.state.get<Partial<QualityGate>>('verify.qualityGate');
+    const gate: QualityGate = {
+      maxCritical: gateConfig?.maxCritical ?? DEFAULT_QUALITY_GATE.maxCritical,
+      maxHigh: gateConfig?.maxHigh ?? DEFAULT_QUALITY_GATE.maxHigh,
+      maxMedium: gateConfig?.maxMedium ?? DEFAULT_QUALITY_GATE.maxMedium,
+    };
+    let verdict = computeVerdict(allFindings, gate);
 
     // --- Step 7: Human gate ---
     const humanGateRequired = allFindings.some((f) => f.humanRequired === true);

@@ -239,7 +239,7 @@ packages/
 - **Skill-Only**: All functionality delivered as skills via `defineSkill()`. No hardcoded commands
 - **Deterministic First**: Lint/test/health are deterministic. LLM only where judgment needed
 - **Agent Router**: Provider-agnostic abstraction over Claude/OpenAI/Google/Ollama via Vercel AI SDK
-- **Proactive Recommender**: 100+ rules engine suggesting next-best-action after every skill
+- **Proactive Recommender**: 50+ deterministic rules engine suggesting next-best-action after every skill
 - **Config Hierarchy**: Global (~/.sun/config.toml) → Project (.sun/config.toml) → Directory
 - **State Engine**: SQLite WAL for structured data + FileStore for .sun/ flat files
 - **UI Contract**: SkillUi (skill intent API) + UiAdapter (Ink/console/silent renderers)

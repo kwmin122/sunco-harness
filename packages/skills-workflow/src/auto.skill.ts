@@ -287,6 +287,13 @@ export default defineSkill({
         skillId: 'workflow.execute',
       },
       {
+        // Mandatory lint gate: runs deterministically after execute, before verify.
+        // Agent CANNOT skip this. Stripe Minions pattern: "hardcoded script always
+        // runs the linter and the agent cannot skip this."
+        name: 'lint-gate',
+        skillId: 'harness.lint',
+      },
+      {
         name: 'verify',
         skillId: 'workflow.verify',
       },
