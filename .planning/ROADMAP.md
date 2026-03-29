@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Composition Skills** - auto, quick, fast, do -- power-user orchestration (completed 2026-03-29)
 - [x] **Phase 10: Debugging** - debug, diagnose, forensics -- failure recovery and analysis (completed 2026-03-29)
 - [x] **Phase 11: Planning Quality Pipeline** - research-integrated planning, revision loop, requirements coverage (completed 2026-03-29)
-- [ ] **Phase 12: Operational Resilience** - crash recovery, stuck detection, cost dashboard, budget ceiling, 3-tier timeout (v1.1)
+- [x] **Phase 12: Operational Resilience** - crash recovery, stuck detection, cost dashboard, budget ceiling, 3-tier timeout (v1.1) (completed 2026-03-29)
 - [ ] **Phase 13: Headless + CI/CD** - headless mode, JSON query, exit codes, HTML reports (v1.1)
 - [ ] **Phase 14: Context Optimization** - context pre-injection, adaptive replanning, complexity routing, token profiles (v1.1)
 - [ ] **Phase 15: Document Generation** - HWPX, markdown docs, template system (v1.1)
@@ -231,7 +231,7 @@ Plans:
   3. User runs `sunco stats` → sees per-skill token/cost breakdown, phase totals, model-level split
   4. User sets `sunco.budget_ceiling = 10.00` → auto mode pauses at $10 with 50%/75%/90% warnings
   5. Soft timeout warns agent to wrap up, idle timeout detects stalls, hard timeout force-stops — all configurable
-**Plans:** 0 plans (not yet planned)
+**Plans:** 2/2 plans complete
 
 ### Phase 13: Headless + CI/CD
 **Goal**: SUNCO runs in CI pipelines, cron jobs, and scripts without TUI — enabling team adoption and automation
@@ -294,7 +294,7 @@ v1.1 Phases: 11 -> 12 -> 13 -> 14 -> 15
 | 9. Composition Skills | 3/3 | Complete | 2026-03-29 |
 | 10. Debugging | 3/3 | Complete | 2026-03-29 |
 | 11. Planning Quality Pipeline | 1/1 | Complete | 2026-03-29 |
-| 12. Operational Resilience | 0/? | Not started | - |
+| 12. Operational Resilience | 2/2 | Complete   | 2026-03-29 |
 | 13. Headless + CI/CD | 0/? | Not started | - |
 | 14. Context Optimization | 0/? | Not started | - |
 | 15. Document Generation | 0/? | Not started | - |

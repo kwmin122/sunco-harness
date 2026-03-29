@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-03-29T05:54:37Z"
+status: executing
+stopped_at: Completed 12-02-PLAN.md
+last_updated: "2026-03-29T06:01:29.676Z"
 last_activity: 2026-03-29
 progress:
-  total_phases: 15
-  completed_phases: 10
-  total_plans: 53
-  completed_plans: 54
+  total_phases: 16
+  completed_phases: 11
+  total_plans: 55
+  completed_plans: 56
   percent: 0
 ---
 
@@ -107,6 +107,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 10-debugging P03 | 3min | 2 tasks | 6 files |
 | Phase 11 P01 | 2min | 1 tasks | 4 files |
 | Phase 12-operational-resilience P01 | 12min | 3 tasks | 6 files |
+| Phase 12 P02 | 20 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -246,6 +247,8 @@ Recent decisions affecting current work:
 - [Phase 12-01]: StuckDetector is stateless (pure function on history array) — state lives in AutoLock
 - [Phase 12-01]: BudgetGuard uses null ceilingUsd to represent no-ceiling (not 0 or Infinity) for clarity
 - [Phase 12-01]: StuckDetector.analyze() returns consecutiveFailures even when not stuck so callers can monitor progress
+- [Phase 12]: Budget ceiling and timeout config read from ctx.state (not ctx.config) — SunConfig has no budget_ceiling field
+- [Phase 12]: Promise.race timeout resolves (not rejects) to SkillResult to avoid unhandled rejection
 
 ### Pending Todos
 
@@ -259,6 +262,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T05:54:37Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-03-29T06:01:29.672Z
+Stopped at: Completed 12-02-PLAN.md
 Resume file: None
