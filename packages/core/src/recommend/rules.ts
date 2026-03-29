@@ -1,7 +1,7 @@
 /**
  * @sunco/core - Recommendation Rules
  *
- * 25+ deterministic rules that map (state, lastResult) to recommendations.
+ * 30+ deterministic rules that map (state, lastResult) to recommendations.
  * Grouped by category: workflow transitions, harness transitions,
  * session state, error recovery, milestone, context-aware, and fallback.
  *
@@ -303,7 +303,7 @@ const errorRecoveryRules: RecommendationRule[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Category 5: Milestone Rules (rules 21-24)
+// Category 5: Milestone + Shipping Rules (rules 21-29)
 // ---------------------------------------------------------------------------
 
 const milestoneRules: RecommendationRule[] = [
@@ -348,6 +348,60 @@ const milestoneRules: RecommendationRule[] = [
     () => [
       rec('workflow.research', 'Research solution', 'Debugging stuck -- research for solutions', 'high'),
       rec('workflow.discuss', 'Discuss with team', 'Discuss the issue for fresh perspective', 'medium'),
+    ],
+  ),
+
+  // Rule 25: After ship failure -> debug and verify (Phase 8)
+  rule(
+    'after-ship-failure',
+    'After ship failure, investigate or re-verify',
+    (s) => lastWas(s, 'workflow.ship') && lastFailed(s),
+    () => [
+      rec('workflow.debug', 'Debug failure', 'Investigate ship failure', 'high'),
+      rec('workflow.verify', 'Re-verify', 'Re-run verification before retrying ship', 'medium'),
+    ],
+  ),
+
+  // Rule 26: After release success -> milestone complete (Phase 8)
+  rule(
+    'after-release-success',
+    'After successful release, consider completing the milestone',
+    (s) => lastWas(s, 'workflow.release') && lastSucceeded(s),
+    () => [
+      rec('workflow.milestone', 'Complete milestone', 'Archive and tag this milestone', 'medium'),
+      rec('core.status', 'Check status', 'Review status after release', 'low'),
+    ],
+  ),
+
+  // Rule 27: After release failure -> debug (Phase 8)
+  rule(
+    'after-release-failure',
+    'After release failure, investigate',
+    (s) => lastWas(s, 'workflow.release') && lastFailed(s),
+    () => [
+      rec('workflow.debug', 'Debug failure', 'Investigate release failure', 'high'),
+    ],
+  ),
+
+  // Rule 28: After milestone complete -> start new milestone (Phase 8)
+  rule(
+    'after-milestone-complete',
+    'After completing a milestone, start the next one',
+    (s) => lastWas(s, 'workflow.milestone') && lastSucceeded(s) && hasProjectState(s, 'lastMilestoneAction', 'complete'),
+    () => [
+      rec('workflow.milestone', 'New milestone', 'Start the next milestone', 'high'),
+      rec('core.status', 'Check status', 'Review project status', 'medium'),
+    ],
+  ),
+
+  // Rule 29: After milestone gaps -> plan catch-up (Phase 8)
+  rule(
+    'after-milestone-gaps',
+    'After identifying gaps, plan catch-up work',
+    (s) => lastWas(s, 'workflow.milestone') && lastSucceeded(s) && hasProjectState(s, 'lastMilestoneAction', 'gaps'),
+    () => [
+      rec('workflow.plan', 'Plan catch-up', 'Plan the newly created catch-up phases', 'high'),
+      rec('workflow.execute', 'Execute catch-up', 'Execute catch-up phases', 'medium'),
     ],
   ),
 ];
