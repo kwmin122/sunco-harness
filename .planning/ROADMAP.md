@@ -169,7 +169,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 08-01-PLAN.md -- Shared infrastructure: version-bumper, changelog-writer, milestone-helpers, 4 prompt builders
+- [x] 08-01-PLAN.md -- Shared infrastructure: version-bumper, changelog-writer, milestone-helpers, 4 prompt builders
 - [ ] 08-02-PLAN.md -- sunco ship (verify pre-check + PR creation) + sunco release (version bump + tag + publish)
 - [ ] 08-03-PLAN.md -- sunco milestone skill (5 subcommands: new, audit, complete, summary, gaps)
 - [ ] 08-04-PLAN.md -- CLI wiring, barrel exports, recommender rules, build verification

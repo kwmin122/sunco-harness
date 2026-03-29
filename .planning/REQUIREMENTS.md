@@ -75,11 +75,11 @@
 
 - [x] **WF-01**: `sunco new` -- 아이디어->질문->병렬 리서치->요구사항->로드맵 자동 생성
 - [x] **WF-02**: `sunco scan` -- 기존 코드베이스 7개 문서 분석
-- [ ] **WF-03**: `sunco milestone new` -- 다음 마일스톤 시작 (질문->리서치->요구사항->로드맵)
-- [ ] **WF-04**: `sunco milestone audit` -- 마일스톤 달성도 검증 (의도 vs 실제)
-- [ ] **WF-05**: `sunco milestone complete` -- 아카이브 + 태그 + 다음 준비
-- [ ] **WF-06**: `sunco milestone summary` -- 종합 보고서 (온보딩/리뷰용)
-- [ ] **WF-07**: `sunco milestone gaps` -- audit 격차 -> 추가 페이즈 생성
+- [x] **WF-03**: `sunco milestone new` -- 다음 마일스톤 시작 (질문->리서치->요구사항->로드맵)
+- [x] **WF-04**: `sunco milestone audit` -- 마일스톤 달성도 검증 (의도 vs 실제)
+- [x] **WF-05**: `sunco milestone complete` -- 아카이브 + 태그 + 다음 준비
+- [x] **WF-06**: `sunco milestone summary` -- 종합 보고서 (온보딩/리뷰용)
+- [x] **WF-07**: `sunco milestone gaps` -- audit 격차 -> 추가 페이즈 생성
 - [x] **WF-08**: `sunco progress` -- 전체 진행 상황 + 다음 액션 라우팅
 
 ### Workflow -- 맥락 + 계획
@@ -117,8 +117,8 @@
 
 ### Workflow -- 출시
 
-- [ ] **SHP-01**: `sunco ship` -- PR 생성 + 5겹 필터 통과 확인 + 자동/수동 게이트
-- [ ] **SHP-02**: `sunco release` -- 버전 태깅 + 아카이브 + npm publish
+- [x] **SHP-01**: `sunco ship` -- PR 생성 + 5겹 필터 통과 확인 + 자동/수동 게이트
+- [x] **SHP-02**: `sunco release` -- 버전 태깅 + 아카이브 + npm publish
 
 ### Workflow -- 세션 관리
 
@@ -286,13 +286,13 @@
 | REV-02 | Phase 7: Verification Pipeline | Complete |
 | REV-03 | Phase 7: Verification Pipeline | Complete |
 | REV-04 | Phase 7: Verification Pipeline | Complete |
-| SHP-01 | Phase 8: Shipping + Milestones | Pending |
-| SHP-02 | Phase 8: Shipping + Milestones | Pending |
-| WF-03 | Phase 8: Shipping + Milestones | Pending |
-| WF-04 | Phase 8: Shipping + Milestones | Pending |
-| WF-05 | Phase 8: Shipping + Milestones | Pending |
-| WF-06 | Phase 8: Shipping + Milestones | Pending |
-| WF-07 | Phase 8: Shipping + Milestones | Pending |
+| SHP-01 | Phase 8: Shipping + Milestones | Complete |
+| SHP-02 | Phase 8: Shipping + Milestones | Complete |
+| WF-03 | Phase 8: Shipping + Milestones | Complete |
+| WF-04 | Phase 8: Shipping + Milestones | Complete |
+| WF-05 | Phase 8: Shipping + Milestones | Complete |
+| WF-06 | Phase 8: Shipping + Milestones | Complete |
+| WF-07 | Phase 8: Shipping + Milestones | Complete |
 | WF-15 | Phase 9: Composition Skills | Pending |
 | WF-16 | Phase 9: Composition Skills | Pending |
 | WF-17 | Phase 9: Composition Skills | Pending |
