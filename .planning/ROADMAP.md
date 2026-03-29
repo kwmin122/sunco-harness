@@ -182,7 +182,12 @@ Plans:
   1. User runs `sunco auto` and remaining phases execute autonomously (discuss, plan, execute, verify chain) -- stopping only at blockers or gray areas requiring human judgment
   2. User runs `sunco quick --full` for a lightweight task with optional discuss/research steps, or `sunco fast` for immediate execution skipping planning
   3. User types `sunco do "fix the login bug"` in natural language and the correct skill chain is identified and executed
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md -- sunco auto (autonomous pipeline) + sunco do (NL router with prompt builder)
+- [ ] 09-02-PLAN.md -- sunco quick (lightweight task) + sunco fast (immediate execution)
+- [ ] 09-03-PLAN.md -- CLI wiring, barrel exports, tsup config, recommender rules, build verification
 
 ### Phase 10: Debugging
 **Goal**: Users can diagnose failures, analyze root causes, and perform post-mortem forensics on workflow breakdowns
@@ -209,5 +214,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 | 6. Execution + Review | 0/4 | Not started | - |
 | 7. Verification Pipeline | 0/4 | Not started | - |
 | 8. Shipping + Milestones | 0/4 | Not started | - |
-| 9. Composition Skills | 0/? | Not started | - |
+| 9. Composition Skills | 0/3 | Not started | - |
 | 10. Debugging | 0/? | Not started | - |
