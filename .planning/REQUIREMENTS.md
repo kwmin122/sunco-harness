@@ -179,13 +179,13 @@
 ### Korean Market Foundation
 
 - **KR-01**: CLI i18n 프레임워크 -- 한국어/영어 메시지 전환. `sunco.locale = "ko"` 설정
-- **KR-02**: `sunco notify:kakao` -- 카카오톡 알림 스킬. 빌드 성공/실패, 테스트 결과, 검증 완료 알림
+- **KR-02**: `sunco notify` -- 빌드/테스트 결과 알림 스킬. Slack webhook + Discord webhook 우선 구현. 카카오 알림톡은 공식 Alimtalk API + 인증된 딜러(Solapi 등) 경유만 허용 (macOS Accessibility 자동화 금지 — 카카오 운영정책 위반, 계정정지 리스크)
 - **KR-03**: Agent Router HyperCLOVA X provider -- NAVER HyperCLOVA X API 연동 (langchain-naver 참고)
 - **KR-04**: `sunco search:kr` -- 네이버 트렌드, 카카오, 국내 스타트업, 규제 환경. 한국어 NLP
 - **KR-05**: 한국어 `--help` 메시지 -- 모든 스킬 description + option 한국어 번역
 - **KR-06**: `sunco doc:hwpx` -- HWP/HWPX 문서 프로그래밍 생성/편집/변환. 정부/기업 제안서, 수행계획서 자동 생성. hwpxjs + Hancom SDK 활용
 - **KR-07**: es-hangul 연동 -- 한글 조사 처리(은/는, 이/가, 을/를), CLI 메시지 자연스러운 한국어 출력
-- **KR-08**: HyperCLOVA X SEED provider -- Agent Router에 네이버 HyperCLOVA X SEED 모델 추가 (무료 상용, 한국어+코드 사전학습)
+- **KR-08**: HyperCLOVA X SEED provider -- Agent Router에 네이버 HyperCLOVA X SEED 모델 추가. 선택적 provider만 (기본값 X). "Powered by HyperCLOVA X" 귀속 표기 필수. 10M MAU 이하 무료, "경쟁 제품" 조항 주의 (SUNCO는 CLI 개발자 도구라 LOW-MEDIUM 리스크)
 
 ### Developer Experience
 
