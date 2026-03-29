@@ -31,6 +31,112 @@ import { readFile, readdir, access } from 'node:fs/promises';
 import { join } from 'node:path';
 
 // ---------------------------------------------------------------------------
+// Acceptance criteria patterns (Task 2: acceptance_criteria auto-link)
+// ---------------------------------------------------------------------------
+
+/** Pattern: "{file} contains {string}" */
+const GREPPABLE = /^(.+?)\s+contains\s+['"]?(.+?)['"]?$/i;
+
+/** Pattern: "{file} exports {symbol}" */
+const EXPORTABLE = /^(.+?)\s+exports?\s+(.+)$/i;
+
+/**
+ * Extract <acceptance_criteria> block content from raw PLAN.md text.
+ * Returns an array of non-empty criterion lines.
+ */
+function extractAcceptanceCriteria(rawPlan: string): string[] {
+  const match = rawPlan.match(/<acceptance_criteria>([\s\S]*?)<\/acceptance_criteria>/);
+  if (!match) return [];
+  return match[1]
+    .split('\n')
+    .map((l) => l.replace(/^[-*]\s*/, '').trim())
+    .filter(Boolean);
+}
+
+/**
+ * Run deterministic grep-verifiable acceptance criteria checks.
+ * For each criterion:
+ *   - Pattern "file contains string" → readFile + includes()
+ *   - Pattern "file exports symbol" → readFile + regex match for export.*symbol
+ *   - Otherwise: skip (non-greppable, let agent handle)
+ * Returns findings for failed checks.
+ */
+async function checkAcceptanceCriteria(
+  cwd: string,
+  criteria: string[],
+  planId: string,
+): Promise<VerifyFinding[]> {
+  const findings: VerifyFinding[] = [];
+
+  for (const criterion of criteria) {
+    // Try "contains" pattern first
+    const containsMatch = criterion.match(GREPPABLE);
+    if (containsMatch) {
+      const [, filePart, needle] = containsMatch;
+      const filePath = join(cwd, filePart.trim());
+      try {
+        const content = await readFile(filePath, 'utf-8');
+        if (!content.includes(needle.trim())) {
+          findings.push({
+            layer: 3,
+            source: 'acceptance',
+            severity: 'high',
+            description: `Acceptance criterion not met (${planId}): "${criterion}"`,
+            file: filePart.trim(),
+            suggestion: `Ensure ${filePart.trim()} contains the string: "${needle.trim()}"`,
+          });
+        }
+      } catch {
+        findings.push({
+          layer: 3,
+          source: 'acceptance',
+          severity: 'high',
+          description: `Acceptance criterion file not found (${planId}): ${filePart.trim()}`,
+          file: filePart.trim(),
+          suggestion: `Create the file: ${filePart.trim()}`,
+        });
+      }
+      continue;
+    }
+
+    // Try "exports" pattern
+    const exportsMatch = criterion.match(EXPORTABLE);
+    if (exportsMatch) {
+      const [, filePart, symbol] = exportsMatch;
+      const filePath = join(cwd, filePart.trim());
+      try {
+        const content = await readFile(filePath, 'utf-8');
+        const exportPattern = new RegExp(`export[^\\n]*${symbol.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+        if (!exportPattern.test(content)) {
+          findings.push({
+            layer: 3,
+            source: 'acceptance',
+            severity: 'high',
+            description: `Acceptance criterion not met (${planId}): "${criterion}"`,
+            file: filePart.trim(),
+            suggestion: `Ensure ${filePart.trim()} exports the symbol: "${symbol.trim()}"`,
+          });
+        }
+      } catch {
+        findings.push({
+          layer: 3,
+          source: 'acceptance',
+          severity: 'high',
+          description: `Acceptance criterion file not found (${planId}): ${filePart.trim()}`,
+          file: filePart.trim(),
+          suggestion: `Create the file: ${filePart.trim()}`,
+        });
+      }
+      continue;
+    }
+
+    // Non-greppable criterion — skip deterministic check, will be handled by agent
+  }
+
+  return findings;
+}
+
+// ---------------------------------------------------------------------------
 // Shared constants
 // ---------------------------------------------------------------------------
 
@@ -358,6 +464,16 @@ export async function runLayer3Acceptance(
 
   // Check acceptance criteria from plans
   for (const plan of plans) {
+    // Step A: Check <acceptance_criteria> blocks (Task 2: acceptance_criteria auto-link)
+    // Extract from raw plan text — deterministic grep-verifiable checks
+    const acceptanceCriteria = extractAcceptanceCriteria(plan.raw);
+    if (acceptanceCriteria.length > 0) {
+      const planId = `${plan.frontmatter.phase}-${plan.frontmatter.plan}`;
+      const acFindings = await checkAcceptanceCriteria(ctx.cwd, acceptanceCriteria, planId);
+      findings.push(...acFindings);
+    }
+
+    // Step B: Check task done criteria (file existence checks)
     for (const task of plan.tasks) {
       for (const criterion of task.done) {
         // Extract file paths from criterion (look for path-like patterns)
