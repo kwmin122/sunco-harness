@@ -352,16 +352,37 @@ export default defineSkill({
     const success = verdict !== 'FAIL';
     const summary = `Verification ${verdict}: ${allFindings.length} finding(s) across 5 layers`;
 
+    // Verdict-aware output: succeed silently, fail loudly
+    const details: string[] = [];
+    if (verdict === 'PASS') {
+      // Single line — succeed silently
+      details.push(`${allFindings.length} findings across 5 layers — all within quality gate`);
+    } else if (verdict === 'WARN') {
+      // Brief summary + warning list
+      details.push(`${allFindings.length} finding(s) — within quality gate thresholds`);
+      for (const f of allFindings.slice(0, 10)) {
+        details.push(`  [${f.severity}] ${f.source}: ${f.description.slice(0, 120)}`);
+      }
+      if (allFindings.length > 10) details.push(`  ... and ${allFindings.length - 10} more`);
+    } else {
+      // FAIL — full detailed report with fix suggestions
+      details.push(`${allFindings.length} finding(s) — QUALITY GATE FAILED`);
+      details.push('');
+      for (const f of allFindings) {
+        details.push(`[${f.severity.toUpperCase()}] Layer ${f.layer} (${f.source})`);
+        details.push(`  ${f.description}`);
+        if (f.file) details.push(`  File: ${f.file}${f.line ? `:${f.line}` : ''}`);
+        if (f.suggestion) details.push(`  Fix: ${f.suggestion}`);
+        details.push('');
+      }
+    }
+    details.push(`Output: ${verificationPath}`);
+
     await ctx.ui.result({
       success,
       title: 'Verify',
       summary,
-      details: [
-        `Verdict: ${verdict}`,
-        `Findings: ${allFindings.length}`,
-        `Human gate: ${humanGateRequired ? 'required' : 'not required'}`,
-        `Output: ${verificationPath}`,
-      ],
+      details,
     });
 
     return {

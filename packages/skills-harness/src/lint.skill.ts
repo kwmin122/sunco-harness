@@ -104,11 +104,16 @@ export default defineSkill({
       });
     } else {
       const terminalLines = formatForTerminal(enrichedViolations);
+      // Fail loudly, succeed silently: 0 violations = single-line detail
+      const details =
+        enrichedViolations.length === 0
+          ? ['All architecture boundaries respected']
+          : terminalLines;
       await ctx.ui.result({
         success: result.errorCount === 0,
         title: fix ? 'Lint (with fix)' : 'Lint',
         summary: `${result.filesLinted} files linted, ${result.errorCount} errors, ${result.warningCount} warnings`,
-        details: terminalLines,
+        details,
       });
     }
 
