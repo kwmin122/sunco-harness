@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 10: Debugging** - debug, diagnose, forensics -- failure recovery and analysis (completed 2026-03-29)
 - [x] **Phase 11: Planning Quality Pipeline** - research-integrated planning, revision loop, requirements coverage (completed 2026-03-29)
 - [x] **Phase 12: Operational Resilience** - crash recovery, stuck detection, cost dashboard, budget ceiling, 3-tier timeout (v1.1) (completed 2026-03-29)
-- [ ] **Phase 13: Headless + CI/CD** - headless mode, JSON query, exit codes, HTML reports (v1.1)
+- [x] **Phase 13: Headless + CI/CD** - headless mode, JSON query, exit codes, HTML reports (v1.1) (completed 2026-03-29)
 - [ ] **Phase 14: Context Optimization** - context pre-injection, adaptive replanning, complexity routing, token profiles (v1.1)
 - [ ] **Phase 15: Document Generation** - HWPX, markdown docs, template system (v1.1)
 - [ ] **Phase 16: Skill Marketplace** - install, publish, community registry (v1.1)
@@ -242,7 +242,7 @@ Plans:
   2. `sunco headless query` returns JSON snapshot in <100ms without LLM calls
   3. `sunco export --html` generates self-contained HTML report with progress, costs, timeline
   4. CI pipeline can run `sunco headless next` per cron tick, advancing one unit at a time
-**Plans:** 0 plans (not yet planned)
+**Plans:** 1/1 plans complete
 
 ### Phase 14: Context Optimization
 **Goal**: Minimize token waste and maximize agent effectiveness through smart context management and model routing
@@ -295,7 +295,7 @@ v1.1 Phases: 11 -> 12 -> 13 -> 14 -> 15
 | 10. Debugging | 3/3 | Complete | 2026-03-29 |
 | 11. Planning Quality Pipeline | 1/1 | Complete | 2026-03-29 |
 | 12. Operational Resilience | 2/2 | Complete   | 2026-03-29 |
-| 13. Headless + CI/CD | 0/? | Not started | - |
+| 13. Headless + CI/CD | 1/1 | Complete   | 2026-03-29 |
 | 14. Context Optimization | 0/? | Not started | - |
 | 15. Document Generation | 0/? | Not started | - |
 | 16. Skill Marketplace | 0/? | Not started | - |

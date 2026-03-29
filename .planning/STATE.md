@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 12-02-PLAN.md
-last_updated: "2026-03-29T06:01:29.676Z"
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-03-29T06:10:35.091Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 16
-  completed_phases: 11
-  total_plans: 55
-  completed_plans: 56
+  completed_phases: 12
+  total_plans: 56
+  completed_plans: 57
   percent: 0
 ---
 
@@ -21,11 +21,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** Phase 12 — operational resilience
+**Current focus:** Phase 13 — headless CI/CD mode
 
 ## Current Position
 
-Phase: 12
+Phase: 13
 Plan: 01 complete
 Status: In progress
 Last activity: 2026-03-29
@@ -249,6 +249,8 @@ Recent decisions affecting current work:
 - [Phase 12-01]: StuckDetector.analyze() returns consecutiveFailures even when not stuck so callers can monitor progress
 - [Phase 12]: Budget ceiling and timeout config read from ctx.state (not ctx.config) — SunConfig has no budget_ceiling field
 - [Phase 12]: Promise.race timeout resolves (not rejects) to SkillResult to avoid unhandled rejection
+- [Phase 13-01]: Headless uses lifecycle.boot normally then builds per-invocation SilentUiAdapter context to reuse all booted services without a second boot cycle
+- [Phase 13-01]: Exit code semantics: 0=success, 2=blocked (result.data.blocked=true), 1=error
 
 ### Pending Todos
 
@@ -262,6 +264,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T06:01:29.672Z
-Stopped at: Completed 12-02-PLAN.md
+Last session: 2026-03-29T06:10:35.088Z
+Stopped at: Completed 13-01-PLAN.md
 Resume file: None
