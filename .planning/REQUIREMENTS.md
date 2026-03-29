@@ -166,13 +166,48 @@
 - [ ] **UX-04**: 상태바: 모델 사용량(토큰 %) + 세션 컨텍스트 사용량(%) + provider명 항상 표시 (Claude Code 하단바 패턴)
 - [ ] **UX-05**: 상태바: 에이전트 실행 중 실시간 업데이트, 비용 누적 표시
 
+## v1.1 Requirements
+
+### Planning Quality Pipeline (GSD-inspired)
+
+- **PQP-01**: `sunco plan --research` -- plan 스킬에 research 자동 통합. RESEARCH.md 생성 후 planner에 입력
+- **PQP-02**: Plan-checker revision loop -- planner ↔ checker 최대 3회 반복. ISSUES FOUND → 수정 → 재검증
+- **PQP-03**: Requirements coverage gate -- plan 완료 시 모든 phase REQ-ID가 최소 1개 plan에 매핑되는지 검증
+- **PQP-04**: Validation strategy -- RESEARCH.md의 Validation Architecture → VALIDATION.md 생성. Nyquist 검증 차원
+- **PQP-05**: Deep work rules -- 모든 plan task에 read_first(변경 전 반드시 읽을 파일), acceptance_criteria(grep 검증 가능), concrete action(구체적 값) 필수
+
+### Korean Market Foundation
+
+- **KR-01**: CLI i18n 프레임워크 -- 한국어/영어 메시지 전환. `sunco.locale = "ko"` 설정
+- **KR-02**: `sunco notify:kakao` -- 카카오톡 알림 스킬. 빌드 성공/실패, 테스트 결과, 검증 완료 알림
+- **KR-03**: Agent Router HyperCLOVA X provider -- NAVER HyperCLOVA X API 연동 (langchain-naver 참고)
+- **KR-04**: `sunco search:kr` -- 네이버 트렌드, 카카오, 국내 스타트업, 규제 환경. 한국어 NLP
+- **KR-05**: 한국어 `--help` 메시지 -- 모든 스킬 description + option 한국어 번역
+
+### Developer Experience
+
+- **DX-01**: Context Freshness Manager -- 토큰 사용량 모니터링 → threshold 초과 시 자동 handoff 생성 + 새 세션 resume 안내
+- **DX-02**: `sunco gha <url>` -- GitHub Actions 실패 분석. gh CLI 연동, 로그 파싱, root cause, fix PR 제안
+- **DX-03**: `sunco stats` -- 사용량 통계: 누적 토큰, 스킬별 빈도, 세션 기록, GitHub 스타일 활동 그래프
+- **DX-04**: `sunco audit:safety` -- ~/.claude/settings.json allowedCommands 감사. rm -rf, sudo, git reset --hard 등 위험 패턴 탐지
+- **DX-05**: Handoff 자동화 -- `sunco guard` watch mode에 토큰 카운터 추가 → threshold 시 HANDOFF.json 자동 생성
+
+### Community & Ecosystem
+
+- **COM-01**: `sunco tips` -- 상황별 팁 추천. 테스트 실패 시 TDD 팁, 긴 세션 시 컨텍스트 관리 팁. 한국어 데이터베이스
+- **COM-02**: `sunco search:paper` -- arXiv, Scholar, DBpia, RISS, KCI. 인용 네트워크 분석
+- **COM-03**: `sunco search:patent` -- KIPRIS, USPTO, Google Patents. 선행기술 조사
+
+### Skill Marketplace (장기)
+
+- **MKT-01**: `sunco install <skill-name>` -- npm 기반 스킬 설치. @sunco/skill-* 네임스페이스
+- **MKT-02**: `sunco publish` -- 스킬 패키지 npm 배포. 스킬 메타데이터 검증
+- **MKT-03**: Community skill registry -- skillsmp.com 형태 검색/발견 인터페이스
+
 ## v2 Requirements
 
 ### Extension Skills
 
-- **EXT-01**: `sunco search:kr` -- 네이버 트렌드, 카카오, 국내 스타트업, 규제 환경. 한국어 NLP
-- **EXT-02**: `sunco search:paper` -- arXiv, Scholar, Semantic Scholar, DBpia, RISS, KCI. 인용 네트워크
-- **EXT-03**: `sunco search:patent` -- KIPRIS, USPTO, Google Patents. 선행기술 조사
 - **EXT-04**: `sunco design` -- 디자인 시스템 + UI 스타일 가이드 + `sunco ui-spec` 계약서
 
 ### SUNCO Terminal

@@ -12,16 +12,21 @@ SUN is an Agent Workspace OS built as a CLI runtime with 49 skills. This roadmap
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Core Platform** - CLI engine, config, skill system, state engine, agent router, recommender, UX foundations
-- [ ] **Phase 2: Harness Skills** - init, lint, health, agents, guard -- deterministic backbone, zero LLM cost
-- [ ] **Phase 3: Standalone TS Skills** - Session, ideas, phase management, settings, progress -- all deterministic
-- [ ] **Phase 4: Project Initialization** - new and scan -- agent-powered project bootstrap
-- [ ] **Phase 5: Context + Planning** - discuss, assume, research, plan -- the spec-driven workflow chain
-- [ ] **Phase 6: Execution + Review** - execute with worktree isolation and multi-agent cross-review
-- [ ] **Phase 7: Verification Pipeline** - 5-layer Swiss cheese, verify, validate, test-gen, review architecture
-- [ ] **Phase 8: Shipping + Milestones** - ship, release, milestone lifecycle management
+- [x] **Phase 1: Core Platform** - CLI engine, config, skill system, state engine, agent router, recommender, UX foundations (completed)
+- [x] **Phase 2: Harness Skills** - init, lint, health, agents, guard -- deterministic backbone, zero LLM cost (completed)
+- [x] **Phase 3: Standalone TS Skills** - Session, ideas, phase management, settings, progress -- all deterministic (completed)
+- [x] **Phase 4: Project Initialization** - new and scan -- agent-powered project bootstrap (completed)
+- [x] **Phase 5: Context + Planning** - discuss, assume, research, plan -- the spec-driven workflow chain (completed)
+- [x] **Phase 6: Execution + Review** - execute with worktree isolation and multi-agent cross-review (completed)
+- [x] **Phase 7: Verification Pipeline** - 5-layer Swiss cheese, verify, validate, test-gen, review architecture (completed)
+- [x] **Phase 8: Shipping + Milestones** - ship, release, milestone lifecycle management (completed)
 - [x] **Phase 9: Composition Skills** - auto, quick, fast, do -- power-user orchestration (completed 2026-03-29)
 - [x] **Phase 10: Debugging** - debug, diagnose, forensics -- failure recovery and analysis (completed 2026-03-29)
+- [ ] **Phase 11: Planning Quality Pipeline** - research-integrated planning, revision loop, requirements coverage (v1.1)
+- [ ] **Phase 12: Korean Market Foundation** - i18n, KakaoTalk notify, HyperCLOVA X, search:kr (v1.1)
+- [ ] **Phase 13: Developer Experience** - context freshness, GHA analysis, stats, safety audit (v1.1)
+- [ ] **Phase 14: Community & Ecosystem** - tips, search:paper, search:patent (v1.1)
+- [ ] **Phase 15: Skill Marketplace** - install, publish, community registry (v1.1)
 
 ## Phase Details
 
@@ -204,20 +209,79 @@ Plans:
 - [x] 10-02-PLAN.md -- sunco debug (agent failure classification) + sunco forensics (workflow post-mortem)
 - [x] 10-03-PLAN.md -- CLI wiring, barrel exports, tsup config, recommender rules, build verification
 
+### Phase 11: Planning Quality Pipeline
+**Goal**: Upgrade `sunco plan` with integrated research, revision loop, and requirements coverage — GSD-level quality but as independent CLI
+**Depends on**: Phase 5 (plan skill exists), Phase 10
+**Requirements**: PQP-01, PQP-02, PQP-03, PQP-04, PQP-05
+**Success Criteria** (what must be TRUE):
+  1. User runs `sunco plan --research` and research runs automatically before planning, producing RESEARCH.md that feeds into the planner
+  2. Plan-checker validates plan quality and iterates up to 3 times (planner ↔ checker) until VERIFICATION PASSED
+  3. After planning, a requirements coverage check ensures every phase REQ-ID appears in at least one plan
+  4. Each plan task has mandatory read_first, acceptance_criteria (grep-verifiable), and concrete action fields
+**Plans:** 0 plans (not yet planned)
+
+### Phase 12: Korean Market Foundation
+**Goal**: Make SUNCO the first Korean-first AI workspace OS with i18n, Korean platform integrations, and local AI provider support
+**Depends on**: Phase 1 (core platform)
+**Requirements**: KR-01, KR-02, KR-03, KR-04, KR-05
+**Success Criteria** (what must be TRUE):
+  1. User sets `sunco.locale = "ko"` and all CLI messages, help text, and skill descriptions display in Korean
+  2. User runs `sunco notify:kakao` with a KakaoTalk OAuth token and receives build/test result notifications
+  3. User configures HyperCLOVA X API key and Agent Router dispatches to NAVER's model alongside Claude/OpenAI
+  4. User runs `sunco search:kr "핀테크 트렌드"` and gets structured results from Naver, Kakao, Korean startup DBs
+**Plans:** 0 plans (not yet planned)
+
+### Phase 13: Developer Experience
+**Goal**: Proactive DX features that Claude Code users do manually — SUNCO automates them
+**Depends on**: Phase 3 (session skills), Phase 8 (shipping)
+**Requirements**: DX-01, DX-02, DX-03, DX-04, DX-05
+**Success Criteria** (what must be TRUE):
+  1. When context token usage exceeds 80%, SUNCO auto-generates HANDOFF.json and prompts user to start fresh session
+  2. User runs `sunco gha <url>` and gets root cause analysis of GitHub Actions failure with fix suggestion
+  3. User runs `sunco stats` and sees cumulative tokens, skill frequency, session history, activity heatmap
+  4. User runs `sunco audit:safety` and gets a risk report of dangerous approved commands in settings.json
+**Plans:** 0 plans (not yet planned)
+
+### Phase 14: Community & Ecosystem
+**Goal**: Korean-language tip system, academic/patent research skills, and automated session management
+**Depends on**: Phase 12 (i18n), Phase 3 (session skills)
+**Requirements**: COM-01, COM-02, COM-03
+**Success Criteria** (what must be TRUE):
+  1. User sees contextual Korean tips after skill execution (e.g., TDD tip after test failure)
+  2. User runs `sunco search:paper "transformer attention"` and gets structured results from arXiv, DBpia, RISS
+  3. User runs `sunco search:patent "음성인식"` and gets KIPRIS/USPTO results with prior art analysis
+**Plans:** 0 plans (not yet planned)
+
+### Phase 15: Skill Marketplace
+**Goal**: Community-driven skill ecosystem with npm-based distribution
+**Depends on**: Phase 1 (skill system)
+**Requirements**: MKT-01, MKT-02, MKT-03
+**Success Criteria** (what must be TRUE):
+  1. User runs `sunco install @sunco/skill-tdd` and the skill is downloaded from npm and registered in the skill registry
+  2. User runs `sunco publish` in a skill project directory and the skill is published to npm with validated metadata
+  3. Community skills are discoverable via `sunco search:skills <keyword>`
+**Plans:** 0 plans (not yet planned)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
+v1 Phases: 1 -> 2 -> 3 -> ... -> 10 (COMPLETE)
+v1.1 Phases: 11 -> 12 -> 13 -> 14 -> 15
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Platform | 12/12 | Complete |  |
-| 2. Harness Skills | 0/8 | Not started | - |
-| 3. Standalone TS Skills | 0/6 | Not started | - |
+| 2. Harness Skills | 8/8 | Complete |  |
+| 3. Standalone TS Skills | 6/6 | Complete |  |
 | 4. Project Initialization | 4/4 | Complete |  |
-| 5. Context + Planning | 0/5 | Not started | - |
-| 6. Execution + Review | 0/4 | Not started | - |
-| 7. Verification Pipeline | 0/4 | Not started | - |
-| 8. Shipping + Milestones | 0/4 | Not started | - |
-| 9. Composition Skills | 3/3 | Complete   | 2026-03-29 |
-| 10. Debugging | 3/3 | Complete    | 2026-03-29 |
+| 5. Context + Planning | 5/5 | Complete |  |
+| 6. Execution + Review | 4/4 | Complete |  |
+| 7. Verification Pipeline | 4/4 | Complete |  |
+| 8. Shipping + Milestones | 4/4 | Complete |  |
+| 9. Composition Skills | 3/3 | Complete | 2026-03-29 |
+| 10. Debugging | 3/3 | Complete | 2026-03-29 |
+| 11. Planning Quality Pipeline | 0/? | Not started | - |
+| 12. Korean Market Foundation | 0/? | Not started | - |
+| 13. Developer Experience | 0/? | Not started | - |
+| 14. Community & Ecosystem | 0/? | Not started | - |
+| 15. Skill Marketplace | 0/? | Not started | - |
