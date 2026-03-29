@@ -678,6 +678,77 @@ const compositionRules: RecommendationRule[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Category 10: Debugging Skill Rules (Phase 10)
+// Transitions for diagnose -> debug -> forensics escalation chain
+// ---------------------------------------------------------------------------
+
+const debuggingRules: RecommendationRule[] = [
+  // Rule 36: After diagnose success with errors -> suggest debug
+  rule(
+    'after-diagnose-errors',
+    'After diagnose finds errors, suggest debug for analysis',
+    (s) => lastWas(s, 'workflow.diagnose') && lastSucceeded(s) && hasProjectState(s, 'diagnose.lastResult'),
+    (s) => {
+      const result = s.projectState['diagnose.lastResult'] as { total_errors?: number } | undefined;
+      if (result && (result.total_errors ?? 0) > 0) {
+        return [
+          rec('workflow.debug', 'Debug issues', 'Diagnose found errors -- get AI analysis of root cause', 'high'),
+          rec('workflow.lint', 'Run lint', 'Check for architecture violations', 'medium'),
+        ];
+      }
+      return [
+        rec('workflow.verify', 'Verify', 'No errors found -- proceed with verification', 'medium'),
+      ];
+    },
+  ),
+
+  // Rule 37: After diagnose with zero errors -> verify or continue
+  rule(
+    'after-diagnose-clean',
+    'After clean diagnose, suggest verify or continue',
+    (s) => lastWas(s, 'workflow.diagnose') && lastSucceeded(s) && !hasProjectState(s, 'diagnose.lastResult'),
+    () => [
+      rec('workflow.verify', 'Verify', 'Build is clean -- proceed with verification', 'high'),
+      rec('workflow.execute', 'Continue executing', 'No issues found -- continue work', 'medium'),
+    ],
+  ),
+
+  // Rule 38: After forensics -> suggest plan or discuss to address findings
+  rule(
+    'after-forensics',
+    'After forensics analysis, suggest planning corrective action',
+    (s) => lastWas(s, 'workflow.forensics') && lastSucceeded(s),
+    () => [
+      rec('workflow.plan', 'Plan fix', 'Forensics identified root cause -- plan corrective action', 'high'),
+      rec('workflow.discuss', 'Discuss approach', 'Review forensics findings and discuss next steps', 'medium'),
+    ],
+  ),
+
+  // Rule 39: After forensics failure -> try debug instead
+  rule(
+    'after-forensics-failure',
+    'After forensics failure, fall back to debug',
+    (s) => lastWas(s, 'workflow.forensics') && lastFailed(s),
+    () => [
+      rec('workflow.debug', 'Try debug', 'Forensics failed -- try targeted debugging instead', 'high'),
+      rec('workflow.diagnose', 'Run diagnose', 'Get deterministic error analysis first', 'medium'),
+    ],
+  ),
+
+  // Rule 40: After repeated debug failures -> escalate to forensics
+  rule(
+    'debug-escalate-forensics',
+    'After debug failure, suggest deeper forensics analysis',
+    (s) => lastWas(s, 'workflow.debug') && lastFailed(s),
+    () => [
+      rec('workflow.forensics', 'Run forensics', 'Debug failed -- try full post-mortem analysis', 'high'),
+      rec('workflow.diagnose', 'Run diagnose', 'Get fresh diagnostic data', 'medium'),
+      rec('workflow.research', 'Research the issue', 'Complex problem -- research before fixing', 'low'),
+    ],
+  ),
+];
+
+// ---------------------------------------------------------------------------
 // Category 8: Fallback Rules (rules 41-42)
 // ---------------------------------------------------------------------------
 
@@ -722,5 +793,6 @@ export const RECOMMENDATION_RULES: RecommendationRule[] = [
   ...contextAwareRules,
   ...verificationPipelineRules,
   ...compositionRules,
+  ...debuggingRules,
   ...fallbackRules,
 ];

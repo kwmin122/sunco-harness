@@ -145,9 +145,9 @@ export default defineSkill({
     try {
       const git = simpleGit(ctx.cwd);
       const log = await git.log({ maxCount: 100 });
-      gitHistory = log.all
+      gitHistory = [...log.all]
         .reverse()
-        .map((c) => `${c.hash.slice(0, 7)} ${c.date} ${c.message}`)
+        .map((c: { hash: string; date: string; message: string }) => `${c.hash.slice(0, 7)} ${c.date} ${c.message}`)
         .join('\n');
     } catch {
       gitHistory = '[git history unavailable]';

@@ -58,6 +58,9 @@ import {
   quickSkill,
   fastSkill,
   doSkill,
+  debugSkill,
+  diagnoseSkill,
+  forensicsSkill,
 } from '@sunco/skills-workflow';
 
 /**
@@ -113,6 +116,10 @@ const preloadedSkills = [
   quickSkill,
   fastSkill,
   doSkill,
+  // Phase 10 debugging skills
+  debugSkill,
+  diagnoseSkill,
+  forensicsSkill,
 ];
 
 async function main(): Promise<void> {
