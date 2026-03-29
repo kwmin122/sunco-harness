@@ -175,6 +175,14 @@ export default defineSkill({
       flags: '--skip-check',
       description: 'Skip plan-checker validation',
     },
+    {
+      flags: '--research',
+      description: 'Run research before planning (auto if RESEARCH.md missing)',
+    },
+    {
+      flags: '--skip-research',
+      description: 'Skip research even if RESEARCH.md missing',
+    },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
@@ -253,6 +261,40 @@ export default defineSkill({
       }
     }
 
+    // Auto-research: if no RESEARCH.md and not --skip-research
+    if (!researchMd && !ctx.args['skip-research']) {
+      const researchProgress = ctx.ui.progress({ title: 'Running research first...' });
+      try {
+        const researchResult = await ctx.run('workflow.research', { phase: phaseNumber });
+        if (researchResult.success) {
+          // Re-read the RESEARCH.md that research skill just created
+          try {
+            researchMd = await readFile(join(phaseDir!, `${paddedPhase}-RESEARCH.md`), 'utf-8');
+          } catch {
+            // Research may have written but we can't read it
+          }
+        }
+        researchProgress.done({ summary: researchResult.success ? 'Research complete' : 'Research failed (continuing)' });
+      } catch {
+        researchProgress.done({ summary: 'Research unavailable (continuing without)' });
+        ctx.log.warn('Research skill not available or failed, proceeding without research');
+      }
+    } else if (ctx.args['research']) {
+      // Explicit --research flag: always run even if RESEARCH.md exists
+      const researchProgress = ctx.ui.progress({ title: 'Running research (--research flag)...' });
+      try {
+        const researchResult = await ctx.run('workflow.research', { phase: phaseNumber });
+        if (researchResult.success) {
+          try {
+            researchMd = await readFile(join(phaseDir!, `${paddedPhase}-RESEARCH.md`), 'utf-8');
+          } catch { /* continue */ }
+        }
+        researchProgress.done({ summary: 'Research complete' });
+      } catch {
+        researchProgress.done({ summary: 'Research failed (continuing)' });
+      }
+    }
+
     // REQUIREMENTS.md and ROADMAP.md from .planning/
     let requirementsMd = '';
     let roadmapMd = '';
@@ -271,6 +313,39 @@ export default defineSkill({
 
     // Extract phase goal and requirements from ROADMAP.md
     const phaseInfo = extractPhaseInfo(roadmapMd, phaseNumber);
+
+    // ----- Step 2.5: Generate VALIDATION.md from research (PQP-04) -----
+    if (researchMd && researchMd.includes('## Validation Architecture')) {
+      try {
+        const validationPath = join(phaseDir ?? join(ctx.cwd, '.planning', 'phases', phaseDirName || `${paddedPhase}-${phaseSlug}`), `${paddedPhase}-VALIDATION.md`);
+        const validationContent = [
+          `# Phase ${phaseNumber}: Validation Strategy`,
+          '',
+          `**Generated:** ${new Date().toISOString()}`,
+          `**Source:** ${paddedPhase}-RESEARCH.md`,
+          '',
+          '## Validation Dimensions',
+          '',
+          '1. **Goal Achievement** -- Do observable truths hold?',
+          '2. **Artifact Completeness** -- Do all planned files exist with real content?',
+          '3. **Wiring Integrity** -- Are all key links connected?',
+          '4. **Anti-Pattern Freedom** -- No TODOs, stubs, or placeholders?',
+          '5. **Test Coverage** -- Do tests exist and pass?',
+          '6. **Deep Work Compliance** -- read_first honored, acceptance_criteria verifiable?',
+          '',
+          '## Extracted from Research',
+          '',
+          researchMd.split('## Validation Architecture')[1]?.split(/\n## /)[0] ?? '(No validation architecture found in research)',
+          '',
+          '---',
+          `*Generated from Phase ${phaseNumber} research at ${new Date().toISOString()}*`,
+        ].join('\n');
+        await writeFile(validationPath, validationContent, 'utf-8');
+        ctx.log.info('VALIDATION.md written', { path: validationPath });
+      } catch (err) {
+        ctx.log.warn('Failed to write VALIDATION.md', { error: String(err) });
+      }
+    }
 
     // ----- Step 3: Plan-checker validation loop (D-13) -----
     let planOutput = '';
@@ -409,8 +484,36 @@ export default defineSkill({
       writtenFiles.push(targetPath);
     }
 
+    // ----- Step 4.5: Requirements coverage gate (PQP-03) -----
+    const coveredReqs = new Set<string>();
+    for (const planText of planTexts) {
+      // Parse requirements from YAML frontmatter
+      const reqMatch = planText.match(/requirements:\s*\[([^\]]*)\]/);
+      if (reqMatch) {
+        reqMatch[1]!
+          .split(',')
+          .map((r) => r.trim().replace(/['"]/g, ''))
+          .filter(Boolean)
+          .forEach((r) => coveredReqs.add(r));
+      }
+      // Also try line-by-line YAML format
+      const lineMatches = [...planText.matchAll(/^\s*-\s*([\w-]+\d+)/gm)];
+      for (const m of lineMatches) {
+        if (phaseInfo.requirements.includes(m[1]!)) {
+          coveredReqs.add(m[1]!);
+        }
+      }
+    }
+
+    const uncoveredReqs = phaseInfo.requirements.filter((r) => !coveredReqs.has(r));
+
     // ----- Step 5: Build result -----
     const remainingWarnings: string[] = [];
+    if (uncoveredReqs.length > 0) {
+      remainingWarnings.push(
+        `Requirements coverage gap: ${uncoveredReqs.join(', ')} not found in any plan's requirements field`,
+      );
+    }
     if (issues.length > 0) {
       remainingWarnings.push(
         `${issues.length} issue(s) remaining after ${MAX_ITERATIONS} iterations:`,

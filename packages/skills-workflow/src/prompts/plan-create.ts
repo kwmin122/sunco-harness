@@ -108,8 +108,10 @@ Each plan MUST include:
    - \`<context>\`: @-references to files the executor should read
    - \`<tasks>\`: Contains \`<task type="auto">\` elements, each with:
      - \`<name>\`: Task name
+     - \`<read_first>\`: Files the executor MUST read before modifying anything (MANDATORY -- at least the file being modified + any source of truth)
      - \`<files>\`: Files created/modified
-     - \`<action>\`: Detailed step-by-step instructions (specific enough for a different Claude instance)
+     - \`<action>\`: Detailed step-by-step instructions with CONCRETE values (NOT "align X with Y" -- specify exact values, signatures, config keys)
+     - \`<acceptance_criteria>\`: Grep-verifiable completion conditions (e.g., "file.ts contains export function foo")
      - \`<verify>\`: \`<automated>\` commands to verify completion
      - \`<done>\`: Bullet list of completion criteria
    - \`<verification>\`: Overall plan verification commands
@@ -130,6 +132,9 @@ Each plan MUST include:
 4. 2-3 tasks per plan (not more)
 5. No plan should exceed ~50% of context budget
 6. Key links must cover critical import/dependency connections that could break
+7. Every task MUST have <read_first> listing at minimum the file being modified
+8. Every <action> must contain concrete values -- never say "align with" or "match to" without specifying the exact target
+9. Every task MUST have <acceptance_criteria> with grep-verifiable conditions
 
 ## Output Format
 

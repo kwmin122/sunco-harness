@@ -2,7 +2,7 @@
  * Plan checker prompt builder for sunco plan.
  *
  * Instructs a verification agent to check generated plans against
- * 6 quality dimensions: requirement_coverage, task_completeness,
+ * 7 quality dimensions: requirement_coverage, task_completeness,
  * dependency_correctness, key_links_planned, scope_sanity, must_haves_derivation.
  *
  * Outputs structured ---ISSUE--- blocks or NO_ISSUES_FOUND.
@@ -58,7 +58,7 @@ These requirement IDs must ALL be covered: ${phaseRequirements.join(', ')}
 
 ## Verification Dimensions
 
-Check each plan against ALL 6 dimensions:
+Check each plan against ALL 7 dimensions:
 
 ### 1. requirement_coverage
 Every phase requirement ID [${phaseRequirements.join(', ')}] MUST appear in at least one plan's \`requirements\` frontmatter field.
@@ -89,6 +89,14 @@ Every \`<task>\` element must have: \`<name>\`, \`<files>\`, \`<action>\`, \`<ve
 - \`must_haves.key_links\` should cover critical connections between files
 - Missing truths or artifacts is a **blocker**
 
+### 7. deep_work_rules
+- Every \`<task>\` MUST have a \`<read_first>\` element listing files to read (at minimum the file being modified)
+- Every \`<task>\` MUST have an \`<acceptance_criteria>\` element with grep-verifiable conditions
+- Every \`<action>\` must contain concrete values, not vague references like "align with", "match to", "update to be consistent"
+- Missing read_first is a **blocker**
+- Missing acceptance_criteria is a **blocker**
+- Vague action text is a **warning**
+
 ## Output Format
 
 For each issue found, output:
@@ -115,5 +123,5 @@ NO_ISSUES_FOUND
 - Do NOT flag issues that are clearly intentional design choices documented in CONTEXT.md
 - Focus on correctness and completeness, not style
 
-Now check ALL plans against ALL 6 dimensions.`;
+Now check ALL plans against ALL 7 dimensions.`;
 }
