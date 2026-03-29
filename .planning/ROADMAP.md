@@ -166,7 +166,13 @@ Plans:
   1. User runs `sunco ship` and gets a PR with 5-layer verification pre-check, automatic/manual gates, and clear pass/fail status
   2. User runs `sunco release` and gets version tagging, archive creation, and npm publish in one command
   3. User runs `sunco milestone new/audit/complete/summary/gaps` and can start milestones, verify achievement vs intent, archive completed work, generate onboarding reports, and create catch-up phases for gaps
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 08-01-PLAN.md -- Shared infrastructure: version-bumper, changelog-writer, milestone-helpers, 4 prompt builders
+- [ ] 08-02-PLAN.md -- sunco ship (verify pre-check + PR creation) + sunco release (version bump + tag + publish)
+- [ ] 08-03-PLAN.md -- sunco milestone skill (5 subcommands: new, audit, complete, summary, gaps)
+- [ ] 08-04-PLAN.md -- CLI wiring, barrel exports, recommender rules, build verification
 
 ### Phase 9: Composition Skills
 **Goal**: Users can orchestrate entire workflows automatically, run lightweight tasks, and route natural language to the right skill
@@ -202,6 +208,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 | 5. Context + Planning | 0/5 | Not started | - |
 | 6. Execution + Review | 0/4 | Not started | - |
 | 7. Verification Pipeline | 0/4 | Not started | - |
-| 8. Shipping + Milestones | 0/? | Not started | - |
+| 8. Shipping + Milestones | 0/4 | Not started | - |
 | 9. Composition Skills | 0/? | Not started | - |
 | 10. Debugging | 0/? | Not started | - |
