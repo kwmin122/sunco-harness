@@ -610,6 +610,74 @@ const verificationPipelineRules: RecommendationRule[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Category 9: Composition Skill Rules (Phase 9)
+// Transitions for auto/quick/fast/do composition skills
+// ---------------------------------------------------------------------------
+
+const compositionRules: RecommendationRule[] = [
+  // After milestone new -> suggest running auto pipeline
+  rule(
+    'suggest-auto-after-milestone-new',
+    'After creating a new milestone, run auto pipeline',
+    (s) => lastWas(s, 'workflow.milestone') && lastSucceeded(s) && hasProjectState(s, 'lastMilestoneAction', 'new'),
+    () => [
+      rec('workflow.auto', 'Run Auto Pipeline', 'New milestone created -- run auto to execute all phases', 'high'),
+    ],
+  ),
+
+  // Fresh session with no previous skill -> suggest quick task
+  rule(
+    'suggest-quick-idle',
+    'Suggest quick task for fresh sessions',
+    (s) => s.lastSkillId === undefined || s.lastSkillId === '',
+    () => [
+      rec('workflow.quick', 'Quick Task', 'Run a lightweight task without full planning', 'low'),
+    ],
+  ),
+
+  // No context -> suggest do (natural language)
+  rule(
+    'suggest-do-generic',
+    'Suggest describing task in natural language when no context',
+    (s) => !s.lastSkillId,
+    () => [
+      rec('workflow.do', 'Describe What You Need', 'Describe your task in natural language', 'low'),
+    ],
+  ),
+
+  // After auto success -> suggest shipping results
+  rule(
+    'after-auto-success',
+    'After auto pipeline completes, ship the results',
+    (s) => lastWas(s, 'workflow.auto') && lastSucceeded(s),
+    () => [
+      rec('workflow.ship', 'Ship Results', 'Auto pipeline complete -- ship the PR', 'high'),
+    ],
+  ),
+
+  // After auto failure -> retry or check status
+  rule(
+    'after-auto-failure',
+    'After auto pipeline failure, retry or check status',
+    (s) => lastWas(s, 'workflow.auto') && !lastSucceeded(s),
+    () => [
+      rec('workflow.auto', 'Retry Auto', 'Resume auto pipeline from where it stopped', 'high'),
+      rec('core.status', 'Check Status', 'See what phase failed', 'medium'),
+    ],
+  ),
+
+  // After quick success -> suggest verifying changes
+  rule(
+    'after-quick-success',
+    'After quick task completes, verify the changes',
+    (s) => lastWas(s, 'workflow.quick') && lastSucceeded(s),
+    () => [
+      rec('workflow.verify', 'Verify Changes', 'Run verification on the quick task output', 'medium'),
+    ],
+  ),
+];
+
+// ---------------------------------------------------------------------------
 // Category 8: Fallback Rules (rules 41-42)
 // ---------------------------------------------------------------------------
 
@@ -653,5 +721,6 @@ export const RECOMMENDATION_RULES: RecommendationRule[] = [
   ...milestoneRules,
   ...contextAwareRules,
   ...verificationPipelineRules,
+  ...compositionRules,
   ...fallbackRules,
 ];
