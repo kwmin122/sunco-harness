@@ -94,6 +94,7 @@ export type {
   PermissionSet,
   Artifact,
   AgentUsage,
+  UsageEntry,
 } from './agent/types.js';
 
 // ---------------------------------------------------------------------------

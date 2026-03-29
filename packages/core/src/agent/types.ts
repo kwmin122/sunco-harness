@@ -77,6 +77,20 @@ export interface Artifact {
 // Usage Tracking (D-21: accurate + estimated costs)
 // ---------------------------------------------------------------------------
 
+/**
+ * Per-call usage entry for detailed cost history.
+ * Persisted in state under 'usage.history' for cost breakdown queries.
+ */
+export interface UsageEntry {
+  skillId: string;
+  phase: number | null;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  timestamp: string;
+}
+
 /** Token and cost usage information */
 export interface AgentUsage {
   /** Input tokens consumed (undefined if not available) */
