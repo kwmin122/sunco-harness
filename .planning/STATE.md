@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-03-29T05:30:30.845Z"
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-03-29T05:54:37Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 15
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** Phase 10 — debugging
+**Current focus:** Phase 12 — operational resilience
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 12
+Plan: 01 complete
+Status: In progress
 Last activity: 2026-03-29
 
 Progress: [░░░░░░░░░░] 0%
@@ -106,6 +106,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 10-debugging P02 | 3min | 2 tasks | 3 files |
 | Phase 10-debugging P03 | 3min | 2 tasks | 6 files |
 | Phase 11 P01 | 2min | 1 tasks | 4 files |
+| Phase 12-operational-resilience P01 | 12min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -241,6 +242,10 @@ Recent decisions affecting current work:
 - [Phase 10-debugging]: Fixed forensics.skill.ts readonly array DTS error via spread operator before .reverse()
 - [Phase 11]: Auto-research runs when RESEARCH.md missing (unless --skip-research); explicit --research flag always reruns
 - [Phase 11]: plan-checker dimension count updated from 6 to 7 (deep_work_rules as dimension 7)
+- [Phase 12-01]: AutoLock stores history in the same lock file (single source of truth) rather than a separate file
+- [Phase 12-01]: StuckDetector is stateless (pure function on history array) — state lives in AutoLock
+- [Phase 12-01]: BudgetGuard uses null ceilingUsd to represent no-ceiling (not 0 or Infinity) for clarity
+- [Phase 12-01]: StuckDetector.analyze() returns consecutiveFailures even when not stuck so callers can monitor progress
 
 ### Pending Todos
 
@@ -254,6 +259,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T05:30:30.842Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-03-29T05:54:37Z
+Stopped at: Completed 12-01-PLAN.md
 Resume file: None
