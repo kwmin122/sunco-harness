@@ -185,7 +185,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md -- sunco auto (autonomous pipeline) + sunco do (NL router with prompt builder)
+- [x] 09-01-PLAN.md -- sunco auto (autonomous pipeline) + sunco do (NL router with prompt builder)
 - [x] 09-02-PLAN.md -- sunco quick (lightweight task) + sunco fast (immediate execution)
 - [ ] 09-03-PLAN.md -- CLI wiring, barrel exports, tsup config, recommender rules, build verification
 

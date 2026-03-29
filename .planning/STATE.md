@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-03-29T00:47:26.236Z"
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-29T00:48:57.259Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 50
-  completed_plans: 48
+  completed_plans: 49
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 09 (composition-skills) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -100,6 +100,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 08 P02 | 5min | 2 tasks | 4 files |
 | Phase 08-shipping-milestones P04 | 5min | 2 tasks | 5 files |
 | Phase 09 P02 | 2min | 2 tasks | 3 files |
+| Phase 09 P01 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -223,6 +224,8 @@ Recent decisions affecting current work:
 - [Phase 08-shipping-milestones]: Used hasProjectState for lastMilestoneAction to differentiate milestone complete vs gaps transitions
 - [Phase 09]: quick skill try/catch + warnings for optional discuss/research failures (partial failure OK)
 - [Phase 09]: fast skill wider writePaths (**) vs quick (scoped) for ad-hoc tasks; 3-min timeout vs 5-min
+- [Phase 09]: Pipeline steps as typed array with skip-check callbacks for orchestrating multi-skill workflows
+- [Phase 09]: NL routing with read-only agent dispatch and quick fallback when no skill matches
 
 ### Pending Todos
 
@@ -236,6 +239,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T00:47:26.233Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-03-29T00:48:57.255Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None

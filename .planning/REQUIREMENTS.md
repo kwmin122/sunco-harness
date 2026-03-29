@@ -96,10 +96,10 @@
 
 ### Workflow -- 조합
 
-- [ ] **WF-15**: `sunco auto` -- 전체 남은 페이즈 자율 실행 (discuss->plan->execute->verify 체인). 블로커/회색지대만 멈춤
+- [x] **WF-15**: `sunco auto` -- 전체 남은 페이즈 자율 실행 (discuss->plan->execute->verify 체인). 블로커/회색지대만 멈춤
 - [x] **WF-16**: `sunco quick` -- 경량 작업 (--discuss/--research/--full 플래그)
 - [x] **WF-17**: `sunco fast` -- 즉시 실행, 계획 스킵
-- [ ] **WF-18**: `sunco do` -- 자연어->스킬 자동 라우팅
+- [x] **WF-18**: `sunco do` -- 자연어->스킬 자동 라우팅
 
 ### Workflow -- 검증 (Review Architecture)
 
@@ -293,10 +293,10 @@
 | WF-05 | Phase 8: Shipping + Milestones | Complete |
 | WF-06 | Phase 8: Shipping + Milestones | Complete |
 | WF-07 | Phase 8: Shipping + Milestones | Complete |
-| WF-15 | Phase 9: Composition Skills | Pending |
+| WF-15 | Phase 9: Composition Skills | Complete |
 | WF-16 | Phase 9: Composition Skills | Complete |
 | WF-17 | Phase 9: Composition Skills | Complete |
-| WF-18 | Phase 9: Composition Skills | Pending |
+| WF-18 | Phase 9: Composition Skills | Complete |
 | DBG-01 | Phase 10: Debugging | Pending |
 | DBG-02 | Phase 10: Debugging | Pending |
 | DBG-03 | Phase 10: Debugging | Pending |
