@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
+milestone: v1.1
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 10-03-PLAN.md
-last_updated: "2026-03-29T05:02:30.671Z"
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-29T05:30:30.845Z"
 last_activity: 2026-03-29
 progress:
-  total_phases: 10
+  total_phases: 15
   completed_phases: 10
   total_plans: 53
-  completed_plans: 53
+  completed_plans: 54
   percent: 0
 ---
 
@@ -105,6 +105,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 10-debugging P01 | 4min | 2 tasks | 5 files |
 | Phase 10-debugging P02 | 3min | 2 tasks | 3 files |
 | Phase 10-debugging P03 | 3min | 2 tasks | 6 files |
+| Phase 11 P01 | 2min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -238,6 +239,8 @@ Recent decisions affecting current work:
 - [Phase 10-debugging]: Forensics report written to .sun/forensics/ as markdown for persistence; cross-skill invocation via ctx.run for context gathering
 - [Phase 10-debugging]: debuggingRules placed between compositionRules and fallbackRules for specificity ordering
 - [Phase 10-debugging]: Fixed forensics.skill.ts readonly array DTS error via spread operator before .reverse()
+- [Phase 11]: Auto-research runs when RESEARCH.md missing (unless --skip-research); explicit --research flag always reruns
+- [Phase 11]: plan-checker dimension count updated from 6 to 7 (deep_work_rules as dimension 7)
 
 ### Pending Todos
 
@@ -251,6 +254,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T01:25:25.162Z
-Stopped at: Completed 10-03-PLAN.md
+Last session: 2026-03-29T05:30:30.842Z
+Stopped at: Completed 11-01-PLAN.md
 Resume file: None
