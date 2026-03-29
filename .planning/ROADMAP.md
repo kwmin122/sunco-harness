@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 6: Execution + Review** - execute with worktree isolation and multi-agent cross-review
 - [ ] **Phase 7: Verification Pipeline** - 5-layer Swiss cheese, verify, validate, test-gen, review architecture
 - [ ] **Phase 8: Shipping + Milestones** - ship, release, milestone lifecycle management
-- [ ] **Phase 9: Composition Skills** - auto, quick, fast, do -- power-user orchestration
+- [x] **Phase 9: Composition Skills** - auto, quick, fast, do -- power-user orchestration (completed 2026-03-29)
 - [ ] **Phase 10: Debugging** - debug, diagnose, forensics -- failure recovery and analysis
 
 ## Phase Details
@@ -182,12 +182,12 @@ Plans:
   1. User runs `sunco auto` and remaining phases execute autonomously (discuss, plan, execute, verify chain) -- stopping only at blockers or gray areas requiring human judgment
   2. User runs `sunco quick --full` for a lightweight task with optional discuss/research steps, or `sunco fast` for immediate execution skipping planning
   3. User types `sunco do "fix the login bug"` in natural language and the correct skill chain is identified and executed
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 09-01-PLAN.md -- sunco auto (autonomous pipeline) + sunco do (NL router with prompt builder)
 - [x] 09-02-PLAN.md -- sunco quick (lightweight task) + sunco fast (immediate execution)
-- [ ] 09-03-PLAN.md -- CLI wiring, barrel exports, tsup config, recommender rules, build verification
+- [x] 09-03-PLAN.md -- CLI wiring, barrel exports, tsup config, recommender rules, build verification
 
 ### Phase 10: Debugging
 **Goal**: Users can diagnose failures, analyze root causes, and perform post-mortem forensics on workflow breakdowns
@@ -214,5 +214,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> ... -> 10
 | 6. Execution + Review | 0/4 | Not started | - |
 | 7. Verification Pipeline | 0/4 | Not started | - |
 | 8. Shipping + Milestones | 0/4 | Not started | - |
-| 9. Composition Skills | 0/3 | Not started | - |
+| 9. Composition Skills | 3/3 | Complete   | 2026-03-29 |
 | 10. Debugging | 0/? | Not started | - |
