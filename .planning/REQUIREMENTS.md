@@ -183,6 +183,9 @@
 - **KR-03**: Agent Router HyperCLOVA X provider -- NAVER HyperCLOVA X API 연동 (langchain-naver 참고)
 - **KR-04**: `sunco search:kr` -- 네이버 트렌드, 카카오, 국내 스타트업, 규제 환경. 한국어 NLP
 - **KR-05**: 한국어 `--help` 메시지 -- 모든 스킬 description + option 한국어 번역
+- **KR-06**: `sunco doc:hwpx` -- HWP/HWPX 문서 프로그래밍 생성/편집/변환. 정부/기업 제안서, 수행계획서 자동 생성. hwpxjs + Hancom SDK 활용
+- **KR-07**: es-hangul 연동 -- 한글 조사 처리(은/는, 이/가, 을/를), CLI 메시지 자연스러운 한국어 출력
+- **KR-08**: HyperCLOVA X SEED provider -- Agent Router에 네이버 HyperCLOVA X SEED 모델 추가 (무료 상용, 한국어+코드 사전학습)
 
 ### Developer Experience
 
