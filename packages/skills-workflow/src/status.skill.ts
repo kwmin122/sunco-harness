@@ -14,7 +14,7 @@
  */
 
 import { defineSkill } from '@sunco/core';
-import type { SkillContext, SkillResult } from '@sunco/core';
+import type { SkillContext, SkillResult, UsageEntry } from '@sunco/core';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import chalk from 'chalk';
@@ -73,6 +73,25 @@ async function executeStatus(ctx: SkillContext): Promise<SkillResult> {
 
   // Build formatted display
   const lines = buildDisplayLines(phases, progress, state);
+
+  // Cost tracking from usage history in state
+  const usageHistory = (await ctx.state.get<UsageEntry[]>('usage.history')) ?? null;
+  if (usageHistory && usageHistory.length > 0) {
+    // Per-skill cost breakdown
+    const bySkill = new Map<string, number>();
+    let totalCost = 0;
+    for (const entry of usageHistory) {
+      bySkill.set(entry.skillId, (bySkill.get(entry.skillId) ?? 0) + entry.costUsd);
+      totalCost += entry.costUsd;
+    }
+
+    lines.push('Cost breakdown:');
+    for (const [skill, cost] of [...bySkill.entries()].sort((a, b) => b[1] - a[1])) {
+      lines.push(`  ${skill}: $${cost.toFixed(4)}`);
+    }
+    lines.push(`  Total: $${totalCost.toFixed(4)}`);
+    lines.push('');
+  }
 
   // Get recommendations for "Next Best Action"
   const recommendations = ctx.recommend.getRecommendations({
