@@ -178,14 +178,12 @@
 
 ### Korean Market Foundation
 
-- **KR-01**: CLI i18n 프레임워크 -- 한국어/영어 메시지 전환. `sunco.locale = "ko"` 설정
-- **KR-02**: `sunco notify` -- 빌드/테스트 결과 알림 스킬. Slack webhook + Discord webhook 우선 구현. 카카오 알림톡은 공식 Alimtalk API + 인증된 딜러(Solapi 등) 경유만 허용 (macOS Accessibility 자동화 금지 — 카카오 운영정책 위반, 계정정지 리스크)
-- **KR-03**: Agent Router HyperCLOVA X provider -- NAVER HyperCLOVA X API 연동 (langchain-naver 참고)
-- **KR-04**: `sunco search:kr` -- 네이버 트렌드, 카카오, 국내 스타트업, 규제 환경. 한국어 NLP
-- **KR-05**: 한국어 `--help` 메시지 -- 모든 스킬 description + option 한국어 번역
-- **KR-06**: `sunco doc:hwpx` -- HWP/HWPX 문서 프로그래밍 생성/편집/변환. 정부/기업 제안서, 수행계획서 자동 생성. hwpxjs + Hancom SDK 활용
-- **KR-07**: es-hangul 연동 -- 한글 조사 처리(은/는, 이/가, 을/를), CLI 메시지 자연스러운 한국어 출력
-- **KR-08**: HyperCLOVA X SEED provider -- Agent Router에 네이버 HyperCLOVA X SEED 모델 추가. 선택적 provider만 (기본값 X). "Powered by HyperCLOVA X" 귀속 표기 필수. 10M MAU 이하 무료, "경쟁 제품" 조항 주의 (SUNCO는 CLI 개발자 도구라 LOW-MEDIUM 리스크)
+- **KR-01**: CLI i18n 프레임워크 -- 한국어/영어 메시지 전환. `sunco.locale = "ko"` 설정. 외부 의존성 없이 자체 구현 (메시지 맵 + locale resolver)
+- **KR-02**: `sunco notify` -- 빌드/테스트 결과 알림 스킬. Slack webhook + Discord webhook + generic webhook 자체 구현. 카카오 알림톡은 사용자가 공식 인증 딜러 credential 제공 시만 지원
+- **KR-03**: 한글 조사 처리 자체 구현 -- 은/는, 이/가, 을/를, 와/과 자동 선택. ~100줄 자체 코드, 외부 라이브러리(es-hangul 등) 의존 없음
+- **KR-04**: `sunco search:kr` -- 네이버/카카오 검색 API 래퍼. 사용자가 자기 API 키 제공 필수. SUNCO는 래핑만, API 키 내장 안 함
+- **KR-05**: 한국어 `--help` 메시지 -- 모든 스킬 description + option 한국어 번역. 직접 작성
+- **KR-06**: `sunco doc:hwpx` -- HWPX(OWPML) 문서 생성. KS X 6101 국가표준 스펙 기반 자체 구현. 제3자 라이브러리 사용 안 함. 정부/기업 제안서, 수행계획서 자동 생성
 
 ### Developer Experience
 

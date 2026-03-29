@@ -221,15 +221,15 @@ Plans:
 **Plans:** 0 plans (not yet planned)
 
 ### Phase 12: Korean Market Foundation
-**Goal**: Make SUNCO the first Korean-first AI workspace OS with i18n, Korean platform integrations, HWP document support, and local AI provider
+**Goal**: Make SUNCO the first Korean-first AI workspace OS — i18n, HWPX document generation, notification webhooks, Korean search. 모든 코드 자체 구현, 제3자 라이브러리 의존 없음
 **Depends on**: Phase 1 (core platform)
-**Requirements**: KR-01, KR-02, KR-03, KR-04, KR-05, KR-06, KR-07, KR-08
+**Requirements**: KR-01, KR-02, KR-03, KR-04, KR-05, KR-06
 **Success Criteria** (what must be TRUE):
-  1. User sets `sunco.locale = "ko"` and all CLI messages, help text, and skill descriptions display in natural Korean (es-hangul 조사 처리 포함)
-  2. User runs `sunco notify:kakao` with a KakaoTalk OAuth token and receives build/test result notifications
-  3. User runs `sunco doc:hwpx --template 제안서` and gets a properly formatted HWP/HWPX document generated from project context
-  4. User configures HyperCLOVA X SEED model and Agent Router dispatches to NAVER's free Korean-optimized model
-  5. User runs `sunco search:kr "핀테크 트렌드"` and gets structured results from Naver, Kakao, Korean startup DBs
+  1. User sets `sunco.locale = "ko"` and all CLI messages, help text display in natural Korean with correct 조사 (은/는, 이/가 — 자체 구현)
+  2. User runs `sunco notify --slack <webhook-url>` and receives build/test result notifications via Slack/Discord/generic webhook
+  3. User runs `sunco doc:hwpx --template 제안서` and gets a properly formatted HWPX document from project context (KS X 6101 스펙 자체 구현)
+  4. User runs `sunco search:kr "핀테크 트렌드" --naver-key <key>` and gets structured results (사용자 API 키 필수, 내장 키 없음)
+  5. User runs `sunco --help` in Korean locale and all 39+ skill descriptions appear in Korean
 **Plans:** 0 plans (not yet planned)
 
 ### Phase 13: Developer Experience
