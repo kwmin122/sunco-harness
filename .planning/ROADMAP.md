@@ -22,11 +22,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8: Shipping + Milestones** - ship, release, milestone lifecycle management (completed)
 - [x] **Phase 9: Composition Skills** - auto, quick, fast, do -- power-user orchestration (completed 2026-03-29)
 - [x] **Phase 10: Debugging** - debug, diagnose, forensics -- failure recovery and analysis (completed 2026-03-29)
-- [ ] **Phase 11: Planning Quality Pipeline** - research-integrated planning, revision loop, requirements coverage (v1.1)
-- [ ] **Phase 12: Korean Market Foundation** - i18n, KakaoTalk notify, HyperCLOVA X, search:kr (v1.1)
-- [ ] **Phase 13: Developer Experience** - context freshness, GHA analysis, stats, safety audit (v1.1)
-- [ ] **Phase 14: Community & Ecosystem** - tips, search:paper, search:patent (v1.1)
-- [ ] **Phase 15: Skill Marketplace** - install, publish, community registry (v1.1)
+- [x] **Phase 11: Planning Quality Pipeline** - research-integrated planning, revision loop, requirements coverage (completed 2026-03-29)
+- [ ] **Phase 12: Operational Resilience** - crash recovery, stuck detection, cost dashboard, budget ceiling, 3-tier timeout (v1.1)
+- [ ] **Phase 13: Headless + CI/CD** - headless mode, JSON query, exit codes, HTML reports (v1.1)
+- [ ] **Phase 14: Context Optimization** - context pre-injection, adaptive replanning, complexity routing, token profiles (v1.1)
+- [ ] **Phase 15: Document Generation** - HWPX, markdown docs, template system (v1.1)
+- [ ] **Phase 16: Skill Marketplace** - install, publish, community registry (v1.1)
 
 ## Phase Details
 
@@ -220,47 +221,58 @@ Plans:
   4. Each plan task has mandatory read_first, acceptance_criteria (grep-verifiable), and concrete action fields
 **Plans:** 0 plans (not yet planned)
 
-### Phase 12: Korean Market Foundation
-**Goal**: Make SUNCO the first Korean-first AI workspace OS — i18n, HWPX document generation, notification webhooks, Korean search. 모든 코드 자체 구현, 제3자 라이브러리 의존 없음
+### Phase 12: Operational Resilience
+**Goal**: SUNCO auto mode가 프로덕션급 안정성을 가짐 — 크래시 복구, 멈춤 감지, 비용 제어, 타임아웃 감독. GSD v2 수준의 운영 안정성
+**Depends on**: Phase 9 (auto skill), Phase 10 (debugging)
+**Requirements**: OPS-01, OPS-02, OPS-03, OPS-04, OPS-05
+**Success Criteria** (what must be TRUE):
+  1. User runs `sunco auto`, session crashes mid-task, user runs `sunco auto` again → resumes from last checkpoint with recovery briefing (no work lost)
+  2. Agent enters infinite loop (same skill fails 3x) → auto mode stops with diagnostic report explaining what got stuck and why
+  3. User runs `sunco stats` → sees per-skill token/cost breakdown, phase totals, model-level split
+  4. User sets `sunco.budget_ceiling = 10.00` → auto mode pauses at $10 with 50%/75%/90% warnings
+  5. Soft timeout warns agent to wrap up, idle timeout detects stalls, hard timeout force-stops — all configurable
+**Plans:** 0 plans (not yet planned)
+
+### Phase 13: Headless + CI/CD
+**Goal**: SUNCO runs in CI pipelines, cron jobs, and scripts without TUI — enabling team adoption and automation
+**Depends on**: Phase 12 (operational resilience)
+**Requirements**: HLS-01, HLS-02, HLS-03, HLS-04, HLS-05
+**Success Criteria** (what must be TRUE):
+  1. `sunco headless auto --timeout 600000` runs in GitHub Actions, auto-responds to prompts, exits with code 0/1/2
+  2. `sunco headless query` returns JSON snapshot in <100ms without LLM calls
+  3. `sunco export --html` generates self-contained HTML report with progress, costs, timeline
+  4. CI pipeline can run `sunco headless next` per cron tick, advancing one unit at a time
+**Plans:** 0 plans (not yet planned)
+
+### Phase 14: Context Optimization
+**Goal**: Minimize token waste and maximize agent effectiveness through smart context management and model routing
+**Depends on**: Phase 1 (agent router), Phase 12 (cost tracking)
+**Requirements**: CTX-01, CTX-02, CTX-03, CTX-04
+**Success Criteria** (what must be TRUE):
+  1. Agent dispatch prompt includes relevant file contents inline — LLM uses 0 tool calls to read context
+  2. After plan execution, roadmap is automatically reassessed — outdated plans are flagged or updated
+  3. Simple tasks route to fast/cheap models, complex tasks to capable models — automatic, no user config
+  4. User sets `sunco.token_profile = "budget"` → 40-60% cost reduction with graceful quality tradeoff
+**Plans:** 0 plans (not yet planned)
+
+### Phase 15: Document Generation
+**Goal**: Generate project documents (HWPX, markdown) from project context — "한글파일로 작성해드릴까요?"
 **Depends on**: Phase 1 (core platform)
-**Requirements**: KR-01, KR-02, KR-03, KR-04, KR-05, KR-06
+**Requirements**: DOC-01, DOC-02, DOC-03
 **Success Criteria** (what must be TRUE):
-  1. User sets `sunco.locale = "ko"` and all CLI messages, help text display in natural Korean with correct 조사 (은/는, 이/가 — 자체 구현)
-  2. User runs `sunco notify --slack <webhook-url>` and receives build/test result notifications via Slack/Discord/generic webhook
-  3. User runs `sunco doc:hwpx --template 제안서` and gets a properly formatted HWPX document from project context (KS X 6101 스펙 자체 구현)
-  4. User runs `sunco search:kr "핀테크 트렌드" --naver-key <key>` and gets structured results (사용자 API 키 필수, 내장 키 없음)
-  5. User runs `sunco --help` in Korean locale and all 39+ skill descriptions appear in Korean
+  1. User runs `sunco doc:hwpx --template 제안서` → properly formatted HWPX file generated from project context
+  2. User runs `sunco doc:md --type readme` → README.md generated from project analysis
+  3. User creates custom template in .sun/templates/ → `sunco doc --template <name>` uses it
 **Plans:** 0 plans (not yet planned)
 
-### Phase 13: Developer Experience
-**Goal**: Proactive DX features that Claude Code users do manually — SUNCO automates them
-**Depends on**: Phase 3 (session skills), Phase 8 (shipping)
-**Requirements**: DX-01, DX-02, DX-03, DX-04, DX-05
-**Success Criteria** (what must be TRUE):
-  1. When context token usage exceeds 80%, SUNCO auto-generates HANDOFF.json and prompts user to start fresh session
-  2. User runs `sunco gha <url>` and gets root cause analysis of GitHub Actions failure with fix suggestion
-  3. User runs `sunco stats` and sees cumulative tokens, skill frequency, session history, activity heatmap
-  4. User runs `sunco audit:safety` and gets a risk report of dangerous approved commands in settings.json
-**Plans:** 0 plans (not yet planned)
-
-### Phase 14: Community & Ecosystem
-**Goal**: Korean-language tip system, academic/patent research skills, and automated session management
-**Depends on**: Phase 12 (i18n), Phase 3 (session skills)
-**Requirements**: COM-01, COM-02, COM-03
-**Success Criteria** (what must be TRUE):
-  1. User sees contextual Korean tips after skill execution (e.g., TDD tip after test failure)
-  2. User runs `sunco search:paper "transformer attention"` and gets structured results from arXiv, DBpia, RISS
-  3. User runs `sunco search:patent "음성인식"` and gets KIPRIS/USPTO results with prior art analysis
-**Plans:** 0 plans (not yet planned)
-
-### Phase 15: Skill Marketplace
+### Phase 16: Skill Marketplace
 **Goal**: Community-driven skill ecosystem with npm-based distribution
 **Depends on**: Phase 1 (skill system)
 **Requirements**: MKT-01, MKT-02, MKT-03
 **Success Criteria** (what must be TRUE):
-  1. User runs `sunco install @sunco/skill-tdd` and the skill is downloaded from npm and registered in the skill registry
-  2. User runs `sunco publish` in a skill project directory and the skill is published to npm with validated metadata
-  3. Community skills are discoverable via `sunco search:skills <keyword>`
+  1. User runs `sunco install @sunco/skill-tdd` → skill downloaded and registered
+  2. User runs `sunco publish` → skill published to npm with validated metadata
+  3. Community skills discoverable via `sunco search:skills <keyword>`
 **Plans:** 0 plans (not yet planned)
 
 ## Progress
@@ -281,8 +293,9 @@ v1.1 Phases: 11 -> 12 -> 13 -> 14 -> 15
 | 8. Shipping + Milestones | 4/4 | Complete |  |
 | 9. Composition Skills | 3/3 | Complete | 2026-03-29 |
 | 10. Debugging | 3/3 | Complete | 2026-03-29 |
-| 11. Planning Quality Pipeline | 0/? | Not started | - |
-| 12. Korean Market Foundation | 0/? | Not started | - |
-| 13. Developer Experience | 0/? | Not started | - |
-| 14. Community & Ecosystem | 0/? | Not started | - |
-| 15. Skill Marketplace | 0/? | Not started | - |
+| 11. Planning Quality Pipeline | 1/1 | Complete | 2026-03-29 |
+| 12. Operational Resilience | 0/? | Not started | - |
+| 13. Headless + CI/CD | 0/? | Not started | - |
+| 14. Context Optimization | 0/? | Not started | - |
+| 15. Document Generation | 0/? | Not started | - |
+| 16. Skill Marketplace | 0/? | Not started | - |

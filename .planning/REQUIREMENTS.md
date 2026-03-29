@@ -168,42 +168,48 @@
 
 ## v1.1 Requirements
 
-### Planning Quality Pipeline (GSD-inspired)
+### Planning Quality Pipeline (Phase 11 — COMPLETE)
 
-- **PQP-01**: `sunco plan --research` -- plan 스킬에 research 자동 통합. RESEARCH.md 생성 후 planner에 입력
-- **PQP-02**: Plan-checker revision loop -- planner ↔ checker 최대 3회 반복. ISSUES FOUND → 수정 → 재검증
-- **PQP-03**: Requirements coverage gate -- plan 완료 시 모든 phase REQ-ID가 최소 1개 plan에 매핑되는지 검증
-- **PQP-04**: Validation strategy -- RESEARCH.md의 Validation Architecture → VALIDATION.md 생성. Nyquist 검증 차원
-- **PQP-05**: Deep work rules -- 모든 plan task에 read_first(변경 전 반드시 읽을 파일), acceptance_criteria(grep 검증 가능), concrete action(구체적 값) 필수
+- [x] **PQP-01**: `sunco plan --research` -- plan 스킬에 research 자동 통합
+- [x] **PQP-02**: Plan-checker revision loop -- planner ↔ checker 최대 3회 반복
+- [x] **PQP-03**: Requirements coverage gate -- plan REQ-ID 커버리지 검증
+- [x] **PQP-04**: Validation strategy -- RESEARCH.md → VALIDATION.md 생성
+- [x] **PQP-05**: Deep work rules -- read_first, acceptance_criteria, concrete action 필수
 
-### Korean Market Foundation
+### Operational Resilience (Phase 12)
 
-- **KR-01**: CLI i18n 프레임워크 -- 한국어/영어 메시지 전환. `sunco.locale = "ko"` 설정. 외부 의존성 없이 자체 구현 (메시지 맵 + locale resolver)
-- **KR-02**: `sunco notify` -- 빌드/테스트 결과 알림 스킬. Slack webhook + Discord webhook + generic webhook 자체 구현. 카카오 알림톡은 사용자가 공식 인증 딜러 credential 제공 시만 지원
-- **KR-03**: 한글 조사 처리 자체 구현 -- 은/는, 이/가, 을/를, 와/과 자동 선택. ~100줄 자체 코드, 외부 라이브러리(es-hangul 등) 의존 없음
-- **KR-04**: `sunco search:kr` -- 네이버/카카오 검색 API 래퍼. 사용자가 자기 API 키 제공 필수. SUNCO는 래핑만, API 키 내장 안 함
-- **KR-05**: 한국어 `--help` 메시지 -- 모든 스킬 description + option 한국어 번역. 직접 작성
-- **KR-06**: `sunco doc:hwpx` -- HWPX(OWPML) 문서 생성. KS X 6101 국가표준 스펙 기반 자체 구현. 제3자 라이브러리 사용 안 함. 정부/기업 제안서, 수행계획서 자동 생성
+- **OPS-01**: 크래시 복구 -- .sun/auto.lock 잠금파일로 현재 작업 추적. 세션 사망 시 다음 sunco auto가 마지막 상태에서 자동 재개. SUMMARY.md 존재하면 완료 처리, 없으면 복구 브리핑 생성
+- **OPS-02**: 멈춤 감지 -- 슬라이딩 윈도우로 반복 디스패치 패턴 인식 (같은 스킬 3회 연속 실패 = stuck). 감지 시 1회 심층 진단 재시도 후 실패면 자동 정지 + 원인 보고
+- **OPS-03**: 비용 대시보드 -- `sunco stats` 스킬에 실시간 비용 추적 추가. 단위별 토큰/비용, phase별 집계, 모델별 분류. SQLite state에 저장
+- **OPS-04**: 예산 한도 -- `sunco.budget_ceiling` 설정 (USD). auto 모드에서 한도 도달 시 자동 정지. 50%/75%/90% 경고 단계
+- **OPS-05**: 타임아웃 3단계 -- soft(LLM에게 마무리 경고), idle(활동 없음 감지), hard(강제 정지). 설정: `auto_supervisor.soft_timeout_minutes`, `idle_timeout_minutes`, `hard_timeout_minutes`
 
-### Developer Experience
+### Headless + CI/CD (Phase 13)
 
-- **DX-01**: Context Freshness Manager -- 토큰 사용량 모니터링 → threshold 초과 시 자동 handoff 생성 + 새 세션 resume 안내
-- **DX-02**: `sunco gha <url>` -- GitHub Actions 실패 분석. gh CLI 연동, 로그 파싱, root cause, fix PR 제안
-- **DX-03**: `sunco stats` -- 사용량 통계: 누적 토큰, 스킬별 빈도, 세션 기록, GitHub 스타일 활동 그래프
-- **DX-04**: `sunco audit:safety` -- ~/.claude/settings.json allowedCommands 감사. rm -rf, sudo, git reset --hard 등 위험 패턴 탐지
-- **DX-05**: Handoff 자동화 -- `sunco guard` watch mode에 토큰 카운터 추가 → threshold 시 HANDOFF.json 자동 생성
+- **HLS-01**: `sunco headless` -- TUI 없는 CLI 모드. CI 파이프라인, cron, 스크립트 자동화용. 인터랙티브 프롬프트 자동 응답
+- **HLS-02**: `sunco headless query` -- 즉시 JSON 스냅샷 (LLM 호출 없이 ~50ms). 현재 상태, 다음 디스패치, 비용
+- **HLS-03**: 종료 코드 규약 -- 0=완료, 1=에러/타임아웃, 2=블로킹(사람 필요)
+- **HLS-04**: `sunco headless --timeout <ms>` -- 최대 실행 시간 제한. CI 예산 보호
+- **HLS-05**: HTML 리포트 -- `sunco export --html` 마일스톤 완료 후 자체 포함 HTML 리포트 자동 생성. CSS/JS 인라인, 외부 의존 없음
 
-### Community & Ecosystem
+### Context Optimization (Phase 14)
 
-- **COM-01**: `sunco tips` -- 상황별 팁 추천. 테스트 실패 시 TDD 팁, 긴 세션 시 컨텍스트 관리 팁. 한국어 데이터베이스
-- **COM-02**: `sunco search:paper` -- arXiv, Scholar, DBpia, RISS, KCI. 인용 네트워크 분석
-- **COM-03**: `sunco search:patent` -- KIPRIS, USPTO, Google Patents. 선행기술 조사
+- **CTX-01**: 컨텍스트 사전 주입 -- 에이전트 디스패치 시 관련 파일 내용을 프롬프트에 인라인. LLM이 파일 읽기에 토큰 낭비하지 않음
+- **CTX-02**: 적응형 재계획 -- 각 plan 실행 완료 후 로드맵 자동 재평가. 새 정보가 계획을 바꿀 경우 plan 재정렬/추가/삭제
+- **CTX-03**: 복잡도 기반 모델 라우팅 -- 작업 복잡도 자동 분류 (simple/standard/complex) → 적절한 모델 자동 선택. sub-ms 휴리스틱, LLM 호출 없음
+- **CTX-04**: 토큰 프로파일 -- budget/balanced/quality 프리셋. budget=40-60% 절약 (저렴 모델, 리서치 스킵), quality=전체 파워
 
-### Skill Marketplace (장기)
+### Document Generation (Phase 15)
 
-- **MKT-01**: `sunco install <skill-name>` -- npm 기반 스킬 설치. @sunco/skill-* 네임스페이스
-- **MKT-02**: `sunco publish` -- 스킬 패키지 npm 배포. 스킬 메타데이터 검증
-- **MKT-03**: Community skill registry -- skillsmp.com 형태 검색/발견 인터페이스
+- **DOC-01**: `sunco doc:hwpx` -- HWPX(OWPML) 문서 생성. KS X 6101 스펙 기반 자체 구현. 프로젝트 컨텍스트에서 제안서/수행계획서/보고서 자동 생성
+- **DOC-02**: `sunco doc:md` -- 마크다운 문서 생성. README, API 문서, 아키텍처 문서 등
+- **DOC-03**: 문서 템플릿 시스템 -- .sun/templates/에 사용자 정의 템플릿. `sunco doc --template <name>`
+
+### Skill Marketplace (Phase 16)
+
+- **MKT-01**: `sunco install <skill-name>` -- npm 기반 스킬 설치
+- **MKT-02**: `sunco publish` -- 스킬 npm 배포
+- **MKT-03**: Community skill registry
 
 ## v2 Requirements
 
