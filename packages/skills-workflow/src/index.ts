@@ -60,8 +60,10 @@ export { default as releaseSkill } from './release.skill.js';
 export { default as milestoneSkill } from './milestone.skill.js';
 
 // Phase 9 composition skills
+export { default as autoSkill } from './auto.skill.js';
 export { default as quickSkill } from './quick.skill.js';
 export { default as fastSkill } from './fast.skill.js';
+export { default as doSkill } from './do.skill.js';
 
 // Phase 7 shared utilities
 export type { VerifyFinding, VerifyReport, LayerResult, VerifyVerdict, CoverageMetric, FileCoverage, CoverageReport } from './shared/verify-types.js';

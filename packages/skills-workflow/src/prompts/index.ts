@@ -58,3 +58,6 @@ export { buildShipPrBody } from './ship-pr-body.js';
 export { buildMilestoneAuditPrompt } from './milestone-audit.js';
 export { buildMilestoneSummaryPrompt } from './milestone-summary.js';
 export { buildMilestoneNewPrompt } from './milestone-new.js';
+
+// Do-route prompt builder (from plan 09-01)
+export { buildDoRoutePrompt } from './do-route.js';

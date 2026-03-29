@@ -54,6 +54,10 @@ import {
   shipSkill,
   releaseSkill,
   milestoneSkill,
+  autoSkill,
+  quickSkill,
+  fastSkill,
+  doSkill,
 } from '@sunco/skills-workflow';
 
 /**
@@ -104,6 +108,11 @@ const preloadedSkills = [
   shipSkill,
   releaseSkill,
   milestoneSkill,
+  // Phase 9 composition skills
+  autoSkill,
+  quickSkill,
+  fastSkill,
+  doSkill,
 ];
 
 async function main(): Promise<void> {
