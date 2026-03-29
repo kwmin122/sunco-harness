@@ -18,7 +18,7 @@
  * Requirements: CLI-01 (sunco binary), D-03 (entry point)
  */
 
-import { createProgram, registerSkills, createLifecycle } from '@sunco/core';
+import { createProgram, registerSkills, createLifecycle, SilentUiAdapter, createSkillUi, createSkillContext } from '@sunco/core';
 import {
   samplePromptSkill,
   initSkill,
@@ -61,6 +61,7 @@ import {
   debugSkill,
   diagnoseSkill,
   forensicsSkill,
+  querySkill,
 } from '@sunco/skills-workflow';
 
 /**
@@ -120,6 +121,8 @@ const preloadedSkills = [
   debugSkill,
   diagnoseSkill,
   forensicsSkill,
+  // Phase 13 headless CI/CD skills
+  querySkill,
 ];
 
 async function main(): Promise<void> {
@@ -133,6 +136,105 @@ async function main(): Promise<void> {
     const executeHook = lifecycle.createExecuteHook(services);
 
     registerSkills(program, services.registry, executeHook);
+
+    // ---------------------------------------------------------------------------
+    // Headless subcommand (CI/CD mode)
+    // ---------------------------------------------------------------------------
+    // Registered after skill subcommands so it does not conflict with skill names.
+    // Runs any registered skill with SilentUiAdapter, JSON stdout, structured exit codes.
+
+    program
+      .command('headless')
+      .description('Run any skill in headless mode (CI/CD) — JSON output, structured exit codes')
+      .argument('<command>', 'Skill command to run (e.g., status, query, verify)')
+      .argument('[args...]', 'Arguments to pass to the skill')
+      .option('--timeout <ms>', 'Maximum execution time in milliseconds')
+      .allowUnknownOption(true)
+      .action(async (command: string, args: string[], options: { timeout?: string }) => {
+        // Set timeout if provided
+        if (options.timeout) {
+          const ms = parseInt(options.timeout, 10);
+          if (!isNaN(ms) && ms > 0) {
+            setTimeout(() => {
+              console.log(JSON.stringify({ success: false, summary: `Timeout after ${ms}ms`, exitCode: 1 }));
+              process.exit(1);
+            }, ms);
+          }
+        }
+
+        // services is guaranteed non-null here: headless is registered only after
+        // lifecycle.boot() succeeds, so services is always defined at this point.
+        const bootedServices = services!;
+
+        // Look up the skill by command name in the registry
+        const skill = bootedServices.registry.getByCommand(command);
+        if (!skill) {
+          console.log(JSON.stringify({ success: false, summary: `Unknown skill: ${command}`, exitCode: 1 }));
+          process.exitCode = 1;
+          return;
+        }
+
+        try {
+          // Parse args into an options object: --key value -> { key: value }, --flag -> { flag: true }
+          const parsedArgs: Record<string, unknown> = { _: args };
+          for (let i = 0; i < args.length; i++) {
+            const arg = args[i];
+            if (arg?.startsWith('--')) {
+              const key = arg.slice(2);
+              const next = args[i + 1];
+              if (next !== undefined && !next.startsWith('--')) {
+                parsedArgs[key] = next;
+                i++;
+              } else {
+                parsedArgs[key] = true;
+              }
+            }
+          }
+
+          // Build a silent UI and a skill context, reusing all booted services
+          const silentAdapter = new SilentUiAdapter();
+          const silentUi = createSkillUi(silentAdapter);
+
+          const ctx = createSkillContext({
+            skillId: skill.id,
+            config: bootedServices.config,
+            state: bootedServices.stateEngine.state,
+            fileStore: bootedServices.stateEngine.fileStore,
+            agentRouter: bootedServices.agentRouter,
+            recommender: bootedServices.recommender,
+            ui: silentUi,
+            registry: bootedServices.registry,
+            cwd: bootedServices.cwd,
+            args: parsedArgs,
+          });
+
+          const result = await skill.execute(ctx);
+
+          // Determine exit code: 0=success, 2=blocked, 1=error
+          let exitCode = 0;
+          if (!result.success) {
+            const data = result.data as Record<string, unknown> | undefined;
+            exitCode = data?.blocked ? 2 : 1;
+          }
+
+          console.log(JSON.stringify({
+            success: result.success,
+            summary: result.summary,
+            data: result.data,
+            warnings: result.warnings,
+            exitCode,
+          }));
+
+          process.exitCode = exitCode;
+        } catch (err) {
+          console.log(JSON.stringify({
+            success: false,
+            summary: err instanceof Error ? err.message : String(err),
+            exitCode: 1,
+          }));
+          process.exitCode = 1;
+        }
+      });
 
     await program.parseAsync(process.argv);
   } catch (error: unknown) {

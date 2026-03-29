@@ -70,6 +70,9 @@ export { default as debugSkill } from './debug.skill.js';
 export { default as diagnoseSkill } from './diagnose.skill.js';
 export { default as forensicsSkill } from './forensics.skill.js';
 
+// Phase 13 headless CI/CD skills
+export { default as querySkill } from './query.skill.js';
+
 // Phase 10 shared types
 export type { FailureType, DiagnoseError, DiagnoseResult, DebugAnalysis, ForensicsReport } from './shared/debug-types.js';
 export { parseTestOutput, parseTypeErrors, parseLintErrors } from './diagnose.skill.js';

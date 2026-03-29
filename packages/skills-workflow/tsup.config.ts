@@ -35,6 +35,7 @@ export default defineConfig({
     'src/debug.skill.ts',
     'src/diagnose.skill.ts',
     'src/forensics.skill.ts',
+    'src/query.skill.ts',
   ],
   format: ['esm'],
   target: 'node22',
