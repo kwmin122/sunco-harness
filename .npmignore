@@ -1,0 +1,9 @@
+src/
+__tests__/
+.planning/
+.sun/
+tsconfig*.json
+tsup.config.ts
+vitest.config.ts
+.github/
+*.test.ts
