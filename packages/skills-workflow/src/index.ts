@@ -77,6 +77,9 @@ export { default as exportSkill } from './export.skill.js';
 // Phase 14 context optimization skills
 export { default as graphSkill } from './graph.skill.js';
 
+// Phase 15 document generation skills
+export { default as docSkill } from './doc.skill.js';
+
 // Phase 10 shared types
 export type { FailureType, DiagnoseError, DiagnoseResult, DebugAnalysis, ForensicsReport } from './shared/debug-types.js';
 export { parseTestOutput, parseTypeErrors, parseLintErrors } from './diagnose.skill.js';

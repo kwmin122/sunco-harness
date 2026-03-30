@@ -64,6 +64,7 @@ import {
   querySkill,
   exportSkill,
   graphSkill,
+  docSkill,
 } from '@sunco/skills-workflow';
 
 /**
@@ -128,6 +129,8 @@ const preloadedSkills = [
   exportSkill,
   // Phase 14 context optimization skills
   graphSkill,
+  // Phase 15 document generation skills
+  docSkill,
 ];
 
 async function main(): Promise<void> {

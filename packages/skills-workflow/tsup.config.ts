@@ -38,6 +38,7 @@ export default defineConfig({
     'src/query.skill.ts',
     'src/export.skill.ts',
     'src/graph.skill.ts',
+    'src/doc.skill.ts',
   ],
   format: ['esm'],
   target: 'node22',
