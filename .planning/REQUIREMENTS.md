@@ -194,13 +194,14 @@
 
 ### Context Optimization + Quality Depth (Phase 14)
 
-- **CTX-01**: KV-cache 최적화 -- 에이전트 프롬프트를 stable prefix(AGENTS.md, 규칙, 스킬 정의) + variable suffix(현재 작업) 구조로 분리. cache hit rate 극대화. Manus AI 패턴 (10x 비용 절감)
+- **CTX-01**: 코드 지식 그래프 -- Tree-sitter AST 파싱 → .sun/graph.db (SQLite). 변경 파일 → blast radius 분석 → 관련 파일만 에이전트에 제공. 토큰 6-49x 절감. code-review-graph 인사이트 + Manus KV-cache 패턴 결합. `sunco graph` 스킬로 구축, `sunco guard --watch`에서 증분 업데이트
 - **CTX-02**: 적응형 재계획 -- 각 plan 실행 완료 후 로드맵 자동 재평가. 새 정보가 계획을 바꿀 경우 plan 재정렬/추가/삭제
 - **CTX-03**: 복잡도 기반 모델 라우팅 -- 작업 복잡도 자동 분류 (simple/standard/complex) → 적절한 모델 자동 선택. sub-ms 휴리스틱, LLM 호출 없음
 - **CTX-04**: 토큰 프로파일 -- budget/balanced/quality 프리셋. budget=40-60% 절약 (저렴 모델, 리서치 스킵), quality=전체 파워
 - **CTX-05**: Garbage Collection 스킬 -- `sunco health --deep` 에이전트가 코드-문서 불일치, 죽은 import, 오래된 TODO, 아키텍처 엔트로피 탐지+수정 제안. OpenAI 3대 기둥 중 하나
 - **CTX-06**: Plan→Verify 자동 연결 -- verify Layer 3에서 해당 phase의 PLAN.md를 파싱하여 acceptance_criteria 자동 추출 → 검증. Opslane/Verify spec-first 패턴
 - **CTX-07**: fail loudly, succeed silently -- verify/lint 출력 패턴 개선. PASS=1줄 요약, FAIL=전체 상세 보고서+수정 제안. 컨텍스트 오염 방지. HumanLayer 패턴
+- **CTX-08**: Docker 격리 모드 -- `sunco auto --docker` 컨테이너 안에서 에이전트 실행. 호스트 파일시스템/네트워크 격리. Dockerfile 자체 제공. CI/CD + 위험한 자동 모드용
 
 ### Document Generation (Phase 15)
 
