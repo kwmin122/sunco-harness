@@ -72,6 +72,7 @@ export { default as forensicsSkill } from './forensics.skill.js';
 
 // Phase 13 headless CI/CD skills
 export { default as querySkill } from './query.skill.js';
+export { default as exportSkill } from './export.skill.js';
 
 // Phase 14 context optimization skills
 export { default as graphSkill } from './graph.skill.js';

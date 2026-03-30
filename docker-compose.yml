@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  sunco:
+    build: .
+    volumes:
+      - .:/workspace:ro          # source read-only
+      - ./.sun:/workspace/.sun   # .sun/ read-write
+    working_dir: /workspace
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    entrypoint: ["node", "/app/packages/cli/dist/cli.js"]
+    command: ["auto"]

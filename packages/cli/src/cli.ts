@@ -62,6 +62,7 @@ import {
   diagnoseSkill,
   forensicsSkill,
   querySkill,
+  exportSkill,
   graphSkill,
 } from '@sunco/skills-workflow';
 
@@ -124,6 +125,7 @@ const preloadedSkills = [
   forensicsSkill,
   // Phase 13 headless CI/CD skills
   querySkill,
+  exportSkill,
   // Phase 14 context optimization skills
   graphSkill,
 ];

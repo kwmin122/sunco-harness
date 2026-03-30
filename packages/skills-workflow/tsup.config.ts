@@ -36,6 +36,7 @@ export default defineConfig({
     'src/diagnose.skill.ts',
     'src/forensics.skill.ts',
     'src/query.skill.ts',
+    'src/export.skill.ts',
     'src/graph.skill.ts',
   ],
   format: ['esm'],

@@ -213,9 +213,9 @@ export default defineSkill({
     await lock.acquire(startPhase ?? 1, 'init');
 
     // --- Step 2: Read ROADMAP.md ---
+    const roadmapPath = join(ctx.cwd, '.planning', 'ROADMAP.md');
     let roadmapContent: string;
     try {
-      const roadmapPath = join(ctx.cwd, '.planning', 'ROADMAP.md');
       roadmapContent = await readFile(roadmapPath, 'utf-8');
     } catch {
       await lock.release();
@@ -432,6 +432,30 @@ export default defineSkill({
           failedPhases++;
         } else if (!aborted) {
           completedPhases++;
+
+          // Adaptive replan: re-read roadmap to catch dynamically inserted phases
+          try {
+            const freshRoadmap = await readFile(roadmapPath, 'utf-8');
+            const freshParsed = parseRoadmap(freshRoadmap);
+            const freshRemaining = freshParsed.phases
+              .filter((p) => !p.completed && Number(p.number) >= phaseNumber + 1)
+              .sort((a, b) => Number(a.number) - Number(b.number));
+
+            // Check if new phases were inserted
+            if (freshRemaining.length !== remainingPhases.length - (i + 1)) {
+              ctx.log.info('Roadmap changed — replanning', {
+                previous: remainingPhases.length - (i + 1),
+                current: freshRemaining.length,
+              });
+              // Replace remaining phases with fresh data
+              remainingPhases.splice(i + 1, remainingPhases.length, ...freshRemaining);
+              pipelineProgress.update({
+                message: `Roadmap updated — ${freshRemaining.length} phases remaining`,
+              });
+            }
+          } catch {
+            ctx.log.warn('Could not re-read roadmap for adaptive replan');
+          }
         }
       }
     } finally {
