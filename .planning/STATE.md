@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: executing
-stopped_at: Completed 14-01-PLAN.md
-last_updated: "2026-03-29T06:37:22.652Z"
+stopped_at: Completed 14-02-PLAN.md
+last_updated: "2026-03-30T08:39:01.602Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 16
   completed_phases: 13
-  total_plans: 57
-  completed_plans: 58
+  total_plans: 58
+  completed_plans: 59
   percent: 0
 ---
 
@@ -109,6 +109,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 12-operational-resilience P01 | 12min | 3 tasks | 6 files |
 | Phase 12 P02 | 20 | 3 tasks | 5 files |
 | Phase 14 P01 | 15 | 3 tasks | 5 files |
+| Phase 14 P02 | 12 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -254,6 +255,9 @@ Recent decisions affecting current work:
 - [Phase 13-01]: Exit code semantics: 0=success, 2=blocked (result.data.blocked=true), 1=error
 - [Phase 14]: health --deep uses inline prompt building to avoid cross-package dep; canonical buildHealthDeepPrompt in skills-workflow
 - [Phase 14]: acceptance_criteria auto-link via regex on raw PLAN.md text; GREPPABLE/EXPORTABLE patterns for deterministic checks
+- [Phase 14]: JSON persistence to .sun/graph.json via writeFile (not ctx.state) — graph is large, flat file is more inspectable
+- [Phase 14]: CodeGraph.fromJSON/toJSON for in-memory graph serialization; BFS separates direct vs transitive deps at collection time
+- [Phase 14]: resolveImport strips .js->tries .ts for TypeScript ESM; dynamic import('simple-git') for graceful degradation
 
 ### Pending Todos
 
@@ -267,6 +271,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T06:37:22.649Z
-Stopped at: Completed 14-01-PLAN.md
+Last session: 2026-03-30T08:39:01.598Z
+Stopped at: Completed 14-02-PLAN.md
 Resume file: None

@@ -256,7 +256,7 @@ Plans:
   5. `sunco health --deep` detects code-doc mismatches, dead imports, stale TODOs via agent
   6. `sunco verify` auto-loads acceptance_criteria from PLAN.md
   7. verify PASS = 1-line summary, FAIL = full report with fix suggestions
-**Plans:** 1/1 plans complete
+**Plans:** 2/2 plans complete
 
 ### Phase 15: Document Generation
 **Goal**: Generate project documents (HWPX, markdown) from project context — "한글파일로 작성해드릴까요?"
@@ -299,6 +299,6 @@ v1.1 Phases: 11 -> 12 -> 13 -> 14 -> 15
 | 11. Planning Quality Pipeline | 1/1 | Complete | 2026-03-29 |
 | 12. Operational Resilience | 2/2 | Complete   | 2026-03-29 |
 | 13. Headless + CI/CD | 1/1 | Complete   | 2026-03-29 |
-| 14. Context Optimization | 1/1 | Complete   | 2026-03-29 |
+| 14. Context Optimization | 2/2 | Complete   | 2026-03-30 |
 | 15. Document Generation | 0/? | Not started | - |
 | 16. Skill Marketplace | 0/? | Not started | - |
