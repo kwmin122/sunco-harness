@@ -1,15 +1,18 @@
 {
   "name": "popcoru",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Agent Workspace OS — harness engineering for AI coding agents",
   "type": "module",
   "files": [
+    "bin/",
+    "commands/",
     "dist/",
+    "hooks/",
     "README.md",
     "LICENSE"
   ],
   "bin": {
-    "sunco": "./dist/cli.js"
+    "popcoru": "./bin/install.cjs"
   },
   "keywords": [
     "ai",
