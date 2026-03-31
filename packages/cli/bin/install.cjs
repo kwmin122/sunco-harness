@@ -17,14 +17,25 @@ const RESET   = '\x1b[0m';
 // ---------------------------------------------------------------------------
 // ASCII art logo
 // ---------------------------------------------------------------------------
-const LOGO = `
-${EMERALD}   ███████╗██╗   ██╗███╗   ██╗ ██████╗ ██████╗ ${RESET}
-${EMERALD}   ██╔════╝██║   ██║████╗  ██║██╔════╝██╔═══██╗${RESET}
-${EMERALD}   ███████╗██║   ██║██╔██╗ ██║██║     ██║   ██║${RESET}
-${EMERALD}   ╚════██║██║   ██║██║╚██╗██║██║     ██║   ██║${RESET}
-${EMERALD}   ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝${RESET}
-${EMERALD}   ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝${RESET}
+const LOGO_WIDE = `
+${EMERALD} ███████╗██╗   ██╗███╗   ██╗ ██████╗ ██████╗ ${RESET}
+${EMERALD} ██╔════╝██║   ██║████╗  ██║██╔════╝██╔═══██╗${RESET}
+${EMERALD} ███████╗██║   ██║██╔██╗ ██║██║     ██║   ██║${RESET}
+${EMERALD} ╚════██║██║   ██║██║╚██╗██║██║     ██║   ██║${RESET}
+${EMERALD} ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝${RESET}
+${EMERALD} ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝${RESET}
 `;
+
+const LOGO_COMPACT = `
+${EMERALD} ╔═╗╦ ╦╔╗╔╔═╗╔═╗${RESET}
+${EMERALD} ╚═╗║ ║║║║║  ║ ║${RESET}
+${EMERALD} ╚═╝╚═╝╝╚╝╚═╝╚═╝${RESET}
+`;
+
+function getLogo() {
+  const cols = process.stdout.columns || 80;
+  return cols >= 50 ? LOGO_WIDE : LOGO_COMPACT;
+}
 
 // ---------------------------------------------------------------------------
 // Read version from package.json
@@ -173,14 +184,20 @@ function install(targetDir) {
   const pkgRoot = path.join(__dirname, '..');
 
   // Source paths (relative to the npm package root)
-  const srcCommands = path.join(pkgRoot, 'commands', 'sunco');
-  const srcEngine   = path.join(pkgRoot, 'dist');          // built CLI artifacts
-  const srcHooks    = path.join(pkgRoot, 'hooks');
+  const srcCommands   = path.join(pkgRoot, 'commands', 'sunco');
+  const srcEngine     = path.join(pkgRoot, 'dist');
+  const srcHooks      = path.join(pkgRoot, 'hooks');
+  const srcWorkflows  = path.join(pkgRoot, 'workflows');
+  const srcReferences = path.join(pkgRoot, 'references');
+  const srcTemplates  = path.join(pkgRoot, 'templates');
 
   // Destination paths
-  const destCommands = path.join(targetDir, 'commands', 'sunco');
-  const destEngine   = path.join(targetDir, 'sunco', 'bin');
-  const destHooks    = path.join(targetDir, 'hooks');
+  const destCommands   = path.join(targetDir, 'commands', 'sunco');
+  const destEngine     = path.join(targetDir, 'sunco', 'bin');
+  const destHooks      = path.join(targetDir, 'hooks');
+  const destWorkflows  = path.join(targetDir, 'sunco', 'workflows');
+  const destReferences = path.join(targetDir, 'sunco', 'references');
+  const destTemplates  = path.join(targetDir, 'sunco', 'templates');
 
   const skillCount = countSkills(srcCommands);
 
@@ -198,10 +215,15 @@ function install(targetDir) {
   // Copy hooks (.cjs files — CJS format required to run standalone outside ESM package)
   const hooksCopied = copyGlob(srcHooks, '*.cjs', destHooks);
 
+  // Copy workflows, references, templates
+  const wfCopied  = copyDirRecursive(srcWorkflows, destWorkflows);
+  const refCopied = copyDirRecursive(srcReferences, destReferences);
+  const tplCopied = copyDirRecursive(srcTemplates, destTemplates);
+
   // Patch settings.json
   patchSettings(targetDir);
 
-  return { cmdCopied, engCopied, hooksCopied, skillCount, version };
+  return { cmdCopied, engCopied, hooksCopied, wfCopied, refCopied, tplCopied, skillCount, version };
 }
 
 // ---------------------------------------------------------------------------
@@ -261,7 +283,7 @@ function parseArgs(argv) {
 }
 
 function showHelp(version) {
-  console.log(LOGO);
+  console.log(getLogo());
   console.log(`  ${BOLD}SUNCO v${version}${RESET}`);
   console.log(`  ${DIM}Agent Workspace OS — harness engineering for AI agents${RESET}\n`);
   console.log(`  ${BOLD}Usage:${RESET}`);
@@ -285,7 +307,7 @@ function main() {
     process.exit(0);
   }
 
-  console.log(LOGO);
+  console.log(getLogo());
   console.log(`  ${BOLD}SUNCO v${version}${RESET}`);
   console.log(`  ${DIM}Agent Workspace OS — harness engineering for AI agents${RESET}\n`);
 
@@ -323,12 +345,16 @@ function main() {
   console.log(`  Installing ${BOLD}${scope}${RESET} ...\n`);
 
   try {
-    const { cmdCopied, engCopied, hooksCopied, skillCount, version: v } = install(targetDir);
+    const r = install(targetDir);
 
-    const skillLabel = skillCount > 0 ? `(${skillCount} skills)` : `(${cmdCopied} files)`;
+    const skillLabel = r.skillCount > 0 ? `(${r.skillCount} skills)` : `(${r.cmdCopied} files)`;
+    const docCount = r.wfCopied + r.refCopied + r.tplCopied;
     console.log(`  ${GREEN}✓${RESET} Installed ${BOLD}commands/sunco${RESET} ${DIM}${skillLabel}${RESET}`);
-    console.log(`  ${GREEN}✓${RESET} Installed ${BOLD}sunco engine${RESET}  ${DIM}(${engCopied} files)${RESET}`);
-    console.log(`  ${GREEN}✓${RESET} Installed ${BOLD}hooks${RESET}          ${DIM}(${hooksCopied} files)${RESET}`);
+    console.log(`  ${GREEN}✓${RESET} Installed ${BOLD}sunco engine${RESET}  ${DIM}(${r.engCopied} files)${RESET}`);
+    console.log(`  ${GREEN}✓${RESET} Installed ${BOLD}hooks${RESET}          ${DIM}(${r.hooksCopied} files)${RESET}`);
+    if (docCount > 0) {
+      console.log(`  ${GREEN}✓${RESET} Installed ${BOLD}docs${RESET}           ${DIM}(${docCount} files)${RESET}`);
+    }
     console.log(`\n  ${GREEN}Done!${RESET} Run ${EMERALD}/sunco:help${RESET} to get started.\n`);
   } catch (err) {
     console.error(`\n  ${BOLD}Error during install:${RESET} ${err.message}\n`);

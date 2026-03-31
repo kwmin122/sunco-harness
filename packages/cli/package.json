@@ -8,6 +8,9 @@
     "commands/",
     "dist/",
     "hooks/",
+    "workflows/",
+    "references/",
+    "templates/",
     "README.md",
     "LICENSE"
   ],
