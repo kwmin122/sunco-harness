@@ -7,19 +7,335 @@ allowed-tools:
 ---
 
 <objective>
-Run the SUNCO init skill to detect the project's technology stack, architectural layers, and coding conventions, then generate lint rules and scaffold the .sun/ workspace directory. This is the mandatory first step before using lint, health, or guard.
+Initialize the SUNCO project harness by detecting the project's technology stack, architectural layers, and coding conventions, then generating lint rules and scaffolding the .sun/ workspace directory. This is the mandatory first step before using lint, health, or guard.
+
+Try the engine binary first. If it is unavailable or fails (e.g., better-sqlite3 missing on a fresh install), fall back to a full pure-.md implementation that delivers equivalent output with zero native dependencies.
 </objective>
 
 <process>
-1. Run: `node $HOME/.claude/sunco/bin/cli.js init`
-   - Optional: add `--preset <name>` to force a specific preset instead of auto-detection
-   - Optional: add `--force` to overwrite an existing .sun/ configuration
-2. Display the output clearly:
-   - Ecosystems detected (e.g., typescript-monorepo, react, node)
-   - Layers detected (e.g., domain, service, infra, ui)
-   - Naming and import style conventions
-   - Number of lint rules generated
-   - Preset applied
-3. If init succeeds, suggest: "Run `/sunco:lint` to check architecture boundaries, or `/sunco:health` for a full health score."
-4. If init fails (e.g., unsupported stack), show the error message and suggest running with `--preset <name>` to force a known preset.
+## Step 1 — Try the engine
+
+Run:
+```
+node $HOME/.claude/sunco/bin/cli.js init 2>&1
+```
+
+Capture both stdout and stderr. If the command exits with code 0 and produces normal init output, display that output and skip to Step 7.
+
+If the command fails for any reason (exit code non-zero, "Cannot find module", "better-sqlite3", "was compiled against a different Node.js version", or any other error), proceed to Step 2 — do NOT show the raw error to the user, just note that the engine is unavailable and the fallback is running.
+
+---
+
+## Step 2 — Detect ecosystems
+
+Read the following files if they exist (use Read tool or Bash `test -f`):
+
+| File | Ecosystem signal |
+|------|-----------------|
+| `package.json` | nodejs (high) |
+| `tsconfig.json` | typescript (high) |
+| `deno.json` | deno (high) |
+| `bun.lockb` | bun (high) |
+| `Cargo.toml` | rust (high) |
+| `go.mod` | go (high) |
+| `pyproject.toml` | python (high) |
+| `requirements.txt` | python (medium) |
+| `setup.py` | python (medium) |
+| `Pipfile` | python (medium) |
+| `build.gradle` | java (high) |
+| `build.gradle.kts` | kotlin (high) |
+| `pom.xml` | java (high) |
+| `Gemfile` | ruby (high) |
+| `composer.json` | php (high) |
+| `Package.swift` | swift (high) |
+| `pubspec.yaml` | dart (high) |
+
+Also run `ls *.csproj 2>/dev/null` and `ls *.sln 2>/dev/null` to detect dotnet.
+
+Build the ecosystem list in order of first match. The primary ecosystem is the first high-confidence match.
+
+If `package.json` exists, read it to extract:
+- `dependencies` and `devDependencies` keys → detect React (`react`), Next.js (`next`), Vue (`vue`), Angular (`@angular/core`), Svelte (`svelte`), Express (`express`), Fastify (`fastify`), NestJS (`@nestjs/core`), Vitest (`vitest`), Jest (`jest`), Vite (`vite`), Webpack (`webpack`)
+- `type` field: `"module"` means ESM, absence or `"commonjs"` means CJS
+- `workspaces` field (or root `package.json` with `packages/` directory) → monorepo
+
+If `tsconfig.json` exists, read it to extract:
+- `compilerOptions.paths` → alias imports present
+- `compilerOptions.baseUrl` → alias imports present
+- `references` array → TypeScript project references (monorepo)
+
+---
+
+## Step 3 — Detect architectural layers
+
+Check if any of these source root directories exist (in order): `src`, `lib`, `app`, `packages`
+
+Run: `ls -d src lib app packages 2>/dev/null | head -1` to find the first match. Record as `sourceRoot`.
+
+If a source root is found, list its immediate subdirectories:
+```
+ls -d <sourceRoot>/*/  2>/dev/null
+```
+
+Map each subdirectory name (case-insensitive) to layers using these rules:
+
+| Directory names | Layer name | Can import from |
+|----------------|------------|-----------------|
+| types, typings, interfaces | types | (none) |
+| config, configuration, settings | config | types |
+| utils, utilities, helpers, lib, shared | utils | types, config |
+| domain, models, entities, services, core | domain | types, config, utils |
+| handlers, controllers, routes, api, endpoints | handler | types, config, utils, domain |
+| ui, views, pages, components, screens | ui | types, config, utils, domain |
+| infra, infrastructure, db, database, adapters, external | infra | types, config, utils, domain |
+
+A layer matches if the directory name equals any of the listed names. Record `pattern` as `<sourceRoot>/<dirName>/*`.
+
+---
+
+## Step 4 — Generate ESLint flat config
+
+Only generate `eslint.config.js` if:
+- `nodejs` or `typescript` ecosystem was detected
+- `eslint.config.js` does NOT already exist
+
+If `eslint.config.js` already exists, skip silently (do not overwrite).
+
+Generate `eslint.config.js` based on the detected stack:
+
+**TypeScript + Node.js (typescript-node preset):**
+```javascript
+// eslint.config.js — auto-generated by sunco init
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import boundaries from 'eslint-plugin-boundaries';
+
+export default tseslint.config(
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    plugins: { boundaries },
+    settings: {
+      'boundaries/elements': [
+        // LAYER_ELEMENTS_PLACEHOLDER
+      ],
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/consistent-type-imports': 'error',
+      'boundaries/dependencies': [
+        'error',
+        {
+          default: 'disallow',
+          rules: [
+            // LAYER_RULES_PLACEHOLDER
+          ],
+        },
+      ],
+    },
+  },
+  {
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '.turbo/**'],
+  },
+);
+```
+
+Replace `// LAYER_ELEMENTS_PLACEHOLDER` with the detected layers formatted as:
+```javascript
+        { type: 'layerName', pattern: 'src/dirname/*' },
+```
+
+Replace `// LAYER_RULES_PLACEHOLDER` with one entry per layer that has `canImportFrom` > 0, formatted as:
+```javascript
+        { from: [{ type: 'layerName' }], allow: [{ type: 'dep1' }, { type: 'dep2' }] },
+```
+
+If no layers were detected, use empty arrays for both placeholders.
+
+**Node.js only (no TypeScript):**
+Omit the `tseslint` import and `...tseslint.configs.recommended` lines. Keep the rest.
+
+**Python, Rust, Go, or other non-JS ecosystems:**
+Skip ESLint config entirely. Note in output that linting is handled by the ecosystem's native tools.
+
+---
+
+## Step 5 — Create .sun/ workspace
+
+Create the following structure (skip files that already exist, unless `--force` was passed):
+
+```
+.sun/
+  config.toml        ← generated from detection results
+  rules/
+    arch-layers.json ← boundary rule (only if layers were detected)
+  tribal/
+    .gitkeep
+  scenarios/
+    .gitkeep
+  planning/
+    .gitkeep
+```
+
+**Generate `.sun/config.toml`:**
+
+```toml
+# Auto-generated by sunco init (fallback mode)
+
+[stack]
+ecosystems = ["<list>"]
+primary = "<primaryEcosystem>"
+preset = "<preset-id>"
+
+[layers]
+source_root = "<sourceRoot or empty string>"
+
+[[layers.detected]]
+name = "<layerName>"
+pattern = "<layerPattern>"
+# (repeat for each detected layer)
+
+[conventions]
+naming = "<naming>"
+import_style = "<importStyle>"
+export_style = "<exportStyle>"
+test_organization = "<testOrg>"
+```
+
+For conventions in fallback mode:
+- `naming`: read 3–5 source files and look for `export function`, `export const`, `export class` names. If most start uppercase → `PascalCase`, if most start lowercase with uppercase inside → `camelCase`. Default to `camelCase` for TypeScript projects.
+- `import_style`: if `tsconfig.json` has `paths` or `baseUrl` → `alias`, else `relative`
+- `export_style`: if most exports in sampled files use `export default` → `default`, else `named`
+- `test_organization`: check if `src/**/__tests__/` exists → `__tests__`, else if any `*.test.ts` alongside source → `co-located`, else if top-level `test/` or `tests/` exists → `top-level-test`, else `unknown`
+
+**Preset resolution** (pick the first match):
+1. `typescript-node` — if both `typescript` and `nodejs` detected
+2. `nodejs` — if `nodejs` detected
+3. `rust` — if `rust` detected
+4. `python` — if `python` detected
+5. `go` — if `go` detected
+6. `generic` — fallback
+
+**Generate `.sun/rules/arch-layers.json`** (only if layers were detected):
+```json
+{
+  "id": "arch-layers",
+  "source": "init-fallback",
+  "createdAt": "<ISO timestamp>",
+  "pattern": "Architecture layer dependency boundaries",
+  "eslintConfig": {
+    "settings": {
+      "boundaries/elements": [
+        { "type": "<layerName>", "pattern": "<layerPattern>" }
+      ]
+    },
+    "rules": {
+      "boundaries/dependencies": [
+        2,
+        {
+          "default": "disallow",
+          "rules": [
+            { "from": [{ "type": "<layer>" }], "allow": [{ "type": "<dep>" }] }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Step 6 — Generate .gitignore if missing
+
+If `.gitignore` does not exist, create one with sensible defaults for the detected ecosystem:
+
+**Node.js / TypeScript:**
+```
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.tsbuildinfo
+.env
+.env.local
+.turbo/
+```
+
+**Python:**
+```
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.env
+```
+
+**Rust:**
+```
+target/
+Cargo.lock
+```
+
+**Go:**
+```
+*.exe
+*.out
+vendor/
+```
+
+If `.gitignore` already exists, skip this step.
+
+---
+
+## Step 7 — Display results
+
+Print the following structured output:
+
+```
+sunco init complete
+
+  Mode:         fallback (engine unavailable)   ← omit this line if engine succeeded
+  Preset:       <preset-id>
+  Ecosystems:   <comma-separated list, or "none detected">
+  Primary:      <primaryEcosystem or "unknown">
+  Layers:       <comma-separated layer names, or "none detected">
+  Source root:  <sourceRoot or "none">
+  Naming:       <naming convention>
+  Import style: <import style>
+  Export style: <export style>
+  Test org:     <test organization>
+
+  Files written:
+    .sun/config.toml
+    .sun/rules/arch-layers.json        ← only if layers detected
+    eslint.config.js                   ← only if JS/TS and not pre-existing
+    .gitignore                         ← only if created fresh
+
+  Rules generated: <count>
+```
+
+If init was previously run and `--force` was not passed, and `.sun/config.toml` already exists, print instead:
+
+```
+  .sun/ already initialized. Pass --force to reinitialize.
+  Tip: run /sunco:lint to check architecture boundaries.
+```
+
+---
+
+## Step 8 — Suggest next steps
+
+After a successful init, always suggest:
+
+- If layers were detected: "Run `/sunco:lint` to check architecture boundary violations."
+- If no layers detected: "Run `/sunco:health` for a full codebase health score."
+- Always: "Run `/sunco:guard` to enable real-time lint on file changes."
+
+If the detected stack includes React, Next.js, or a UI layer: also suggest `/sunco:ui-review`.
 </process>
