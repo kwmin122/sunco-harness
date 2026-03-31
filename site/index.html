@@ -44,7 +44,7 @@ tailwind.config = {
   border-bottom: 1px solid #1a2332;
 }
 .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
-.terminal-body { padding: 20px 24px; font-size: 13px; line-height: 1.7; color: #c9d1d9; }
+.terminal-body { padding: 20px 24px; font-size: 13px; line-height: 1.7; color: #c9d1d9; white-space: pre; overflow-x: auto; }
 .terminal-body .green { color: #74db97; }
 .terminal-body .dim { color: #484f58; }
 .terminal-body .bold { font-weight: 700; color: #e6edf3; }
@@ -100,14 +100,13 @@ tailwind.config = {
         <div class="terminal-dot bg-[#27c93f]"></div>
         <span class="text-white/30 text-xs font-mono ml-2">Terminal</span>
       </div>
-      <div class="terminal-body">
-<pre class="green"> ███████╗██╗   ██╗███╗   ██╗ ██████╗ ██████╗
+      <div class="terminal-body"><span class="green"> ███████╗██╗   ██╗███╗   ██╗ ██████╗ ██████╗
  ██╔════╝██║   ██║████╗  ██║██╔════╝██╔═══██╗
  ███████╗██║   ██║██╔██╗ ██║██║     ██║   ██║
  ╚════██║██║   ██║██║╚██╗██║██║     ██║   ██║
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
- ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝</pre>
-<br>
+ ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝</span>
+
   <span class="bold">SUNCO v0.2.6</span>
   <span class="dim">Agent Workspace OS — harness engineering for AI agents</span>
 
@@ -133,8 +132,7 @@ tailwind.config = {
   <span class="green">✓</span> Claude Code: <span class="bold">훅</span>   <span class="dim">(4 개 파일)</span>
   <span class="green">✓</span> Claude Code: <span class="bold">문서</span>    <span class="dim">(22 개 파일)</span>
 
-  <span class="green">완료!</span> <span class="green">/sunco:help</span> — /sunco:help를 실행하여 시작하세요.
-      </div>
+  <span class="green">완료!</span> <span class="green">/sunco:help</span> — /sunco:help를 실행하여 시작하세요.</div>
     </div>
 
     <!-- Runtime logos -->
@@ -175,8 +173,7 @@ tailwind.config = {
             <div class="terminal-dot bg-[#27c93f]"></div>
             <span class="text-white/30 text-xs font-mono ml-2">/sunco:lint</span>
           </div>
-          <div class="terminal-body text-sm">
-<span class="green">⚡ SUNCO > lint</span>
+          <div class="terminal-body text-sm"><span class="green">⚡ SUNCO > lint</span>
 
 <span class="bold">Architecture Boundary Check</span>
 <span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
@@ -187,8 +184,7 @@ tailwind.config = {
 <span class="green">✓</span> ESLint rules:     <span class="green">PASS</span> <span class="dim">(0 errors, 0 warnings)</span>
 
 <span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
-<span class="green">Score: 100/100</span> <span class="dim">| 4 checks | 0.3s</span>
-          </div>
+<span class="green">Score: 100/100</span> <span class="dim">| 4 checks | 0.3s</span></div>
         </div>
       </div>
       <div class="md:col-span-4">
@@ -265,8 +261,7 @@ tailwind.config = {
             <div class="terminal-dot bg-[#27c93f]"></div>
             <span class="text-white/30 text-xs font-mono ml-2">/sunco:verify 3</span>
           </div>
-          <div class="terminal-body text-sm">
-<span class="bold">Phase 3 Verification Results</span>
+          <div class="terminal-body text-sm"><span class="bold">Phase 3 Verification Results</span>
 <span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
 
 <span class="green">●</span> <span class="cyan">sunco-reviewer</span><span class="dim">(Code review Phase 3)</span>
@@ -284,8 +279,7 @@ tailwind.config = {
 
 <span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
 <span class="green">Overall: ALL 6 LAYERS PASSED</span>
-Run <span class="green">/sunco:ship 3</span> to create the PR.
-          </div>
+Run <span class="green">/sunco:ship 3</span> to create the PR.</div>
         </div>
       </div>
       <div class="order-1 md:order-2">
