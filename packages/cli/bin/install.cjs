@@ -483,38 +483,154 @@ function resolveRuntimeKeys(selectionStr) {
 }
 
 // ---------------------------------------------------------------------------
-// Interactive prompts
+// Interactive TUI selectors (arrow keys, zero deps)
 // ---------------------------------------------------------------------------
-function prompt(rl, question) {
+
+/**
+ * Single-select: arrow keys to move, enter to confirm.
+ * Returns the selected index.
+ */
+function singleSelect(title, options) {
   return new Promise((resolve) => {
-    rl.question(question, (answer) => resolve(answer));
+    let cursor = 0;
+    const { stdin, stdout } = process;
+
+    function render() {
+      // Move up to redraw (title + options + hint = options.length + 2 lines)
+      const total = options.length + 2;
+      stdout.write(`\x1b[${total}A`); // move up
+      stdout.write(`\x1b[J`);         // clear below
+
+      stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
+      for (let i = 0; i < options.length; i++) {
+        const selected = i === cursor;
+        const icon = selected ? `${EMERALD}\u276F${RESET}` : ' ';
+        const dot  = selected ? `${EMERALD}\u25CF${RESET}` : `${DIM}\u25CB${RESET}`;
+        const label = selected ? `${BOLD}${options[i]}${RESET}` : `${DIM}${options[i]}${RESET}`;
+        stdout.write(`  ${icon} ${dot} ${label}\n`);
+      }
+      stdout.write(`\n  ${DIM}\u2191\u2193 move \u00B7 enter select${RESET}\n`);
+    }
+
+    // Print initial blank lines so render() can move up
+    stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
+    for (let i = 0; i < options.length; i++) stdout.write('\n');
+    stdout.write('\n\n');
+    render();
+
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding('utf8');
+
+    function onKey(key) {
+      if (key === '\x1b[A') { cursor = (cursor - 1 + options.length) % options.length; render(); }
+      else if (key === '\x1b[B') { cursor = (cursor + 1) % options.length; render(); }
+      else if (key === '\r' || key === '\n') { cleanup(); resolve(cursor); }
+      else if (key === '\x03') { cleanup(); process.exit(0); } // ctrl+c
+    }
+
+    function cleanup() {
+      stdin.removeListener('data', onKey);
+      stdin.setRawMode(false);
+      stdin.pause();
+    }
+
+    stdin.on('data', onKey);
+  });
+}
+
+/**
+ * Multi-select: arrow keys to move, space to toggle, 'a' for all, enter to confirm.
+ * Returns array of selected indices.
+ */
+function multiSelect(title, options) {
+  return new Promise((resolve) => {
+    let cursor = 0;
+    const selected = new Set([0]); // Claude Code selected by default
+    const { stdin, stdout } = process;
+
+    function render() {
+      const total = options.length + 3;
+      stdout.write(`\x1b[${total}A`);
+      stdout.write(`\x1b[J`);
+
+      stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
+      for (let i = 0; i < options.length; i++) {
+        const isCursor = i === cursor;
+        const isSelected = selected.has(i);
+        const arrow = isCursor ? `${EMERALD}\u276F${RESET}` : ' ';
+        const box = isSelected ? `${GREEN}\u25C9${RESET}` : `${DIM}\u25CB${RESET}`;
+        const label = isCursor ? `${BOLD}${options[i]}${RESET}` : options[i];
+        stdout.write(`  ${arrow} ${box} ${label}\n`);
+      }
+      const count = selected.size;
+      stdout.write(`\n  ${DIM}\u2191\u2193 move \u00B7 space toggle \u00B7 a all \u00B7 enter confirm${RESET}  ${EMERALD}(${count} selected)${RESET}\n`);
+    }
+
+    stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
+    for (let i = 0; i < options.length; i++) stdout.write('\n');
+    stdout.write('\n\n');
+    render();
+
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding('utf8');
+
+    function onKey(key) {
+      if (key === '\x1b[A') { cursor = (cursor - 1 + options.length) % options.length; render(); }
+      else if (key === '\x1b[B') { cursor = (cursor + 1) % options.length; render(); }
+      else if (key === ' ') {
+        if (selected.has(cursor)) selected.delete(cursor); else selected.add(cursor);
+        render();
+      }
+      else if (key === 'a' || key === 'A') {
+        if (selected.size === options.length) selected.clear();
+        else for (let i = 0; i < options.length; i++) selected.add(i);
+        render();
+      }
+      else if (key === '\r' || key === '\n') {
+        cleanup();
+        if (selected.size === 0) selected.add(0); // at least Claude Code
+        resolve([...selected].sort());
+      }
+      else if (key === '\x03') { cleanup(); process.exit(0); }
+    }
+
+    function cleanup() {
+      stdin.removeListener('data', onKey);
+      stdin.setRawMode(false);
+      stdin.pause();
+    }
+
+    stdin.on('data', onKey);
   });
 }
 
 async function runInteractivePrompts() {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
-  // --- Language selection ---
-  console.log(`\n  Select language / 언어를 선택하세요:`);
-  console.log(`  1) English`);
-  console.log(`  2) 한국어`);
-  const langAnswer = await prompt(rl, `  > `);
-  const lang = langAnswer.trim() === '2' ? 'ko' : 'en';
+  // --- Language selection (single select) ---
+  const langIdx = await singleSelect(
+    'Select language / 언어를 선택하세요:',
+    ['English', '한국어']
+  );
+  const lang = langIdx === 1 ? 'ko' : 'en';
+  console.log('');
 
   const msg = MSG[lang];
 
-  // --- Runtime selection ---
-  console.log(`\n${msg.selectRuntime}`);
-  console.log(`  1) Claude Code  (~/.claude/)`);
-  console.log(`  2) Codex CLI    (~/.codex/)`);
-  console.log(`  3) Cursor       (~/.cursor/)`);
-  console.log(`  4) Antigravity  (~/.antigravity/)`);
-  const runtimeAnswer = await prompt(rl, `  > `);
+  // --- Runtime selection (multi select) ---
+  const runtimeOptions = [
+    `Claude Code   ${DIM}(~/.claude/)${RESET}`,
+    `Codex CLI     ${DIM}(~/.codex/)${RESET}`,
+    `Cursor        ${DIM}(~/.cursor/)${RESET}`,
+    `Antigravity   ${DIM}(~/.antigravity/)${RESET}`,
+  ];
+  const selectedIndices = await multiSelect(
+    lang === 'ko' ? '설치할 런타임을 선택하세요:' : 'Select runtimes to install:',
+    runtimeOptions
+  );
 
-  rl.close();
-
-  const runtimeKeys = resolveRuntimeKeys(runtimeAnswer.trim() || '1');
-  return { lang, runtimeKeys };
+  const runtimeKeys = selectedIndices.map((i) => RUNTIME_KEYS[i]).filter(Boolean);
+  return { lang, runtimeKeys: runtimeKeys.length > 0 ? runtimeKeys : ['claude'] };
 }
 
 // ---------------------------------------------------------------------------
