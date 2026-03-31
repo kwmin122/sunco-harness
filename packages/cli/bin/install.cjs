@@ -484,11 +484,17 @@ function resolveRuntimeKeys(selectionStr) {
 
 // ---------------------------------------------------------------------------
 // Interactive TUI selectors (arrow keys, zero deps)
+// Uses \x1b7 (save cursor) / \x1b8 (restore cursor) for flicker-free redraw.
 // ---------------------------------------------------------------------------
+
+const HIDE_CURSOR = '\x1b[?25l';
+const SHOW_CURSOR = '\x1b[?25h';
+const SAVE_POS    = '\x1b7';
+const RESTORE_POS = '\x1b8';
+const CLEAR_BELOW = '\x1b[J';
 
 /**
  * Single-select: arrow keys to move, enter to confirm.
- * Returns the selected index.
  */
 function singleSelect(title, options) {
   return new Promise((resolve) => {
@@ -496,26 +502,19 @@ function singleSelect(title, options) {
     const { stdin, stdout } = process;
 
     function render() {
-      // Move up to redraw (title + options + hint = options.length + 2 lines)
-      const total = options.length + 2;
-      stdout.write(`\x1b[${total}A`); // move up
-      stdout.write(`\x1b[J`);         // clear below
-
+      stdout.write(RESTORE_POS + CLEAR_BELOW);
       stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
       for (let i = 0; i < options.length; i++) {
-        const selected = i === cursor;
-        const icon = selected ? `${EMERALD}\u276F${RESET}` : ' ';
-        const dot  = selected ? `${EMERALD}\u25CF${RESET}` : `${DIM}\u25CB${RESET}`;
-        const label = selected ? `${BOLD}${options[i]}${RESET}` : `${DIM}${options[i]}${RESET}`;
-        stdout.write(`  ${icon} ${dot} ${label}\n`);
+        const active = i === cursor;
+        const arrow = active ? `${EMERALD}\u276F${RESET}` : ' ';
+        const dot   = active ? `${EMERALD}\u25CF${RESET}` : `${DIM}\u25CB${RESET}`;
+        const label = active ? `${BOLD}${options[i]}${RESET}` : `${DIM}${options[i]}${RESET}`;
+        stdout.write(`  ${arrow} ${dot} ${label}\n`);
       }
       stdout.write(`\n  ${DIM}\u2191\u2193 move \u00B7 enter select${RESET}\n`);
     }
 
-    // Print initial blank lines so render() can move up
-    stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
-    for (let i = 0; i < options.length; i++) stdout.write('\n');
-    stdout.write('\n\n');
+    stdout.write(HIDE_CURSOR + SAVE_POS);
     render();
 
     stdin.setRawMode(true);
@@ -525,14 +524,20 @@ function singleSelect(title, options) {
     function onKey(key) {
       if (key === '\x1b[A') { cursor = (cursor - 1 + options.length) % options.length; render(); }
       else if (key === '\x1b[B') { cursor = (cursor + 1) % options.length; render(); }
-      else if (key === '\r' || key === '\n') { cleanup(); resolve(cursor); }
-      else if (key === '\x03') { cleanup(); process.exit(0); } // ctrl+c
+      else if (key === '\r' || key === '\n') { done(cursor); }
+      else if (key === '\x03') { done(0, true); }
     }
 
-    function cleanup() {
+    function done(val, exit) {
       stdin.removeListener('data', onKey);
       stdin.setRawMode(false);
       stdin.pause();
+      stdout.write(SHOW_CURSOR);
+      // Show final selection
+      stdout.write(RESTORE_POS + CLEAR_BELOW);
+      stdout.write(`  ${BOLD}${title}${RESET} ${EMERALD}${options[val]}${RESET}\n\n`);
+      if (exit) process.exit(0);
+      resolve(val);
     }
 
     stdin.on('data', onKey);
@@ -540,36 +545,41 @@ function singleSelect(title, options) {
 }
 
 /**
- * Multi-select: arrow keys to move, space to toggle, 'a' for all, enter to confirm.
- * Returns array of selected indices.
+ * Multi-select: arrow keys move, space toggles, 'a' toggles all, enter confirms.
+ * Last item is a "Confirm" button — pressing enter on it also confirms.
  */
 function multiSelect(title, options) {
   return new Promise((resolve) => {
     let cursor = 0;
-    const selected = new Set([0]); // Claude Code selected by default
+    const selected = new Set([0]); // Claude Code on by default
+    const confirmIdx = options.length; // virtual confirm button index
+    const totalItems = options.length + 1;
     const { stdin, stdout } = process;
 
     function render() {
-      const total = options.length + 3;
-      stdout.write(`\x1b[${total}A`);
-      stdout.write(`\x1b[J`);
-
+      stdout.write(RESTORE_POS + CLEAR_BELOW);
       stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
       for (let i = 0; i < options.length; i++) {
-        const isCursor = i === cursor;
-        const isSelected = selected.has(i);
-        const arrow = isCursor ? `${EMERALD}\u276F${RESET}` : ' ';
-        const box = isSelected ? `${GREEN}\u25C9${RESET}` : `${DIM}\u25CB${RESET}`;
-        const label = isCursor ? `${BOLD}${options[i]}${RESET}` : options[i];
+        const active = i === cursor;
+        const checked = selected.has(i);
+        const arrow = active ? `${EMERALD}\u276F${RESET}` : ' ';
+        const box   = checked ? `${GREEN}[\u2713]${RESET}` : `${DIM}[ ]${RESET}`;
+        const label = active ? `${BOLD}${options[i]}${RESET}` : options[i];
         stdout.write(`  ${arrow} ${box} ${label}\n`);
       }
+      // Confirm button
+      const onConfirm = cursor === confirmIdx;
       const count = selected.size;
-      stdout.write(`\n  ${DIM}\u2191\u2193 move \u00B7 space toggle \u00B7 a all \u00B7 enter confirm${RESET}  ${EMERALD}(${count} selected)${RESET}\n`);
+      stdout.write('\n');
+      if (onConfirm) {
+        stdout.write(`  ${EMERALD}\u276F ${BOLD}[ Install ${count} runtime${count !== 1 ? 's' : ''} ]${RESET}\n`);
+      } else {
+        stdout.write(`    ${DIM}[ Install ${count} runtime${count !== 1 ? 's' : ''} ]${RESET}\n`);
+      }
+      stdout.write(`\n  ${DIM}\u2191\u2193 move \u00B7 space toggle \u00B7 a all \u00B7 enter confirm${RESET}\n`);
     }
 
-    stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
-    for (let i = 0; i < options.length; i++) stdout.write('\n');
-    stdout.write('\n\n');
+    stdout.write(HIDE_CURSOR + SAVE_POS);
     render();
 
     stdin.setRawMode(true);
@@ -577,29 +587,44 @@ function multiSelect(title, options) {
     stdin.setEncoding('utf8');
 
     function onKey(key) {
-      if (key === '\x1b[A') { cursor = (cursor - 1 + options.length) % options.length; render(); }
-      else if (key === '\x1b[B') { cursor = (cursor + 1) % options.length; render(); }
+      if (key === '\x1b[A') { cursor = (cursor - 1 + totalItems) % totalItems; render(); }
+      else if (key === '\x1b[B') { cursor = (cursor + 1) % totalItems; render(); }
       else if (key === ' ') {
-        if (selected.has(cursor)) selected.delete(cursor); else selected.add(cursor);
-        render();
+        if (cursor < options.length) {
+          if (selected.has(cursor)) selected.delete(cursor); else selected.add(cursor);
+          render();
+        } else {
+          confirm(); // space on confirm button
+        }
       }
       else if (key === 'a' || key === 'A') {
         if (selected.size === options.length) selected.clear();
         else for (let i = 0; i < options.length; i++) selected.add(i);
         render();
       }
-      else if (key === '\r' || key === '\n') {
-        cleanup();
-        if (selected.size === 0) selected.add(0); // at least Claude Code
-        resolve([...selected].sort());
-      }
-      else if (key === '\x03') { cleanup(); process.exit(0); }
+      else if (key === '\r' || key === '\n') { confirm(); }
+      else if (key === '\x03') { exit(); }
     }
 
-    function cleanup() {
+    function confirm() {
       stdin.removeListener('data', onKey);
       stdin.setRawMode(false);
       stdin.pause();
+      stdout.write(SHOW_CURSOR);
+      if (selected.size === 0) selected.add(0);
+      // Show final selection
+      stdout.write(RESTORE_POS + CLEAR_BELOW);
+      const names = [...selected].sort().map(i => options[i].replace(/\x1b\[[^m]*m/g, '').trim()).join(', ');
+      stdout.write(`  ${BOLD}${title}${RESET} ${EMERALD}${names}${RESET}\n\n`);
+      resolve([...selected].sort());
+    }
+
+    function exit() {
+      stdin.removeListener('data', onKey);
+      stdin.setRawMode(false);
+      stdin.pause();
+      stdout.write(SHOW_CURSOR);
+      process.exit(0);
     }
 
     stdin.on('data', onKey);
@@ -607,26 +632,21 @@ function multiSelect(title, options) {
 }
 
 async function runInteractivePrompts() {
-  // --- Language selection (single select) ---
   const langIdx = await singleSelect(
     'Select language / 언어를 선택하세요:',
     ['English', '한국어']
   );
   const lang = langIdx === 1 ? 'ko' : 'en';
-  console.log('');
 
-  const msg = MSG[lang];
-
-  // --- Runtime selection (multi select) ---
-  const runtimeOptions = [
-    `Claude Code   ${DIM}(~/.claude/)${RESET}`,
-    `Codex CLI     ${DIM}(~/.codex/)${RESET}`,
-    `Cursor        ${DIM}(~/.cursor/)${RESET}`,
-    `Antigravity   ${DIM}(~/.antigravity/)${RESET}`,
+  const runtimeLabels = [
+    'Claude Code   (~/.claude/)',
+    'Codex CLI     (~/.codex/)',
+    'Cursor        (~/.cursor/)',
+    'Antigravity   (~/.antigravity/)',
   ];
   const selectedIndices = await multiSelect(
     lang === 'ko' ? '설치할 런타임을 선택하세요:' : 'Select runtimes to install:',
-    runtimeOptions
+    runtimeLabels
   );
 
   const runtimeKeys = selectedIndices.map((i) => RUNTIME_KEYS[i]).filter(Boolean);
