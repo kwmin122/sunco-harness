@@ -74,7 +74,7 @@ export function _setNestedKey(
 // ---------------------------------------------------------------------------
 
 export default defineSkill({
-  id: 'core.settings',
+  id: 'workflow.settings',
   command: 'settings',
   kind: 'deterministic',
   stage: 'stable',
