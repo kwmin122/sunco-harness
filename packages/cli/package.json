@@ -1,6 +1,6 @@
 {
   "name": "popcoru",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Agent Workspace OS — harness engineering for AI coding agents",
   "type": "module",
   "files": [
@@ -47,12 +47,12 @@
     "lint": "echo 'lint not configured yet'"
   },
   "dependencies": {
-    "@sunco/core": "*",
-    "@sunco/skills-harness": "*",
-    "@sunco/skills-workflow": "*",
     "commander": "14.0.3"
   },
   "devDependencies": {
+    "@sunco/core": "*",
+    "@sunco/skills-harness": "*",
+    "@sunco/skills-workflow": "*",
     "tsup": "8.5.0",
     "typescript": "6.0.2"
   }
