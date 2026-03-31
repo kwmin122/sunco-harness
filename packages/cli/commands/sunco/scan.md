@@ -59,6 +59,8 @@ cat package.json | head -50
 
 Spawn parallel agents for each document (or just the focused one if --focus):
 
+**Agent name:** `sunco-scanner` — description: `Scan: [document]`
+
 **Agent 1 — Tech Stack:**
 "Scan this codebase. Read package.json files in all packages. Document:
 - Primary language and version

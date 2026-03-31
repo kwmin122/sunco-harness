@@ -65,6 +65,8 @@ Determine detected design system. If ambiguous: ask user.
 
 Spawn a research agent to extract UI requirements from the phase context:
 
+**Agent name:** `sunco-ui-designer` — description: `UI-SPEC: Phase [N]`
+
 **Research agent prompt:**
 "Analyze this phase for UI requirements:
 Phase goal: [from ROADMAP.md]

@@ -45,6 +45,8 @@ Otherwise review all three dimensions.
 
 Spawn 2-3 independent review agents (one per focus area or provider).
 
+**Agent name:** `sunco-reviewer` — description: `Review: [focus]`
+
 **Agent prompt template:**
 ```
 You are a [role] reviewing a code change for a TypeScript CLI project called SUNCO.

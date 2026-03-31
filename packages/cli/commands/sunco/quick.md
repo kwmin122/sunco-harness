@@ -48,6 +48,9 @@ Capture answers. Proceed.
 ## Step 3: Apply --research (if flag present)
 
 Spawn a single research agent:
+
+**Agent name:** `sunco-quick` — description: `Quick: [task]`
+
 "Quick research: what's the best approach for [task]?
 Context: [answers from discuss if applicable]
 Constraint: TypeScript, [from CLAUDE.md stack]

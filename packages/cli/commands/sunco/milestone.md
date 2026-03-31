@@ -57,6 +57,9 @@ If yes: add to ROADMAP.md with gap_closure: true in frontmatter.
 ## If --summary
 
 Spawn an agent to generate a comprehensive summary:
+
+**Agent name:** `sunco-milestone` — description: `Milestone: [action]`
+
 "Read all completed phase SUMMARY.md files, REQUIREMENTS.md, PROJECT.md, and ROADMAP.md.
 Generate a project summary suitable for team onboarding:
 1. What was built

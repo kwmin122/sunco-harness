@@ -46,6 +46,8 @@ Or if `--topic` specified: single focused agent.
 
 ## Step 3: Spawn research agents
 
+**Agent name:** `sunco-researcher` — description: `Research: [topic]`
+
 **Architecture agent:**
 "Research the best architectural approach for: [phase goal].
 Given constraints: [tech stack from CLAUDE.md]

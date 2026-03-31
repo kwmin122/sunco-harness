@@ -48,6 +48,8 @@ git log --oneline -5
 
 ## Step 3: Spawn 4 parallel mapper agents
 
+**Agent name:** `sunco-mapper` — description: `Map: [focus]`
+
 **Agent 1 — Tech Stack mapper:**
 "Map the tech stack of this codebase.
 

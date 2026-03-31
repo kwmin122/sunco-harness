@@ -76,8 +76,9 @@ If `--interactive` is in $ARGUMENTS:
 - Show progress after each task
 
 Otherwise (default — parallel):
-- Spawn one Agent/Task per plan in the wave
-- Each agent runs with fresh context
+- Spawn one Agent per plan in the wave
+- **Agent name:** `sunco-executor` with description `Execute plan [N]-[M]`
+- Each agent runs with fresh context (model: sonnet)
 - Agents run in parallel within the wave
 
 **Per-plan agent prompt:**

@@ -102,6 +102,8 @@ Root Cause: [primary cause]
 
 Spawn a forensic agent:
 
+**Agent name:** `sunco-forensics` — description: `Forensics: [target]`
+
 "You are investigating a workflow failure for project SUNCO.
 
 Evidence:

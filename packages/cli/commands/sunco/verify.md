@@ -58,6 +58,9 @@ Spawn 2 independent review agents with fresh context. Each agent:
 2. Reads the modified code files
 3. Reviews independently without seeing the other agent's output
 
+**Agent 1** — name: `sunco-reviewer` description: `Code review Phase [N]`
+**Agent 2** — name: `sunco-security` description: `Security review Phase [N]`
+
 **Agent 1 prompt:**
 "You are a senior engineer reviewing Phase [N] implementation. Read the plan at [path] and the modified files listed in files_modified. Review for:
 - Correctness: does the implementation match the plan?
@@ -151,7 +154,7 @@ Layer 4 FAIL = sensitive files committed or major scope violation.
 
 ## Layer 5: Adversarial test (skip if --skip-adversarial)
 
-Spawn an adversarial agent:
+Spawn an adversarial agent — name: `sunco-adversarial` description: `Break Phase [N]`
 
 **Adversarial agent prompt:**
 "You are a malicious user trying to break the Phase [N] implementation.

@@ -48,6 +48,8 @@ If `[N]-CONTEXT.md` does not exist: warn and ask if user wants to run `/sunco:di
 
 Spawn a research agent to investigate implementation approaches:
 
+**Agent name:** `sunco-planner` — description: `Plan Phase [N]`
+
 **Research agent prompt:**
 "Research the best implementation approach for: [phase goal].
 Context: [decisions from CONTEXT.md]

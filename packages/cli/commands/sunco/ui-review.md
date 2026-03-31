@@ -57,6 +57,8 @@ cat src/styles/globals.css src/app/globals.css 2>/dev/null | head -100
 
 Spawn an audit agent for each pillar in parallel.
 
+**Agent name:** `sunco-ui-auditor` — description: `UI audit: [pillar]`
+
 ---
 
 ### Pillar 1: Typography (0-10)

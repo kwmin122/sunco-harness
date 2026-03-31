@@ -72,6 +72,8 @@ If neither specified: ask "What type of document? (readme / api / architecture /
 
 Spawn an agent to generate the document:
 
+**Agent name:** `sunco-doc` — description: `Generate: [type]`
+
 "Generate a [type] document for this project.
 
 Source material:

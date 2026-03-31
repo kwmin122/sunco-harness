@@ -54,6 +54,8 @@ Questions to ask:
 
 Spawn 4 parallel research agents using Task tool. Each agent reads the codebase and searches for relevant context:
 
+**Agent name:** `sunco-researcher` — description: `Research: [area]`
+
 **Agent 1 — Tech Stack Research:**
 "Research the best tech stack choices for: [idea]. Consider: [language preference], [project type], [scale]. Identify 3 top options with tradeoffs."
 
