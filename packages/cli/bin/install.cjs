@@ -239,6 +239,7 @@ const DESCRIPTIONS_KO = {
   'verify.md':         '6계층 스위스 치즈 검증 — 각 계층이 다른 실패 유형 포착',
   'workspaces.md':     'git worktree로 격리된 워크스페이스 관리',
   'workstreams.md':    '병렬 워크스트림 관리 — 분기 생성, 전환, 병합',
+  'mode.md':           'SUNCO 모드 ON — 모든 입력을 최적 스킬로 자동 라우팅. 슈퍼 사이어인.',
 };
 
 function patchDescriptions(commandsDir, descriptions) {

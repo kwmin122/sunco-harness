@@ -24,22 +24,43 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Deterministic harness** — lint, health, guard run with zero LLM cost
 - **6-layer Swiss cheese verification** — multi-agent review, guardrails, BDD criteria, permission audit, adversarial test, cross-model (Codex)
 - **Blast radius analysis** — dependency graph check before every execution
-- **57 slash commands** covering the full development lifecycle
+- **58 slash commands** covering the full development lifecycle
 - **Proactive recommender** — 50+ rules suggesting next-best-action
 - **HWPX document generation** — Korean standard document format
 
 ## Quick Start
 
 ```bash
-# Install
+# Install (interactive — choose language + runtimes)
 npx popcoru
 
+# Or install with flags
+npx popcoru --all --lang ko          # all runtimes, Korean
+npx popcoru --claude --codex         # Claude Code + Codex only
+
 # In Claude Code:
+/sunco:mode              # Activate SUNCO Mode (auto-routes everything)
 /sunco:help              # See all commands
 /sunco:init              # Detect stack, generate rules
 /sunco:new               # Bootstrap project from idea
-/sunco:lint              # Architecture boundary enforcement
-/sunco:health            # Codebase health score
+```
+
+## SUNCO Mode
+
+```
+/sunco:mode
+```
+
+Activates **auto-routing mode** — every message you type is automatically matched to the best `/sunco:*` command. No need to memorize commands. Just describe what you want.
+
+```
+⚡ SUNCO > lint
+Running architecture boundary check...
+
+⚡ SUNCO > debug
+Analyzing the error...
+
+⚡ SUNCO Mode | Context: ██████████░░░░░░ 65% | Skills used: 3
 ```
 
 ## The Pipeline
@@ -128,6 +149,7 @@ Each step has built-in quality gates:
 | `/sunco:workspaces` | Multi-project workspaces |
 | `/sunco:ui-phase` | UI design contract generation |
 | `/sunco:ui-review` | 6-pillar visual UI audit |
+| `/sunco:mode` | Auto-routing mode — every input finds the best skill |
 | `/sunco:manager` | Interactive command center |
 | `/sunco:stats` | Project statistics |
 | `/sunco:profile` | Model profile management |
@@ -158,12 +180,15 @@ npx popcoru --uninstall
 
 ## Multi-Runtime Support
 
-SUNCO is designed for Claude Code first, with planned support for:
-- Codex CLI
-- Cursor
-- Gemini
-- Antigravity
-- Any agent that supports slash commands
+SUNCO supports multiple AI coding runtimes:
+
+```bash
+npx popcoru --claude              # Claude Code (~/.claude/)
+npx popcoru --codex               # Codex CLI (~/.codex/)
+npx popcoru --cursor              # Cursor (~/.cursor/)
+npx popcoru --antigravity         # Antigravity (~/.antigravity/)
+npx popcoru --all                 # All runtimes at once
+```
 
 ---
 
@@ -202,7 +227,7 @@ npx popcoru
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝
 
- ✓ Installed commands/sunco (57 skills)
+ ✓ Installed commands/sunco (58 skills)
  ✓ Installed sunco engine
  ✓ Installed hooks
  ✓ Installed docs
