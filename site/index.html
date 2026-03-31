@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html class="dark" lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SUNCO | Agent Workspace OS</title>
+<meta name="description" content="AI 코딩 에이전트가 실수를 덜 하게 판을 깔아주는 OS. 58 Skills. 6-Layer Verification. Zero Mistakes.">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        emerald: { 500: "#008046", 400: "#74db97", 300: "#90f8b1" },
+        surface: { DEFAULT: "#131313", dim: "#0e0e0e", container: "#1f1f1f", bright: "#2a2a2a" }
+      },
+      fontFamily: {
+        headline: ["Space Grotesk"],
+        body: ["Inter"],
+        mono: ["JetBrains Mono"]
+      }
+    }
+  }
+}
+</script>
+<style>
+.kinetic-gradient { background: linear-gradient(135deg, #74db97 0%, #008046 100%); }
+.text-stroke { -webkit-text-stroke: 1.5px rgba(116, 219, 151, 0.3); color: transparent; }
+.terminal {
+  background: #0d1117;
+  border: 1px solid #1a2332;
+  border-radius: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+}
+.terminal-header {
+  background: #161b22;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #1a2332;
+}
+.terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+.terminal-body { padding: 20px 24px; font-size: 13px; line-height: 1.7; color: #c9d1d9; }
+.terminal-body .green { color: #74db97; }
+.terminal-body .dim { color: #484f58; }
+.terminal-body .bold { font-weight: 700; color: #e6edf3; }
+.terminal-body .yellow { color: #e3b341; }
+.terminal-body .cyan { color: #79c0ff; }
+.glow { box-shadow: 0 0 80px rgba(116, 219, 151, 0.08); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp 0.8s ease-out forwards; }
+.fade-up-delay { animation: fadeUp 0.8s ease-out 0.2s forwards; opacity: 0; }
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(116,219,151,0.1); } 50% { box-shadow: 0 0 40px rgba(116,219,151,0.2); } }
+.pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+</style>
+</head>
+<body class="bg-[#131313] text-[#e2e2e2] font-body overflow-x-hidden selection:bg-emerald-500 selection:text-black">
+
+<!-- Nav -->
+<nav class="fixed top-0 w-full z-50 bg-[#131313]/80 backdrop-blur-xl border-b border-emerald-500/10">
+  <div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+    <div class="text-2xl font-black tracking-tighter text-emerald-400 font-headline">SUNCO</div>
+    <div class="hidden md:flex gap-8 items-center">
+      <a class="text-emerald-400 font-headline font-bold text-sm tracking-tight" href="https://github.com/kwmin122/sunco-harness">GitHub</a>
+      <a class="text-white/50 hover:text-emerald-400 font-headline font-bold text-sm tracking-tight transition" href="https://www.npmjs.com/package/popcoru">npm</a>
+    </div>
+    <a href="https://www.npmjs.com/package/popcoru" class="px-5 py-2 kinetic-gradient text-black rounded-full font-headline text-xs uppercase tracking-widest font-bold hover:scale-105 active:scale-95 transition-all">
+      npx popcoru
+    </a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="relative pt-32 pb-20 overflow-hidden">
+  <!-- Background text -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap opacity-[0.02] select-none pointer-events-none">
+    <h1 class="text-[30vw] font-black font-headline tracking-tighter leading-none">AGENT OS</h1>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="fade-up">
+      <span class="uppercase tracking-[0.2em] text-emerald-400 font-headline text-xs font-bold">v0.2.6 &mdash; Multi-Runtime Support</span>
+      <h1 class="text-[clamp(3rem,8vw,7rem)] font-black font-headline tracking-tighter leading-[0.85] mt-4">
+        HARNESS YOUR <span class="text-emerald-400 italic">AGENTS</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-white/50 font-medium mt-6 max-w-xl">
+        58 Skills. 6-Layer Verification. <span class="text-white">Zero Mistakes.</span>
+      </p>
+    </div>
+
+    <!-- Terminal: Install -->
+    <div class="mt-16 terminal glow fade-up-delay">
+      <div class="terminal-header">
+        <div class="terminal-dot bg-[#ff5f56]"></div>
+        <div class="terminal-dot bg-[#ffbd2e]"></div>
+        <div class="terminal-dot bg-[#27c93f]"></div>
+        <span class="text-white/30 text-xs font-mono ml-2">Terminal</span>
+      </div>
+      <div class="terminal-body">
+<pre class="green"> ███████╗██╗   ██╗███╗   ██╗ ██████╗ ██████╗
+ ██╔════╝██║   ██║████╗  ██║██╔════╝██╔═══██╗
+ ███████╗██║   ██║██╔██╗ ██║██║     ██║   ██║
+ ╚════██║██║   ██║██║╚██╗██║██║     ██║   ██║
+ ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
+ ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝</pre>
+<br>
+  <span class="bold">SUNCO v0.2.6</span>
+  <span class="dim">Agent Workspace OS — harness engineering for AI agents</span>
+
+  <span class="bold">Select language / 언어를 선택하세요</span>
+
+  <span class="green">1)</span> English
+  <span class="green">2)</span> 한국어
+
+  Choice <span class="dim">[1]</span>: <span class="yellow">2</span>
+
+  <span class="bold">설치할 런타임을 선택하세요</span>
+
+  <span class="green">1)</span> Claude Code   <span class="dim">(~/.claude/)</span>
+  <span class="green">2)</span> Codex CLI     <span class="dim">(~/.codex/)</span>
+  <span class="green">3)</span> Cursor        <span class="dim">(~/.cursor/)</span>
+  <span class="green">4)</span> Antigravity   <span class="dim">(~/.antigravity/)</span>
+  <span class="green">5)</span> All
+
+  Choice <span class="dim">[1]</span>: <span class="yellow">5</span>
+
+  <span class="green">✓</span> Claude Code: <span class="bold">명령어</span> <span class="dim">(58 개 스킬)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">엔진</span>  <span class="dim">(23 개 파일)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">훅</span>   <span class="dim">(4 개 파일)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">문서</span>    <span class="dim">(22 개 파일)</span>
+
+  <span class="green">완료!</span> <span class="green">/sunco:help</span> — /sunco:help를 실행하여 시작하세요.
+      </div>
+    </div>
+
+    <!-- Runtime logos -->
+    <div class="mt-20 flex flex-wrap justify-between items-center gap-8 opacity-30">
+      <span class="font-headline font-bold text-lg">Claude Code</span>
+      <span class="font-headline font-bold text-lg">Codex</span>
+      <span class="font-headline font-bold text-lg">Cursor</span>
+      <span class="font-headline font-bold text-lg">Antigravity</span>
+      <span class="font-headline font-bold text-lg">Gemini</span>
+    </div>
+  </div>
+</section>
+
+<!-- Zero-Cost Harness -->
+<section class="bg-[#0e0e0e] py-32 border-y border-white/5">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-end mb-16">
+      <div class="md:col-span-7">
+        <h2 class="text-4xl md:text-6xl font-black font-headline tracking-tighter leading-none">
+          BUILD FASTER WITH<br/>
+          <span class="text-emerald-400 italic">ZERO-COST HARNESS</span>
+        </h2>
+      </div>
+      <div class="md:col-span-5">
+        <p class="text-lg text-white/50 leading-relaxed md:text-right">
+          린트, 헬스체크, 가드 — LLM 비용 0원으로 코드 품질을 강제합니다. 결정적 하네스가 에이전트를 올바른 길로 안내합니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div class="md:col-span-8">
+        <!-- Terminal: Lint -->
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="terminal-dot bg-[#ff5f56]"></div>
+            <div class="terminal-dot bg-[#ffbd2e]"></div>
+            <div class="terminal-dot bg-[#27c93f]"></div>
+            <span class="text-white/30 text-xs font-mono ml-2">/sunco:lint</span>
+          </div>
+          <div class="terminal-body text-sm">
+<span class="green">⚡ SUNCO > lint</span>
+
+<span class="bold">Architecture Boundary Check</span>
+<span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="green">✓</span> Layer enforcement: <span class="green">PASS</span> <span class="dim">(0 violations)</span>
+<span class="green">✓</span> Import direction:  <span class="green">PASS</span> <span class="dim">(domain → service → infra)</span>
+<span class="green">✓</span> TypeScript strict: <span class="green">PASS</span> <span class="dim">(noEmit clean)</span>
+<span class="green">✓</span> ESLint rules:     <span class="green">PASS</span> <span class="dim">(0 errors, 0 warnings)</span>
+
+<span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="green">Score: 100/100</span> <span class="dim">| 4 checks | 0.3s</span>
+          </div>
+        </div>
+      </div>
+      <div class="md:col-span-4">
+        <div class="bg-[#1f1f1f] p-8 rounded-xl border-l-4 border-emerald-500 h-full flex flex-col justify-center">
+          <h3 class="text-2xl font-black font-headline mb-6">TRUST WHAT WE VERIFY</h3>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded font-mono text-xs font-bold">lint</span>
+            <span class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded font-mono text-xs font-bold">health</span>
+            <span class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded font-mono text-xs font-bold">guard</span>
+            <span class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded font-mono text-xs font-bold">verify</span>
+            <span class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded font-mono text-xs font-bold">auto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Skills Bento Grid -->
+<section class="py-32 bg-[#131313]">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="relative rounded-xl h-[280px] bg-[#1f1f1f] border border-white/5 group hover:border-emerald-500/20 transition-all flex flex-col justify-between p-6">
+        <span class="text-emerald-400 text-3xl">&#9881;</span>
+        <div>
+          <span class="font-headline font-black text-2xl tracking-tighter block">HARNESS</span>
+          <span class="text-white/30 text-xs">lint, health, guard</span>
+        </div>
+      </div>
+      <div class="relative rounded-xl h-[280px] bg-[#1f1f1f] border border-white/5 group hover:border-emerald-500/20 transition-all col-span-1 md:col-span-2 flex flex-col justify-between p-6">
+        <span class="text-emerald-400 text-3xl">&#9654;</span>
+        <div>
+          <span class="font-headline font-black text-3xl tracking-tighter block">WORKFLOW</span>
+          <span class="text-white/30 text-xs">new, discuss, plan, execute, verify, ship</span>
+        </div>
+      </div>
+      <div class="relative rounded-xl h-[280px] bg-[#1f1f1f] border border-white/5 group hover:border-emerald-500/20 transition-all flex flex-col justify-between p-6">
+        <span class="text-emerald-400 text-3xl">&#128270;</span>
+        <div>
+          <span class="font-headline font-black text-2xl tracking-tighter block">DEBUG</span>
+          <span class="text-white/30 text-xs">debug, diagnose, forensics</span>
+        </div>
+      </div>
+      <div class="relative rounded-xl h-[220px] bg-[#1f1f1f] border border-white/5 hover:border-emerald-500/20 transition-all md:col-span-2 flex items-center justify-center p-6">
+        <div class="text-center">
+          <span class="font-headline font-black text-3xl tracking-tighter">COMPOSITION</span>
+          <div class="text-white/30 text-xs mt-2">auto, quick, fast, do</div>
+        </div>
+      </div>
+      <div class="relative rounded-xl h-[220px] bg-[#1f1f1f] border border-white/5 hover:border-emerald-500/20 transition-all flex flex-col justify-end p-6">
+        <span class="font-headline font-black text-xl tracking-tighter">SESSION</span>
+        <span class="text-white/30 text-xs">pause, resume, next</span>
+      </div>
+      <div class="relative rounded-xl h-[220px] bg-[#1f1f1f] border border-emerald-500/10 hover:border-emerald-500/30 transition-all flex items-center justify-center p-6 pulse-glow">
+        <div class="text-center">
+          <span class="font-headline font-black text-xl tracking-tighter text-emerald-400">6-LAYER VERIFY</span>
+          <div class="text-white/30 text-xs mt-1">Swiss cheese model</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Ship with Confidence -->
+<section class="py-32 relative">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+      <div class="order-2 md:order-1">
+        <!-- Terminal: Verify -->
+        <div class="terminal glow">
+          <div class="terminal-header">
+            <div class="terminal-dot bg-[#ff5f56]"></div>
+            <div class="terminal-dot bg-[#ffbd2e]"></div>
+            <div class="terminal-dot bg-[#27c93f]"></div>
+            <span class="text-white/30 text-xs font-mono ml-2">/sunco:verify 3</span>
+          </div>
+          <div class="terminal-body text-sm">
+<span class="bold">Phase 3 Verification Results</span>
+<span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="green">●</span> <span class="cyan">sunco-reviewer</span><span class="dim">(Code review Phase 3)</span>
+  Layer 1 (Multi-agent review): <span class="green">PASS</span>
+
+<span class="green">●</span> <span class="cyan">sunco-security</span><span class="dim">(Security review Phase 3)</span>
+  Layer 2 (Guardrails):         <span class="green">PASS</span>
+
+  Layer 3 (BDD criteria):       <span class="green">PASS</span> <span class="dim">(12/12)</span>
+  Layer 4 (Permission audit):   <span class="green">PASS</span>
+
+<span class="green">●</span> <span class="cyan">sunco-adversarial</span><span class="dim">(Break Phase 3)</span>
+  Layer 5 (Adversarial):        <span class="green">PASS</span>
+  Layer 6 (Cross-model Codex):  <span class="green">PASS</span>
+
+<span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="green">Overall: ALL 6 LAYERS PASSED</span>
+Run <span class="green">/sunco:ship 3</span> to create the PR.
+          </div>
+        </div>
+      </div>
+      <div class="order-1 md:order-2">
+        <h2 class="text-5xl md:text-7xl font-black font-headline tracking-tighter leading-none mb-8">
+          SHIP WITH<br/>
+          <span class="text-stroke">CONFIDENCE</span>
+        </h2>
+        <p class="text-xl text-white/50 leading-relaxed max-w-md">
+          Every phase passes through 6 independent verification layers. What slips through one gets caught by the next.
+        </p>
+        <div class="mt-8 space-y-3 text-sm">
+          <div class="flex items-center gap-3"><span class="text-emerald-400">01</span> <span class="text-white/70">Multi-agent cross-review</span></div>
+          <div class="flex items-center gap-3"><span class="text-emerald-400">02</span> <span class="text-white/70">Deterministic guardrails</span></div>
+          <div class="flex items-center gap-3"><span class="text-emerald-400">03</span> <span class="text-white/70">BDD acceptance criteria</span></div>
+          <div class="flex items-center gap-3"><span class="text-emerald-400">04</span> <span class="text-white/70">Permission audit</span></div>
+          <div class="flex items-center gap-3"><span class="text-emerald-400">05</span> <span class="text-white/70">Adversarial test</span></div>
+          <div class="flex items-center gap-3"><span class="text-emerald-400">06</span> <span class="text-white/70">Cross-model verification (Codex)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUNCO Mode -->
+<section class="py-32 bg-[#0e0e0e] overflow-hidden relative">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-6xl font-black font-headline tracking-tighter uppercase leading-tight max-w-4xl mx-auto">
+        EVERY AGENT MAKES FEWER MISTAKES WITH <span class="text-emerald-400">SUNCO</span>
+      </h2>
+    </div>
+
+    <!-- Terminal: SUNCO Mode -->
+    <div class="max-w-3xl mx-auto">
+      <div class="terminal glow pulse-glow">
+        <div class="terminal-header">
+          <div class="terminal-dot bg-[#ff5f56]"></div>
+          <div class="terminal-dot bg-[#ffbd2e]"></div>
+          <div class="terminal-dot bg-[#27c93f]"></div>
+          <span class="text-emerald-400 text-xs font-mono ml-2 font-bold">⚡ SUNCO MODE</span>
+        </div>
+        <div class="terminal-body text-center py-12">
+          <div class="text-emerald-400 text-6xl mb-4">&#9889;</div>
+          <div class="font-headline font-black text-3xl tracking-tighter text-white">/sunco:mode</div>
+          <div class="font-mono text-xs uppercase tracking-[0.4em] text-emerald-400/60 mt-3">58 skills armed and ready</div>
+          <div class="mt-8 flex flex-wrap justify-center gap-3 text-xs font-mono text-white/30">
+            <span>DISCUSS</span>
+            <span class="text-emerald-400">&#8594;</span>
+            <span>PLAN</span>
+            <span class="text-emerald-400">&#8594;</span>
+            <span>EXECUTE</span>
+            <span class="text-emerald-400">&#8594;</span>
+            <span>VERIFY</span>
+            <span class="text-emerald-400">&#8594;</span>
+            <span>SHIP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-3xl mx-auto text-center">
+      <p class="text-xl text-white/50 leading-relaxed">
+        SUNCO는 에이전트 시대의 빌더를 위한 워크스페이스 OS입니다.
+        <span class="text-emerald-400 italic">하네스 엔지니어링</span>이 핵심 &mdash;
+        린터가 가르치면서 막고, 코드가 아니라 의도를 검증합니다.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-40 bg-[#131313] relative overflow-hidden">
+  <div class="absolute bottom-0 right-0 opacity-[0.03] pointer-events-none select-none">
+    <span class="text-[300px] font-black font-headline text-emerald-400">&#9889;</span>
+  </div>
+  <div class="max-w-7xl mx-auto px-6 text-center relative z-10">
+    <h2 class="text-5xl md:text-8xl font-black font-headline tracking-tighter mb-16 uppercase">
+      GET STARTED<br/>
+      <span class="text-emerald-400">IN 10 SECONDS</span>
+    </h2>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+      <a href="https://www.npmjs.com/package/popcoru" class="w-full sm:w-auto px-12 py-6 kinetic-gradient text-black rounded-full font-headline text-2xl font-black tracking-tighter hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-emerald-500/20 inline-block text-center">
+        npx popcoru
+      </a>
+      <a href="https://github.com/kwmin122/sunco-harness" class="w-full sm:w-auto px-12 py-6 border-2 border-white/10 text-white rounded-full font-headline text-2xl font-black tracking-tighter hover:bg-white hover:text-black transition-all inline-block text-center">
+        GitHub &#8599;
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="border-t border-white/5 bg-[#0e0e0e]">
+  <div class="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto gap-6">
+    <div class="text-emerald-400 font-bold font-headline text-xl">SUNCO</div>
+    <div class="flex gap-8 font-headline text-xs uppercase tracking-widest text-white/30">
+      <a class="hover:text-emerald-400 transition" href="https://github.com/kwmin122/sunco-harness">GitHub</a>
+      <a class="hover:text-emerald-400 transition" href="https://www.npmjs.com/package/popcoru">npm</a>
+    </div>
+    <div class="font-headline text-xs uppercase tracking-widest text-white/30">
+      MIT License &middot; Made in Korea
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
