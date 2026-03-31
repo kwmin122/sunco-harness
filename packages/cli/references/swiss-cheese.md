@@ -184,14 +184,14 @@ Findings from one layer inform others:
 
 Based on defect analysis across projects using the 6-layer model:
 
-| Layer | % of defects it's the *first* to catch |
-|-------|----------------------------------------|
-| Layer 2 (guardrails) | 45% | (largest share — type/lint errors are common) |
-| Layer 1 (review) | 25% | (logic errors and quality issues) |
-| Layer 3 (BDD) | 12% | (incomplete features) |
-| Layer 5 (adversarial) | 10% | (security and edge cases) |
-| Layer 4 (permissions) | 5% | (scope violations and secrets) |
-| Layer 6 (cross-model) | 3% | (model-specific blind spots) |
+| Layer | % | What it catches |
+|-------|---|-----------------|
+| Layer 2 (guardrails) | 45% | type/lint errors — largest share, runs fast |
+| Layer 1 (review) | 25% | logic errors and quality issues |
+| Layer 3 (BDD) | 12% | incomplete features |
+| Layer 5 (adversarial) | 10% | security and edge cases |
+| Layer 4 (permissions) | 5% | scope violations and secrets |
+| Layer 6 (cross-model) | 3% | model-specific blind spots |
 
 Notes:
 - "First to catch" means the defect escaped all prior layers but was caught by this one

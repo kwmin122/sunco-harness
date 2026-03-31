@@ -30,6 +30,10 @@
 **Deployment target:** {{deployment_target}}
 **Performance requirements:** {{performance_requirements}}
 
+## Goals
+
+{{goals}}
+
 ## Key Decisions
 
 These decisions were made during project bootstrap and govern all subsequent phases.

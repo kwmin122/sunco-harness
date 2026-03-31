@@ -268,7 +268,7 @@ Note: This does not block overall verification.
 
 Write to `.planning/phases/[N]-[phase-name]/[N]-VERIFICATION.md`.
 
-Use template from `packages/cli/templates/summary.md` (verification variant).
+Use the following VERIFICATION.md structure (defined inline below):
 
 ```markdown
 # Phase [N] Verification Results
