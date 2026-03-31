@@ -483,174 +483,56 @@ function resolveRuntimeKeys(selectionStr) {
 }
 
 // ---------------------------------------------------------------------------
-// Interactive TUI selectors (arrow keys, zero deps)
-// Uses \x1b7 (save cursor) / \x1b8 (restore cursor) for flicker-free redraw.
+// Interactive prompts (GSD-style: readline.question, numbered choices)
 // ---------------------------------------------------------------------------
 
-const HIDE_CURSOR = '\x1b[?25l';
-const SHOW_CURSOR = '\x1b[?25h';
-const SAVE_POS    = '\x1b7';
-const RESTORE_POS = '\x1b8';
-const CLEAR_BELOW = '\x1b[J';
-
-/**
- * Single-select: arrow keys to move, enter to confirm.
- */
-function singleSelect(title, options) {
-  return new Promise((resolve) => {
-    let cursor = 0;
-    const { stdin, stdout } = process;
-
-    function render() {
-      stdout.write(RESTORE_POS + CLEAR_BELOW);
-      stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
-      for (let i = 0; i < options.length; i++) {
-        const active = i === cursor;
-        const arrow = active ? `${EMERALD}\u276F${RESET}` : ' ';
-        const dot   = active ? `${EMERALD}\u25CF${RESET}` : `${DIM}\u25CB${RESET}`;
-        const label = active ? `${BOLD}${options[i]}${RESET}` : `${DIM}${options[i]}${RESET}`;
-        stdout.write(`  ${arrow} ${dot} ${label}\n`);
-      }
-      stdout.write(`\n  ${DIM}\u2191\u2193 move \u00B7 enter select${RESET}\n`);
-    }
-
-    stdout.write(HIDE_CURSOR + SAVE_POS);
-    render();
-
-    stdin.setRawMode(true);
-    stdin.resume();
-    stdin.setEncoding('utf8');
-
-    function onKey(key) {
-      if (key === '\x1b[A') { cursor = (cursor - 1 + options.length) % options.length; render(); }
-      else if (key === '\x1b[B') { cursor = (cursor + 1) % options.length; render(); }
-      else if (key === '\r' || key === '\n') { done(cursor); }
-      else if (key === '\x03') { done(0, true); }
-    }
-
-    function done(val, exit) {
-      stdin.removeListener('data', onKey);
-      stdin.setRawMode(false);
-      stdin.pause();
-      stdout.write(SHOW_CURSOR);
-      // Show final selection
-      stdout.write(RESTORE_POS + CLEAR_BELOW);
-      stdout.write(`  ${BOLD}${title}${RESET} ${EMERALD}${options[val]}${RESET}\n\n`);
-      if (exit) process.exit(0);
-      resolve(val);
-    }
-
-    stdin.on('data', onKey);
-  });
-}
-
-/**
- * Multi-select: arrow keys move, space toggles, 'a' toggles all, enter confirms.
- * Last item is a "Confirm" button — pressing enter on it also confirms.
- */
-function multiSelect(title, options) {
-  return new Promise((resolve) => {
-    let cursor = 0;
-    const selected = new Set([0]); // Claude Code on by default
-    const confirmIdx = options.length; // virtual confirm button index
-    const totalItems = options.length + 1;
-    const { stdin, stdout } = process;
-
-    function render() {
-      stdout.write(RESTORE_POS + CLEAR_BELOW);
-      stdout.write(`  ${BOLD}${title}${RESET}\n\n`);
-      for (let i = 0; i < options.length; i++) {
-        const active = i === cursor;
-        const checked = selected.has(i);
-        const arrow = active ? `${EMERALD}\u276F${RESET}` : ' ';
-        const box   = checked ? `${GREEN}[\u2713]${RESET}` : `${DIM}[ ]${RESET}`;
-        const label = active ? `${BOLD}${options[i]}${RESET}` : options[i];
-        stdout.write(`  ${arrow} ${box} ${label}\n`);
-      }
-      // Confirm button
-      const onConfirm = cursor === confirmIdx;
-      const count = selected.size;
-      stdout.write('\n');
-      if (onConfirm) {
-        stdout.write(`  ${EMERALD}\u276F ${BOLD}[ Install ${count} runtime${count !== 1 ? 's' : ''} ]${RESET}\n`);
-      } else {
-        stdout.write(`    ${DIM}[ Install ${count} runtime${count !== 1 ? 's' : ''} ]${RESET}\n`);
-      }
-      stdout.write(`\n  ${DIM}\u2191\u2193 move \u00B7 space toggle \u00B7 a all \u00B7 enter confirm${RESET}\n`);
-    }
-
-    stdout.write(HIDE_CURSOR + SAVE_POS);
-    render();
-
-    stdin.setRawMode(true);
-    stdin.resume();
-    stdin.setEncoding('utf8');
-
-    function onKey(key) {
-      if (key === '\x1b[A') { cursor = (cursor - 1 + totalItems) % totalItems; render(); }
-      else if (key === '\x1b[B') { cursor = (cursor + 1) % totalItems; render(); }
-      else if (key === ' ') {
-        if (cursor < options.length) {
-          if (selected.has(cursor)) selected.delete(cursor); else selected.add(cursor);
-          render();
-        } else {
-          confirm(); // space on confirm button
-        }
-      }
-      else if (key === 'a' || key === 'A') {
-        if (selected.size === options.length) selected.clear();
-        else for (let i = 0; i < options.length; i++) selected.add(i);
-        render();
-      }
-      else if (key === '\r' || key === '\n') { confirm(); }
-      else if (key === '\x03') { exit(); }
-    }
-
-    function confirm() {
-      stdin.removeListener('data', onKey);
-      stdin.setRawMode(false);
-      stdin.pause();
-      stdout.write(SHOW_CURSOR);
-      if (selected.size === 0) selected.add(0);
-      // Show final selection
-      stdout.write(RESTORE_POS + CLEAR_BELOW);
-      const names = [...selected].sort().map(i => options[i].replace(/\x1b\[[^m]*m/g, '').trim()).join(', ');
-      stdout.write(`  ${BOLD}${title}${RESET} ${EMERALD}${names}${RESET}\n\n`);
-      resolve([...selected].sort());
-    }
-
-    function exit() {
-      stdin.removeListener('data', onKey);
-      stdin.setRawMode(false);
-      stdin.pause();
-      stdout.write(SHOW_CURSOR);
-      process.exit(0);
-    }
-
-    stdin.on('data', onKey);
-  });
+function ask(rl, question) {
+  return new Promise((resolve) => rl.question(question, resolve));
 }
 
 async function runInteractivePrompts() {
-  const langIdx = await singleSelect(
-    'Select language / 언어를 선택하세요:',
-    ['English', '한국어']
-  );
-  const lang = langIdx === 1 ? 'ko' : 'en';
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  let answered = false;
+  rl.on('close', () => { if (!answered) process.exit(0); });
 
-  const runtimeLabels = [
-    'Claude Code   (~/.claude/)',
-    'Codex CLI     (~/.codex/)',
-    'Cursor        (~/.cursor/)',
-    'Antigravity   (~/.antigravity/)',
-  ];
-  const selectedIndices = await multiSelect(
-    lang === 'ko' ? '설치할 런타임을 선택하세요:' : 'Select runtimes to install:',
-    runtimeLabels
-  );
+  // --- Language ---
+  console.log(`  ${BOLD}Select language / 언어를 선택하세요${RESET}\n`);
+  console.log(`  ${EMERALD}1${RESET}) English`);
+  console.log(`  ${EMERALD}2${RESET}) 한국어\n`);
+  const langAnswer = await ask(rl, `  Choice ${DIM}[1]${RESET}: `);
+  const lang = langAnswer.trim() === '2' ? 'ko' : 'en';
 
-  const runtimeKeys = selectedIndices.map((i) => RUNTIME_KEYS[i]).filter(Boolean);
-  return { lang, runtimeKeys: runtimeKeys.length > 0 ? runtimeKeys : ['claude'] };
+  // --- Runtimes ---
+  const rtTitle = lang === 'ko'
+    ? '설치할 런타임을 선택하세요'
+    : 'Which runtime(s) to install?';
+  const selectMultiple = lang === 'ko'
+    ? '복수 선택: 1,2,3 또는 5 (전체)'
+    : 'Select multiple: 1,2,3 or 5 (all)';
+
+  console.log(`\n  ${BOLD}${rtTitle}${RESET}\n`);
+  console.log(`  ${EMERALD}1${RESET}) Claude Code   ${DIM}(~/.claude/)${RESET}`);
+  console.log(`  ${EMERALD}2${RESET}) Codex CLI     ${DIM}(~/.codex/)${RESET}`);
+  console.log(`  ${EMERALD}3${RESET}) Cursor        ${DIM}(~/.cursor/)${RESET}`);
+  console.log(`  ${EMERALD}4${RESET}) Antigravity   ${DIM}(~/.antigravity/)${RESET}`);
+  console.log(`  ${EMERALD}5${RESET}) All\n`);
+  console.log(`  ${DIM}${selectMultiple}${RESET}\n`);
+  const rtAnswer = await ask(rl, `  Choice ${DIM}[1]${RESET}: `);
+
+  answered = true;
+  rl.close();
+
+  const input = rtAnswer.trim() || '1';
+  let runtimeKeys;
+  if (input === '5') {
+    runtimeKeys = [...RUNTIME_KEYS];
+  } else {
+    const nums = input.split(/[\s,]+/).map(s => parseInt(s, 10)).filter(n => n >= 1 && n <= 4);
+    runtimeKeys = nums.map(n => RUNTIME_KEYS[n - 1]).filter(Boolean);
+  }
+  if (runtimeKeys.length === 0) runtimeKeys = ['claude'];
+
+  return { lang, runtimeKeys };
 }
 
 // ---------------------------------------------------------------------------
