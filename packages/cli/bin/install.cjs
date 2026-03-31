@@ -330,10 +330,20 @@ function install(targetDir) {
   // Copy engine (dist/ -> {target}/sunco/bin/)
   const engCopied = copyDirRecursive(srcEngine, destEngine);
 
-  // Write VERSION file alongside engine
+  // Write VERSION file alongside engine + just-upgraded marker
   const version = readVersion();
   ensureDir(path.join(targetDir, 'sunco'));
-  fs.writeFileSync(path.join(targetDir, 'sunco', 'VERSION'), version + '\n', 'utf8');
+  const versionPath = path.join(targetDir, 'sunco', 'VERSION');
+  // Read old version before overwriting (for just-upgraded notification)
+  let oldVersion = null;
+  try { oldVersion = fs.readFileSync(versionPath, 'utf8').trim(); } catch { /* first install */ }
+  fs.writeFileSync(versionPath, version + '\n', 'utf8');
+  // Write just-upgraded marker if version changed
+  if (oldVersion && oldVersion !== version) {
+    const stateDir = path.join(os.homedir(), '.sunco');
+    ensureDir(stateDir);
+    fs.writeFileSync(path.join(stateDir, 'just-upgraded-from'), oldVersion, 'utf8');
+  }
 
   // Copy hooks (.cjs files — CJS format required to run standalone outside ESM package)
   const hooksCopied = copyGlob(srcHooks, '*.cjs', destHooks);
