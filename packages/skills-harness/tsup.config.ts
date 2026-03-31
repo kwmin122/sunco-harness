@@ -3,8 +3,6 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [
     'src/index.ts',
-    'src/settings.skill.ts',
-    'src/sample-prompt.skill.ts',
     'src/init.skill.ts',
     'src/lint.skill.ts',
     'src/health.skill.ts',

@@ -5,10 +5,10 @@
  * scan -> validate -> preset expand -> add -> remove -> filter -> Set<SkillId>
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { resolveActiveSkills } from '../resolver.js';
 import { defineSkill } from '../define.js';
-import { DuplicateSkillError } from '../../errors/index.js';
+// DuplicateSkillError no longer thrown — resolver deduplicates with warn+skip
 import type { SkillDefinition } from '../types.js';
 import type { SkillPolicyConfig } from '../../config/types.js';
 
@@ -96,26 +96,33 @@ describe('resolveActiveSkills', () => {
     expect(result.has('harness.init')).toBe(true);
   });
 
-  it('throws DuplicateSkillError for duplicate IDs in discovered', () => {
+  it('deduplicates skills with same ID (keeps first, warns)', () => {
     const discovered = [
       makeSkill({ id: 'harness.init', command: 'init' }),
       makeSkill({ id: 'harness.init', command: 'init2' }),
     ];
+    const policy: SkillPolicyConfig = { ...defaultPolicy, add: ['harness.init'] };
 
-    expect(() =>
-      resolveActiveSkills(discovered, defaultPolicy),
-    ).toThrow(DuplicateSkillError);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = resolveActiveSkills(discovered, policy);
+    expect(result.has('harness.init')).toBe(true);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('duplicate skill id'));
+    warnSpy.mockRestore();
   });
 
-  it('throws DuplicateSkillError for duplicate commands in discovered', () => {
+  it('deduplicates skills with same command (keeps first, warns)', () => {
     const discovered = [
       makeSkill({ id: 'a.init', command: 'init' }),
       makeSkill({ id: 'b.init', command: 'init' }),
     ];
+    const policy: SkillPolicyConfig = { ...defaultPolicy, add: ['a.init', 'b.init'] };
 
-    expect(() =>
-      resolveActiveSkills(discovered, defaultPolicy),
-    ).toThrow(DuplicateSkillError);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = resolveActiveSkills(discovered, policy);
+    expect(result.has('a.init')).toBe(true);
+    expect(result.has('b.init')).toBe(false);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('duplicate skill command'));
+    warnSpy.mockRestore();
   });
 
   it('filters out internal skills unless explicitly added', () => {

@@ -20,7 +20,6 @@
 
 import { createProgram, registerSkills, createLifecycle, SilentUiAdapter, createSkillUi, createSkillContext } from '@sunco/core';
 import {
-  samplePromptSkill,
   initSkill,
   lintSkill,
   healthSkill,
@@ -77,7 +76,6 @@ import {
  */
 const preloadedSkills = [
   // Phase 2 harness skills
-  samplePromptSkill,
   initSkill,
   lintSkill,
   healthSkill,

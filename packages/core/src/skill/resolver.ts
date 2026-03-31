@@ -36,25 +36,30 @@ export function resolveActiveSkills(
   discovered: SkillDefinition[],
   policy: SkillPolicyConfig,
 ): Set<string> {
-  // Step 1: Validate discovered -- check for duplicate IDs and commands (D-14)
+  // Step 1: Dedup discovered -- skip duplicates from scanner + preloaded overlap
   const seenIds = new Set<string>();
   const seenCommands = new Set<string>();
+  const deduped: SkillDefinition[] = [];
 
   for (const skill of discovered) {
     if (seenIds.has(skill.id)) {
-      throw new DuplicateSkillError(skill.id, 'id');
+      // eslint-disable-next-line no-console
+      console.warn(`[sun:resolver] Skipping duplicate skill id: '${skill.id}'`);
+      continue;
+    }
+    if (seenCommands.has(skill.command)) {
+      // eslint-disable-next-line no-console
+      console.warn(`[sun:resolver] Skipping duplicate skill command: '${skill.command}'`);
+      continue;
     }
     seenIds.add(skill.id);
-
-    if (seenCommands.has(skill.command)) {
-      throw new DuplicateSkillError(skill.command, 'command');
-    }
     seenCommands.add(skill.command);
+    deduped.push(skill);
   }
 
-  // Build lookup for quick access
+  // Build lookup for quick access (using deduped list)
   const discoveredById = new Map<string, SkillDefinition>();
-  for (const skill of discovered) {
+  for (const skill of deduped) {
     discoveredById.set(skill.id, skill);
   }
 

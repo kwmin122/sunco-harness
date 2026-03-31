@@ -32,10 +32,15 @@ export class SkillRegistry {
    */
   register(skill: SkillDefinition): void {
     if (this.byId.has(skill.id)) {
-      throw new DuplicateSkillError(skill.id, 'id');
+      // Warn and skip — duplicate IDs from scanner + preloaded are expected
+      // eslint-disable-next-line no-console
+      console.warn(`[sun:registry] Skipping duplicate skill id: '${skill.id}'`);
+      return;
     }
     if (this.byCommand.has(skill.command)) {
-      throw new DuplicateSkillError(skill.command, 'command');
+      // eslint-disable-next-line no-console
+      console.warn(`[sun:registry] Skipping duplicate skill command: '${skill.command}'`);
+      return;
     }
 
     this.byId.set(skill.id, skill);

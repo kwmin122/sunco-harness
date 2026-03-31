@@ -32,7 +32,7 @@ Execute all plans in a phase using wave-based parallelization. Each plan runs in
 - `.planning/phases/[N]-*/[N]-[M]-SUMMARY.md` — per-plan execution summary
 - `.planning/phases/[N]-*/[N]-VERIFICATION.md` — phase verification checklist
 
-**After this command:** Run `/sunco:verify [N]` for 5-layer verification.
+**After this command:** Run `/sunco:verify [N]` for 6-layer verification.
 </objective>
 
 <process>
@@ -161,6 +161,6 @@ Phase [N] execution complete.
   Blast radius: [clean / warnings]
 ```
 
-If all complete and lint passes: "Run `/sunco:verify [N]` for 5-layer verification."
+If all complete and lint passes: "Run `/sunco:verify [N]` for 6-layer verification."
 If failures: "Fix the issues above, then re-run `/sunco:execute [N] --wave [failed-wave]`."
 </process>
