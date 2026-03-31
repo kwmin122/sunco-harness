@@ -1,6 +1,6 @@
 {
   "name": "popcoru",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Agent Workspace OS — harness engineering for AI coding agents",
   "type": "module",
   "files": [
