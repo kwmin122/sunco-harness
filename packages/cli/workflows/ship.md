@@ -1,0 +1,389 @@
+# Ship Workflow
+
+Create a PR from verified phase work. Runs a verification pre-check, generates the PR body from SUMMARY.md files, creates a clean branch if needed, pushes, and opens the PR via `gh`. Used by `/sunco:ship`.
+
+---
+
+## Overview
+
+Five steps:
+
+1. **Pre-check** — verify phase work is verified or warn
+2. **Build PR content** — aggregate SUMMARY.md files into a coherent PR body
+3. **Branch** — create a clean PR branch (delegates to `/sunco:pr-branch` logic)
+4. **Push** — push to remote
+5. **Create PR** — via `gh pr create` or print manual fallback
+
+---
+
+## Step 1: Parse Arguments
+
+Parse `$ARGUMENTS`:
+
+| Token | Variable | Default |
+|-------|----------|---------|
+| First positional token | `PHASE_ARG` | auto-detect |
+| `--draft` | `DRAFT` | false |
+| `--skip-verify` | `SKIP_VERIFY` | false |
+| `--base <branch>` | `BASE_BRANCH` | `main` |
+| `--title <text>` | `CUSTOM_TITLE` | auto-generated |
+| `--no-push` | `NO_PUSH` | false |
+
+If `PHASE_ARG` is absent, detect the most recently executed phase from STATE.md:
+
+```bash
+node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load
+```
+
+Read `current_phase.number` and `current_phase.status`. If `status != "executed"` and `status != "verified"`, warn:
+
+```
+No executed phase detected in STATE.md.
+Specify a phase explicitly: /sunco:ship <phase-number>
+```
+
+---
+
+## Step 2: Verification Pre-Check
+
+Determine whether the phase has been verified.
+
+### Check for VERIFICATION.md
+
+```bash
+PADDED=$(printf "%02d" "$PHASE_ARG")
+PHASE_DIR=$(ls -d .planning/phases/${PADDED}-* 2>/dev/null | head -1)
+VERIFICATION_FILE="${PHASE_DIR}/${PADDED}-VERIFICATION.md"
+```
+
+**Case A: VERIFICATION.md exists and contains "Overall: PASS"**
+
+```
+Verification: PASS (found VERIFICATION.md)
+Proceeding to build PR content.
+```
+
+**Case B: VERIFICATION.md exists but shows "NEEDS FIXES"**
+
+```
+Verification: NEEDS FIXES
+
+VERIFICATION.md reports outstanding issues:
+  [extract Issues to Fix section — show as-is]
+
+Options:
+  fix    — Fix issues, then re-ship (recommended)
+  ship   — Ship anyway with a [NEEDS FIXES] notice in the PR body
+  abort  — Stop here
+```
+
+Wait for user choice. If `ship`: mark `PR_HAS_WARNINGS=true` (adds warning block to PR body). If `abort`: stop.
+
+**Case C: VERIFICATION.md does not exist**
+
+If `--skip-verify` was passed:
+
+```
+Warning: No VERIFICATION.md found for Phase ${PHASE_ARG}.
+Proceeding with --skip-verify (verification was bypassed).
+PR body will include: ⚠ Verification not run.
+```
+
+Set `PR_HAS_WARNINGS=true`.
+
+If `--skip-verify` was NOT passed:
+
+```
+No VERIFICATION.md found for Phase ${PHASE_ARG}.
+
+Run verification first:
+  /sunco:verify ${PHASE_ARG}
+
+Or bypass with:
+  /sunco:ship ${PHASE_ARG} --skip-verify
+```
+
+Stop.
+
+---
+
+## Step 3: Build PR Content
+
+Aggregate all SUMMARY.md and CONTEXT.md files into a structured PR body.
+
+### Read phase artifacts
+
+```bash
+# Read phase context
+CONTEXT_FILE="${PHASE_DIR}/${PADDED}-CONTEXT.md"
+
+# Find all SUMMARY.md files for this phase
+SUMMARY_FILES=$(ls "${PHASE_DIR}/"*"-SUMMARY.md" 2>/dev/null | sort)
+```
+
+### Extract from CONTEXT.md
+
+Read and extract:
+- Phase objective (from `## Objective` section)
+- Key decisions (from `## Decisions` section)
+- Requirements covered (from `## Requirements` section)
+
+### Extract from each SUMMARY.md
+
+For each SUMMARY.md in chronological order, extract:
+- Plan title (from frontmatter `title:`)
+- Objective achieved (from `## Objective Achieved` section)
+- Key files created/modified (from `## Key Files` section)
+
+### Extract from VERIFICATION.md (if present)
+
+- Overall result
+- Layer results summary table
+- Any warnings
+
+### Compose PR title
+
+Pattern: `feat(phase-{N}): {phase_name_from_roadmap}`
+
+If `CUSTOM_TITLE` was provided: use it verbatim.
+
+If the phase is a bug fix phase: use `fix(phase-{N}): ...`.
+If it's a docs phase: use `docs(phase-{N}): ...`.
+
+### Compose PR body
+
+```markdown
+## Phase {N}: {Phase Name}
+
+{phase objective — 2-3 sentences extracted from CONTEXT.md}
+
+---
+
+## What Was Built
+
+{For each plan, one bullet:}
+- **{plan title}**: {objective achieved — one sentence}
+
+## Key Files
+
+{Aggregate key_files_created from all SUMMARYs, deduplicated:}
+- `{file_path}` — {description}
+
+## Requirements Covered
+
+{From CONTEXT.md requirements section:}
+- REQ-{N}: {requirement description}
+
+## Verification
+
+{If VERIFICATION.md present and PASS:}
+All 6 verification layers passed.
+
+| Layer | Result |
+|-------|--------|
+| 1 Multi-agent review | PASS |
+| 2 Guardrails | PASS |
+| 3 BDD criteria | PASS |
+| 4 Permission audit | PASS |
+| 5 Adversarial | PASS |
+| 6 Cross-model | PASS/SKIPPED |
+
+{If PR_HAS_WARNINGS:}
+⚠ Verification has outstanding issues. See VERIFICATION.md for details.
+
+---
+
+## Key Decisions Made in Phase {N}
+
+{From CONTEXT.md decisions section — top 3-5 decisions:}
+- **{decision title}**: {rationale}
+
+---
+
+Generated by `/sunco:ship {N}`
+```
+
+Save draft PR body to `.planning/phases/${PADDED}-*/PR-BODY.md` for review before pushing.
+
+---
+
+## Step 4: Branch Preparation
+
+### Check current branch
+
+```bash
+CURRENT_BRANCH=$(git branch --show-current)
+```
+
+**If already on a feature branch** (not `main` or `master`):
+
+```
+Already on branch: ${CURRENT_BRANCH}
+Using this branch for the PR.
+```
+
+Skip branch creation.
+
+**If on `main` or `master`:**
+
+Check if a `phase/{N}-*` branch already exists:
+
+```bash
+PHASE_BRANCH=$(git branch | grep "phase/${PADDED}-" | head -1 | tr -d ' ')
+```
+
+If branch exists: `git checkout "${PHASE_BRANCH}"`
+
+If branch does not exist, create one:
+
+```bash
+PHASE_NAME=$(echo "$PHASE_DIR" | sed 's|.*/[0-9]*-||')
+BRANCH_NAME="phase/${PADDED}-${PHASE_NAME}"
+git checkout -b "${BRANCH_NAME}"
+```
+
+Confirm: "Created branch: `${BRANCH_NAME}`"
+
+### Verify .planning/ commits are excluded
+
+Check if `.planning/` directory is in `.gitignore` for this branch, or if the branch was prepared with `/sunco:pr-branch`.
+
+```bash
+git log --oneline --name-only --diff-filter=A "${BASE_BRANCH}..HEAD" | grep "\.planning/"
+```
+
+If `.planning/` files are in commits AND the user has not already run `/sunco:pr-branch`:
+
+```
+.planning/ files detected in commits.
+These planning artifacts should not be in the PR.
+
+Run /sunco:pr-branch first to create a clean PR branch,
+or use --force to include them anyway.
+```
+
+Stop unless `--force` was passed.
+
+---
+
+## Step 5: Push
+
+If `--no-push` was passed: skip push, print instructions.
+
+```bash
+REMOTE=$(git remote | head -1)
+if [[ -z "$REMOTE" ]]; then
+  # No remote — print manual instructions
+  echo "No git remote configured. Cannot push automatically."
+  echo "Add a remote and push manually:"
+  echo "  git remote add origin <url>"
+  echo "  git push -u origin ${CURRENT_BRANCH}"
+  exit 0
+fi
+
+git push -u "${REMOTE}" "${CURRENT_BRANCH}" 2>&1
+```
+
+If push fails with authentication error: print manual instructions (see Fallback section).
+
+If push succeeds: "Pushed to `${REMOTE}/${CURRENT_BRANCH}`."
+
+---
+
+## Step 6: Create PR
+
+### Check for gh CLI
+
+```bash
+gh --version 2>/dev/null
+```
+
+**If gh is available:**
+
+Build the `gh pr create` command:
+
+```bash
+DRAFT_FLAG=""
+if [[ "${DRAFT}" == "true" ]]; then
+  DRAFT_FLAG="--draft"
+fi
+
+gh pr create \
+  --base "${BASE_BRANCH}" \
+  --title "${PR_TITLE}" \
+  --body-file ".planning/phases/${PADDED}-${PHASE_NAME}/PR-BODY.md" \
+  ${DRAFT_FLAG}
+```
+
+Capture the PR URL from output.
+
+Report:
+```
+PR created.
+  Title:  {PR_TITLE}
+  Branch: {CURRENT_BRANCH} → {BASE_BRANCH}
+  Status: {draft | ready for review}
+  URL:    {pr_url}
+
+Next: request a review, or run /sunco:release when merged.
+```
+
+**If gh is NOT available — Fallback:**
+
+Print complete manual instructions:
+
+```
+gh CLI not found. Create the PR manually:
+
+1. Push your branch (if not already done):
+   git push -u origin {CURRENT_BRANCH}
+
+2. Open a PR on GitHub:
+   https://github.com/{owner}/{repo}/compare/{BASE_BRANCH}...{CURRENT_BRANCH}
+
+3. Use this PR title:
+   {PR_TITLE}
+
+4. PR body has been saved to:
+   .planning/phases/{PADDED}-{phase_name}/PR-BODY.md
+   Copy and paste it into the PR description.
+
+5. To install gh CLI for future use:
+   brew install gh
+   gh auth login
+```
+
+---
+
+## Flags Reference
+
+| Flag | Effect |
+|------|--------|
+| `--draft` | Creates PR as draft (not ready for review) |
+| `--skip-verify` | Bypasses VERIFICATION.md check |
+| `--base <branch>` | Sets target branch (default: main) |
+| `--title <text>` | Overrides auto-generated PR title |
+| `--no-push` | Skips push, prints manual instructions |
+| `--force` | Allows .planning/ files in commits |
+
+---
+
+## Error Handling
+
+| Error | Response |
+|-------|----------|
+| No phase found in STATE.md | Prompt to specify phase explicitly |
+| VERIFICATION.md shows NEEDS FIXES | Ask fix/ship/abort |
+| No VERIFICATION.md and no --skip-verify | Stop, suggest /sunco:verify |
+| No git remote | Print manual push + PR instructions |
+| gh not installed | Print full manual instructions |
+| Push auth failure | Print manual instructions with SSH/token guidance |
+| .planning/ files in commits | Suggest /sunco:pr-branch, stop unless --force |
+
+---
+
+## Route
+
+After PR creation: "Run `/sunco:release` after the PR is merged to create the version tag and changelog entry."
+
+If PR is draft: "When ready for review, convert: `gh pr ready {pr_number}`."

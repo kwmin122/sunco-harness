@@ -5,9 +5,9 @@
  *
  * Equivalent to GSD's gsd-tools.cjs. Centralizes atomic operations used
  * across SUNCO skill scripts: commits, config init, state reads/writes,
- * project detection, and phase transitions.
+ * project detection, phase transitions, todo management, and model resolution.
  *
- * Usage: node sunco-tools.cjs <command> [args]
+ * Usage: node sunco-tools.cjs <command> [args] [--cwd <path>]
  *
  * Commands:
  *   commit <message> [--files f1 f2] [--all]
@@ -23,6 +23,12 @@
  *       Returns JSON: { project_exists, has_codebase_map, planning_exists,
  *                       has_existing_code, has_package_file, has_git, project_root }
  *
+ *   init phase-op <phase_number>
+ *       Returns full context for phase operation workflows.
+ *       Returns JSON: { commit_docs, phase_found, phase_dir, phase_number, phase_name,
+ *                       phase_slug, padded_phase, has_research, has_context, has_plans,
+ *                       has_verification, plan_count, roadmap_exists, planning_exists }
+ *
  *   state-update [--phase N] [--status S] [--next S] [--timestamp S]
  *       Updates .planning/STATE.md with given fields.
  *       Returns JSON: { updated: true, path: ".planning/STATE.md" }
@@ -31,6 +37,54 @@
  *       Updates STATE.md for phase transition and commits it.
  *       Returns JSON: { transitioned: true, from: N, to: N, hash: "abc123" }
  *
+ *   config-get <key>
+ *       Reads a dot-path key from .planning/config.json.
+ *       Returns JSON: { key: "workflow.research", value: true }
+ *
+ *   config-set <key> <value>
+ *       Writes a dot-path key to .planning/config.json.
+ *       Returns JSON: { updated: true, key: "...", value: ... }
+ *
+ *   todo add <text>
+ *       Adds a new todo item to .planning/todos/pending/.
+ *       Returns JSON: { added: true, id: N, file: "..." }
+ *
+ *   todo list [--area <area>]
+ *       Lists pending todos, optionally filtered by area.
+ *       Returns JSON: { count: N, todos: [...] }
+ *
+ *   todo done <id_or_filename>
+ *       Marks a todo as completed (moves to completed/).
+ *       Returns JSON: { completed: true, file: "..." }
+ *
+ *   todo match-phase <phase_number>
+ *       Matches pending todos against a phase's context.
+ *       Returns JSON: { todo_count: N, matches: [...] }
+ *
+ *   resolve-model <agent-role>
+ *       Resolves the model for an agent role based on config profile.
+ *       Returns JSON: { agent: "...", profile: "...", model: "..." }
+ *
+ *   agent-skills <agent-role>
+ *       Returns skill injection text for an agent.
+ *       Returns JSON: { agent: "...", skills: "..." }
+ *
+ *   begin-phase <phase_number>
+ *       Marks a phase as started in STATE.md.
+ *       Returns JSON: { started: true, phase: N }
+ *
+ *   complete-phase <phase_number>
+ *       Marks a phase as completed in STATE.md.
+ *       Returns JSON: { completed: true, phase: N }
+ *
+ *   checkpoint read <phase>
+ *       Reads checkpoint data for a phase.
+ *       Returns JSON: { phase: N, wave: N, data: {...} }
+ *
+ *   checkpoint write <phase> <wave> '<json>'
+ *       Writes checkpoint data for a phase.
+ *       Returns JSON: { written: true, phase: N, wave: N }
+ *
  * All output is JSON to stdout. Never throws — returns { error: "message" } on failure.
  */
 
@@ -38,6 +92,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { execSync } = require('child_process');
 
 // ─── Output helpers ───────────────────────────────────────────────────────────
@@ -79,6 +134,17 @@ function readFile(filePath) {
   }
 }
 
+/**
+ * List files in a directory, returning [] if it doesn't exist.
+ */
+function listDir(dirPath) {
+  try {
+    return fs.readdirSync(dirPath);
+  } catch {
+    return [];
+  }
+}
+
 // ─── Project root detection ───────────────────────────────────────────────────
 
 /**
@@ -100,6 +166,13 @@ function findProjectRoot(startDir) {
     dir = parent;
   }
   return startDir;
+}
+
+/**
+ * Return the .planning directory path for a project root.
+ */
+function planningDir(projectRoot) {
+  return path.join(projectRoot, '.planning');
 }
 
 // ─── Arg parsing helpers ──────────────────────────────────────────────────────
@@ -212,6 +285,26 @@ function patchStateContent(content, updates) {
   return result;
 }
 
+/**
+ * Patch a YAML-style frontmatter field in STATE.md content.
+ * Looks for lines like:  fieldname: value
+ * If not found, appends before the first --- boundary end.
+ */
+function patchFrontmatterField(content, field, value) {
+  const fieldRegex = new RegExp(`^(${escapeRegex(field)}\\s*:\\s*)(.*)$`, 'm');
+  if (fieldRegex.test(content)) {
+    return content.replace(fieldRegex, `$1${value}`);
+  }
+  // Try to append inside frontmatter block (between --- markers)
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  if (fmMatch) {
+    const newFm = fmMatch[0].replace(/\n---$/, `\n${field}: ${value}\n---`);
+    return content.replace(fmMatch[0], newFm);
+  }
+  // Fallback: append bold-key style
+  return content.trimEnd() + `\n- **${field}**: ${value}\n`;
+}
+
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -230,6 +323,316 @@ function buildInitialStateContent(fields) {
     `- **last_updated**: ${fields.timestamp || ts}`,
     '',
   ].join('\n');
+}
+
+// ─── Config helpers ───────────────────────────────────────────────────────────
+
+/**
+ * Load .planning/config.json from the project root.
+ * Returns an empty object if the file doesn't exist or is malformed.
+ */
+function loadConfig(projectRoot) {
+  const configPath = path.join(projectRoot, '.planning', 'config.json');
+  const raw = readFile(configPath);
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Get a nested value from an object using dot-path notation.
+ * e.g. getNestedValue({workflow: {research: true}}, 'workflow.research') => true
+ */
+function getNestedValue(obj, keyPath) {
+  const parts = keyPath.split('.');
+  let cur = obj;
+  for (const part of parts) {
+    if (cur === null || cur === undefined || typeof cur !== 'object') return undefined;
+    cur = cur[part];
+  }
+  return cur;
+}
+
+/**
+ * Set a nested value in an object using dot-path notation.
+ * Creates intermediate objects as needed.
+ */
+function setNestedValue(obj, keyPath, value) {
+  const parts = keyPath.split('.');
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i];
+    if (cur[part] === null || cur[part] === undefined || typeof cur[part] !== 'object') {
+      cur[part] = {};
+    }
+    cur = cur[part];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+
+/**
+ * Parse a CLI string value to its appropriate type.
+ * 'true'/'false' => boolean, numeric strings => number, else string.
+ */
+function parseConfigValue(raw) {
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  if (raw === 'null') return null;
+  const n = Number(raw);
+  if (!isNaN(n) && raw.trim() !== '') return n;
+  return raw;
+}
+
+// ─── Phase helpers ────────────────────────────────────────────────────────────
+
+/**
+ * Normalize a phase number to zero-padded 2-digit string (e.g. 1 => '01', 13 => '13').
+ * Decimal phases like '1.1' => '01.1'.
+ */
+function padPhase(phaseNum) {
+  const str = String(phaseNum);
+  if (str.includes('.')) {
+    const [int, dec] = str.split('.');
+    return String(int).padStart(2, '0') + '.' + dec;
+  }
+  return str.padStart(2, '0');
+}
+
+/**
+ * Convert a phase name to a URL-safe slug.
+ * e.g. 'Core Platform' => 'core-platform'
+ */
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Find the phase directory for a given phase number.
+ * Scans .planning/phases/ for a directory starting with the padded phase number.
+ * Returns { found, directory, phase_name, phase_slug, phase_number } or null.
+ */
+function findPhaseDir(projectRoot, phaseNum) {
+  const phasesDir = path.join(projectRoot, '.planning', 'phases');
+  if (!fs.existsSync(phasesDir)) return null;
+
+  const padded = padPhase(phaseNum);
+  let dirs;
+  try {
+    dirs = fs.readdirSync(phasesDir);
+  } catch {
+    return null;
+  }
+
+  // Match directories starting with the padded phase number
+  const match = dirs.find((d) => {
+    const stat = fs.statSync(path.join(phasesDir, d));
+    if (!stat.isDirectory()) return false;
+    return d === padded || d.startsWith(padded + '-') || d.startsWith(padded + '.');
+  });
+
+  if (!match) return null;
+
+  const dirPath = path.join('.planning', 'phases', match);
+  // Extract phase name from directory name: "01-core-platform" => "Core Platform"
+  const namePart = match.replace(/^\d+(\.\d+)?-/, '');
+  const phaseName = namePart
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  return {
+    found: true,
+    directory: dirPath,
+    phase_number: phaseNum,
+    phase_name: phaseName,
+    phase_slug: slugify(phaseName),
+    padded_phase: padded,
+  };
+}
+
+/**
+ * Inspect a phase directory for artifact presence.
+ * Returns flags: has_research, has_context, has_verification, plan_count, etc.
+ */
+function inspectPhaseDir(projectRoot, phaseDir) {
+  const fullDir = path.join(projectRoot, phaseDir);
+  const files = listDir(fullDir);
+
+  const planFiles = files.filter((f) => /PLAN\.md$/i.test(f) || /-PLAN\.md$/i.test(f));
+  const hasResearch = files.some((f) => /RESEARCH\.md$/i.test(f));
+  const hasContext = files.some((f) => /CONTEXT\.md$/i.test(f));
+  const hasVerification = files.some((f) => /VERIFICATION\.md$/i.test(f));
+
+  return {
+    has_research: hasResearch,
+    has_context: hasContext,
+    has_verification: hasVerification,
+    has_plans: planFiles.length > 0,
+    plan_count: planFiles.length,
+    files,
+  };
+}
+
+/**
+ * Parse ROADMAP.md to find phase info by number.
+ * Returns { found, phase_number, phase_name } or null.
+ */
+function findPhaseInRoadmap(projectRoot, phaseNum) {
+  const roadmapPath = path.join(projectRoot, '.planning', 'ROADMAP.md');
+  const content = readFile(roadmapPath);
+  if (!content) return null;
+
+  const padded = padPhase(phaseNum);
+  // Match lines like: | Phase 01 | Core Platform | ...
+  // or: ## Phase 01 — Core Platform
+  const patterns = [
+    new RegExp(`Phase\\s+${escapeRegex(padded)}\\s*[|\\-—]\\s*([^|\\n]+)`, 'i'),
+    new RegExp(`##\\s+Phase\\s+${escapeRegex(padded)}\\s*[—\\-]\\s*([^\\n]+)`, 'i'),
+    new RegExp(`\\|\\s*${escapeRegex(padded)}\\s*\\|\\s*([^|]+)\\|`, 'i'),
+  ];
+
+  for (const pattern of patterns) {
+    const m = content.match(pattern);
+    if (m) {
+      const phaseName = m[1].trim().replace(/\*+/g, '').trim();
+      return {
+        found: true,
+        phase_number: phaseNum,
+        phase_name: phaseName,
+        phase_slug: slugify(phaseName),
+      };
+    }
+  }
+
+  return null;
+}
+
+// ─── Model profiles ───────────────────────────────────────────────────────────
+
+const MODEL_PROFILES = {
+  'sunco-planner':        { quality: 'claude-opus-4-5',   balanced: 'claude-sonnet-4-5', budget: 'claude-haiku-3-5' },
+  'sunco-roadmapper':     { quality: 'claude-opus-4-5',   balanced: 'claude-sonnet-4-5', budget: 'claude-sonnet-4-5' },
+  'sunco-executor':       { quality: 'claude-opus-4-5',   balanced: 'claude-sonnet-4-5', budget: 'claude-sonnet-4-5' },
+  'sunco-researcher':     { quality: 'claude-opus-4-5',   balanced: 'claude-sonnet-4-5', budget: 'claude-haiku-3-5' },
+  'sunco-verifier':       { quality: 'claude-sonnet-4-5', balanced: 'claude-sonnet-4-5', budget: 'claude-haiku-3-5' },
+  'sunco-plan-checker':   { quality: 'claude-sonnet-4-5', balanced: 'claude-sonnet-4-5', budget: 'claude-haiku-3-5' },
+  'sunco-debugger':       { quality: 'claude-opus-4-5',   balanced: 'claude-sonnet-4-5', budget: 'claude-sonnet-4-5' },
+  'sunco-mapper':         { quality: 'claude-sonnet-4-5', balanced: 'claude-haiku-3-5',  budget: 'claude-haiku-3-5' },
+  'sunco-ui-checker':     { quality: 'claude-sonnet-4-5', balanced: 'claude-sonnet-4-5', budget: 'claude-haiku-3-5' },
+  'sunco-synthesizer':    { quality: 'claude-sonnet-4-5', balanced: 'claude-sonnet-4-5', budget: 'claude-haiku-3-5' },
+};
+
+// Aliases: map gsd- agent names to sunco- equivalents for cross-compatibility
+const AGENT_ALIASES = {
+  'gsd-planner':       'sunco-planner',
+  'gsd-executor':      'sunco-executor',
+  'gsd-verifier':      'sunco-verifier',
+  'gsd-debugger':      'sunco-debugger',
+  'gsd-roadmapper':    'sunco-roadmapper',
+  'gsd-codebase-mapper': 'sunco-mapper',
+};
+
+const PROFILE_SHORT_TO_MODEL = {
+  opus:   'claude-opus-4-5',
+  sonnet: 'claude-sonnet-4-5',
+  haiku:  'claude-haiku-3-5',
+};
+
+/**
+ * Resolve the full model ID for an agent role given a profile.
+ */
+function resolveModel(agentRole, profile) {
+  const normalizedRole = AGENT_ALIASES[agentRole] || agentRole;
+  const profileDef = MODEL_PROFILES[normalizedRole];
+
+  if (!profileDef) {
+    // Unknown agent: fall back to profile-level defaults
+    const defaults = { quality: 'claude-opus-4-5', balanced: 'claude-sonnet-4-5', budget: 'claude-haiku-3-5' };
+    return defaults[profile] || defaults.balanced;
+  }
+
+  const shortModel = profileDef[profile] || profileDef.balanced;
+  return shortModel;
+}
+
+// ─── Todo helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Return the pending todos directory path.
+ */
+function todoPendingDir(projectRoot) {
+  return path.join(projectRoot, '.planning', 'todos', 'pending');
+}
+
+/**
+ * Return the completed todos directory path.
+ */
+function todoCompletedDir(projectRoot) {
+  return path.join(projectRoot, '.planning', 'todos', 'completed');
+}
+
+/**
+ * Generate the next todo ID by scanning existing pending + completed files.
+ */
+function nextTodoId(projectRoot) {
+  const pendingFiles = listDir(todoPendingDir(projectRoot));
+  const completedFiles = listDir(todoCompletedDir(projectRoot));
+  const all = [...pendingFiles, ...completedFiles];
+
+  let maxId = 0;
+  for (const f of all) {
+    const m = f.match(/^(\d+)/);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (n > maxId) maxId = n;
+    }
+  }
+  return maxId + 1;
+}
+
+/**
+ * Parse a todo file's content to extract title, body, area, and creation date.
+ */
+function parseTodoFile(content, filename) {
+  const lines = content.split('\n');
+  let title = '';
+  let area = 'general';
+  let body = '';
+  let created = '';
+
+  for (const line of lines) {
+    if (!title && line.startsWith('# ')) {
+      title = line.slice(2).trim();
+      continue;
+    }
+    const areaMatch = line.match(/^\*\*[Aa]rea\*\*\s*:\s*(.+)$/);
+    if (areaMatch) { area = areaMatch[1].trim(); continue; }
+    const createdMatch = line.match(/^\*\*[Cc]reated\*\*\s*:\s*(.+)$/);
+    if (createdMatch) { created = createdMatch[1].trim(); continue; }
+    body += line + '\n';
+  }
+
+  // Extract ID from filename
+  const idMatch = filename.match(/^(\d+)/);
+  const id = idMatch ? parseInt(idMatch[1], 10) : null;
+
+  return { id, title: title || filename, area, body: body.trim(), created };
+}
+
+// ─── Checkpoint helpers ───────────────────────────────────────────────────────
+
+/**
+ * Return the checkpoint file path for a phase.
+ */
+function checkpointPath(projectRoot, phase) {
+  const padded = padPhase(phase);
+  return path.join(projectRoot, '.planning', 'phases', padded, '.checkpoint.json');
 }
 
 // ─── Commands ─────────────────────────────────────────────────────────────────
@@ -322,15 +725,22 @@ function cmdConfigNewProject(args, cwd) {
  * }
  */
 function cmdInit(args, cwd) {
-  // args[1] is the workflow name (e.g. "new-project") — kept for future use
+  // args[1] is the workflow name (e.g. "new-project" or "phase-op") — dispatched here
+  const workflow = args[1];
+
+  // Dispatch sub-workflows
+  if (workflow === 'phase-op') {
+    return cmdInitPhaseOp(args, cwd);
+  }
+
   const projectRoot = findProjectRoot(cwd);
 
-  const planningDir = path.join(projectRoot, '.planning');
-  const planningExists = fs.existsSync(planningDir);
+  const planningDirPath = path.join(projectRoot, '.planning');
+  const planningExists = fs.existsSync(planningDirPath);
 
   // has_codebase_map: .planning/codebase-map.md or .sun/codebase-map.md
   const hasCodebaseMap =
-    fs.existsSync(path.join(planningDir, 'codebase-map.md')) ||
+    fs.existsSync(path.join(planningDirPath, 'codebase-map.md')) ||
     fs.existsSync(path.join(projectRoot, '.sun', 'codebase-map.md'));
 
   // has_package_file: package.json, Cargo.toml, pyproject.toml, go.mod, etc.
@@ -366,6 +776,93 @@ function cmdInit(args, cwd) {
     has_git: hasGit,
     project_root: projectRoot,
   });
+}
+
+/**
+ * init phase-op <phase_number>
+ *
+ * Returns full context for phase operation workflows.
+ * Returns: {
+ *   commit_docs, phase_found, phase_dir, phase_number, phase_name, phase_slug,
+ *   padded_phase, has_research, has_context, has_plans, has_verification,
+ *   plan_count, roadmap_exists, planning_exists
+ * }
+ */
+function cmdInitPhaseOp(args, cwd) {
+  const phaseArg = args[2];
+  if (!phaseArg) return fail('init phase-op requires a phase number');
+
+  const projectRoot = findProjectRoot(cwd);
+  const config = loadConfig(projectRoot);
+  const planningDirPath = planningDir(projectRoot);
+
+  // Find phase directory
+  let phaseInfo = findPhaseDir(projectRoot, phaseArg);
+
+  // Fallback to ROADMAP.md if no directory found
+  if (!phaseInfo) {
+    const roadmapPhase = findPhaseInRoadmap(projectRoot, phaseArg);
+    if (roadmapPhase) {
+      phaseInfo = {
+        found: true,
+        directory: null,
+        phase_number: phaseArg,
+        phase_name: roadmapPhase.phase_name,
+        phase_slug: roadmapPhase.phase_slug,
+        padded_phase: padPhase(phaseArg),
+      };
+    }
+  }
+
+  // Inspect artifacts if we have a directory
+  let artifacts = {
+    has_research: false,
+    has_context: false,
+    has_verification: false,
+    has_plans: false,
+    plan_count: 0,
+  };
+
+  if (phaseInfo && phaseInfo.directory) {
+    const inspected = inspectPhaseDir(projectRoot, phaseInfo.directory);
+    artifacts = {
+      has_research: inspected.has_research,
+      has_context: inspected.has_context,
+      has_verification: inspected.has_verification,
+      has_plans: inspected.has_plans,
+      plan_count: inspected.plan_count,
+    };
+  }
+
+  const result = {
+    // Config
+    commit_docs: config.commit_docs !== undefined ? config.commit_docs : true,
+    model_profile: config.model_profile || 'quality',
+
+    // Phase info
+    phase_found: !!phaseInfo,
+    phase_dir: phaseInfo ? phaseInfo.directory : null,
+    phase_number: phaseInfo ? phaseInfo.phase_number : phaseArg,
+    phase_name: phaseInfo ? phaseInfo.phase_name : null,
+    phase_slug: phaseInfo ? phaseInfo.phase_slug : null,
+    padded_phase: padPhase(phaseArg),
+
+    // Artifact flags
+    has_research: artifacts.has_research,
+    has_context: artifacts.has_context,
+    has_plans: artifacts.has_plans,
+    has_verification: artifacts.has_verification,
+    plan_count: artifacts.plan_count,
+
+    // File existence
+    roadmap_exists: fs.existsSync(path.join(planningDirPath, 'ROADMAP.md')),
+    planning_exists: fs.existsSync(planningDirPath),
+
+    // Root
+    project_root: projectRoot,
+  };
+
+  out(result);
 }
 
 /**
@@ -483,6 +980,524 @@ function cmdTransition(args, cwd) {
   }
 }
 
+/**
+ * config-get <key>
+ *
+ * Read a dot-path key from .planning/config.json.
+ * Returns: { key: "...", value: ... }
+ */
+function cmdConfigGet(args, cwd) {
+  const key = args[1];
+  if (!key) return fail('config-get requires a key argument (e.g. workflow.research)');
+
+  const projectRoot = findProjectRoot(cwd);
+  const config = loadConfig(projectRoot);
+
+  const value = getNestedValue(config, key);
+  if (value === undefined) {
+    out({ key, value: null, found: false });
+  } else {
+    out({ key, value, found: true });
+  }
+}
+
+/**
+ * config-set <key> <value>
+ *
+ * Write a dot-path key to .planning/config.json.
+ * Returns: { updated: true, key: "...", value: ... }
+ */
+function cmdConfigSet(args, cwd) {
+  const key = args[1];
+  const rawValue = args[2];
+
+  if (!key) return fail('config-set requires a key argument');
+  if (rawValue === undefined) return fail('config-set requires a value argument');
+
+  const projectRoot = findProjectRoot(cwd);
+  const configPath = path.join(projectRoot, '.planning', 'config.json');
+  const config = loadConfig(projectRoot);
+
+  const value = parseConfigValue(rawValue);
+  setNestedValue(config, key, value);
+
+  try {
+    writeFile(configPath, JSON.stringify(config, null, 2) + '\n');
+    out({ updated: true, key, value });
+  } catch (e) {
+    fail(`config-set: write failed — ${e.message}`);
+  }
+}
+
+/**
+ * todo add <text>
+ *
+ * Adds a new todo item to .planning/todos/pending/.
+ * Returns: { added: true, id: N, file: "..." }
+ */
+function cmdTodoAdd(args, cwd) {
+  const text = args[2];
+  if (!text) return fail('todo add requires a text argument');
+
+  const projectRoot = findProjectRoot(cwd);
+  const id = nextTodoId(projectRoot);
+  const ts = new Date().toISOString();
+  const paddedId = String(id).padStart(3, '0');
+  const slug = slugify(text).slice(0, 40) || 'todo';
+  const filename = `${paddedId}-${slug}.md`;
+  const pendingPath = path.join(todoPendingDir(projectRoot), filename);
+
+  const content = [
+    `# ${text}`,
+    '',
+    `**Area**: general`,
+    `**Created**: ${ts}`,
+    '',
+  ].join('\n');
+
+  try {
+    writeFile(pendingPath, content);
+    out({
+      added: true,
+      id,
+      file: path.join('.planning', 'todos', 'pending', filename),
+    });
+  } catch (e) {
+    fail(`todo add: write failed — ${e.message}`);
+  }
+}
+
+/**
+ * todo list [--area <area>]
+ *
+ * Lists pending todos, optionally filtered by area.
+ * Returns: { count: N, todos: [...] }
+ */
+function cmdTodoList(args, cwd) {
+  const flags = parseNamedArgs(args, ['area']);
+  const filterArea = flags.area || null;
+
+  const projectRoot = findProjectRoot(cwd);
+  const pendingPath = todoPendingDir(projectRoot);
+  const files = listDir(pendingPath).filter((f) => f.endsWith('.md')).sort();
+
+  const todos = [];
+  for (const filename of files) {
+    const filePath = path.join(pendingPath, filename);
+    const content = readFile(filePath);
+    if (!content) continue;
+
+    const parsed = parseTodoFile(content, filename);
+    if (filterArea && parsed.area !== filterArea) continue;
+
+    todos.push({
+      id: parsed.id,
+      title: parsed.title,
+      area: parsed.area,
+      created: parsed.created,
+      file: path.join('.planning', 'todos', 'pending', filename),
+    });
+  }
+
+  out({ count: todos.length, todos });
+}
+
+/**
+ * todo done <id_or_filename>
+ *
+ * Marks a todo as completed by moving it from pending/ to completed/.
+ * Returns: { completed: true, file: "..." }
+ */
+function cmdTodoDone(args, cwd) {
+  const idOrFile = args[2];
+  if (!idOrFile) return fail('todo done requires an id or filename argument');
+
+  const projectRoot = findProjectRoot(cwd);
+  const pendingPath = todoPendingDir(projectRoot);
+  const completedPath = todoCompletedDir(projectRoot);
+
+  const files = listDir(pendingPath).filter((f) => f.endsWith('.md')).sort();
+
+  let targetFile = null;
+
+  // Check if it's a numeric ID
+  const numericId = parseInt(idOrFile, 10);
+  if (!isNaN(numericId)) {
+    const paddedId = String(numericId).padStart(3, '0');
+    targetFile = files.find((f) => f.startsWith(paddedId + '-') || f.startsWith(paddedId + '.'));
+  }
+
+  // Or match by filename substring
+  if (!targetFile) {
+    targetFile = files.find((f) => f === idOrFile || f.includes(idOrFile));
+  }
+
+  if (!targetFile) {
+    return fail(`todo done: no pending todo found matching "${idOrFile}"`);
+  }
+
+  const srcPath = path.join(pendingPath, targetFile);
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const destFilename = targetFile.replace('.md', `-done-${ts}.md`);
+  const destPath = path.join(completedPath, destFilename);
+
+  try {
+    mkdirp(completedPath);
+    const content = readFile(srcPath) || '';
+    writeFile(destPath, content + `\n**Completed**: ${new Date().toISOString()}\n`);
+    fs.unlinkSync(srcPath);
+    out({
+      completed: true,
+      file: path.join('.planning', 'todos', 'completed', destFilename),
+    });
+  } catch (e) {
+    fail(`todo done: failed — ${e.message}`);
+  }
+}
+
+/**
+ * todo match-phase <phase_number>
+ *
+ * Matches pending todos against a phase's goal/name/requirements.
+ * Returns: { todo_count: N, matches: [...] }
+ */
+function cmdTodoMatchPhase(args, cwd) {
+  const phaseArg = args[2];
+  if (!phaseArg) return fail('todo match-phase requires a phase number');
+
+  const projectRoot = findProjectRoot(cwd);
+  const phaseInfo = findPhaseDir(projectRoot, phaseArg);
+  const roadmapPhase = findPhaseInRoadmap(projectRoot, phaseArg);
+
+  // Build phase text corpus to match against
+  const phaseText = [
+    phaseInfo ? phaseInfo.phase_name : '',
+    roadmapPhase ? roadmapPhase.phase_name : '',
+  ].join(' ').toLowerCase();
+
+  // Extract keywords from phase text (words >= 4 chars)
+  const phaseKeywords = new Set(
+    phaseText.split(/\W+/).filter((w) => w.length >= 4)
+  );
+
+  // Load pending todos
+  const pendingPath = todoPendingDir(projectRoot);
+  const files = listDir(pendingPath).filter((f) => f.endsWith('.md')).sort();
+
+  const todos = [];
+  for (const filename of files) {
+    const content = readFile(path.join(pendingPath, filename));
+    if (!content) continue;
+    todos.push({
+      filename,
+      ...parseTodoFile(content, filename),
+    });
+  }
+
+  if (todos.length === 0) {
+    out({ phase: phaseArg, matches: [], todo_count: 0 });
+    return;
+  }
+
+  // Score each todo for relevance
+  const matches = [];
+  for (const todo of todos) {
+    const todoWords = `${todo.title} ${todo.body}`.toLowerCase().split(/\W+/).filter((w) => w.length >= 4);
+    const matchedKeywords = todoWords.filter((w) => phaseKeywords.has(w));
+    const score = matchedKeywords.length;
+
+    if (score > 0 || phaseKeywords.size === 0) {
+      matches.push({
+        id: todo.id,
+        title: todo.title,
+        area: todo.area,
+        score,
+        matched_keywords: matchedKeywords,
+        file: path.join('.planning', 'todos', 'pending', todo.filename),
+      });
+    }
+  }
+
+  // Sort by score descending
+  matches.sort((a, b) => b.score - a.score);
+
+  out({ phase: phaseArg, matches, todo_count: todos.length });
+}
+
+/**
+ * resolve-model <agent-role>
+ *
+ * Resolves the model for an agent role based on the project's model_profile config.
+ * Returns: { agent: "...", profile: "...", model: "..." }
+ */
+function cmdResolveModel(args, cwd) {
+  const agentRole = args[1];
+  if (!agentRole) return fail('resolve-model requires an agent role argument');
+
+  const projectRoot = findProjectRoot(cwd);
+  const config = loadConfig(projectRoot);
+  const profile = config.model_profile || 'quality';
+
+  const model = resolveModel(agentRole, profile);
+
+  out({ agent: agentRole, profile, model });
+}
+
+/**
+ * agent-skills <agent-role>
+ *
+ * Returns skill injection text for an agent role.
+ * Reads from config.agent_skills.<agent-role> if set, otherwise returns defaults.
+ * Returns: { agent: "...", skills: "..." }
+ */
+function cmdAgentSkills(args, cwd) {
+  const agentRole = args[1];
+  if (!agentRole) return fail('agent-skills requires an agent role argument');
+
+  const projectRoot = findProjectRoot(cwd);
+  const config = loadConfig(projectRoot);
+
+  // Check for custom skills in config
+  const customSkills = config.agent_skills && config.agent_skills[agentRole];
+  if (customSkills) {
+    out({ agent: agentRole, skills: customSkills, source: 'config' });
+    return;
+  }
+
+  // Default skill sets per agent role
+  const defaultSkills = {
+    'sunco-executor': [
+      'Always write tests alongside implementation code.',
+      'Prefer deterministic operations over LLM calls where possible.',
+      'Use TypeScript strict mode. Never use any type.',
+      'Follow ESM import conventions: .js extension in imports for .ts files.',
+      'Commit each plan atomically with a descriptive commit message.',
+    ].join('\n'),
+
+    'sunco-planner': [
+      'Think through requirements carefully before generating plans.',
+      'Decompose work into discrete, independently testable units.',
+      'Flag ambiguities as assumptions with [ASSUME] prefix.',
+      'Prefer 3-5 focused plans over many small plans.',
+    ].join('\n'),
+
+    'sunco-verifier': [
+      'Check both happy path and error path behaviors.',
+      'Verify that all acceptance criteria from the plan are addressed.',
+      'Report findings with severity: critical, high, medium, low.',
+      'Never mark verification as PASS if critical issues remain.',
+    ].join('\n'),
+
+    'sunco-debugger': [
+      'Start with reproduction — confirm you can trigger the bug.',
+      'Narrow scope before suggesting fixes.',
+      'Document root cause, not just symptoms.',
+      'Verify fix does not introduce regressions.',
+    ].join('\n'),
+
+    'sunco-researcher': [
+      'Prioritize official documentation and source code over blog posts.',
+      'Note package versions and compatibility constraints explicitly.',
+      'Flag if a solution requires paid services or non-standard infrastructure.',
+    ].join('\n'),
+  };
+
+  // Alias lookup
+  const normalizedRole = AGENT_ALIASES[agentRole] || agentRole;
+  const skills = defaultSkills[normalizedRole] || defaultSkills[agentRole] || '';
+
+  out({ agent: agentRole, skills, source: skills ? 'default' : 'none' });
+}
+
+/**
+ * begin-phase <phase_number>
+ *
+ * Marks a phase as started in STATE.md (sets status to 'executing').
+ * Returns: { started: true, phase: N }
+ */
+function cmdBeginPhase(args, cwd) {
+  const phaseArg = args[1];
+  if (!phaseArg) return fail('begin-phase requires a phase number');
+
+  const projectRoot = findProjectRoot(cwd);
+  const statePath = path.join(projectRoot, STATE_PATH_RELATIVE);
+  const ts = new Date().toISOString();
+  const existing = readFile(statePath);
+
+  if (!existing) {
+    const content = buildInitialStateContent({
+      phase: phaseArg,
+      status: 'executing',
+      next: `Execute phase ${phaseArg}`,
+      timestamp: ts,
+    });
+    try {
+      writeFile(statePath, content);
+      out({ started: true, phase: phaseArg });
+    } catch (e) {
+      fail(`begin-phase: write failed — ${e.message}`);
+    }
+    return;
+  }
+
+  // Patch frontmatter status if present, else patch markdown body
+  let patched = existing;
+  if (/^status\s*:/m.test(existing)) {
+    patched = patchFrontmatterField(existing, 'status', 'executing');
+    patched = patchFrontmatterField(patched, 'last_updated', `"${ts}"`);
+  } else {
+    patched = patchStateContent(existing, {
+      status: 'executing',
+      last_updated: ts,
+    });
+  }
+
+  try {
+    writeFile(statePath, patched);
+    out({ started: true, phase: phaseArg });
+  } catch (e) {
+    fail(`begin-phase: write failed — ${e.message}`);
+  }
+}
+
+/**
+ * complete-phase <phase_number>
+ *
+ * Marks a phase as completed in STATE.md.
+ * Returns: { completed: true, phase: N }
+ */
+function cmdCompletePhase(args, cwd) {
+  const phaseArg = args[1];
+  if (!phaseArg) return fail('complete-phase requires a phase number');
+
+  const projectRoot = findProjectRoot(cwd);
+  const statePath = path.join(projectRoot, STATE_PATH_RELATIVE);
+  const ts = new Date().toISOString();
+  const existing = readFile(statePath);
+
+  if (!existing) {
+    const content = buildInitialStateContent({
+      phase: phaseArg,
+      status: 'complete',
+      next: `Begin next phase`,
+      timestamp: ts,
+    });
+    try {
+      writeFile(statePath, content);
+      out({ completed: true, phase: phaseArg });
+    } catch (e) {
+      fail(`complete-phase: write failed — ${e.message}`);
+    }
+    return;
+  }
+
+  let patched = existing;
+  if (/^status\s*:/m.test(existing)) {
+    patched = patchFrontmatterField(existing, 'status', 'complete');
+    patched = patchFrontmatterField(patched, 'last_updated', `"${ts}"`);
+  } else {
+    patched = patchStateContent(existing, {
+      status: 'complete',
+      last_updated: ts,
+    });
+  }
+
+  try {
+    writeFile(statePath, patched);
+    out({ completed: true, phase: phaseArg });
+  } catch (e) {
+    fail(`complete-phase: write failed — ${e.message}`);
+  }
+}
+
+/**
+ * checkpoint read <phase>
+ *
+ * Reads checkpoint data for a phase from .planning/phases/<phase>/.checkpoint.json.
+ * Returns: { phase: N, wave: N, data: {...} }
+ */
+function cmdCheckpointRead(args, cwd) {
+  const phase = args[2];
+  if (!phase) return fail('checkpoint read requires a phase number');
+
+  const projectRoot = findProjectRoot(cwd);
+
+  // Try phase directory first
+  const phaseInfo = findPhaseDir(projectRoot, phase);
+  let cpPath = null;
+
+  if (phaseInfo && phaseInfo.directory) {
+    cpPath = path.join(projectRoot, phaseInfo.directory, '.checkpoint.json');
+  } else {
+    // Fallback: padded phase directory
+    const padded = padPhase(phase);
+    cpPath = path.join(projectRoot, '.planning', 'phases', padded, '.checkpoint.json');
+  }
+
+  const raw = readFile(cpPath);
+  if (!raw) {
+    out({ phase, wave: 0, data: {}, found: false });
+    return;
+  }
+
+  try {
+    const data = JSON.parse(raw);
+    out({ phase, wave: data.wave || 0, data, found: true });
+  } catch (e) {
+    fail(`checkpoint read: malformed JSON — ${e.message}`);
+  }
+}
+
+/**
+ * checkpoint write <phase> <wave> '<json>'
+ *
+ * Writes checkpoint data for a phase.
+ * Returns: { written: true, phase: N, wave: N }
+ */
+function cmdCheckpointWrite(args, cwd) {
+  const phase = args[2];
+  const wave = args[3];
+  const rawJson = args[4];
+
+  if (!phase) return fail('checkpoint write requires a phase number');
+  if (!wave) return fail('checkpoint write requires a wave number');
+  if (!rawJson) return fail('checkpoint write requires a JSON data argument');
+
+  let data;
+  try {
+    data = JSON.parse(rawJson);
+  } catch (e) {
+    return fail(`checkpoint write: invalid JSON — ${e.message}`);
+  }
+
+  const projectRoot = findProjectRoot(cwd);
+  const phaseInfo = findPhaseDir(projectRoot, phase);
+
+  let cpDir;
+  if (phaseInfo && phaseInfo.directory) {
+    cpDir = path.join(projectRoot, phaseInfo.directory);
+  } else {
+    const padded = padPhase(phase);
+    cpDir = path.join(projectRoot, '.planning', 'phases', padded);
+  }
+
+  const cpPath = path.join(cpDir, '.checkpoint.json');
+
+  const payload = {
+    phase,
+    wave: parseInt(wave, 10) || 0,
+    updated_at: new Date().toISOString(),
+    ...data,
+  };
+
+  try {
+    writeFile(cpPath, JSON.stringify(payload, null, 2) + '\n');
+    out({ written: true, phase, wave: payload.wave });
+  } catch (e) {
+    fail(`checkpoint write: write failed — ${e.message}`);
+  }
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -513,7 +1528,11 @@ async function main() {
   if (!command) {
     return fail(
       'Usage: node sunco-tools.cjs <command> [args] [--cwd <path>]\n' +
-        'Commands: commit, config-new-project, init, state-update, transition'
+        'Commands: commit, config-new-project, config-get, config-set, ' +
+        'init, init phase-op, state-update, transition, ' +
+        'todo add, todo list, todo done, todo match-phase, ' +
+        'resolve-model, agent-skills, begin-phase, complete-phase, ' +
+        'checkpoint read, checkpoint write'
     );
   }
 
@@ -521,20 +1540,96 @@ async function main() {
     case 'commit':
       cmdCommit(args, cwd);
       break;
+
     case 'config-new-project':
       cmdConfigNewProject(args, cwd);
       break;
+
+    case 'config-get':
+      cmdConfigGet(args, cwd);
+      break;
+
+    case 'config-set':
+      cmdConfigSet(args, cwd);
+      break;
+
     case 'init':
       cmdInit(args, cwd);
       break;
+
     case 'state-update':
       cmdStateUpdate(args, cwd);
       break;
+
     case 'transition':
       cmdTransition(args, cwd);
       break;
+
+    case 'resolve-model':
+      cmdResolveModel(args, cwd);
+      break;
+
+    case 'agent-skills':
+      cmdAgentSkills(args, cwd);
+      break;
+
+    case 'begin-phase':
+      cmdBeginPhase(args, cwd);
+      break;
+
+    case 'complete-phase':
+      cmdCompletePhase(args, cwd);
+      break;
+
+    case 'todo': {
+      const subcommand = args[1];
+      switch (subcommand) {
+        case 'add':
+          cmdTodoAdd(args, cwd);
+          break;
+        case 'list':
+          cmdTodoList(args, cwd);
+          break;
+        case 'done':
+          cmdTodoDone(args, cwd);
+          break;
+        case 'match-phase':
+          cmdTodoMatchPhase(args, cwd);
+          break;
+        default:
+          fail(
+            `Unknown todo subcommand: ${subcommand}. ` +
+              'Valid subcommands: add, list, done, match-phase'
+          );
+      }
+      break;
+    }
+
+    case 'checkpoint': {
+      const subcommand = args[1];
+      switch (subcommand) {
+        case 'read':
+          cmdCheckpointRead(args, cwd);
+          break;
+        case 'write':
+          cmdCheckpointWrite(args, cwd);
+          break;
+        default:
+          fail(
+            `Unknown checkpoint subcommand: ${subcommand}. ` +
+              'Valid subcommands: read, write'
+          );
+      }
+      break;
+    }
+
     default:
-      fail(`Unknown command: ${command}. Valid commands: commit, config-new-project, init, state-update, transition`);
+      fail(
+        `Unknown command: ${command}. Valid commands: ` +
+          'commit, config-new-project, config-get, config-set, ' +
+          'init, state-update, transition, ' +
+          'todo, resolve-model, agent-skills, begin-phase, complete-phase, checkpoint'
+      );
   }
 }
 
