@@ -456,13 +456,25 @@ If the executor is interrupted mid-task (context window exhaustion, network erro
 
 1. **Git state:** Any staged but uncommitted changes are preserved in the working tree. The orchestrator runs `git stash` to save them.
 2. **Partial file:** The last completed task checkpoint tells the orchestrator exactly where progress stopped.
-3. **Recovery command:** Orchestrator spawns a new executor with:
+3. **Worktree state:** If running in a worktree, the worktree directory persists. The orchestrator can inspect it without affecting the main tree.
+4. **Recovery command:** Orchestrator spawns a new executor with:
    ```
    Resume plan {plan} from task {N+1}.
    Previous executor was interrupted during task {N+1}.
    Git stash may contain partial work — run `git stash pop` first and evaluate what was done.
    If partial work is usable, continue from where it left off.
    If partial work is broken, discard it (`git checkout -- .`) and redo task {N+1} from scratch.
+   ```
+5. **Worktree recovery:** If the interrupted executor was in a worktree:
+   ```bash
+   # Check if worktree exists
+   git worktree list | grep "executor-{plan}"
+   # If exists: resume in the same worktree (all prior work preserved)
+   # If not: create fresh worktree, apply completed task checkpoints
+   ```
+6. **Rollback point:** Before recovery, the orchestrator creates a rollback point:
+   ```bash
+   node "$HOME/.claude/sunco/bin/sunco-tools.cjs" rollback-point create --label "before-recovery-{plan}"
    ```
 
 ---
@@ -478,9 +490,32 @@ These rules make common executor mistakes structurally impossible:
    - Test retry: maximum 2 attempts. After 2 failures, investigate root cause (do not keep re-running).
    - Build retry: maximum 2 attempts.
 
-3. **Blast radius gate.** If a single task modifies more than 10 files, PAUSE before committing. Report to orchestrator: "Task {N} modified {count} files — this exceeds the blast radius threshold. Verify before commit? (yes/no)"
+3. **Blast radius gate with worktree isolation.** If a single task modifies more than 10 files, PAUSE before committing. Report to orchestrator: "Task {N} modified {count} files — this exceeds the blast radius threshold." For high-risk tasks (infrastructure changes, config rewrites, cross-package refactors), the orchestrator should spawn the executor in a git worktree (`git worktree add`) for isolated execution. Verify all quality gates pass in the worktree before merging back:
+   ```bash
+   # Orchestrator creates isolated worktree
+   git worktree add .worktrees/executor-{plan}-{task} HEAD
+   # Executor runs in worktree — blast radius contained
+   # On success: merge worktree changes back
+   git worktree remove .worktrees/executor-{plan}-{task}
+   # On failure: discard entire worktree — zero damage to main tree
+   ```
 
 4. **No silent failures.** If any `<verify><automated>` command exits non-zero, the task is NOT complete regardless of whether the `<done>` block seems satisfied. Automated verification trumps self-assessment.
+
+5. **Lint-gate fix loop with escalation.** When lint/tsc fails after task completion:
+   - **Attempt 1:** Read errors, apply targeted fix. Re-run lint/tsc.
+   - **Attempt 2:** If different errors, fix those. Re-run.
+   - **Attempt 3:** If still failing, try a broader fix (check imports, types).
+   - **After 3 failures:** STOP. Do NOT keep trying. Write the errors to the task checkpoint and escalate to the user:
+     ```
+     ⚠ Lint gate failed after 3 fix attempts.
+     Remaining errors:
+     [paste lint output]
+     Manual intervention needed before this task can be marked complete.
+     ```
+   - Never disable lint rules or add `eslint-disable` comments to pass the gate.
+
+6. **Hidden test awareness.** Tests that pass in the executor's view may fail under conditions the executor didn't test. After all tasks complete, run the FULL test suite (`npx vitest run`), not just the tests the plan references. If previously-passing tests now fail, this is a regression — fix it before committing.
 
 ---
 

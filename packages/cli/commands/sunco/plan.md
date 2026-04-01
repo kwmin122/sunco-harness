@@ -1,7 +1,7 @@
 ---
 name: sunco:plan
 description: Convert phase context into 1-3 verified, atomic execution plans. Run after /sunco:discuss. Each plan has YAML frontmatter, XML task structure, and a done_when checklist.
-argument-hint: "<phase> [--skip-research] [--skip-verify] [--gaps]"
+argument-hint: "<phase> [--skip-research] [--skip-verify] [--gaps] [--cross-model]"
 allowed-tools:
   - Read
   - Bash
@@ -21,6 +21,7 @@ allowed-tools:
 - `--skip-research` — Skip implementation research. Use when you already know the approach or are iterating quickly.
 - `--skip-verify` — Skip plan verification loop. Use when iterating after a previous verify found gaps.
 - `--gaps` — Gap closure mode. Read `[N]-VERIFICATION.md`, create gap-closure plans only. Skips research.
+- `--cross-model` — Enable design pingpong: spawn two models in parallel, merge PLAN.md outputs. WARNING: ~2.4x token cost.
 </context>
 
 <objective>

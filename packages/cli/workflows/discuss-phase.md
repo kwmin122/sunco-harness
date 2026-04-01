@@ -152,7 +152,36 @@ Use /sunco:progress to see available phases.
 ```
 Exit workflow.
 
-**If `phase_found` is true:** Continue to check_existing.
+**If `phase_found` is true:** Continue to artifact integrity check.
+
+### Artifact Integrity Check
+
+Before proceeding, verify no planning artifacts have been modified since the last operation:
+
+```bash
+HASH_CHECK=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" artifact-hash check 2>/dev/null)
+```
+
+Parse JSON for `changed` (boolean) and `artifacts` (array).
+
+**If `changed` is true:**
+```
+⚠ SUNCO detected changes to planning artifacts since last operation:
+[list changed files from artifacts array]
+
+Options:
+  1) Run impact analysis first (recommended)
+  2) Ignore and continue (changes are intentional)
+  3) Revert changes
+```
+
+Use AskUserQuestion to let user choose. If option 1: invoke `/sunco:impact-analysis` workflow and return. If option 3: invoke `/sunco:backtrack` workflow and return. If option 2: update hashes and continue.
+
+```bash
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" artifact-hash compute 2>/dev/null
+```
+
+**If `changed` is false or no stored hashes:** Continue to check_existing.
 
 **Flag detection** — Parse `$ARGUMENTS` for:
 - `--auto` → fully automated mode, no user prompts, pick recommended defaults

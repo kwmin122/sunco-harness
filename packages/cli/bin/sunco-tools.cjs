@@ -85,6 +85,34 @@
  *       Writes checkpoint data for a phase.
  *       Returns JSON: { written: true, phase: N, wave: N }
  *
+ *   artifact-hash compute
+ *       Hash all .planning/ artifacts, store in .planning/.hashes.json.
+ *       Returns JSON: { computed: true, count: N, path: ".planning/.hashes.json" }
+ *
+ *   artifact-hash check
+ *       Compare stored hashes against current file hashes.
+ *       Returns JSON: { changed: bool, artifacts: [{ file, old_hash, new_hash, status }] }
+ *
+ *   rollback-point create --label <label>
+ *       Creates rollback point: snapshot hashes + git tag + manifest.
+ *       Returns JSON: { created: true, label, tag, manifest }
+ *
+ *   rollback-point list
+ *       Lists all rollback points.
+ *       Returns JSON: { count: N, points: [...] }
+ *
+ *   rollback-point restore --label <label>
+ *       Restores .planning/ artifacts to a rollback point (code untouched).
+ *       Returns JSON: { restored: true, label, tag, restored_files: N }
+ *
+ *   rollback-point prune --older-than <N>d
+ *       Deletes rollback points older than N days.
+ *       Returns JSON: { pruned: N, remaining: N }
+ *
+ *   impact-analysis --changed <file1> [file2 ...]
+ *       Computes invalidation cascade for changed planning artifacts.
+ *       Returns JSON: { invalidated: [...], maybe_invalidated: [...], warnings: [...] }
+ *
  * All output is JSON to stdout. Never throws — returns { error: "message" } on failure.
  */
 
@@ -633,6 +661,174 @@ function parseTodoFile(content, filename) {
 function checkpointPath(projectRoot, phase) {
   const padded = padPhase(phase);
   return path.join(projectRoot, '.planning', 'phases', padded, '.checkpoint.json');
+}
+
+// ─── Artifact hash helpers ───────────────────────────────────────────────────
+
+const crypto = require('crypto');
+
+/**
+ * Tracked planning artifacts — files whose changes trigger impact analysis.
+ */
+const TRACKED_ARTIFACTS = [
+  'PROJECT.md', 'REQUIREMENTS.md', 'ROADMAP.md', 'STATE.md',
+];
+
+/**
+ * Compute SHA256 hash of a file's content.
+ */
+function fileHash(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    return crypto.createHash('sha256').update(content).digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Collect all trackable planning artifacts: top-level + per-phase CONTEXT/PLAN/VERIFICATION.
+ * Returns array of { relative, absolute } objects.
+ */
+function collectArtifacts(projectRoot) {
+  const pDir = planningDir(projectRoot);
+  const artifacts = [];
+
+  // Top-level planning files
+  for (const name of TRACKED_ARTIFACTS) {
+    const abs = path.join(pDir, name);
+    if (fs.existsSync(abs)) {
+      artifacts.push({ relative: path.join('.planning', name), absolute: abs });
+    }
+  }
+
+  // Per-phase files (CONTEXT.md, PLAN.md, VERIFICATION.md, RESEARCH.md)
+  const phasesDir = path.join(pDir, 'phases');
+  if (fs.existsSync(phasesDir)) {
+    const phases = listDir(phasesDir).filter((d) => {
+      try { return fs.statSync(path.join(phasesDir, d)).isDirectory(); } catch { return false; }
+    });
+    for (const phase of phases) {
+      const phaseDir = path.join(phasesDir, phase);
+      const files = listDir(phaseDir).filter((f) =>
+        /\.(md|json)$/i.test(f) && !f.startsWith('.')
+      );
+      for (const f of files) {
+        const abs = path.join(phaseDir, f);
+        artifacts.push({ relative: path.join('.planning', 'phases', phase, f), absolute: abs });
+      }
+    }
+  }
+
+  return artifacts;
+}
+
+/**
+ * Path to the stored hashes file.
+ */
+function hashesPath(projectRoot) {
+  return path.join(planningDir(projectRoot), '.hashes.json');
+}
+
+// ─── Rollback helpers ────────────────────────────────────────────────────────
+
+/**
+ * Path to the rollback manifest directory.
+ */
+function rollbackDir(projectRoot) {
+  return path.join(planningDir(projectRoot), '.rollback');
+}
+
+// ─── Impact analysis helpers ─────────────────────────────────────────────────
+
+/**
+ * Dependency graph: which artifacts are invalidated when a given artifact changes.
+ * Keys are basename patterns, values are functions that return affected files.
+ */
+function computeImpactCascade(projectRoot, changedFiles) {
+  const pDir = planningDir(projectRoot);
+  const phasesDir = path.join(pDir, 'phases');
+  const results = { invalidated: [], maybe_invalidated: [], warnings: [] };
+
+  // Collect all phase directories
+  const phaseDirs = [];
+  if (fs.existsSync(phasesDir)) {
+    const dirs = listDir(phasesDir).filter((d) => {
+      try { return fs.statSync(path.join(phasesDir, d)).isDirectory(); } catch { return false; }
+    });
+    for (const d of dirs) phaseDirs.push(d);
+  }
+
+  for (const changed of changedFiles) {
+    const basename = path.basename(changed);
+
+    if (basename === 'PROJECT.md') {
+      if (fs.existsSync(path.join(pDir, 'REQUIREMENTS.md')))
+        results.maybe_invalidated.push({ file: '.planning/REQUIREMENTS.md', reason: 'Project goals may have changed' });
+      if (fs.existsSync(path.join(pDir, 'ROADMAP.md')))
+        results.maybe_invalidated.push({ file: '.planning/ROADMAP.md', reason: 'Project constraints may have changed' });
+      for (const d of phaseDirs) {
+        const ctx = path.join(phasesDir, d);
+        const ctxFiles = listDir(ctx).filter((f) => /CONTEXT\.md$/i.test(f));
+        for (const f of ctxFiles)
+          results.maybe_invalidated.push({ file: path.join('.planning', 'phases', d, f), reason: 'May reference changed project decisions' });
+      }
+    }
+
+    if (basename === 'REQUIREMENTS.md') {
+      for (const d of phaseDirs) {
+        const phaseFiles = listDir(path.join(phasesDir, d));
+        const ctxFiles = phaseFiles.filter((f) => /CONTEXT\.md$/i.test(f));
+        const planFiles = phaseFiles.filter((f) => /PLAN\.md$/i.test(f));
+        for (const f of ctxFiles)
+          results.invalidated.push({ file: path.join('.planning', 'phases', d, f), reason: 'Covered requirements may have changed' });
+        for (const f of planFiles)
+          results.invalidated.push({ file: path.join('.planning', 'phases', d, f), reason: 'Implemented requirements may have changed' });
+      }
+      if (fs.existsSync(path.join(pDir, 'ROADMAP.md')))
+        results.maybe_invalidated.push({ file: '.planning/ROADMAP.md', reason: 'Phase success criteria may reference changed requirements' });
+    }
+
+    if (basename === 'ROADMAP.md') {
+      if (fs.existsSync(path.join(pDir, 'STATE.md')))
+        results.warnings.push({ file: '.planning/STATE.md', reason: 'Current phase may have changed — update STATE.md' });
+      for (const d of phaseDirs) {
+        const ctxFiles = listDir(path.join(phasesDir, d)).filter((f) => /CONTEXT\.md$/i.test(f));
+        for (const f of ctxFiles)
+          results.maybe_invalidated.push({ file: path.join('.planning', 'phases', d, f), reason: 'Phase scope may have changed' });
+      }
+    }
+
+    // Per-phase CONTEXT.md changed
+    const phaseContextMatch = changed.match(/phases\/([^/]+)\/.*CONTEXT\.md$/i);
+    if (phaseContextMatch) {
+      const phaseD = phaseContextMatch[1];
+      const phaseFiles = listDir(path.join(phasesDir, phaseD));
+      const planFiles = phaseFiles.filter((f) => /PLAN\.md$/i.test(f));
+      for (const f of planFiles)
+        results.invalidated.push({ file: path.join('.planning', 'phases', phaseD, f), reason: 'Must re-plan — context has changed' });
+      const summaryFiles = phaseFiles.filter((f) => /SUMMARY\.md$/i.test(f));
+      for (const f of summaryFiles)
+        results.warnings.push({ file: path.join('.planning', 'phases', phaseD, f), reason: 'Already executed — may need revision' });
+    }
+  }
+
+  // Deduplicate
+  const dedup = (arr) => {
+    const seen = new Set();
+    return arr.filter((item) => {
+      const key = item.file + '|' + item.reason;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  results.invalidated = dedup(results.invalidated);
+  results.maybe_invalidated = dedup(results.maybe_invalidated);
+  results.warnings = dedup(results.warnings);
+
+  return results;
 }
 
 // ─── Commands ─────────────────────────────────────────────────────────────────
@@ -1498,6 +1694,299 @@ function cmdCheckpointWrite(args, cwd) {
   }
 }
 
+// ─── Artifact Hash Commands ──────────────────────────────────────────────────
+
+/**
+ * artifact-hash compute
+ *
+ * Hash all .planning/ artifacts and store in .planning/.hashes.json.
+ * Returns: { computed: true, count: N, path: ".planning/.hashes.json" }
+ */
+function cmdArtifactHashCompute(args, cwd) {
+  const projectRoot = findProjectRoot(cwd);
+  const artifacts = collectArtifacts(projectRoot);
+  const hashes = {};
+
+  for (const a of artifacts) {
+    const h = fileHash(a.absolute);
+    if (h) hashes[a.relative] = h;
+  }
+
+  const hp = hashesPath(projectRoot);
+  writeFile(hp, JSON.stringify(hashes, null, 2) + '\n');
+  out({ computed: true, count: Object.keys(hashes).length, path: '.planning/.hashes.json' });
+}
+
+/**
+ * artifact-hash check
+ *
+ * Compare stored hashes against current file hashes.
+ * Returns: { changed: bool, artifacts: [{ file, old_hash, new_hash }] }
+ */
+function cmdArtifactHashCheck(args, cwd) {
+  const projectRoot = findProjectRoot(cwd);
+  const hp = hashesPath(projectRoot);
+  const storedRaw = readFile(hp);
+
+  if (!storedRaw) {
+    // No stored hashes — first run, compute and return no changes
+    out({ changed: false, artifacts: [], message: 'No stored hashes found. Run artifact-hash compute first.' });
+    return;
+  }
+
+  let stored;
+  try { stored = JSON.parse(storedRaw); } catch { return fail('Malformed .hashes.json'); }
+
+  const currentArtifacts = collectArtifacts(projectRoot);
+  const currentHashes = {};
+  for (const a of currentArtifacts) {
+    const h = fileHash(a.absolute);
+    if (h) currentHashes[a.relative] = h;
+  }
+
+  const changes = [];
+
+  // Check for modified or deleted files
+  for (const [file, oldHash] of Object.entries(stored)) {
+    const newHash = currentHashes[file] || null;
+    if (newHash !== oldHash) {
+      changes.push({ file, old_hash: oldHash, new_hash: newHash, status: newHash ? 'modified' : 'deleted' });
+    }
+  }
+
+  // Check for new files
+  for (const [file, newHash] of Object.entries(currentHashes)) {
+    if (!stored[file]) {
+      changes.push({ file, old_hash: null, new_hash: newHash, status: 'added' });
+    }
+  }
+
+  out({ changed: changes.length > 0, artifacts: changes });
+}
+
+// ─── Rollback Point Commands ─────────────────────────────────────────────────
+
+/**
+ * rollback-point create --label <label>
+ *
+ * Creates a rollback point: hashes snapshot + git tag + manifest file.
+ * Returns: { created: true, label, tag, manifest }
+ */
+function cmdRollbackPointCreate(args, cwd) {
+  const { label } = parseNamedArgs(args, ['label']);
+  if (!label) return fail('rollback-point create requires --label <label>');
+
+  const projectRoot = findProjectRoot(cwd);
+  const artifacts = collectArtifacts(projectRoot);
+  const hashes = {};
+  const artifactPaths = [];
+
+  for (const a of artifacts) {
+    const h = fileHash(a.absolute);
+    if (h) {
+      hashes[a.relative] = h;
+      artifactPaths.push(a.relative);
+    }
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const safeLabel = label.replace(/[^a-zA-Z0-9_-]/g, '-');
+  const tagName = `sunco/rollback/${timestamp}-${safeLabel}`;
+
+  // Store manifest
+  const manifest = {
+    label,
+    tag: tagName,
+    timestamp: new Date().toISOString(),
+    artifacts: artifactPaths,
+    hashes,
+  };
+
+  const rbDir = rollbackDir(projectRoot);
+  const manifestPath = path.join(rbDir, `${timestamp}-${safeLabel}.json`);
+  writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+
+  // Also update the main hashes file
+  const hp = hashesPath(projectRoot);
+  writeFile(hp, JSON.stringify(hashes, null, 2) + '\n');
+
+  // Create git tag (if in a git repo)
+  try {
+    git(`add .planning/`, cwd);
+    try { git(`commit -m "chore(sunco): rollback point — ${label}" --allow-empty`, cwd); } catch { /* no changes is ok */ }
+    git(`tag "${tagName}"`, cwd);
+  } catch (e) {
+    // Git operations are best-effort — manifest is the primary record
+    manifest.git_error = e.message;
+  }
+
+  out({ created: true, label, tag: tagName, manifest: path.relative(projectRoot, manifestPath) });
+}
+
+/**
+ * rollback-point list
+ *
+ * List all rollback points with labels and timestamps.
+ * Returns: { count: N, points: [{ label, tag, timestamp, manifest }] }
+ */
+function cmdRollbackPointList(args, cwd) {
+  const projectRoot = findProjectRoot(cwd);
+  const rbDir = rollbackDir(projectRoot);
+  const files = listDir(rbDir).filter((f) => f.endsWith('.json')).sort();
+
+  const points = [];
+  for (const f of files) {
+    const raw = readFile(path.join(rbDir, f));
+    if (!raw) continue;
+    try {
+      const m = JSON.parse(raw);
+      points.push({
+        label: m.label,
+        tag: m.tag,
+        timestamp: m.timestamp,
+        artifact_count: (m.artifacts || []).length,
+        manifest: f,
+      });
+    } catch { /* skip malformed */ }
+  }
+
+  out({ count: points.length, points });
+}
+
+/**
+ * rollback-point restore --label <label>
+ *
+ * Restore .planning/ artifacts to the state at a rollback point.
+ * Does NOT touch code files — only .planning/ artifacts.
+ * Returns: { restored: true, label, restored_files: N }
+ */
+function cmdRollbackPointRestore(args, cwd) {
+  const { label } = parseNamedArgs(args, ['label']);
+  if (!label) return fail('rollback-point restore requires --label <label>');
+
+  const projectRoot = findProjectRoot(cwd);
+  const rbDir = rollbackDir(projectRoot);
+
+  // Find the manifest matching the label
+  const files = listDir(rbDir).filter((f) => f.endsWith('.json')).sort().reverse();
+  let manifest = null;
+  for (const f of files) {
+    const raw = readFile(path.join(rbDir, f));
+    if (!raw) continue;
+    try {
+      const m = JSON.parse(raw);
+      if (m.label === label) { manifest = m; break; }
+    } catch { /* skip */ }
+  }
+
+  if (!manifest) return fail(`No rollback point found with label: ${label}`);
+
+  let restoredCount = 0;
+
+  // Try git-based restore first (more reliable)
+  if (manifest.tag) {
+    try {
+      for (const artifact of manifest.artifacts) {
+        try {
+          git(`checkout "${manifest.tag}" -- "${artifact}"`, cwd);
+          restoredCount++;
+        } catch {
+          // File may not exist in that tag — skip
+        }
+      }
+    } catch {
+      return fail(`Git restore failed for tag ${manifest.tag}`);
+    }
+  }
+
+  // Update STATE.md to reflect rollback
+  const statePath = path.join(projectRoot, STATE_PATH_RELATIVE);
+  const stateContent = readFile(statePath);
+  if (stateContent) {
+    const updated = patchStateContent(stateContent, {
+      'Last Action': `Rollback to "${label}" at ${new Date().toISOString()}`,
+      'last_updated': new Date().toISOString(),
+    });
+    writeFile(statePath, updated);
+  }
+
+  // Re-compute and store hashes after restore
+  const artifacts = collectArtifacts(projectRoot);
+  const newHashes = {};
+  for (const a of artifacts) {
+    const h = fileHash(a.absolute);
+    if (h) newHashes[a.relative] = h;
+  }
+  writeFile(hashesPath(projectRoot), JSON.stringify(newHashes, null, 2) + '\n');
+
+  out({ restored: true, label, tag: manifest.tag, restored_files: restoredCount });
+}
+
+/**
+ * rollback-point prune --older-than <days>d
+ *
+ * Delete rollback manifests and tags older than N days.
+ * Returns: { pruned: N, remaining: N }
+ */
+function cmdRollbackPointPrune(args, cwd) {
+  const { 'older-than': olderThan } = parseNamedArgs(args, ['older-than']);
+  if (!olderThan) return fail('rollback-point prune requires --older-than <N>d');
+
+  const daysMatch = olderThan.match(/^(\d+)d$/);
+  if (!daysMatch) return fail('--older-than format: <N>d (e.g. 30d)');
+
+  const days = parseInt(daysMatch[1], 10);
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const projectRoot = findProjectRoot(cwd);
+  const rbDir = rollbackDir(projectRoot);
+  const files = listDir(rbDir).filter((f) => f.endsWith('.json'));
+
+  let pruned = 0;
+  for (const f of files) {
+    const raw = readFile(path.join(rbDir, f));
+    if (!raw) continue;
+    try {
+      const m = JSON.parse(raw);
+      const ts = new Date(m.timestamp);
+      if (ts < cutoff) {
+        // Remove manifest
+        fs.unlinkSync(path.join(rbDir, f));
+        // Try to remove git tag
+        if (m.tag) {
+          try { git(`tag -d "${m.tag}"`, cwd); } catch { /* tag may not exist */ }
+        }
+        pruned++;
+      }
+    } catch { /* skip malformed */ }
+  }
+
+  const remaining = listDir(rbDir).filter((f) => f.endsWith('.json')).length;
+  out({ pruned, remaining });
+}
+
+// ─── Impact Analysis Command ─────────────────────────────────────────────────
+
+/**
+ * impact-analysis --changed <file1> [file2 ...]
+ *
+ * Compute the invalidation cascade for changed artifacts.
+ * Returns: { invalidated: [...], maybe_invalidated: [...], warnings: [...] }
+ */
+function cmdImpactAnalysis(args, cwd) {
+  const changedFiles = parseListArg(args, 'changed');
+  if (changedFiles.length === 0) return fail('impact-analysis requires --changed <file> [file2 ...]');
+
+  const projectRoot = findProjectRoot(cwd);
+  const results = computeImpactCascade(projectRoot, changedFiles);
+
+  out({
+    changed_files: changedFiles,
+    ...results,
+    total_affected: results.invalidated.length + results.maybe_invalidated.length + results.warnings.length,
+  });
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -1532,7 +2021,10 @@ async function main() {
         'init, init phase-op, state-update, transition, ' +
         'todo add, todo list, todo done, todo match-phase, ' +
         'resolve-model, agent-skills, begin-phase, complete-phase, ' +
-        'checkpoint read, checkpoint write'
+        'checkpoint read, checkpoint write, ' +
+        'artifact-hash compute, artifact-hash check, ' +
+        'rollback-point create, rollback-point list, rollback-point restore, rollback-point prune, ' +
+        'impact-analysis'
     );
   }
 
@@ -1623,12 +2115,59 @@ async function main() {
       break;
     }
 
+    case 'artifact-hash': {
+      const subcommand = args[1];
+      switch (subcommand) {
+        case 'compute':
+          cmdArtifactHashCompute(args, cwd);
+          break;
+        case 'check':
+          cmdArtifactHashCheck(args, cwd);
+          break;
+        default:
+          fail(
+            `Unknown artifact-hash subcommand: ${subcommand}. ` +
+              'Valid subcommands: compute, check'
+          );
+      }
+      break;
+    }
+
+    case 'rollback-point': {
+      const subcommand = args[1];
+      switch (subcommand) {
+        case 'create':
+          cmdRollbackPointCreate(args, cwd);
+          break;
+        case 'list':
+          cmdRollbackPointList(args, cwd);
+          break;
+        case 'restore':
+          cmdRollbackPointRestore(args, cwd);
+          break;
+        case 'prune':
+          cmdRollbackPointPrune(args, cwd);
+          break;
+        default:
+          fail(
+            `Unknown rollback-point subcommand: ${subcommand}. ` +
+              'Valid subcommands: create, list, restore, prune'
+          );
+      }
+      break;
+    }
+
+    case 'impact-analysis':
+      cmdImpactAnalysis(args, cwd);
+      break;
+
     default:
       fail(
         `Unknown command: ${command}. Valid commands: ` +
           'commit, config-new-project, config-get, config-set, ' +
           'init, state-update, transition, ' +
-          'todo, resolve-model, agent-skills, begin-phase, complete-phase, checkpoint'
+          'todo, resolve-model, agent-skills, begin-phase, complete-phase, checkpoint, ' +
+          'artifact-hash, rollback-point, impact-analysis'
       );
   }
 }

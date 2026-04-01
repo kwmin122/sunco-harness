@@ -1,13 +1,15 @@
 ---
 name: sunco:discuss
 description: Extract decisions and clarify gray areas for a phase before planning. Reads ROADMAP.md, asks focused questions (max 5-7), writes CONTEXT.md. Use --auto to skip questions and pick recommended defaults.
-argument-hint: "<phase> [--auto] [--batch] [--mode discuss|assumptions]"
+argument-hint: "<phase> [--auto] [--batch] [--mode discuss|assumptions] [--cross-model]"
 allowed-tools:
   - Read
   - Bash
   - Write
   - Glob
   - Grep
+  - Agent
+  - Task
   - AskUserQuestion
 ---
 
@@ -20,6 +22,7 @@ allowed-tools:
 - `--batch` — Ask all questions together in a single grouped prompt.
 - `--mode assumptions` — Read codebase first, surface what the agent would assume and do. No questions asked.
 - `--mode discuss` — (default) Interactive discussion mode. Ask focused questions one at a time.
+- `--cross-model` — Enable design pingpong: spawn two models in parallel, merge CONTEXT.md outputs. WARNING: ~2.4x token cost. See `/sunco:design-pingpong` for details.
 </context>
 
 <objective>

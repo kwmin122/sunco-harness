@@ -156,6 +156,50 @@ Post-mortem investigation for a failed phase, unexpected regression, or broken b
 
 ---
 
+## Adaptive Lifecycle Commands
+
+Navigate scope changes, revise decisions, and manage rollback points.
+
+| Command | Description | Key Flags |
+|---------|-------------|-----------|
+| `sunco pivot` | Detect scope changes, run impact analysis, re-route phases | `--dry-run` |
+| `sunco rethink N` | Revise specific decisions in a phase CONTEXT.md | `--decision D-XX` |
+| `sunco backtrack` | Restore .planning/ to a rollback point (code untouched) | `--label <name>` |
+| `sunco reinforce` | Add requirements to current milestone, insert phases if needed | |
+| `sunco where-am-i` | Full orientation dashboard: phase, decisions, changes, rollbacks | `--json`, `--phase N` |
+| `sunco impact-analysis` | Compute invalidation cascade from artifact changes | `--changed <files>` |
+| `sunco design-pingpong N` | Cross-model merge + debate (2.4x cost) | `--artifact`, `--model-b` |
+
+### `/sunco:pivot`
+Detect what changed, compute impact, and re-route affected phases. Use when project direction shifts.
+```
+/sunco:pivot
+/sunco:pivot --dry-run
+```
+
+### `/sunco:rethink N`
+Revise specific decisions without starting over. Original decisions preserved in collapsed blocks.
+```
+/sunco:rethink 2
+/sunco:rethink 2 --decision D-03
+```
+
+### `/sunco:backtrack`
+Restore planning artifacts to a previous state. Lists rollback points for selection.
+```
+/sunco:backtrack
+/sunco:backtrack --label "after-discuss-2"
+```
+
+### `/sunco:where-am-i`
+Complete "you are here" dashboard: decisions, changes, blockers, rollback points.
+```
+/sunco:where-am-i
+/sunco:where-am-i --phase 3
+```
+
+---
+
 ## Session Commands
 
 Track where you are and resume after breaks.

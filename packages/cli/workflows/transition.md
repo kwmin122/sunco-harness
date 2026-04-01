@@ -321,6 +321,22 @@ Next: Phase ${NEXT_PHASE_NUM} — ${NEXT_PHASE_NAME}"
 
 If `git.commit_docs: false` → skip the commit. Display a reminder to commit planning artifacts manually.
 
+### Create Rollback Point
+
+After the transition commit, create a rollback point marking this phase boundary:
+
+```bash
+node "$(npm root -g)/sunco/bin/sunco-tools.cjs" rollback-point create --label "after-transition-phase-${CURRENT_PHASE}-to-${NEXT_PHASE_NUM}"
+```
+
+Also update artifact hashes to reflect the new baseline:
+
+```bash
+node "$(npm root -g)/sunco/bin/sunco-tools.cjs" artifact-hash compute
+```
+
+This ensures the next command invocation has a clean hash baseline and a named rollback point at this phase boundary.
+
 ---
 
 ## Step 10: display_summary

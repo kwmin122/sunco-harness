@@ -1,4 +1,4 @@
-# SUNCO Handoff — 2026-04-01
+# SUNCO Handoff — 2026-04-01 (Session 2)
 
 ## 현재 상태
 
@@ -9,7 +9,45 @@
 **npm**: https://www.npmjs.com/package/popcoru
 **Landing**: site/index.html (Vercel 배포됨)
 
-## 완료된 것
+## 이번 세션 완료
+
+### ISSUE-001: Adaptive Lifecycle + Multi-Model Design Pingpong ✅
+
+| 항목 | 내용 | 라인수 |
+|------|------|--------|
+| sunco-tools.cjs | artifact-hash, rollback-point, impact-analysis 3개 서브커맨드 그룹 | +539 (→2,179 total) |
+| 신규 워크플로 7개 | pivot, rethink, backtrack, reinforce, where-am-i, design-pingpong, impact-analysis | +3,341 |
+| 신규 커맨드 7개 | thin router 패턴, 각 워크플로에 매핑 | +310 |
+| 기존 워크플로 수정 | discuss/plan/execute에 artifact-hash check, new-project/transition에 rollback point | 4개 수정 |
+| 커맨드 수정 | discuss/plan/research에 --cross-model 플래그 | 3개 수정 |
+| help.md | Adaptive Lifecycle 섹션 추가 | +35 |
+
+**총 커맨드**: 58 → 65
+**총 워크플로**: 56 → 64 (guard-watch 포함)
+
+### ISSUE-002: Quality Supremacy ✅
+
+| 에이전트 | 변경 | 핵심 강화 |
+|----------|------|-----------|
+| executor | 500→535 lines | worktree blast radius sandbox, lint-fix loop 3회+에스컬레이션, hidden test awareness, crash recovery 확장 |
+| phase-researcher | 599→627 lines | Source credibility/freshness/contradiction detection을 Appendix에서 메인 프로세스로 통합, stopping conditions |
+| integration-checker | 456→468 lines | Data flow/API contract/dead integration/circular deps/regression을 필수 Step 6a-6e로 승격 |
+| guard | 25→49 lines + 워크플로 생성 | --draft-claude-rules 옵션, guard-watch.md 워크플로 (255 lines) |
+
+### Codex 비교 테스트 프레임워크 ✅
+
+- `codex-benchmark.cjs` (350 lines) — run/score/report 3개 커맨드
+- 6차원 평가: completeness, specificity, actionability, consistency, quality, innovation
+- 가중 점수 시스템, 타이밍 비교, blind A/B eval prompt 생성
+- 샘플 PRD (benchmark-sample-prd.md) 포함
+
+### SUNCO HQ 부트스트랩 ✅
+
+- `ISSUE-003-sunco-hq.md` — 제품 정의, 기술 스택, MVP 스코프, 레포 구조, 비즈니스 모델
+- `bootstrap-hq.sh` — GitHub repo 생성 → Next.js scaffold → 의존성 설치 → SUNCO 하네스 설치 → PRD 복사
+- 기술 스택: Next.js 15 + Tailwind 4 + Drizzle ORM + PostgreSQL + Auth.js v5 + tRPC
+
+## 이전 세션 완료 (v0.3.1)
 
 | Phase | 내용 | 상태 |
 |-------|------|------|
@@ -17,51 +55,19 @@
 | 17 | Skill Pack Pivot (58 commands, installer, hooks, multi-runtime) | 완료 |
 | 18 | GSD Parity (전 카테고리 100%+ 달성) | 완료 |
 
-## v0.3.1 최종 수치 (Phase 18 완료)
+## v0.3.1 최종 수치 + 이번 세션 추가
 
-| 카테고리 | GSD | SUNCO | 달성률 |
-|----------|-----|-------|--------|
-| Workflows | 18,988 | 21,710 | 114% |
-| Templates | 5,026 | 7,347 | 146% |
-| References | 3,798 | 5,026 | 132% |
-| Agents | 9,851 | 10,036 | 102% |
-| Tools | 918 | 1,640 | 178% |
-| **합계** | **38,581** | **45,759** | **119%** |
+| 카테고리 | GSD | SUNCO v0.3.1 | 이번 세션 추가 | 현재 |
+|----------|-----|-------------|---------------|------|
+| Workflows | 18,988 | 21,710 | +3,596 | 25,306 |
+| Templates | 5,026 | 7,347 | — | 7,347 |
+| References | 3,798 | 5,026 | — | 5,026 |
+| Agents | 9,851 | 10,036 | +75 | 10,111 |
+| Tools | 918 | 1,640 | +889 | 2,529 |
+| **합계** | **38,581** | **45,759** | **+4,560** | **50,319** |
+| **달성률** | — | 119% | — | **130%** |
 
-### 품질 판정 (Codex 5.4 + Opus 직접 검증)
-- 18/18 에이전트에서 SUNCO ≥ GSD
-- GSD가 이기는 에이전트: 0개
-- SUNCO >> GSD: 4개 (advisor, assumptions, nyquist, user-profiler)
-- SUNCO > GSD: 6개 (plan-checker, executor, phase-researcher, integration-checker, verifier, ui-checker)
-
-### SUNCO 차별화 (GSD에 없는 기능)
-- 7-layer Swiss cheese verification (Layer 7: Human Eval)
-- 12-point plan checker (GSD: 9점) with BLOCK/WARN/PASS severity
-- 3-type failure classification + 30-minute reclassification rule
-- Goal-backward must_haves derivation in planner
-- Per-task checkpointing + crash recovery + poka-yoke
-- Source credibility scoring + research freshness gate
-- Data flow tracing + circular dependency detection
-- Conditional Claude rule loading (.claude/rules/ with frontmatter)
-- Multi-runtime installer (Claude Code, Codex, Cursor, Antigravity)
-- Korean i18n (58 commands)
-- /sunco:mode (auto-routing Super Saiyan mode)
-
-## 진행 중인 설계 (미구현)
-
-### ISSUE-001: Adaptive Lifecycle + Multi-Model Design Pingpong
-- 설계 완료: `.planning/issues/ISSUE-001-DESIGN.md`
-- State machine, impact analysis algorithm, rollback system 설계됨
-- Multi-model merge + debate protocol 설계됨
-- 구현 필요: 7개 새 워크플로 (pivot, rethink, backtrack, reinforce, where-am-i, design-pingpong, impact-analysis)
-- sunco-tools.cjs 3개 신규 서브커맨드 (artifact-hash, rollback-point, impact-analysis)
-
-### ISSUE-002: Quality Supremacy
-- 계획 완료: `.planning/issues/ISSUE-002-quality-supremacy.md`
-- guard `--draft-claude-rules` 옵션 미구현
-- Anthropic 인사이트 적용 완료 (poka-yoke, tool > prompt, hidden test)
-
-## 프로젝트 구조
+## 프로젝트 구조 (업데이트)
 
 ```
 packages/
@@ -70,28 +76,27 @@ packages/
   skills-workflow/ — 워크플로 스킬 (plan, execute, verify)
   cli/            — 스킬팩 인스톨러 + 커맨드 + 훅
     bin/
-      install.cjs          ← npm entry point (interactive installer)
-      sunco-tools.cjs      ← workflow automation (1,640 lines)
-    commands/sunco/*.md    ← 58 커맨드 (thin routers → workflows)
+      install.cjs          ← npm entry point
+      sunco-tools.cjs      ← workflow automation (2,179 lines)
+      codex-benchmark.cjs  ← A/B 비교 테스트 (NEW)
+      bootstrap-hq.sh      ← SUNCO HQ 부트스트랩 (NEW)
+    commands/sunco/*.md    ← 65 커맨드 (+7 adaptive lifecycle)
     hooks/*.cjs            ← 4 훅
-    workflows/*.md         ← 57 워크플로 (21,710 lines)
-    agents/*.md            ← 18 에이전트 정의 (10,036 lines)
-    references/*.md        ← 15 참조 문서 (5,026 lines)
-    templates/             ← 25+ 템플릿 (7,347 lines)
-      claude-rules/        ← 조건부 규칙 템플릿 5개
-      codebase/            ← 코드베이스 매핑 템플릿 7개
-      research-project/    ← 리서치 출력 템플릿 5개
+    workflows/*.md         ← 64 워크플로 (+8 new)
+    agents/*.md            ← 18 에이전트 (3 enhanced)
+    references/*.md        ← 15 참조 문서
+    templates/             ← 25+ 템플릿
 site/
   index.html             ← 랜딩 페이지 (Vercel)
-  vercel.json
 ```
 
 ## 다음 세션 작업
 
-1. **ISSUE-001 구현** — 적응형 라이프사이클 7개 워크플로
-2. **ISSUE-002 구현** — guard --draft-claude-rules
-3. **Codex 비교 테스트** — v0.3.1 기준 풀 파이프라인 A/B
-4. **SUNCO HQ** — 두 번째 제품 (별도 레포, GSD 파이프라인으로 시작)
+1. **v0.4.0 Publish** — 버전 범프 + npm publish (ISSUE-001/002 반영)
+2. **Codex 실행** — codex-benchmark.cjs로 실제 A/B 테스트 실행
+3. **SUNCO HQ 레포 생성** — bootstrap-hq.sh 실행 → /sunco:new 파이프라인
+4. **ISSUE-001 워크플로 통합 테스트** — pivot/backtrack/rethink 실제 실행 검증
+5. **SUN Terminal** — Swift/AppKit + libghostty R&D 시작
 
 ## 빌드/테스트
 
@@ -99,6 +104,8 @@ site/
 npx turbo build              # 빌드
 npx vitest run               # 883 tests
 node packages/cli/bin/install.cjs --help
+node packages/cli/bin/codex-benchmark.cjs --help
+bash packages/cli/bin/bootstrap-hq.sh --skip-github --dir /tmp/sunco-hq-test
 npm publish --workspace=packages/cli --access public
 ```
 
@@ -106,5 +113,7 @@ npm publish --workspace=packages/cli --access public
 
 - npm publish 시 버전 반드시 확인 (이미 publish된 버전은 재사용 불가)
 - `npm login` 세션 만료 주의
-- Codex 테스트 시 `gpt-5.4` medium 이상 권장 (codex-mini는 ChatGPT 계정에서 제한)
+- Codex 테스트 시 `gpt-5.4` medium 이상 권장
 - GSD 코드 복사 금지 — 개념만 참고, SUNCO 고유 콘텐츠로 작성
+- SUNCO HQ는 별도 레포 (kwmin122/sunco-hq) — 이 레포의 .planning/issues/ISSUE-003에 PRD
+- codex-benchmark.cjs는 Codex CLI가 설치된 환경에서만 run 가능 (score/report는 로컬)

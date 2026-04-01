@@ -1,25 +1,49 @@
 ---
 name: sunco:guard
-description: Real-time lint-on-change with rule promotion
+description: Real-time lint-on-change with rule promotion. Use --draft-claude-rules to generate conditional .claude/rules/ files from recurring violations.
+argument-hint: "[--watch] [--draft-claude-rules] [--blast-radius]"
 allowed-tools:
   - Bash
   - Read
+  - Write
+  - Glob
+  - Grep
+  - AskUserQuestion
 ---
 
+<context>
+**Flags:**
+- `--watch` — Enable watch mode (default behavior). Guard re-lints on every file save.
+- `--draft-claude-rules` — Analyze codebase patterns and generate conditional `.claude/rules/*.md` files with frontmatter globs. Each rule activates only when the agent touches matching files.
+- `--blast-radius` — Enable blast radius monitoring. Flag when a single change touches more than 10 files.
+</context>
+
 <objective>
-Run the SUNCO guard skill to watch the filesystem for changes and automatically run architecture lint on every saved file. Violations are surfaced immediately so they are fixed at the point of introduction rather than discovered later. Repeated violations can be promoted to permanent rules.
+Run the SUNCO guard skill to watch the filesystem for changes and surface violations immediately. Repeated violations can be promoted to permanent rules.
+
+With `--draft-claude-rules`: scan the codebase for patterns that agents commonly get wrong, and generate `.claude/rules/` files with conditional frontmatter so they only load when relevant files are touched. This is the proactive side of guard — teaching agents before they make mistakes, not catching mistakes after.
+
+The generated rules follow the template format in `$HOME/.claude/sunco/templates/claude-rules/`.
 </objective>
 
 <process>
-1. Run: `node $HOME/.claude/sunco/bin/cli.js guard`
-   - Optional: add `--watch` to explicitly enable watch mode (default behavior)
-2. Display the output clearly:
-   - Confirmation that guard is watching (show the directories being monitored)
-   - For each file change detected: the file path and lint result (clean or violations)
-   - For each violation found in watch mode: show the same structured output as `/sunco:lint`
-3. When a violation is detected in watch mode:
-   - Show the violation details immediately
-   - Suggest: "Fix the violation and save — guard will re-lint automatically"
-   - If the same violation appears multiple times across different files, suggest: "This pattern is recurring — consider promoting it to a permanent rule with `/sunco:settings`"
-4. Guard runs as a long-lived process. Inform the user it will keep watching until interrupted (Ctrl+C).
+MANDATORY: Read the workflow file BEFORE taking any action.
+
+Read and execute @$HOME/.claude/sunco/workflows/guard-watch.md end-to-end.
 </process>
+
+<success_criteria>
+**Watch mode:**
+- Guard watching directories confirmed
+- File changes trigger automatic lint
+- Violations surfaced immediately with fix suggestions
+- Recurring violations suggest rule promotion
+
+**--draft-claude-rules mode:**
+- Codebase scanned for pattern categories (skill, API, test, architecture, config)
+- Rules generated ONLY for patterns the codebase actually uses
+- Each rule file has correct frontmatter `patterns:` matching relevant file globs
+- Rules written to `.claude/rules/` (or previewed if `--dry-run`)
+- No duplicate rules generated for patterns already covered
+- User presented with generated rules for review before writing
+</success_criteria>

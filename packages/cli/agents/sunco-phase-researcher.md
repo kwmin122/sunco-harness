@@ -137,6 +137,22 @@ https://sdk.vercel.ai/docs/ai-sdk-core/streaming
 
 Read only the sections relevant to the research question. Stop when you have enough information to answer the question.
 
+**MANDATORY — Source Credibility & Freshness (integrated from Appendix F & H):**
+
+For EVERY finding, immediately apply these checks inline — do not defer to later:
+
+1. **Score the source** (1-10 per Appendix F table). Write the score next to each citation.
+2. **Check freshness**: If information is > 6 months old, note the date. If > 2 years, mark ⚠️ STALE.
+3. **Flag low-credibility findings**: Any finding supported ONLY by sources scoring ≤4 gets a ⚠️ flag and MUST be cross-referenced with at least one score ≥7 source before inclusion in RESEARCH.md.
+4. **Version drift**: If a source mentions library version N but current stable is N+X, mark ⚠️ VERSION DRIFT.
+
+This is not optional. Every finding in the final RESEARCH.md must have a credibility score and freshness assessment.
+
+**Stopping conditions (prevent analysis paralysis):**
+- Maximum 5 WebFetch calls per library/topic. If docs don't answer after 5 pages, document what's unknown and move on.
+- Maximum 10 distinct sources per research question. After 10, consolidate and decide.
+- Maximum 2 hours equivalent effort per research question. If still unclear, mark as OPEN QUESTION for the planner.
+
 **Source code research:**
 
 For critical integration decisions, read the actual source code of the library, not just docs. Docs can be outdated; source is truth.
@@ -178,6 +194,18 @@ Produce a comparison table for any multi-option question:
 ```
 
 Disqualify any option that fails a blocking criterion before scoring.
+
+**MANDATORY — Contradiction Detection (integrated from Appendix G):**
+
+Before finalizing the recommendation, actively check for contradictions across sources:
+
+1. **Scan all findings** for the same topic with conflicting claims.
+2. **If contradiction found**, resolve immediately:
+   - Source scores differ by ≥3: go with higher-scored source, note dissent in table
+   - Scores within 2: present BOTH to the planner as an open question with tradeoffs
+   - >2 sources agree vs 1 dissenting: go with majority, note dissent
+3. **Write contradictions explicitly** in the comparison table — a "Contradictions" row showing which sources disagree and how it was resolved.
+4. **Never silently pick one side.** If you encountered conflicting information, the planner needs to know.
 
 ### Step 6: Risk Assessment
 

@@ -326,6 +326,11 @@ Before reporting INTEGRATION CHECK COMPLETE, all must be true:
 - [ ] User workflows section populated with at least the primary workflow
 - [ ] Workflow completeness checked step-by-step (not just "seems fine")
 - [ ] Skill registration check run (or noted as skipped if no skills exist yet)
+- [ ] **Data flow tracing** completed for every cross-module interaction (Step 6a)
+- [ ] **API contract verification** run for every export/import pair with `npx tsc --noEmit` (Step 6b)
+- [ ] **Dead integration scan** completed — dead exports/imports listed (Step 6c)
+- [ ] **Circular dependency check** completed — any cycle = CRITICAL (Step 6d)
+- [ ] **Regression surface analysis** completed — untested integration changes flagged (Step 6e)
 - [ ] Summary table matches the detailed findings
 - [ ] Recommendations ordered by severity
 - [ ] Overall verdict is PASS only if no critical or high severity issues exist
@@ -333,7 +338,7 @@ Before reporting INTEGRATION CHECK COMPLETE, all must be true:
 
 ---
 
-## Data Flow Tracing
+## Step 6a: Data Flow Tracing (MANDATORY)
 
 For each cross-module interaction discovered during the handoff check, trace the full data flow:
 
@@ -368,7 +373,7 @@ Flow: SkillDefinition from core/skill/types.ts → skills-harness/lint.skill.ts
 
 ---
 
-## API Contract Verification
+## Step 6b: API Contract Verification (MANDATORY)
 
 Beyond type checking, verify that the runtime contract matches the compile-time contract:
 
@@ -380,9 +385,16 @@ Beyond type checking, verify that the runtime contract matches the compile-time 
 
 3. **Config contract:** If modules share configuration, verify they read the same keys from the same config source. Module A reading `config.workflow.research` and Module B reading `config.research` (different path, same intent) is a contract violation.
 
+4. **Real validation, not mock validation** (Anthropic insight): Run `npx tsc --noEmit` against the actual codebase for every contract check. Do NOT reason about type compatibility — let the compiler prove it. If tsc passes, the contract holds at the type level. If it fails, the contract is broken regardless of what the code "looks like."
+
+5. **Wrong abstraction level detection:** Check if an integration is happening at the wrong layer. Signs:
+   - Module A imports an internal utility from Module B (should import the public API)
+   - A function receives a complex object but only uses one field (should receive just that field)
+   - Two modules share a type that's defined in one of them (should be in a shared types file)
+
 ---
 
-## Dead Integration Detection
+## Step 6c: Dead Integration Detection (MANDATORY)
 
 Find connections that exist in code but serve no purpose:
 
@@ -408,7 +420,7 @@ npx tsc --noEmit --noUnusedLocals 2>&1 | grep "declared but"
 
 ---
 
-## Circular Dependency Detection
+## Step 6d: Circular Dependency Detection (MANDATORY — CRITICAL severity)
 
 Circular imports cause subtle bugs (partially initialized modules, undefined at runtime despite passing type check).
 
@@ -434,7 +446,7 @@ grep -rn "^import.*from.*packages/" packages/*/src/ --include="*.ts" | \
 
 ---
 
-## Regression Surface Analysis
+## Step 6e: Regression Surface Analysis (MANDATORY)
 
 For each integration point changed in this phase, assess what existing tests cover it:
 

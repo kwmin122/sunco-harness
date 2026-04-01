@@ -454,6 +454,14 @@ mkdir -p .planning
 node "$HOME/.sunco/bin/sunco-tools.cjs" commit "docs: initialize project" --files .planning/PROJECT.md
 ```
 
+**Create initial rollback point** (safety net for the entire project bootstrapping):
+
+```bash
+node "$HOME/.sunco/bin/sunco-tools.cjs" rollback-point create --label "after-project-init"
+```
+
+This creates `.planning/.rollback/` with a snapshot of all artifacts at this point. If anything goes wrong during research/roadmapping, the user can `/sunco:backtrack` to this clean state.
+
 ---
 
 ## 5. Workflow Preferences

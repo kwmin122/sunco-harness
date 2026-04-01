@@ -77,6 +77,37 @@ node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load
 
 This reads `.sun/STATE.md` (or `.planning/STATE.md` for legacy layouts) and returns current phase, last completed plan, and any pending checkpoints.
 
+### Artifact Integrity Check
+
+Before execution, verify no planning artifacts have drifted:
+
+```bash
+HASH_CHECK=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" artifact-hash check 2>/dev/null)
+```
+
+Parse JSON for `changed` (boolean) and `artifacts` (array).
+
+**If `changed` is true:**
+```
+⚠ SUNCO detected changes to planning artifacts since last operation:
+[list changed files from artifacts array]
+
+Execution is paused. Modified planning artifacts may mean your plans are out of date.
+
+Options:
+  1) Run impact analysis first (recommended)
+  2) Ignore and continue (changes are intentional and don't affect plans)
+  3) Abort execution
+```
+
+Use AskUserQuestion. If option 1: invoke impact-analysis workflow and return. If option 3: exit workflow. If option 2: update hashes and continue.
+
+```bash
+node "$(npm root -g)/sunco/bin/sunco-tools.cjs" artifact-hash compute 2>/dev/null
+```
+
+**If `changed` is false:** Continue to check_interactive_mode.
+
 ---
 
 ## Step 3: check_interactive_mode

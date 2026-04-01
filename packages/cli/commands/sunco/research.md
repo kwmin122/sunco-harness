@@ -1,7 +1,7 @@
 ---
 name: sunco:research
 description: Spawn parallel research agents to investigate implementation approaches for the current phase. Produces a RESEARCH.md with findings and recommendations.
-argument-hint: "[phase] [--topic <topic>] [--depth quick|thorough]"
+argument-hint: "[phase] [--topic <topic>] [--depth quick|thorough] [--cross-model]"
 allowed-tools:
   - Read
   - Bash
@@ -17,6 +17,7 @@ allowed-tools:
 **Flags:**
 - `--topic <topic>` — Research a specific topic instead of the full phase.
 - `--depth quick|thorough` — Research depth. quick=2 agents, thorough=4 agents. Default: quick.
+- `--cross-model` — Spawn both Claude researcher + secondary model researcher in parallel, merge findings. WARNING: ~2.4x token cost.
 </context>
 
 <objective>
