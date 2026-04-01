@@ -14,7 +14,7 @@ The standard workflow for a new project:
 /sunco:discuss 1   → extract decisions for Phase 1
 /sunco:plan 1      → create atomic execution plans
 /sunco:execute 1   → run plans in parallel waves
-/sunco:verify 1    → 6-layer Swiss cheese verification
+/sunco:verify 1    → 7-layer Swiss cheese verification
 /sunco:ship 1      → create PR and prepare release
 ```
 
@@ -83,7 +83,7 @@ The 6-stage review pipeline: discuss → plan → execute → verify → ship.
 | `sunco discuss N` | Extract decisions for Phase N before planning | `--batch`, `--mode assumptions` |
 | `sunco plan N` | Create 2-3 atomic plans for Phase N | `--skip-research`, `--skip-verify` |
 | `sunco execute N` | Execute all plans in parallel waves | `--wave N`, `--interactive` |
-| `sunco verify N` | 6-layer Swiss cheese verification | `--layer N`, `--skip-adversarial`, `--skip-codex` |
+| `sunco verify N` | 7-layer Swiss cheese verification | `--layer N`, `--skip-adversarial`, `--skip-codex` |
 | `sunco ship N` | Create PR and prepare release notes | `--dry-run` |
 | `sunco review N` | Cross-agent code review | `--focus security|performance|style` |
 | `sunco validate N` | Validate phase against REQUIREMENTS.md | |
@@ -113,7 +113,7 @@ Wave-based parallel execution. Mandatory blast radius check before start. Mandat
 ```
 
 ### `/sunco:verify N`
-6-layer Swiss cheese: multi-agent review, guardrails, BDD criteria, permission audit, adversarial test, cross-model (Codex). Each layer catches different failure modes.
+7-layer Swiss cheese: multi-agent review, guardrails, BDD criteria, permission audit, adversarial test, cross-model (Codex), human eval. Each layer catches different failure modes.
 ```
 /sunco:verify 1
 /sunco:verify 2 --skip-adversarial
