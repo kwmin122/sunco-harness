@@ -157,6 +157,37 @@ TBD
 
 ---
 
+### Execution Flow Overview
+
+The debugger follows this orchestrated flow. Each step is mandatory in order — no skipping.
+
+```
+1. Initialize → check for active sessions, create/resume file
+2. Symptom Gathering → collect error output, stack traces, user report
+3. Reproduce → run exact commands to confirm the bug exists now
+4. Classify → Type 1/2/3 failure classification
+5. KB Check → match against known patterns (may accelerate investigation)
+6. Gather Context → read relevant code, git history, config
+7. Hypothesize → generate 3 ranked hypotheses
+8. Test → one at a time, record results
+9. Fix → apply minimal change (skip in find-only mode)
+10. Verify → reproduction + full suite + lint + tsc + stability
+11. Human Verify → for user-facing changes (skip for internal fixes)
+12. Prevent → recommend prevention strategy
+13. KB Update → extract pattern to knowledge base
+14. Archive → move session to archive, restore STATE.md
+```
+
+**In find-only mode:** Steps 9-11 are skipped. Return ROOT CAUSE FOUND after Step 8 confirms the cause.
+
+**In diagnose-only mode** (spawned by `sunco:diagnose`):
+- Input includes pre-parsed error output (test failures, lint errors, build errors)
+- Skip Steps 2-3 (reproduction not needed — errors are already captured)
+- Start at Step 4 (classify) with the pre-parsed errors
+- Return structured diagnosis, not a fix
+
+---
+
 ### Step 2: Reproduce the Issue
 
 Attempt reproduction before forming any hypothesis.

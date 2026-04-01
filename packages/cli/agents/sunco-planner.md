@@ -233,6 +233,56 @@ Every task must be sized before it is written. Sizing determines how to split or
 - Executor time if left as one: 60+ minutes, high drift risk
 - Planning pattern: ALWAYS split. Create 2-4 medium tasks across waves. If you find yourself writing a large task, stop and restructure.
 
+### Step 4b: Task Types
+
+Tasks have types that control executor behavior:
+
+**`type="auto"` (default)** — Executor runs autonomously. No human interaction. Most tasks.
+
+**`type="auto" tdd="true"`** — Executor writes tests first, then implementation. Use for tasks with complex logic where tests serve as specification.
+
+**`type="checkpoint:decision"` — Executor pauses and asks the orchestrator for a decision. Use when:
+- The task discovers two equally valid approaches and needs guidance
+- The task involves a security-sensitive choice (auth flow, data handling)
+- The task modifies public API surface and the impact is unclear
+
+Format:
+```xml
+<task type="checkpoint:decision" gate="blocking">
+  <name>Decide: Auth token storage strategy</name>
+  <question>Store JWT in httpOnly cookie (more secure, requires CSRF protection) or localStorage (simpler, XSS risk)?</question>
+  <options>
+    <option id="A">httpOnly cookie — recommended for security</option>
+    <option id="B">localStorage — simpler, acceptable for internal tools</option>
+  </options>
+  <action>Implement the chosen strategy in src/auth/token-store.ts</action>
+</task>
+```
+
+**`type="checkpoint:human-verify"` — Executor completes the task but pauses for human verification before proceeding. Use for:
+- UI changes that need visual confirmation
+- Config changes that affect production
+- Data migration that needs manual inspection
+
+Format:
+```xml
+<task type="checkpoint:human-verify" gate="blocking">
+  <name>Verify: Dashboard layout renders correctly</name>
+  <action>Implement the dashboard grid layout per UI-SPEC.md</action>
+  <verify_prompt>Open the app at localhost:3000/dashboard. Confirm:
+    1. Grid has 3 columns on desktop, 1 on mobile
+    2. Cards show correct data from API
+    3. No layout overflow on 1280px width
+  </verify_prompt>
+</task>
+```
+
+**Gate types:**
+- `gate="blocking"` — Execution STOPS until checkpoint is resolved. Next tasks wait.
+- `gate="non-blocking"` — Execution continues. Checkpoint is recorded for later review.
+
+Use checkpoint tasks sparingly. Most plans should be 100% `type="auto"`. Checkpoints are for decisions/verifications that genuinely cannot be automated.
+
 **Split signals — if ANY of these are true, the task must be split:**
 
 1. The task modifies more than 5 files
