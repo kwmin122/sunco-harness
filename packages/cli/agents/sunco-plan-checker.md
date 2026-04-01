@@ -275,6 +275,141 @@ Issue: canonical_refs lists "packages/core/src/skill/define-skill.ts" but task a
 Fix: Add "packages/core/src/state/state-engine.ts" to canonical_refs so executor has the state pattern as a direct reference.
 ```
 
+---
+
+### Common Plan Failure Patterns
+
+Beyond the 9-point checklist, these are recurring failure patterns that appear in plans and predictably produce broken or incomplete implementations. When you encounter any of these during the 9-point check, flag them as part of the relevant check's FAIL output.
+
+**Pattern: Deferred idea leak**
+
+The plan subtly implements something the user deferred. Unlike the obvious case (a task literally named "Implement plugins"), deferred idea leaks are subtle:
+
+- A `<done>` block says "the skill registry is extensible for future plugin loading" — extensibility for a deferred feature is the same as implementing it
+- An `<action>` block creates a `plugins/` directory "as a placeholder for future work" — empty directories for deferred features are scope creep
+- A Zod schema includes a `pluginPaths?: string[]` field "reserved for later" — reserved fields are API surface for something not built
+
+When you find this pattern: flag it in Check 2 with the specific line in the action that implements the deferred idea, even if only partially.
+
+**Pattern: Acceptance criteria too vague**
+
+The `<done>` block describes the feature existing, not the feature working correctly. This produces implementations that compile and run but produce wrong results.
+
+Signs:
+- "The function is implemented and exported" — presence without behavior
+- "The skill handles errors" — error handling without specifying which errors, how, and what the user sees
+- "Tests cover the main cases" — "main cases" is a judgment call, not a specification
+
+When you find this pattern: flag it in Check 3. Provide the specific rewrite in this format:
+> Replace `{vague criterion}` with: `{function or command} returns {specific output} when given {specific input}`
+
+**Pattern: Missing error handling**
+
+The `<action>` block describes only the happy path. Error handling is mentioned nowhere or dismissed with "add appropriate error handling."
+
+Signs:
+- The action creates a function that reads a file but never mentions `ENOENT` handling
+- The action calls an external API but never mentions what happens on network failure
+- The action parses user input but never mentions what happens on invalid input
+
+SUNCO executors follow plans literally. If the plan says nothing about error handling, the executor writes no error handling. Then the verifier finds missing error paths and creates gap closure plans. This is expensive.
+
+When you find this pattern: flag it in Check 1 (incomplete requirement coverage) if the requirement mentions error handling, or as a supplementary note on Check 3 if it doesn't. Suggest the specific error cases that must be documented in the `<action>` block.
+
+**Pattern: Architecture boundary violation**
+
+A task's `<action>` block imports code across a forbidden layer boundary. This compiles if TypeScript doesn't enforce the boundary statically (it usually doesn't without custom linting), which means the violation is silent until `sunco:lint` runs.
+
+Common violations in SUNCO plans:
+- `packages/core/src/` importing from `packages/skills-harness/src/` — core cannot depend on skills
+- `packages/skills-harness/src/` importing from `packages/skills-workflow/src/` — harness cannot depend on workflow
+- A workflow skill directly importing from `packages/core/src/skill/registry.ts` instead of using the public API from `packages/core/src/index.ts`
+
+When you find this pattern: flag it in Check 4 with the exact import line that would be written, and the correct alternative (which package export or shared type to use instead).
+
+**Pattern: Circular wave dependency**
+
+Two plans in the same phase have a dependency loop that cannot be resolved by wave ordering.
+
+Classic form:
+- Plan A is in Wave 2 and depends on a type from Plan B
+- Plan B is in Wave 2 and depends on an implementation from Plan A
+- Neither can start without the other finishing
+
+This pattern means the Wave 0 type extraction was incomplete. The shared type both plans need should have been extracted to Wave 0 so both plans in Wave 2 can depend on it without depending on each other.
+
+When you find this pattern: flag it in Check 4. Identify the shared type or interface that needs to be extracted to Wave 0, and describe the restructuring.
+
+---
+
+### Auto-Fix Suggestions
+
+For each common failure pattern, the FAIL output must include a specific, actionable fix suggestion — not a direction but an exact change to make.
+
+**For vague acceptance criteria:**
+
+Do not say: "Make the done block more specific."
+
+Do say:
+```
+Fix: Replace the <done> block in Task {N} with:
+"function {name}({input}: {type}) returns {output type} with {specific field} set to {expected value} when given valid input;
+function {name}({badInput}: {type}) throws {ErrorClass} with message containing '{exact text}' when given {invalid input description};
+verified by running: npx vitest run {test file path}"
+```
+
+The fix suggestion must be copy-pasteable by the planner with only field substitution. If the fix requires the planner to make judgments about what the criterion should say, the suggestion is not specific enough.
+
+**For missing lint gate:**
+
+Do not say: "Add a lint gate task."
+
+Do say:
+```
+Fix: Add the following task as the final task in Wave 4:
+
+<task type="auto">
+  <name>Lint Gate</name>
+  <files>— (verification only)</files>
+  <action>
+    Run lint and type checking across all packages modified in this plan:
+    1. cd packages/{pkg1} && npx eslint --max-warnings 0 src/
+    2. cd packages/{pkg2} && npx eslint --max-warnings 0 src/
+    3. From monorepo root: npx tsc --noEmit
+    If any exits non-zero: fix root cause before marking done.
+  </action>
+  <verify>
+    <automated>npx eslint --max-warnings 0 packages/{pkg1}/src/ packages/{pkg2}/src/ && npx tsc --noEmit</automated>
+  </verify>
+  <done>ESLint exits 0 with --max-warnings 0. TypeScript exits 0 with --noEmit. Zero suppressions added.</done>
+</task>
+```
+
+**For architecture boundary violation:**
+
+Do not say: "Fix the import to respect architecture boundaries."
+
+Do say:
+```
+Fix: Task {N} action line "import { {symbol} } from 'packages/core/src/skill/registry.ts'" violates the architecture boundary.
+Replace with: "import { {symbol} } from 'packages/core/src/index.ts'" (the public barrel export).
+If {symbol} is not exported from the barrel, it must be added to packages/core/src/index.ts in Wave 0 before this task runs.
+```
+
+**For read_first omission:**
+
+Do not say: "Add the missing file to read_first."
+
+Do say:
+```
+Fix: Add to the frontmatter read_first list:
+  - packages/core/src/skill/define-skill.ts   # provides defineSkill() pattern
+  - packages/skills-harness/src/skills/init.skill.ts  # provides complete skill example
+These are required because Task {N} action says "follow the existing skill pattern" — without these files in read_first, the executor must locate them independently, risking pattern divergence.
+```
+
+---
+
 ### Produce Verdict
 
 After all 9 checks, produce the structured verdict:
@@ -389,6 +524,7 @@ The checker output itself must meet these standards:
 5. **Report written** — CHECKER-REPORT.md exists at the expected path after checker completes
 6. **Feedback written** — CHECKER-FEEDBACK.md exists if result is FAIL (planner revision mode requires it)
 7. **No judgment calls** — checker applies the 9-point checklist literally, not subjectively
+8. **Common failure patterns checked** — all 5 common patterns scanned for in addition to the 9-point checklist
 
 ---
 

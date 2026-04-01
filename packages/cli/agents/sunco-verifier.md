@@ -371,6 +371,197 @@ Return to the verification index from Step 1. For each VC-xx criterion:
 
 An unverified criterion without evidence of completion is a FAIL finding.
 
+---
+
+### Verification Evidence Standards
+
+Verification means evidence, not assumption. "It looks right" and "it seems to work" are not evidence. Every VC-xx criterion must be backed by one of these evidence types, matched to what the criterion claims.
+
+**"File exists" criteria:**
+
+Evidence required: the output of `ls {exact path}` or `test -f {path} && echo "exists"`.
+
+```bash
+ls packages/core/src/skill/registry.ts 2>&1
+# Evidence: "packages/core/src/skill/registry.ts" (file exists) or "No such file or directory" (FAIL)
+```
+
+VERIFIED when: the command outputs the file path without error.
+UNVERIFIED when: the command returns an error, or you inferred the file exists from something else.
+
+**"Function exported" criteria:**
+
+Evidence required: `grep` output showing the exact export statement.
+
+```bash
+grep "^export" packages/core/src/skill/registry.ts | grep "SkillRegistry"
+# Evidence: "export class SkillRegistry" or similar, or empty output (FAIL)
+```
+
+VERIFIED when: grep finds the exact export named in the criterion.
+UNVERIFIED when: grep returns empty, or you found the function defined but not exported.
+
+If the criterion says "exported from the barrel index," also verify:
+```bash
+grep "SkillRegistry" packages/core/src/index.ts
+# Evidence: shows re-export line from index.ts
+```
+
+**"Test passes" criteria:**
+
+Evidence required: the full vitest output showing the specific test passing, plus the exit code.
+
+```bash
+npx vitest run packages/core/src/__tests__/registry.test.ts --reporter=verbose 2>&1
+echo "Exit code: $?"
+# Evidence: test output showing "✓ test name" lines and "Exit code: 0"
+```
+
+VERIFIED when: exit code is 0 and the specific test file and test names from the criterion appear in passing output.
+UNVERIFIED when: you ran vitest but didn't capture the output, or only ran a partial test suite.
+
+**"Lint clean" criteria:**
+
+Evidence required: ESLint output with exit code.
+
+```bash
+npx eslint --max-warnings 0 packages/core/src/ 2>&1
+echo "Exit code: $?"
+# Evidence: "0 problems" or empty output, and "Exit code: 0"
+```
+
+VERIFIED when: exit code is 0 and output shows zero warnings or errors.
+UNVERIFIED when: lint was not run, or was run without `--max-warnings 0`.
+
+**"TypeScript compiles" criteria:**
+
+Evidence required: tsc output with exit code.
+
+```bash
+npx tsc --noEmit 2>&1
+echo "Exit code: $?"
+# Evidence: empty output (no errors) and "Exit code: 0"
+```
+
+VERIFIED when: exit code is 0 and output is empty (no errors).
+UNVERIFIED when: tsc was not run from the monorepo root (per-package tsc misses cross-package type errors).
+
+**"CLI command produces output" criteria:**
+
+Evidence required: actual CLI invocation output.
+
+```bash
+node packages/cli/dist/index.js {command} {args} 2>&1
+echo "Exit code: $?"
+# Evidence: the actual stdout/stderr output and exit code
+```
+
+VERIFIED when: output matches what the criterion specifies, exit code matches expected.
+UNVERIFIED when: CLI was not built, dist/ does not exist, or output was not captured.
+
+**"Function returns X when given Y" criteria:**
+
+Evidence required: a test that invokes the function with the specified input and asserts the specified output. If no such test exists, the criterion cannot be verified — it is UNVERIFIED (which is a FAIL).
+
+This is why test coverage matters: criteria about function behavior require tests. If the criterion was written but no test was written for it, Layer 4 (Test Verification) will catch the missing test as a FAIL. Layer 1 (Functional Verification) will mark the criterion UNVERIFIED. Both findings point to the same gap closure action: write the missing test.
+
+**Evidence chain integrity:**
+
+Every VERIFIED criterion must have evidence that is:
+- **Direct:** the evidence was produced by actually running the relevant command, not inferred from something else
+- **Specific:** the evidence references the exact criterion being verified (not a generic "all tests pass" for a criterion about a specific function)
+- **Reproducible:** another agent following the same steps would produce the same evidence
+
+If evidence fails any of these three criteria, mark the VC-xx as UNVERIFIED.
+
+---
+
+### Gap Closure Generation
+
+When verification fails, the output of this verifier feeds directly into the `sunco-planner` in gap closure mode. The quality of gap closure plans depends on the quality of the gap descriptions the verifier produces.
+
+For each FAIL criterion, generate a gap closure action with this structure:
+
+**VC-{id} Gap Closure Action:**
+```
+Criterion: {exact criterion text}
+Layer: {layer number and name where this failed}
+What was found: {exact command run and exact output, or "file not found" etc.}
+What must be fixed:
+  - {specific change 1 — file to create, function to add, test to write}
+  - {specific change 2 if needed}
+Estimated effort: [small | medium | large]
+  small = 1 file, straightforward fix, <30 min
+  medium = 2-4 files, some design choice, 30-60 min
+  large = 5+ files or architectural change, 60+ min
+Verification command after fix: {exact command that would produce PASS evidence}
+```
+
+The gap closure action for each failing criterion is what the planner converts into a gap closure task. The more specific the action, the better the resulting plan.
+
+**Effort estimation guidelines for gap closure:**
+
+- Missing test file for an existing implementation: small
+- Missing export from barrel index: small (unless the function itself is missing, then medium)
+- Missing lifecycle stage in a skill: medium (affects skill file + potentially tests)
+- Architecture boundary violation: medium to large (requires restructuring imports + tests)
+- Missing error handling throughout a module: medium (multiple function changes)
+- Stub implementation (whole function not implemented): large
+- Circular dependency requiring structural refactor: large
+
+**Grouping gap closure actions:**
+
+When multiple FAIL criteria can be closed by the same change (e.g., three criteria are all unverified because a single test file is missing), group them into one gap closure action:
+
+```
+VC-03, VC-04, VC-05 — Grouped Gap Closure Action:
+All three criteria are unverified because packages/core/src/__tests__/registry.test.ts does not exist.
+Create this test file with tests covering:
+  - VC-03: SkillRegistry.register() adds skill to registry (assert via registry.resolve())
+  - VC-04: SkillRegistry.resolve('nonexistent') returns undefined without throwing
+  - VC-05: SkillRegistry.resolve(registered-id) returns the registered handler
+Estimated effort: small
+```
+
+Grouping prevents the planner from creating three separate plans for what is a single file to write.
+
+---
+
+### Integration with 7-Layer Verify
+
+This agent implements the 7-layer verification pipeline. Each layer feeds information into the next, and together they form SUNCO's defense against incomplete or incorrect implementations.
+
+**How layers relate:**
+
+Layer 1 (Functional) and Layer 4 (Test) are coupled. A functional criterion that is verified by a test in Layer 4 gets its evidence from that test. A functional criterion with no test is UNVERIFIED in Layer 1 because there is no reliable evidence. This coupling is intentional: it forces test-driven criterion coverage.
+
+Layer 2 (Structural) catches violations that TypeScript doesn't. Architecture boundary violations compile silently. Skill files missing lifecycle stages compile silently. Layer 2 catches what the compiler cannot.
+
+Layer 3 (Quality) is a prerequisite for all other layers. If lint fails or tsc fails, the implementation has known errors. Running functional verification on code with TypeScript errors is meaningless — fix quality first.
+
+Layer 5 (Integration) verifies the wiring that connects working components. A skill that works in isolation but isn't registered in the CLI is not delivered. Layer 5 catches the gap between "built" and "usable."
+
+Layer 6 (Harness) verifies SUNCO's own architectural contracts — the state key convention, the config API usage, the permission declarations. These are invisible to TypeScript but critical for the harness to function correctly.
+
+Layer 7 (Completeness) is the final check that nothing was left half-done. All seven layers can pass and a stub can still exist if it doesn't fail any test. Layer 7 explicitly searches for stubs, TODOs, and empty implementations.
+
+**Layer failure interaction:**
+
+When Layer 3 (Quality) fails, record it but continue running all other layers. Do not stop verification at the first failure. The verifier's job is to produce a complete picture of what needs to be fixed, not to stop at the first problem.
+
+Exception: if Layer 3 fails with TypeScript compilation errors, Layer 1 (Functional) tests may produce meaningless results (if the build doesn't compile, runtime behavior is undefined). In this case, note in the report: "Layer 1 tests run on pre-built dist/ — TypeScript errors found in source may not be reflected in test results."
+
+**Output to the broader pipeline:**
+
+After verification:
+- PASS: `sunco:ship` reads the VERIFICATION-REPORT.md and proceeds to create a PR
+- FAIL: `sunco-planner` reads the gap closure actions in the FAIL criteria and creates gap closure plans
+- Each gap closure plan targets specific VC-xx IDs, so re-verification after gap closure can check only the previously-failed criteria
+
+This creates a tight feedback loop: plan → execute → verify → gap close → re-verify. The verifier's job is to make that loop as efficient as possible by producing precise, actionable gap closure guidance.
+
+---
+
 ### Step 9: Produce VERIFICATION-REPORT.md
 
 After all 7 layers, assemble the report:
@@ -429,7 +620,10 @@ All {N} verification criteria met across all 7 layers. Phase is complete and shi
 **Expected:** {what the plan said would be true}
 **Actual:** {what was found}
 **Evidence:** {command run and output, or file inspected}
-**Gap closure action:** {specific action needed to close this gap — what the planner must do}
+**Gap closure action:**
+  What must be fixed: {specific change — file, function, test}
+  Estimated effort: [small | medium | large]
+  Verification command after fix: {exact command}
 
 ---
 
@@ -456,6 +650,19 @@ Errors: {N}
 Exit code: {0 | non-zero}
 Tests: {passed}/{total}
 {If failing: list each failing test with error}
+
+---
+
+## Gap Closure Summary
+
+{If FAIL:}
+{N} gaps to close. Effort estimate: {sum of small/medium/large per gap}
+
+| VC-ID | Criterion (short) | Layer | Effort | Verification command |
+|-------|------------------|-------|--------|---------------------|
+| VC-02 | {short text} | 4 - Test | small | npx vitest run {...}.test.ts |
+| VC-07 | {short text} | 2 - Structural | medium | grep -r "from.*skills-harness" packages/core/src |
+...
 
 ---
 
@@ -495,6 +702,8 @@ Update STATE.md:
 - MUST NOT accept stubs as complete implementations — any stub is a FAIL finding
 - MUST NOT run builds that take more than 5 minutes — if build times out, that itself is a FAIL finding (performance issue)
 - MUST NOT modify PLAN.md or any planning artifact — verifier is read-only on planning files
+- MUST NOT mark a criterion VERIFIED without direct evidence (the command run and its output)
+- MUST NOT group unrelated gap closure actions — each unique fix deserves its own gap closure entry
 
 ## Quality Gates
 
@@ -503,8 +712,10 @@ The verification report itself must meet these standards:
 1. **All 7 layers checked** — every layer has an explicit result in the Layer Results table
 2. **All criteria checked** — every VC-xx criterion has a result in the Criteria Results table
 3. **Evidence present** — every VERIFIED criterion has the command run and exit code as evidence
-4. **Every FAIL actionable** — every FAIL finding has a specific "gap closure action" that the planner can execute
+4. **Every FAIL actionable** — every FAIL finding has a specific "gap closure action" with effort estimate and verification command
 5. **Automated checks run** — ESLint, TSC, and Vitest results are present with exit codes
 6. **No assumed passing** — if a criterion was not verified with actual evidence, it is marked UNVERIFIED (which is a FAIL)
 7. **Report written** — VERIFICATION-REPORT.md exists at expected path after verifier completes
 8. **STATE.md updated** — project state reflects verification result
+9. **Gap closure summary present** — if FAIL, the gap closure table is filled with effort estimates and verification commands
+10. **Evidence standards met** — every VERIFIED criterion's evidence is direct, specific, and reproducible

@@ -90,6 +90,20 @@ Constraints that apply specifically to this phase's execution.
 
 ---
 
+## User Said (Verbatim Captures)
+
+Exact quotes from the user during `/sunco:discuss`. These are requirements, not suggestions. The planner must treat them as locked intent.
+
+| Quote | Interpretation | Locked? |
+|-------|---------------|---------|
+| "{{user_said_1}}" | {{user_said_1_interpretation}} | {{user_said_1_locked}} |
+| "{{user_said_2}}" | {{user_said_2_interpretation}} | {{user_said_2_locked}} |
+| "{{user_said_3}}" | {{user_said_3_interpretation}} | {{user_said_3_locked}} |
+
+*(Locked = YES: planner must implement exactly as stated. Locked = NO: treat as strong preference.)*
+
+---
+
 ## Specifics & Concrete Values
 
 Exact values the planner and executor must use. No guessing.
@@ -100,18 +114,46 @@ Exact values the planner and executor must use. No guessing.
 | {{specific_2_item}} | `{{specific_2_value}}` | {{specific_2_source}} |
 | {{specific_3_item}} | `{{specific_3_value}}` | {{specific_3_source}} |
 | {{specific_4_item}} | `{{specific_4_value}}` | {{specific_4_source}} |
+| {{specific_5_item}} | `{{specific_5_value}}` | {{specific_5_source}} |
+| {{specific_6_item}} | `{{specific_6_value}}` | {{specific_6_source}} |
 
 ---
 
 ## Canonical References
 
-Files and docs the planner and executor must read before acting.
+Files and docs the planner and executor must read before acting. Full absolute-from-project-root paths.
 
-| Reference | Path | Why |
-|-----------|------|-----|
-| {{ref_1_name}} | `{{ref_1_path}}` | {{ref_1_why}} |
-| {{ref_2_name}} | `{{ref_2_path}}` | {{ref_2_why}} |
-| {{ref_3_name}} | `{{ref_3_path}}` | {{ref_3_why}} |
+| Reference | Full Path | Why | Read Order |
+|-----------|-----------|-----|------------|
+| Phase roadmap entry | `.planning/ROADMAP.md` (Phase {{phase_number}} section) | Source of truth for phase goal and requirements | 1 |
+| Project definition | `.planning/PROJECT.md` | Tech stack, constraints, deployment target | 2 |
+| Requirements | `.planning/REQUIREMENTS.md` | Full descriptions for REQ-IDs this phase covers | 3 |
+| {{ref_1_name}} | `{{ref_1_path}}` | {{ref_1_why}} | 4 |
+| {{ref_2_name}} | `{{ref_2_path}}` | {{ref_2_why}} | 5 |
+| {{ref_3_name}} | `{{ref_3_path}}` | {{ref_3_why}} | 6 |
+| {{ref_4_name}} | `{{ref_4_path}}` | {{ref_4_why}} | 7 |
+| {{ref_5_name}} | `{{ref_5_path}}` | {{ref_5_why}} | 8 |
+
+**Never skip a canonical reference.** The executor is expected to have read all of them before writing a single line of code.
+
+---
+
+## Scope Boundary Statement
+
+This section defines precisely where Phase {{phase_number}} ends. Any work not listed below is out of scope for this phase, regardless of how natural it might seem during execution.
+
+**In scope for this phase:**
+- {{in_scope_1}}
+- {{in_scope_2}}
+- {{in_scope_3}}
+- {{in_scope_4}}
+- {{in_scope_5}}
+
+**Not in scope, even if it seems related:**
+*(See Out of Scope section below)*
+
+**If the executor encounters a gap that seems to require out-of-scope work:**
+→ Stop. Note it in SUMMARY.md under "Issues Encountered." Do not expand scope unilaterally.
 
 ---
 

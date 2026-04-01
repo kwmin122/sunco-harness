@@ -101,6 +101,37 @@ Derived from PLAN.md frontmatter. All must be true for plan to count as complete
 
 ---
 
+## Acceptance Criteria Evidence Table
+
+Full evidence for each acceptance criterion from the PLAN.md. This table is what `/sunco:verify` reads to confirm the plan is genuinely complete — not just claimed complete.
+
+| # | Criterion | Verification Method | Evidence (command + output excerpt) | Status |
+|---|-----------|--------------------|------------------------------------|--------|
+| 1 | {{ac_1_criterion}} | {{ac_1_method}} | `{{ac_1_evidence_command}}` → {{ac_1_evidence_output}} | {{ac_1_status}} |
+| 2 | {{ac_2_criterion}} | {{ac_2_method}} | `{{ac_2_evidence_command}}` → {{ac_2_evidence_output}} | {{ac_2_status}} |
+| 3 | {{ac_3_criterion}} | {{ac_3_method}} | `{{ac_3_evidence_command}}` → {{ac_3_evidence_output}} | {{ac_3_status}} |
+| 4 | {{ac_4_criterion}} | {{ac_4_method}} | `{{ac_4_evidence_command}}` → {{ac_4_evidence_output}} | {{ac_4_status}} |
+
+*Verification methods: run-command | read-file | visual-inspect | test-case | type-check*
+*Status: ✓ VERIFIED | ✗ FAILED | ⚠️ PARTIAL | ? NEEDS HUMAN*
+
+---
+
+## Technical Debt Introduced
+
+New debt created during execution of this plan. Log it now — do not silently accept it.
+
+| Item | File | Description | Severity | Recommended Fix Phase |
+|------|------|-------------|----------|----------------------|
+| {{debt_1_item}} | `{{debt_1_file}}` | {{debt_1_description}} | {{debt_1_severity}} | {{debt_1_fix_phase}} |
+| {{debt_2_item}} | `{{debt_2_file}}` | {{debt_2_description}} | {{debt_2_severity}} | {{debt_2_fix_phase}} |
+
+*Severity: high — impacts correctness | medium — impacts maintainability | low — cosmetic*
+
+*(Empty if no debt introduced)*
+
+---
+
 ## Issues Encountered
 
 {{issues_encountered}}
@@ -111,9 +142,12 @@ Derived from PLAN.md frontmatter. All must be true for plan to count as complete
 
 ## Decisions Made During Execution
 
-Decisions that deviate from or extend the original plan.
+Decisions that deviate from or extend the original plan. Each must be justified.
 
-{{execution_decisions}}
+| Decision | Original Plan Said | What Was Done Instead | Reason | Impact |
+|----------|-------------------|----------------------|--------|--------|
+| {{exec_decision_1}} | {{exec_decision_1_original}} | {{exec_decision_1_actual}} | {{exec_decision_1_reason}} | {{exec_decision_1_impact}} |
+| {{exec_decision_2}} | {{exec_decision_2_original}} | {{exec_decision_2_actual}} | {{exec_decision_2_reason}} | {{exec_decision_2_impact}} |
 
 *(Empty if execution followed plan exactly)*
 
@@ -121,9 +155,31 @@ Decisions that deviate from or extend the original plan.
 
 ## Next Steps
 
-{{next_steps}}
+Immediate next actions following this plan's completion.
+
+| Priority | Action | Command | Depends On |
+|----------|--------|---------|------------|
+| 1 | {{next_1_action}} | `{{next_1_command}}` | {{next_1_depends}} |
+| 2 | {{next_2_action}} | `{{next_2_command}}` | {{next_2_depends}} |
+| 3 | {{next_3_action}} | `{{next_3_command}}` | {{next_3_depends}} |
+
+**Recommended immediate next command:** `{{recommended_next_command}}`
+
+---
+
+## Scope Drift Log
+
+Items that were almost implemented but held back as out of scope. Prevents re-discovery.
+
+| Item | Why Out of Scope | Route To |
+|------|-----------------|----------|
+| {{drift_1_item}} | {{drift_1_reason}} | {{drift_1_route}} |
+| {{drift_2_item}} | {{drift_2_reason}} | {{drift_2_route}} |
+
+*(Empty if executor stayed within plan scope)*
 
 ---
 
 *Written by execution agent on: {{written_date}}*
 *Plan file: .planning/phases/{{phase_number}}-{{phase_slug}}/{{phase_number}}-{{plan_number}}-PLAN.md*
+*Agent session ID: {{agent_session_id}}*

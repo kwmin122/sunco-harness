@@ -214,6 +214,148 @@ sunco execute 1
 
 ---
 
+## Environment Variable Reference
+
+Complete reference for all environment variables used by this project. Set these in `.env` (local) and your CI/CD provider (production).
+
+| Variable | Required | Default | Description | Where to Get | Affects |
+|----------|----------|---------|-------------|--------------|---------|
+| `{{env_ref_1_name}}` | {{env_ref_1_required}} | `{{env_ref_1_default}}` | {{env_ref_1_description}} | {{env_ref_1_source}} | {{env_ref_1_affects}} |
+| `{{env_ref_2_name}}` | {{env_ref_2_required}} | `{{env_ref_2_default}}` | {{env_ref_2_description}} | {{env_ref_2_source}} | {{env_ref_2_affects}} |
+| `{{env_ref_3_name}}` | {{env_ref_3_required}} | `{{env_ref_3_default}}` | {{env_ref_3_description}} | {{env_ref_3_source}} | {{env_ref_3_affects}} |
+| `{{env_ref_4_name}}` | {{env_ref_4_required}} | `{{env_ref_4_default}}` | {{env_ref_4_description}} | {{env_ref_4_source}} | {{env_ref_4_affects}} |
+| `{{env_ref_5_name}}` | {{env_ref_5_required}} | `{{env_ref_5_default}}` | {{env_ref_5_description}} | {{env_ref_5_source}} | {{env_ref_5_affects}} |
+
+**Validate all required env vars are set:**
+
+```bash
+{{validate_env_command}}
+```
+
+---
+
+## External Service Setup
+
+### Service: {{ext_service_1_name}}
+
+**Purpose:** {{ext_service_1_purpose}}
+**Required for:** {{ext_service_1_required_for}}
+**Free tier available:** {{ext_service_1_free_tier}}
+
+**Setup steps:**
+
+1. Go to {{ext_service_1_url}}
+2. {{ext_service_1_step_1}}
+3. {{ext_service_1_step_2}}
+4. {{ext_service_1_step_3}}
+5. Copy `{{ext_service_1_credential}}` and set `{{ext_service_1_env_var}}` in `.env`
+
+**Verify connection:**
+
+```bash
+{{ext_service_1_verify_command}}
+```
+
+Expected output:
+```
+{{ext_service_1_expected_output}}
+```
+
+---
+
+### Service: {{ext_service_2_name}}
+
+**Purpose:** {{ext_service_2_purpose}}
+**Required for:** {{ext_service_2_required_for}}
+
+**Setup steps:**
+
+1. {{ext_service_2_step_1}}
+2. {{ext_service_2_step_2}}
+3. Set `{{ext_service_2_env_var}}` in `.env`
+
+**Verify connection:**
+
+```bash
+{{ext_service_2_verify_command}}
+```
+
+---
+
+## Common Setup Issues
+
+### Issue: {{issue_1_title}}
+
+**Symptom:** `{{issue_1_symptom}}`
+**Cause:** {{issue_1_cause}}
+**Fix:**
+```bash
+{{issue_1_fix}}
+```
+
+---
+
+### Issue: {{issue_2_title}}
+
+**Symptom:** `{{issue_2_symptom}}`
+**Cause:** {{issue_2_cause}}
+**Fix:**
+```bash
+{{issue_2_fix}}
+```
+
+---
+
+### Issue: {{issue_3_title}}
+
+**Symptom:** `{{issue_3_symptom}}`
+**Cause:** {{issue_3_cause}}
+**Fix:**
+```bash
+{{issue_3_fix}}
+```
+
+---
+
+### Issue: Node version mismatch
+
+**Symptom:** `Error: The engine "node" is incompatible with this module.`
+**Cause:** Running a Node.js version older than required (`{{required_node}}`).
+**Fix:**
+```bash
+# Using nvm
+nvm install {{required_node}}
+nvm use {{required_node}}
+
+# Verify
+node --version
+```
+
+---
+
+### Issue: Missing .env file
+
+**Symptom:** Commands fail with `Error: Missing required environment variable`
+**Cause:** `.env` file not created from template.
+**Fix:**
+```bash
+cp .env.example .env
+# Then fill in required values — see Environment Variable Reference above
+```
+
+---
+
+### Issue: SUNCO state database locked
+
+**Symptom:** `Error: SQLITE_BUSY: database is locked`
+**Cause:** A previous SUNCO process crashed and left a lock file.
+**Fix:**
+```bash
+rm .sun/state.db-wal .sun/state.db-shm 2>/dev/null; echo "lock cleared"
+```
+
+---
+
 ## Project-Specific Notes
 
 {{project_specific_notes}}
@@ -225,6 +367,7 @@ sunco execute 1
 - **SUNCO docs:** `sunco help`
 - **Project issues:** {{issues_url}}
 - **Project discussions:** {{discussions_url}}
+- **SUNCO community:** {{sunco_community_url}}
 
 ---
 

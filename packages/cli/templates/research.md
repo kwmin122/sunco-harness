@@ -261,6 +261,162 @@ Items that could not be fully resolved during research:
 
 ---
 
+<approach_comparison>
+## Approach Comparison Matrix
+
+When multiple implementation approaches are viable, this matrix captures the analysis. The planner uses this to make a justified choice.
+
+| Criterion | Approach A: {{approach_a_name}} | Approach B: {{approach_b_name}} | Approach C: {{approach_c_name}} |
+|-----------|--------------------------------|---------------------------------|---------------------------------|
+| Implementation effort | {{approach_a_effort}} | {{approach_b_effort}} | {{approach_c_effort}} |
+| Runtime performance | {{approach_a_perf}} | {{approach_b_perf}} | {{approach_c_perf}} |
+| Testability | {{approach_a_test}} | {{approach_b_test}} | {{approach_c_test}} |
+| Maintainability | {{approach_a_maintain}} | {{approach_b_maintain}} | {{approach_c_maintain}} |
+| Fits existing patterns | {{approach_a_fits}} | {{approach_b_fits}} | {{approach_c_fits}} |
+| Library ecosystem | {{approach_a_ecosystem}} | {{approach_b_ecosystem}} | {{approach_c_ecosystem}} |
+| Error handling DX | {{approach_a_errors}} | {{approach_b_errors}} | {{approach_c_errors}} |
+| **Score (1-5)** | **{{approach_a_score}}** | **{{approach_b_score}}** | **{{approach_c_score}}** |
+
+**Research verdict:** {{approach_verdict}}
+**Rationale:** {{approach_verdict_rationale}}
+
+*(Use scale: 1 = poor, 3 = acceptable, 5 = excellent)*
+</approach_comparison>
+
+---
+
+<library_evaluation>
+## Library Evaluation Criteria
+
+For each library considered for this phase, evaluated against the SUNCO dependency policy.
+
+### Library: {{eval_lib_1_name}}
+
+| Criterion | Value | Assessment |
+|-----------|-------|------------|
+| npm weekly downloads | {{eval_lib_1_downloads}} | {{eval_lib_1_downloads_assessment}} |
+| Last publish | {{eval_lib_1_last_publish}} | {{eval_lib_1_publish_assessment}} |
+| Open issues | {{eval_lib_1_issues}} | {{eval_lib_1_issues_assessment}} |
+| TypeScript support | {{eval_lib_1_ts}} | {{eval_lib_1_ts_assessment}} |
+| ESM support | {{eval_lib_1_esm}} | {{eval_lib_1_esm_assessment}} |
+| Dependency count | {{eval_lib_1_deps}} | {{eval_lib_1_deps_assessment}} |
+| License | {{eval_lib_1_license}} | {{eval_lib_1_license_assessment}} |
+| Bundle size (gzip) | {{eval_lib_1_size}} | {{eval_lib_1_size_assessment}} |
+| Breaking change history | {{eval_lib_1_breaks}} | {{eval_lib_1_breaks_assessment}} |
+
+**Verdict:** {{eval_lib_1_verdict}} — {{eval_lib_1_verdict_rationale}}
+
+---
+
+### Library: {{eval_lib_2_name}}
+
+| Criterion | Value | Assessment |
+|-----------|-------|------------|
+| npm weekly downloads | {{eval_lib_2_downloads}} | {{eval_lib_2_downloads_assessment}} |
+| Last publish | {{eval_lib_2_last_publish}} | {{eval_lib_2_publish_assessment}} |
+| TypeScript support | {{eval_lib_2_ts}} | {{eval_lib_2_ts_assessment}} |
+| ESM support | {{eval_lib_2_esm}} | {{eval_lib_2_esm_assessment}} |
+| Dependency count | {{eval_lib_2_deps}} | {{eval_lib_2_deps_assessment}} |
+| License | {{eval_lib_2_license}} | {{eval_lib_2_license_assessment}} |
+
+**Verdict:** {{eval_lib_2_verdict}} — {{eval_lib_2_verdict_rationale}}
+</library_evaluation>
+
+---
+
+<risk_assessment>
+## Risk Assessment
+
+Risks identified during research that the planner and executor must account for.
+
+| # | Risk | Probability | Impact | Mitigation | Residual Risk |
+|---|------|-------------|--------|------------|---------------|
+| 1 | {{risk_1}} | {{risk_1_prob}} | {{risk_1_impact}} | {{risk_1_mitigation}} | {{risk_1_residual}} |
+| 2 | {{risk_2}} | {{risk_2_prob}} | {{risk_2_impact}} | {{risk_2_mitigation}} | {{risk_2_residual}} |
+| 3 | {{risk_3}} | {{risk_3_prob}} | {{risk_3_impact}} | {{risk_3_mitigation}} | {{risk_3_residual}} |
+| 4 | {{risk_4}} | {{risk_4_prob}} | {{risk_4_impact}} | {{risk_4_mitigation}} | {{risk_4_residual}} |
+
+*Probability: High | Medium | Low*
+*Impact: High (blocks ship) | Medium (slows execution) | Low (cosmetic)*
+
+### Highest risk item
+
+**Risk:** {{top_risk}}
+**Why it matters:** {{top_risk_why}}
+**Trigger condition:** {{top_risk_trigger}}
+**Mitigation plan:** {{top_risk_mitigation}}
+**Early warning signal:** {{top_risk_warning}}
+</risk_assessment>
+
+---
+
+<code_stubs>
+## Code Stubs for Planner
+
+These stubs are starting points for plan task actions. The planner should use these as the basis for writing concrete `<action>` blocks — not copy them verbatim, but adapt them to the specific files and values in this project.
+
+### Stub 1: {{stub_1_operation}}
+
+```typescript
+// File: {{stub_1_file}}
+// Purpose: {{stub_1_purpose}}
+// Pattern from: {{stub_1_pattern_source}}
+
+{{stub_1_imports}}
+
+{{stub_1_type_definitions}}
+
+export {{stub_1_export_keyword}} {{stub_1_function_or_class}}(
+  {{stub_1_params}}
+): {{stub_1_return_type}} {
+  // {{stub_1_step_1}}
+  // {{stub_1_step_2}}
+  // {{stub_1_step_3}}
+  return {{stub_1_return_example}};
+}
+```
+
+**Key decisions in this stub:**
+- {{stub_1_decision_1}}
+- {{stub_1_decision_2}}
+
+---
+
+### Stub 2: {{stub_2_operation}}
+
+```typescript
+// File: {{stub_2_file}}
+// Purpose: {{stub_2_purpose}}
+// Pattern from: {{stub_2_pattern_source}}
+
+{{stub_2_code}}
+```
+
+---
+
+### Stub 3: Error handling pattern for this domain
+
+```typescript
+// Standard error handling for {{research_domain}}
+// Adapt this pattern in every task that calls {{primary_library}}
+
+{{error_handling_stub}}
+```
+
+---
+
+### Stub 4: Test setup for this domain
+
+```typescript
+// File: {{test_stub_file}}
+// Vitest setup for testing {{research_domain}} code
+
+{{test_setup_stub}}
+```
+</code_stubs>
+
+---
+
 <planning_guidance>
 ## Guidance for /sunco:plan
 
@@ -294,6 +450,57 @@ Wave 3 (after Wave 2):
 
 **Rationale:** {{implementation_order_rationale}}
 </planning_guidance>
+
+---
+
+<library_version_pins>
+## Library Version Pins
+
+Exact versions confirmed working as of research date. Use these in `package.json` — do not rely on caret ranges for core dependencies.
+
+```json
+{
+  "dependencies": {
+    {{version_pin_1}}: "{{version_pin_1_version}}",
+    {{version_pin_2}}: "{{version_pin_2_version}}",
+    {{version_pin_3}}: "{{version_pin_3_version}}",
+    {{version_pin_4}}: "{{version_pin_4_version}}"
+  },
+  "devDependencies": {
+    {{version_pin_dev_1}}: "{{version_pin_dev_1_version}}",
+    {{version_pin_dev_2}}: "{{version_pin_dev_2_version}}",
+    {{version_pin_dev_3}}: "{{version_pin_dev_3_version}}"
+  }
+}
+```
+
+**Version pin rationale:**
+- {{version_pin_reason_1}}
+- {{version_pin_reason_2}}
+
+**When to revisit these pins:**
+- After {{version_revisit_trigger_1}}
+- After {{version_revisit_trigger_2}}
+</library_version_pins>
+
+---
+
+<sources>
+## Sources
+
+All sources consulted during research. The planner can reference these for additional detail.
+
+| Source | URL / Location | Why Consulted | Key Finding |
+|--------|---------------|---------------|-------------|
+| {{source_1_name}} | {{source_1_url}} | {{source_1_why}} | {{source_1_finding}} |
+| {{source_2_name}} | {{source_2_url}} | {{source_2_why}} | {{source_2_finding}} |
+| {{source_3_name}} | {{source_3_url}} | {{source_3_why}} | {{source_3_finding}} |
+| {{source_4_name}} | {{source_4_url}} | {{source_4_why}} | {{source_4_finding}} |
+| {{source_5_name}} | {{source_5_url}} | {{source_5_why}} | {{source_5_finding}} |
+
+**Research cutoff date:** {{research_date}}
+**Note:** Package versions, download counts, and API signatures should be re-verified if research is older than 30 days.
+</sources>
 
 ---
 

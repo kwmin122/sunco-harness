@@ -128,13 +128,91 @@
 
 ---
 
-## Sign-off
+## Per-Requirement Acceptance
+
+Mapping from requirements to UAT test cases. Each requirement must have at least one passing test case before UAT is complete.
+
+| Req ID | Requirement | Test Case IDs | Passing | Status |
+|--------|-------------|---------------|---------|--------|
+| {{req_1_id}} | {{req_1_description}} | {{req_1_test_ids}} | {{req_1_passing}} | {{req_1_uat_status}} |
+| {{req_2_id}} | {{req_2_description}} | {{req_2_test_ids}} | {{req_2_passing}} | {{req_2_uat_status}} |
+| {{req_3_id}} | {{req_3_description}} | {{req_3_test_ids}} | {{req_3_passing}} | {{req_3_uat_status}} |
+| {{req_4_id}} | {{req_4_description}} | {{req_4_test_ids}} | {{req_4_passing}} | {{req_4_uat_status}} |
+
+**Requirements fully covered:** {{reqs_covered}}/{{reqs_total}}
+
+---
+
+## Test Case Template
+
+*(Copy this block to add a new feature test case)*
+
+```markdown
+### Feature N: {{feature_n_name}}
+
+**Req coverage:** {{feature_n_req_ids}}
+**Scenario:** {{feature_n_scenario}}
+
+| Step | Action | Expected | Actual | Status |
+|------|--------|----------|--------|--------|
+| 1    | ...    | ...      |        | pending |
+
+**Notes:**
+**Status:** pending
+```
+
+---
+
+## Regression Check
+
+Verify that no previously-passing functionality was broken by this phase.
+
+| Area | Test | Expected | Actual | Status |
+|------|------|----------|--------|--------|
+| {{regression_1_area}} | {{regression_1_test}} | {{regression_1_expected}} | {{regression_1_actual}} | {{regression_1_status}} |
+| {{regression_2_area}} | {{regression_2_test}} | {{regression_2_expected}} | {{regression_2_actual}} | {{regression_2_status}} |
+| {{regression_3_area}} | {{regression_3_test}} | {{regression_3_expected}} | {{regression_3_actual}} | {{regression_3_status}} |
+
+---
+
+## Sign-off Protocol
+
+### Step 1: Pre-sign-off checklist
+
+Before signing off, verify:
+
+- [ ] All test cases have an actual result (no empty "Actual" cells)
+- [ ] All P0 and P1 issues are resolved or explicitly accepted
+- [ ] All requirements in scope have at least one passing test case
+- [ ] Regression check complete
+- [ ] Edge cases confirmed
+- [ ] Error handling confirmed
+
+### Step 2: Verdict determination
+
+| Condition | Verdict |
+|-----------|---------|
+| All test cases pass, no P0/P1 issues | PASS |
+| All P0/P1 issues resolved, minor issues accepted | CONDITIONAL PASS |
+| Any P0 issue open, or > {{fail_threshold}}% test cases fail | FAIL |
+
+### Step 3: Sign-off record
 
 **Tester:** {{tester_name}}
 **Date:** {{signoff_date}}
 **Verdict:** {{uat_verdict}}
-**Conditions (if conditional):** {{conditional_conditions}}
+**Conditions accepted (if CONDITIONAL PASS):**
+- {{conditional_condition_1}}
+- {{conditional_condition_2}}
+
+**Issues deferred (accepted as known limitations):**
+| Issue ID | Description | Deferred To |
+|----------|-------------|-------------|
+| {{deferred_issue_1_id}} | {{deferred_issue_1_desc}} | {{deferred_issue_1_phase}} |
+
 **Notes:** {{signoff_notes}}
+
+**This UAT record is authoritative.** It overrides any informal approval given verbally or in chat.
 
 ---
 

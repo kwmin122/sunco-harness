@@ -211,6 +211,86 @@ None — all verifiable items confirmed programmatically.
 
 ---
 
+## Per-Criterion Evidence Table
+
+Full evidence for each must-have from every plan in this phase. The verifier records the exact command and output that confirms or denies each criterion.
+
+| Plan | Criterion | Verification Command | Output Excerpt | Status |
+|------|-----------|---------------------|----------------|--------|
+| {{plan_1_id}} | {{plan_1_criterion_1}} | `{{plan_1_criterion_1_cmd}}` | `{{plan_1_criterion_1_output}}` | {{plan_1_criterion_1_status}} |
+| {{plan_1_id}} | {{plan_1_criterion_2}} | `{{plan_1_criterion_2_cmd}}` | `{{plan_1_criterion_2_output}}` | {{plan_1_criterion_2_status}} |
+| {{plan_2_id}} | {{plan_2_criterion_1}} | `{{plan_2_criterion_1_cmd}}` | `{{plan_2_criterion_1_output}}` | {{plan_2_criterion_1_status}} |
+| {{plan_2_id}} | {{plan_2_criterion_2}} | `{{plan_2_criterion_2_cmd}}` | `{{plan_2_criterion_2_output}}` | {{plan_2_criterion_2_status}} |
+| {{plan_3_id}} | {{plan_3_criterion_1}} | `{{plan_3_criterion_1_cmd}}` | `{{plan_3_criterion_1_output}}` | {{plan_3_criterion_1_status}} |
+
+*Status: ✓ VERIFIED | ✗ FAILED | ? UNCERTAIN | H NEEDS HUMAN*
+
+---
+
+## Gap Closure Recommendations
+
+For each gap identified, a concrete recommendation for how to close it. These feed directly into fix plans.
+
+### Critical Gap: {{crit_gap_1_name}}
+
+**What is missing:** {{crit_gap_1_missing}}
+**Root cause:** {{crit_gap_1_root_cause}}
+**Why it blocks progress:** {{crit_gap_1_blocks}}
+
+**Recommended fix plan:**
+- Plan ID: `{{phase_number}}-FIX-01-PLAN.md`
+- Estimated scope: {{crit_gap_1_fix_scope}} *(Small | Medium | Large)*
+- Tasks needed:
+  1. {{crit_gap_1_task_1}}
+  2. {{crit_gap_1_task_2}}
+- Verification after fix: `{{crit_gap_1_verify_after}}`
+
+---
+
+### Critical Gap: {{crit_gap_2_name}}
+
+**What is missing:** {{crit_gap_2_missing}}
+**Root cause:** {{crit_gap_2_root_cause}}
+**Why it blocks progress:** {{crit_gap_2_blocks}}
+
+**Recommended fix plan:**
+- Plan ID: `{{phase_number}}-FIX-02-PLAN.md`
+- Estimated scope: {{crit_gap_2_fix_scope}}
+- Tasks needed:
+  1. {{crit_gap_2_task_1}}
+  2. {{crit_gap_2_task_2}}
+- Verification after fix: `{{crit_gap_2_verify_after}}`
+
+---
+
+### Non-Critical Gap: {{minor_gap_1_name}}
+
+**What is missing:** {{minor_gap_1_missing}}
+**Impact if deferred:** {{minor_gap_1_defer_impact}}
+**Recommendation:** {{minor_gap_1_recommendation}}
+*(Fix now | Defer to phase {{minor_gap_1_defer_phase}} | Accept as known limitation)*
+
+---
+
+## Risk Assessment
+
+Risks identified during verification that affect the quality or stability of the work done in this phase.
+
+| Risk | Likelihood | Impact | File / Area | Mitigation |
+|------|------------|--------|-------------|------------|
+| {{verif_risk_1}} | {{verif_risk_1_likelihood}} | {{verif_risk_1_impact}} | `{{verif_risk_1_file}}` | {{verif_risk_1_mitigation}} |
+| {{verif_risk_2}} | {{verif_risk_2_likelihood}} | {{verif_risk_2_impact}} | `{{verif_risk_2_file}}` | {{verif_risk_2_mitigation}} |
+| {{verif_risk_3}} | {{verif_risk_3_likelihood}} | {{verif_risk_3_impact}} | `{{verif_risk_3_file}}` | {{verif_risk_3_mitigation}} |
+
+*Likelihood: High | Medium | Low*
+*Impact: High (ship blocker) | Medium (quality risk) | Low (cosmetic)*
+
+**Total risks identified:** {{verif_total_risks}}
+**Blocking risks:** {{verif_blocking_risks}}
+**Acceptable risks (deferred):** {{verif_deferred_risks}}
+
+---
+
 ## Verification Metadata
 
 **Verification approach:** {{verification_approach}}
