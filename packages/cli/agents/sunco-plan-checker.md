@@ -710,3 +710,88 @@ Check 6 verifies the lint gate is present. This appendix defines what a COMPLETE
 ```
 
 The lint gate must CHECK, not auto-fix. Auto-fix can hide real problems by silently modifying code. Executors must fix lint errors manually and understand what they fixed.
+
+## Appendix E: Nyquist Test Coverage Dimension
+
+Every plan must establish a minimum test baseline. The Nyquist principle: for every behavior specified in acceptance criteria, at least one test must exist to detect its absence.
+
+**Check procedure:**
+
+1. Parse each task's `<done>` block for verifiable behaviors.
+2. For each behavior, check: does the plan include a task or subtask that creates a test for it?
+3. Minimum threshold: every `<done>` item that describes a runtime behavior (not a file existence check) needs a corresponding test in some task's `<action>`.
+
+**Examples:**
+
+```
+<done>registry.get('foo') returns FooSkill after registration</done>
+→ Required test: "it('returns FooSkill after registration', () => { ... })" must appear in a task's <action>
+→ OR task <action> must reference existing test: "Verify existing test in packages/core/src/__tests__/registry.test.ts covers this"
+
+<done>ESLint exits 0 with --max-warnings 0</done>
+→ No test needed — this is a command check, not a runtime behavior.
+```
+
+**Scoring:**
+- 100% coverage (every behavior has a test reference): PASS
+- 80-99% coverage: WARN with list of uncovered behaviors
+- <80% coverage: FAIL — plan needs test tasks added
+
+**Auto-fix suggestion when FAIL:**
+"Add a test task in Wave 3 (before lint gate) with acceptance criteria covering: [list uncovered behaviors]"
+
+## Appendix F: CLAUDE.md Compliance Dimension
+
+If a CLAUDE.md file exists in the project root, the plan must not contradict its stated conventions.
+
+**Check procedure:**
+
+1. Read CLAUDE.md if it exists. If not, skip this dimension (PASS by default).
+2. Extract rules from the "Conventions" and "Do NOT" sections.
+3. For each plan task, scan the `<action>` block for violations:
+
+| CLAUDE.md rule | Plan violation example | Result |
+|---------------|----------------------|--------|
+| "ESM-only (.js extension in imports)" | Task creates file with `import X from './module'` (no .js) | FAIL |
+| "Deterministic First: no LLM where lint/test suffices" | Task uses agent to check if file exists (Bash would suffice) | WARN |
+| "Each skill follows: entry → progress → gather → process → state.set → ui.result → return" | New skill skips ui.result call | FAIL |
+| "Test files in `__tests__/` directories" | Task puts test in `src/foo.test.ts` (not `__tests__/`) | FAIL |
+
+4. For each violation: report with the specific CLAUDE.md rule quoted and the specific plan task/line.
+
+**Auto-fix suggestion:** "Task N line M: change import to include .js extension per CLAUDE.md ESM convention"
+
+## Appendix G: Cross-Plan Contract Analysis
+
+When checking a plan that coexists with other plans in the same phase, verify interface compatibility.
+
+**When this applies:** Multiple PLAN.md files in `.planning/phases/{N}-*/` — typically plans split across waves.
+
+**Check procedure:**
+
+1. Read all other PLAN.md files in the same phase directory.
+2. For each plan pair, check:
+
+**Export/Import compatibility:**
+- If Plan A creates a type `FooConfig` and Plan B imports it, verify the type signature is consistent. Plan A's `<done>` must specify the exact shape, and Plan B's `<action>` must reference that same shape.
+
+**File ownership:**
+- Build a map: which plan modifies which files.
+- Two plans in the SAME wave must NOT modify the same file. If they do: FAIL with "file ownership conflict".
+- Two plans in DIFFERENT waves may modify the same file if the later wave depends on the earlier.
+
+**Shared state:**
+- If Plan A writes to STATE.md or config.json, and Plan B reads from it, Plan B must be in a later wave.
+
+**Integration surface:**
+- List all public API surfaces created across plans (exports, CLI commands, config keys). Verify no naming collisions and no gap (Plan A exports, but nobody imports).
+
+**Report format:**
+```
+Cross-plan contract analysis for Phase {N}:
+Plans checked: {list}
+Contracts: {N} export/import pairs identified
+Conflicts: {N} (or "none")
+  - [Conflict 1]: Plan A creates FooConfig with {fields}, Plan B expects {different fields}
+  - [Conflict 2]: Plans A and B both modify src/index.ts in Wave 1
+```

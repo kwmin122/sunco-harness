@@ -94,6 +94,45 @@ find packages/ -name "*.test.ts" | head -10
 
 Never plan to create a file that already exists unless the task is explicitly about modifying it. Never plan to add a dependency that is already in package.json. Always check `packages/{pkg}/package.json` before recommending a new dependency.
 
+### Step 2b: Project Skill Discovery
+
+Before writing any task, discover what already exists that can be reused. This prevents plans that reinvent utilities already in the codebase.
+
+**Scan for reusable assets:**
+```bash
+# Exported functions and types from core
+grep -rn "^export " packages/core/src/ --include="*.ts" | head -30
+
+# Shared utilities
+ls packages/*/src/shared/ 2>/dev/null
+
+# Existing test helpers and fixtures
+find packages/ -path "*__tests__*" -name "*.ts" | head -10
+```
+
+**For each discovered asset, decide:**
+- Can this be reused as-is in a task? → Reference it: "Import `createSkillContext` from `@sunco/core`"
+- Does it need minor extension? → Create a task that extends it rather than duplicating
+- Is it in the wrong package for our use? → Note the architecture boundary; may need a new shared export
+
+**Inject into task actions:** Every task action that could reuse existing code must say "Reuse existing `functionName` from `path/to/file`" explicitly. An executor that creates a new `parseJSON` utility when `shared/parse.ts` already has one has failed.
+
+### Step 2c: History Digest
+
+If prior phases exist, read their SUMMARY.md files and extract lessons:
+
+```bash
+ls .planning/phases/*/[0-9]*-SUMMARY.md 2>/dev/null
+```
+
+For each SUMMARY.md found:
+- **What tasks took longer than expected?** → Plan more time or split more aggressively for similar tasks
+- **What tools/libraries worked well?** → Prefer them in this plan
+- **What architecture decisions were made during execution?** → Ensure this plan is consistent
+- **What issues were encountered?** → Proactively avoid them
+
+Record applicable lessons at the top of the plan file in a `<!-- History lessons applied: ... -->` comment. This is for the executor's awareness, not the user's.
+
 ### Step 3: Blast Radius Analysis
 
 For every task that modifies an existing file, assess blast radius:
@@ -488,6 +527,46 @@ Remaining checker concerns: [none | list if any could not be fully resolved]
 ```
 
 Never return a summary that isn't one of these three formats. The orchestrator parses these programmatically.
+
+### Step 8c: Self-Validation Loop
+
+Before reporting PLANNING COMPLETE, run an internal validation pass. This catches plan defects before the external plan-checker runs.
+
+**Validation dimensions (check in order):**
+
+1. **Requirements coverage:** For every requirement listed in CONTEXT.md "Requirements Covered" section, at least one task's `<done>` block verifies it. Missing coverage = FAIL.
+2. **Scope containment:** Every task must implement something within the phase boundary. If a task adds a capability not mentioned in CONTEXT.md or ROADMAP.md for this phase, it is scope creep. Remove it.
+3. **Criteria testability:** Every `<done>` statement must be verifiable by running a command. "Works correctly" = FAIL. "Returns `{ id: number, name: string }` when called with valid input" = PASS.
+4. **Wave dependency correctness:** A task in Wave 2 that depends on output from Wave 2 = cyclic = FAIL. All cross-task dependencies must flow from lower waves to higher.
+5. **File ownership:** No two tasks in the same wave modify the same file. If they must, one goes to the next wave.
+6. **Lint gate present:** The final wave contains a lint gate task. No exceptions.
+7. **No stubs:** Spot-check 3 random `<action>` blocks. If any contains "implement", "TODO", "stub", "placeholder" without concrete instructions, the plan needs more detail.
+
+**If any check fails:**
+- Fix it immediately (do not report to orchestrator with known failures)
+- Re-run the failing check after the fix
+- Maximum 3 self-revision cycles. If still failing after 3, report with the remaining issues listed explicitly.
+
+### Step 8d: Roadmap Update
+
+After the plan is written and validated, update ROADMAP.md to reflect that planning is complete:
+
+```bash
+node $HOME/.claude/sunco/bin/sunco-tools.cjs state-update \
+  --phase ${PHASE} \
+  --status "planned" \
+  --next "/sunco:execute ${PHASE}"
+```
+
+Do NOT modify ROADMAP.md's phase description or success criteria. Only update status fields if they exist.
+
+### Step 8e: Research Integration
+
+If `.planning/phases/{phase}/RESEARCH.md` exists (written by sunco-phase-researcher):
+1. Read it before writing any task
+2. If RESEARCH.md recommends a specific library or approach, use it unless CONTEXT.md explicitly overrides
+3. If RESEARCH.md identifies risks, add a comment in relevant task `<action>` blocks: `<!-- Risk from RESEARCH.md: {risk description}. Mitigation: {approach} -->`
+4. If RESEARCH.md is absent and a task involves a library/API you are uncertain about, note it in the plan's `## Context` section as an assumption that should be verified
 
 ### Step 9: Revision Mode Protocol
 

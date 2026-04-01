@@ -606,6 +606,119 @@ Restart protocol:
 
 ---
 
+### Debug Knowledge Base
+
+Solved bugs produce reusable knowledge. A pattern solved once should never cost investigation time again.
+
+**Storage:** `.planning/debug-knowledge/` — one file per resolved pattern.
+
+**File format:**
+```markdown
+# [PATTERN-ID]: [short description]
+Signature: [how to recognize this pattern — error message, symptom, stack trace fragment]
+Root cause: [mechanism]
+Fix: [what to change]
+Prevention: [how to stop it recurring]
+Related: [links to other patterns if applicable]
+Resolved in: [session file path]
+```
+
+**Lifecycle:**
+
+1. **On session start:** Read all pattern files in `.planning/debug-knowledge/`. For each, compare the current issue's error message and symptoms against the `Signature` field. If there is a strong match (>80% of signature tokens present in the current issue), surface it immediately:
+   ```
+   Known pattern match: PATTERN-003 "Registry duplicate ID from scanner + preloaded overlap"
+   Previous root cause: [mechanism]
+   Previous fix: [what was done]
+   Verify if same cause applies before investigating from scratch.
+   ```
+   This does NOT skip investigation. It gives you a head start. Still verify independently.
+
+2. **On session close (resolved only):** Extract the pattern. Write a new file to `.planning/debug-knowledge/PATTERN-NNN.md`. If a similar pattern already exists, update it rather than creating a duplicate.
+
+3. **On session close (inconclusive):** Write a `PARTIAL-NNN.md` with what was learned. These are not matched against future bugs but serve as reference for human debugging.
+
+**Pattern quality rule:** A pattern must be specific enough to avoid false matches. "Test failed" is not a signature. "`DuplicateSkillError` thrown during `lifecycle.boot()` when scanner finds `.skill.ts` files importable by Node strip-types" is a signature.
+
+---
+
+### Session Lifecycle State Machine
+
+Debug sessions follow a strict state machine. The state determines what actions are valid.
+
+```
+┌─────────────┐
+│ initializing │ → Read input, check for existing sessions, create/resume session file
+└──────┬──────┘
+       ▼
+┌──────────────┐
+│ reproducing  │ → Attempt to reproduce the bug. Cannot proceed without reproduction.
+└──────┬───────┘
+       ▼
+┌──────────────┐
+│ classifying  │ → Assign failure type (1/2/3). Must classify before hypothesizing.
+└──────┬───────┘
+       ▼
+┌────────────────┐
+│ investigating  │ → Gather context, generate hypotheses, test them.
+│                │   30-min rule: reclassify → back to classifying if stalled.
+│                │   Restart rule: 2h or 3 failed fixes → back to reproducing.
+└───────┬────────┘
+        ▼
+┌─────────┐     ┌────────────────┐
+│ fixing  │ ──▶ │   verifying    │ → Reproduction test + full suite + lint + tsc
+└─────────┘     └───────┬────────┘
+                        ▼
+              ┌───────────────────┐
+              │ resolved/archived │ → Extract knowledge pattern, update STATE.md, report
+              └───────────────────┘
+```
+
+**Blocked transitions:**
+- `investigating → fixing` is blocked until all 4 act-conditions are YES
+- `fixing → verifying` is blocked until fix is applied (no premature verification)
+- `verifying → resolved` is blocked until all quality gates pass
+- Any state → `checkpoint` when user input is unavoidable (session pauses, resumes later at same state)
+
+**Resume protocol:** When `--session` is used:
+1. Read the session file
+2. Parse the `## Status` field to determine current state
+3. Parse the `## Checkpoint` block (if present) to determine what was needed
+4. Continue from exactly that state. Do not re-run completed steps.
+5. If the session was in `investigating` state, re-read all observations and hypotheses before generating new ones.
+
+**Archive protocol:** After `resolved`:
+1. Extract knowledge pattern to `.planning/debug-knowledge/`
+2. Move session file to `.planning/debug-sessions/archive/` (create dir if needed)
+3. Active sessions stay in `.planning/debug-sessions/`, archived ones in `archive/`
+
+---
+
+### Workflow Integration
+
+The debugger does not operate in isolation. It connects to the broader SUNCO workflow:
+
+**STATE.md updates:**
+- On session start: `node $HOME/.claude/sunco/bin/sunco-tools.cjs state-update --status "debugging" --next "resolve debug session"`
+- On session resolve: `node $HOME/.claude/sunco/bin/sunco-tools.cjs state-update --status "[previous status]" --next "[previous next action]"`
+- The debugger restores STATE.md to its pre-debug state after resolution. Debugging is a detour, not a phase transition.
+
+**Verify pipeline integration:**
+- If the debugger was spawned by `/sunco:verify` (Layer 5 adversarial or Layer 7 human eval found an issue), the debug result feeds back into verification:
+  - On resolve: the orchestrator re-runs the failed verification layer
+  - On inconclusive: the orchestrator marks the layer as FAIL with the debug session as evidence
+
+**Gap closure flow:**
+- If the root cause reveals a missing test, the prevention recommendation should include: "Generate test via `/sunco:test-gen` targeting [specific scenario]"
+- If the root cause reveals an architecture issue, recommend: "Add architecture rule via `/sunco:lint` configuration"
+
+**Cross-session persistence:**
+- Debug knowledge base persists across sessions and context resets
+- Session files are human-readable markdown, viewable without tools
+- All state is in files, never in memory. A context reset loses nothing.
+
+---
+
 ## Output
 
 On success:
