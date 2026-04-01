@@ -330,3 +330,127 @@ Before reporting INTEGRATION CHECK COMPLETE, all must be true:
 - [ ] Recommendations ordered by severity
 - [ ] Overall verdict is PASS only if no critical or high severity issues exist
 - [ ] All gaps include a resolution recommendation (not just a description of the problem)
+
+---
+
+## Data Flow Tracing
+
+For each cross-module interaction discovered during the handoff check, trace the full data flow:
+
+1. **Origin:** Which module creates the data? What function? What type?
+2. **Transport:** How does it move? Direct import? API call? File I/O? Event?
+3. **Transformations:** Is the data reshaped between origin and consumer? (serialization, mapping, validation)
+4. **Consumer:** Which module uses the data? Does it expect the same shape?
+5. **Error path:** If the origin fails or returns unexpected data, does the consumer handle it?
+
+**Verification commands:**
+```bash
+# Find all exports from a module
+grep -rn "^export " {module_path} --include="*.ts"
+
+# Find all consumers of that export
+grep -rn "from.*{module_name}" packages/ --include="*.ts"
+
+# Check type compatibility at compile time
+npx tsc --noEmit 2>&1 | grep -i "error.*{type_name}"
+```
+
+**Report format per flow:**
+```
+Flow: SkillDefinition from core/skill/types.ts → skills-harness/lint.skill.ts
+  Origin: export interface SkillDefinition { id, command, kind, execute }
+  Transport: direct ESM import
+  Transform: none (used as-is)
+  Consumer: defineSkill() expects SkillDefinition shape
+  Type check: ✅ npx tsc --noEmit passes
+  Error path: ✅ if skill.execute throws, lifecycle catches and reports
+```
+
+---
+
+## API Contract Verification
+
+Beyond type checking, verify that the runtime contract matches the compile-time contract:
+
+1. **For each export/import pair:** Read the actual function implementation. Does it return what the type says?
+   - Type says `Promise<SkillResult>` → does the function always return that shape, including error cases?
+   - Type says `string` → can the function return `undefined` in edge cases despite the type?
+
+2. **Zod schema alignment:** If a module uses Zod schemas for validation, verify the Zod schema matches the TypeScript type. Mismatches between `z.infer<typeof Schema>` and the manually written interface are a common integration bug.
+
+3. **Config contract:** If modules share configuration, verify they read the same keys from the same config source. Module A reading `config.workflow.research` and Module B reading `config.research` (different path, same intent) is a contract violation.
+
+---
+
+## Dead Integration Detection
+
+Find connections that exist in code but serve no purpose:
+
+**Dead exports:**
+```bash
+# Find all exports
+grep -rn "^export " packages/*/src/ --include="*.ts" | awk -F: '{print $1 ":" $3}' > /tmp/all-exports.txt
+
+# For each export, check if it's imported anywhere else
+# If grep finds 0 external imports → dead export
+```
+
+**Dead imports:**
+```bash
+# Find imports that are never used in the importing file
+# TypeScript compiler with --noUnusedLocals catches most, but not all
+npx tsc --noEmit --noUnusedLocals 2>&1 | grep "declared but"
+```
+
+**Dead skill registrations:** Check if every skill registered in `cli.ts` preloadedSkills is actually callable by some command or workflow.
+
+**Report format:** List each dead integration with: file, export/import name, reason it appears dead, recommendation (remove or wire up).
+
+---
+
+## Circular Dependency Detection
+
+Circular imports cause subtle bugs (partially initialized modules, undefined at runtime despite passing type check).
+
+**Detection:**
+```bash
+# If madge is available (ideal)
+npx madge --circular packages/*/src/ 2>/dev/null
+
+# Manual fallback: build import graph
+grep -rn "^import.*from.*packages/" packages/*/src/ --include="*.ts" | \
+  awk -F"'" '{split($1,a,":"); print a[1] " → " $2}' | sort | uniq
+```
+
+**Any cycle found = CRITICAL severity.** Circular dependencies must be resolved before execution proceeds, because they cause:
+- `undefined` imports at runtime (module not fully initialized when imported)
+- Unpredictable test behavior (test execution order matters)
+- Build failures in some bundlers
+
+**Resolution patterns:**
+- Extract shared types to a separate file imported by both sides
+- Invert the dependency (make A not depend on B, have B provide what A needs via injection)
+- Create a third module that both A and B depend on
+
+---
+
+## Regression Surface Analysis
+
+For each integration point changed in this phase, assess what existing tests cover it:
+
+1. List all test files that import from the changed module
+2. For each test file: does it test the specific export/function that changed?
+3. If no tests cover the changed integration → **WARN: untested integration change**
+
+```bash
+# Find test files that import the changed module
+grep -rn "from.*{changed_module}" packages/*/src/__tests__/ --include="*.test.ts"
+
+# Check if they test the specific changed export
+grep -n "{changed_export_name}" {test_file}
+```
+
+**Regression risk levels:**
+- Tests exist AND cover the changed export → LOW risk
+- Tests exist but don't cover the specific change → MEDIUM risk
+- No tests cover this integration → HIGH risk (recommend adding integration test)

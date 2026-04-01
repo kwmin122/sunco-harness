@@ -418,3 +418,83 @@ Before creating the git commit, all of the following must be true:
 8. **Skill lifecycle complete** — any skill implemented has all 6 lifecycle stages
 9. **Deviations documented** — all Rule 1-3 deviations are in SUMMARY.md
 10. **Staging clean** — `git diff --staged --stat` shows only this plan's files
+
+---
+
+## Task-Level Checkpointing
+
+After completing each task (not just each plan), write a progress checkpoint:
+
+```bash
+mkdir -p .planning/phases/{phase}/.checkpoints
+cat > .planning/phases/{phase}/.checkpoints/{plan}-task-{N}.json << 'EOF'
+{
+  "plan": "{plan-id}",
+  "task": {N},
+  "task_name": "{name from <name> tag}",
+  "status": "complete",
+  "files_modified": ["{list of files this task changed}"],
+  "done_verified": true,
+  "timestamp": "{ISO 8601}"
+}
+EOF
+```
+
+**Why per-task, not per-plan:** If the agent crashes after task 3 of 5, per-plan checkpointing loses all progress. Per-task checkpointing means the resume only needs to redo tasks 4 and 5.
+
+**Resume protocol:** When the orchestrator detects a plan with some but not all task checkpoints:
+1. Read all `.checkpoints/{plan}-task-*.json` files
+2. Find the highest completed task number
+3. Spawn executor with instruction: "Resume plan {plan} from task {N+1}. Tasks 1-{N} are already complete — do NOT re-execute them."
+4. Executor reads the plan, skips to task N+1, continues normally
+
+---
+
+## Crash Recovery
+
+If the executor is interrupted mid-task (context window exhaustion, network error, user abort):
+
+1. **Git state:** Any staged but uncommitted changes are preserved in the working tree. The orchestrator runs `git stash` to save them.
+2. **Partial file:** The last completed task checkpoint tells the orchestrator exactly where progress stopped.
+3. **Recovery command:** Orchestrator spawns a new executor with:
+   ```
+   Resume plan {plan} from task {N+1}.
+   Previous executor was interrupted during task {N+1}.
+   Git stash may contain partial work — run `git stash pop` first and evaluate what was done.
+   If partial work is usable, continue from where it left off.
+   If partial work is broken, discard it (`git checkout -- .`) and redo task {N+1} from scratch.
+   ```
+
+---
+
+## Poka-yoke Rules (Error-Proofing)
+
+These rules make common executor mistakes structurally impossible:
+
+1. **Absolute paths only.** Every file path in every task action must be absolute from the project root. Never `./src/foo.ts`. Always `packages/core/src/foo.ts`. This eliminates the #1 source of "file not found" errors in executor agents.
+
+2. **Stopping conditions.** Prevent infinite loops:
+   - Lint fix: maximum 3 attempts. After 3 failures, report the errors and stop.
+   - Test retry: maximum 2 attempts. After 2 failures, investigate root cause (do not keep re-running).
+   - Build retry: maximum 2 attempts.
+
+3. **Blast radius gate.** If a single task modifies more than 10 files, PAUSE before committing. Report to orchestrator: "Task {N} modified {count} files — this exceeds the blast radius threshold. Verify before commit? (yes/no)"
+
+4. **No silent failures.** If any `<verify><automated>` command exits non-zero, the task is NOT complete regardless of whether the `<done>` block seems satisfied. Automated verification trumps self-assessment.
+
+---
+
+## Post-Task Self-Verification
+
+After completing each task, before moving to the next:
+
+1. Re-read the task's `<done>` block completely
+2. For each criterion in `<done>`:
+   - If it specifies a command to run → run it, check exit code
+   - If it specifies a file should exist → `ls` the file
+   - If it specifies a function should be exported → `grep "export.*{name}"` the file
+3. If ALL criteria pass → write task checkpoint, move to next task
+4. If ANY criterion fails:
+   - Attempt to fix (1 attempt only, targeted fix based on which criterion failed)
+   - Re-verify
+   - If still fails → write partial checkpoint, report failure to orchestrator

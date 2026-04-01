@@ -22,11 +22,15 @@ This copies commands, engine, hooks, workflows, references, and templates into `
 AI agents write code. Your job is setting up the field so they make fewer mistakes. SUNCO is that field.
 
 - **Deterministic harness** — lint, health, guard run with zero LLM cost
-- **6-layer Swiss cheese verification** — multi-agent review, guardrails, BDD criteria, permission audit, adversarial test, cross-model (Codex)
+- **7-layer Swiss cheese verification** — multi-agent review, guardrails, BDD criteria, permission audit, adversarial test, cross-model, human eval
+- **18 specialized agents** — planner, executor, debugger, verifier, researcher, and 12 more
+- **12-point plan checker** — requirements, scope, criteria, Nyquist, CLAUDE.md compliance, cross-plan contracts
+- **Adaptive lifecycle** — pivot, rethink, backtrack at any stage without losing progress
 - **Blast radius analysis** — dependency graph check before every execution
+- **Per-task checkpointing** — crash recovery resumes from exact task, not from scratch
 - **58 slash commands** covering the full development lifecycle
-- **Proactive recommender** — 50+ rules suggesting next-best-action
-- **HWPX document generation** — Korean standard document format
+- **Multi-model design pingpong** — Claude + Codex parallel design with merge (coming in v0.4)
+- **Korean i18n** — 58 commands with Korean descriptions, interactive installer
 
 ## Quick Start
 
@@ -63,15 +67,54 @@ Analyzing the error...
 ⚡ SUNCO Mode | Context: ██████████░░░░░░ 65% | Skills used: 3
 ```
 
-## The Pipeline
+## The Complete Lifecycle
+
+### First Flow (New Project → Production)
 
 ```
-/sunco:new → /sunco:discuss → /sunco:plan → /sunco:execute → /sunco:verify → /sunco:ship
+/sunco:new ──── questions → research (4 parallel agents) → PROJECT.md + REQUIREMENTS.md + ROADMAP.md
+    ↓
+/sunco:discuss 1 ──── gray areas → CONTEXT.md with locked decisions
+    ↓
+/sunco:plan 1 ──── acceptance criteria → PLAN.md (verified by 12-point checker)
+    ↓
+/sunco:execute 1 ──── 18 specialized agents → code + lint-gate + SUMMARY.md
+    ↓
+/sunco:verify 1 ──── 7-layer Swiss cheese verification
+    ↓
+/sunco:ship 1 ──── PR with verification evidence
 ```
+
+### Pivot Flow (Change Direction Anytime)
+
+```
+"Actually, let's change the auth approach..."
+    ↓
+/sunco:pivot ──── detects artifact changes → impact analysis
+    ↓
+Shows: "REQUIREMENTS.md changed → Phase 2 plans invalidated"
+    ↓
+Auto-routes to /sunco:rethink 2 → revised decisions
+    ↓
+/sunco:plan 2 → revised plans → continues normal flow
+```
+
+### At Any Point
+
+```
+/sunco:where-am-i      # Complete status + decision history
+/sunco:backtrack D-03   # Rollback to before decision D-03
+/sunco:reinforce        # Add requirements mid-milestone
+/sunco:mode             # Auto-route everything (Super Saiyan mode)
+```
+
+## Quality Architecture
 
 Each step has built-in quality gates:
-- **discuss**: Extracts decisions and gray areas before planning
-- **plan**: Creates BDD acceptance criteria with research integration
+- **discuss**: Extracts decisions, scope guardrail prevents creep, prior decisions loaded
+- **plan**: 12-point checker (requirements, scope, criteria, Nyquist, CLAUDE.md compliance)
+- **execute**: Mandatory lint-gate, blast radius check, per-task checkpointing
+- **verify**: 7-layer Swiss cheese (multi-agent review, guardrails, BDD, permissions, adversarial, cross-model, human eval)
 - **execute**: Parallel execution with mandatory lint-gate after each task
 - **verify**: 6-layer Swiss cheese verification pipeline
 - **ship**: Creates PR only after verification passes

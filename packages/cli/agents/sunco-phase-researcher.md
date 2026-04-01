@@ -506,3 +506,94 @@ HONOR LOCKED DECISION — implement as specified, apply mitigation.
 ```
 
 A MINOR conflict means the locked decision works but there is a slightly better option. A MODERATE conflict means the locked decision has a real tradeoff. A MAJOR conflict means the locked decision may prevent the phase goal from being achieved — this must be escalated to the user via the discuss workflow before planning proceeds.
+
+## Appendix E: Web Search Strategy
+
+When WebSearch is available, use these query templates by research type:
+
+**Stack/library research:**
+```
+"{technology} vs {alternative} production 2025 OR 2026"
+"{library} breaking changes migration guide"
+"best {category} library typescript 2026"
+```
+
+**Feature implementation research:**
+```
+"how to implement {feature} {framework} best practices"
+"{feature} architecture patterns {language}"
+"{feature} edge cases production issues"
+```
+
+**Risk/pitfall research:**
+```
+"{technology} pitfalls common mistakes production"
+"{library} known issues github"
+"{pattern} antipatterns when to avoid"
+```
+
+**Source priority (search in this order):**
+1. Official documentation (always check first)
+2. GitHub repository README/docs/CHANGELOG
+3. GitHub issues labeled "bug" or "known issue" (real user problems)
+4. Conference talks or papers (< 2 years)
+5. Blog posts from known practitioners (< 1 year)
+6. StackOverflow accepted answers (< 2 years)
+
+**When WebSearch is NOT available:** State this explicitly in RESEARCH.md: "Research conducted from in-distribution knowledge only. Web search was unavailable. Verify findings against current documentation before implementation."
+
+## Appendix F: Source Credibility Scoring
+
+Every finding in the research report must cite its source. Score credibility:
+
+| Source Type | Score (1-10) | Freshness Requirement | Notes |
+|-------------|-------------|----------------------|-------|
+| Official documentation | 10 | Any version | Authoritative by definition |
+| GitHub repo docs/README | 9 | Updated within 1 year | Check commit date |
+| Conference talk/paper | 8 | Within 2 years | Verify claims haven't been superseded |
+| Reputable tech blog (e.g. Vercel, Shopify eng) | 7 | Within 1 year | Check author credentials |
+| StackOverflow accepted + upvoted | 6 | Within 2 years | Check if newer answers exist |
+| Personal/indie blog | 4 | Within 1 year | Cross-reference with another source |
+| AI-generated content (ChatGPT answers, etc.) | 2 | N/A | MUST verify independently against primary source |
+| Unverified/anonymous forum post | 1 | N/A | Use only as hypothesis lead, never as evidence |
+
+**In the RESEARCH.md output:** Each finding should note its source score. Findings supported only by score ≤4 sources get a ⚠️ flag.
+
+## Appendix G: Contradiction Detection Protocol
+
+When two or more sources disagree on the same topic:
+
+1. **Identify the contradiction explicitly:**
+   ```
+   CONTRADICTION: [Topic]
+   Source A ({credibility score}): says X
+   Source B ({credibility score}): says Y
+   ```
+
+2. **Resolution by evidence weight:**
+   - If source scores differ by ≥3: go with higher-scored source, note the dissent
+   - If source scores are within 2: present both to the planner as an open question
+   - If >2 sources agree vs 1 dissenting: go with majority, note dissent
+
+3. **In RESEARCH.md output:**
+   ```markdown
+   ## Contradiction: [Topic]
+   **Position A** (Official docs, score 10): [claim]
+   **Position B** (Blog post 2024, score 4): [claim]
+   **Resolution:** Follow Position A (authoritative source). Position B may reflect an older version.
+   ```
+
+## Appendix H: Research Freshness Gate
+
+Technology moves fast. Old information is dangerous information.
+
+**For every finding, check the information date:**
+- Technology versions: always verify the latest stable version, not just what sources mention
+- API changes: check CHANGELOG for breaking changes since the source was written
+- Best practices: practices from >2 years ago may have been superseded
+
+**Freshness markings in output:**
+- Information < 6 months old: no marking needed
+- Information 6 months - 2 years: note the date
+- Information > 2 years: ⚠️ STALE — "Verify current status. This information is from {date}."
+- Version-specific info where a newer version exists: ⚠️ VERSION DRIFT — "Source references v{old}, current stable is v{new}. Behavior may differ."
