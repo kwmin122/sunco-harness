@@ -311,6 +311,7 @@ function install(targetDir) {
   const srcCommands   = path.join(pkgRoot, 'commands', 'sunco');
   const srcEngine     = path.join(pkgRoot, 'dist');
   const srcHooks      = path.join(pkgRoot, 'hooks');
+  const srcAgents     = path.join(pkgRoot, 'agents');
   const srcWorkflows  = path.join(pkgRoot, 'workflows');
   const srcReferences = path.join(pkgRoot, 'references');
   const srcTemplates  = path.join(pkgRoot, 'templates');
@@ -319,6 +320,7 @@ function install(targetDir) {
   const destCommands   = path.join(targetDir, 'commands', 'sunco');
   const destEngine     = path.join(targetDir, 'sunco', 'bin');
   const destHooks      = path.join(targetDir, 'hooks');
+  const destAgents     = path.join(targetDir, 'sunco', 'agents');
   const destWorkflows  = path.join(targetDir, 'sunco', 'workflows');
   const destReferences = path.join(targetDir, 'sunco', 'references');
   const destTemplates  = path.join(targetDir, 'sunco', 'templates');
@@ -350,6 +352,7 @@ function install(targetDir) {
   const hooksCopied = copyGlob(srcHooks, '*.cjs', destHooks);
 
   // Copy workflows, references, templates
+  const agCopied  = copyDirRecursive(srcAgents, destAgents);
   const wfCopied  = copyDirRecursive(srcWorkflows, destWorkflows);
   const refCopied = copyDirRecursive(srcReferences, destReferences);
   const tplCopied = copyDirRecursive(srcTemplates, destTemplates);
@@ -360,7 +363,7 @@ function install(targetDir) {
     patchSettings(targetDir);
   }
 
-  return { cmdCopied, engCopied, hooksCopied, wfCopied, refCopied, tplCopied, skillCount, version, destCommands };
+  return { cmdCopied, engCopied, hooksCopied, agCopied, wfCopied, refCopied, tplCopied, skillCount, version, destCommands };
 }
 
 // ---------------------------------------------------------------------------
@@ -571,7 +574,7 @@ function printInstallResult(r, runtimeName, lang) {
   const skillLabel = r.skillCount > 0
     ? `(${r.skillCount} ${msg.skills})`
     : `(${r.cmdCopied} ${msg.files})`;
-  const docCount = r.wfCopied + r.refCopied + r.tplCopied;
+  const docCount = (r.agCopied || 0) + r.wfCopied + r.refCopied + r.tplCopied;
 
   console.log(`  ${GREEN}✓${RESET} ${runtimeName}: ${BOLD}${msg.commands}${RESET} ${DIM}${skillLabel}${RESET}`);
   console.log(`  ${GREEN}✓${RESET} ${runtimeName}: ${BOLD}${msg.engine}${RESET}  ${DIM}(${r.engCopied} ${msg.files})${RESET}`);

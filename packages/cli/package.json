@@ -8,6 +8,7 @@
     "commands/",
     "dist/",
     "hooks/",
+    "agents/",
     "workflows/",
     "references/",
     "templates/",
