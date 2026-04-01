@@ -53,6 +53,9 @@ investigating
 ## Observations
 []
 
+## Failure Type
+TBD (Type 1: Context Gap / Type 2: Direction Error / Type 3: Structural Conflict)
+
 ## Hypotheses
 []
 
@@ -85,7 +88,33 @@ Otherwise: ask user "How do I reproduce this? (command to run, or describe steps
 
 Record reproduction steps and output in session file.
 
-## Step 3: Gather context
+## Step 3: Classify Failure Type
+
+Before generating hypotheses, classify the failure into one of three types based on the reproduction output and error details:
+
+**Type 1: Context Gap** — Agent/code is missing information
+- Symptoms: `undefined variable`, wrong file path, missing import, API contract mismatch, "is not a function", "Cannot read properties of undefined"
+- Fix approach: Add the missing context (file, docs, types, API contract)
+- Example: "The function expects a User object but receives a raw JSON"
+
+**Type 2: Direction Error** — Requirements misunderstood
+- Symptoms: Feature works but does the wrong thing, UI looks different from spec, output format is wrong, behavior diverges from acceptance criteria
+- Fix approach: Redefine requirements more clearly, provide concrete examples and expected vs actual
+- Example: "Search returns alphabetical results but user expects relevance order"
+
+**Type 3: Structural Conflict** — Code architecture causes the bug
+- Symptoms: Fix A breaks B, circular dependencies, state corruption, same symbol means different things in different contexts
+- Fix approach: Isolate the problem, establish "Must NOT Have" boundaries, restructure the affected component
+- Example: "`includeToday=true` means different things in different functions"
+
+**30-minute rule**: If no progress after 30 minutes on a single approach, reclassify and try a different type's fix approach. Record the reclassification in the session file.
+
+After classifying, record in session file and report:
+```
+Failure classified as **Type [N]: [Name]**. Applying [fix approach].
+```
+
+## Step 4: Gather context
 
 1. Read error output carefully — look for file paths, line numbers, stack traces.
 2. Read the failing file(s).
@@ -99,7 +128,7 @@ Record reproduction steps and output in session file.
    # Find similar usage patterns
    ```
 
-## Step 4: Hypothesis generation
+## Step 5: Hypothesis generation
 
 Generate 3 hypotheses ranked by likelihood. For each:
 - What could cause this behavior?
@@ -108,7 +137,7 @@ Generate 3 hypotheses ranked by likelihood. For each:
 
 Record in session file.
 
-## Step 5: Test hypotheses
+## Step 6: Test hypotheses
 
 For each hypothesis (highest likelihood first):
 1. Design a minimal test to confirm or deny
@@ -125,7 +154,7 @@ Result: [confirmed/disproven]
 Evidence: [output]
 ```
 
-## Step 6: Apply fix
+## Step 7: Apply fix
 
 When root cause confirmed:
 1. Document root cause in session file
@@ -140,12 +169,15 @@ When root cause confirmed:
    npx eslint packages/ --max-warnings 0
    ```
 
-## Step 7: Close session
+## Step 8: Close session
 
 Update session file:
 ```markdown
 ## Status
 resolved
+
+## Failure Type
+[Type N: Name — confirmed classification]
 
 ## Root Cause
 [clear explanation]

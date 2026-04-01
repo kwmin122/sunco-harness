@@ -293,7 +293,46 @@ If `.gitignore` already exists, skip this step.
 
 ---
 
-## Step 7 — Display results
+## Step 7 — Generate CLAUDE.md
+
+If `CLAUDE.md` does not already exist in the project root, create it using the detected values from earlier steps.
+
+```markdown
+# {Project Name}
+
+## Architecture
+- **Stack**: {detected ecosystems}
+- **Source root**: {detected source directory}
+- **Layers**: {detected layers with import rules}
+
+## Conventions
+- {detected naming conventions}
+- {detected import style}
+
+## Key Decisions
+(Add decisions here as the project evolves)
+
+## Do NOT
+- Do not modify files outside src/ without explicit instruction
+- Do not change the package manager
+- Do not add dependencies without asking
+```
+
+Fill in the placeholders as follows:
+- `{Project Name}` — use the `name` field from `package.json`, or the directory name if unavailable
+- `{detected ecosystems}` — comma-separated ecosystem list from Step 2 (e.g. `typescript, nodejs, react`)
+- `{detected source directory}` — `sourceRoot` from Step 3 (e.g. `src/`) or `"not detected"`
+- `{detected layers with import rules}` — one line per layer in the format `layerName (can import: dep1, dep2)`, or `"none detected"` if Step 3 found no layers
+- `{detected naming conventions}` — naming convention from Step 5 conventions (e.g. `camelCase`)
+- `{detected import style}` — import style from Step 5 conventions (e.g. `relative` or `alias`)
+
+If `CLAUDE.md` already exists, skip this step silently.
+
+Add `CLAUDE.md` to the "Files written" list in Step 8 output if it was created.
+
+---
+
+## Step 8 — Display results
 
 Print the following structured output:
 
@@ -316,6 +355,7 @@ sunco init complete
     .sun/rules/arch-layers.json        ← only if layers detected
     eslint.config.js                   ← only if JS/TS and not pre-existing
     .gitignore                         ← only if created fresh
+    CLAUDE.md                          ← only if created fresh
 
   Rules generated: <count>
 ```
@@ -329,7 +369,7 @@ If init was previously run and `--force` was not passed, and `.sun/config.toml` 
 
 ---
 
-## Step 8 — Suggest next steps
+## Step 9 — Suggest next steps
 
 After a successful init, always suggest:
 

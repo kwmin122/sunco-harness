@@ -1,6 +1,6 @@
 ---
 name: sunco:verify
-description: 6-layer Swiss cheese verification for a completed phase. Run after /sunco:execute. Each layer catches different failure modes.
+description: 7-layer Swiss cheese verification for a completed phase. Run after /sunco:execute. Each layer catches different failure modes.
 argument-hint: "<phase> [--layer N] [--skip-adversarial]"
 allowed-tools:
   - Read
@@ -16,21 +16,23 @@ allowed-tools:
 - `<phase>` — Phase number. Required.
 
 **Flags:**
-- `--layer N` — Run only layer N (1-6). Use when re-running after fixing specific issues.
+- `--layer N` — Run only layer N (1-7). Use when re-running after fixing specific issues.
 - `--skip-adversarial` — Skip Layer 5 (adversarial test). Use for non-security-critical phases.
 - `--skip-codex` — Skip Layer 6 (cross-model). Use when Codex plugin is not installed.
+- `--skip-human-eval` — Skip Layer 7 (human eval). Use only in fully automated/CI contexts.
 </context>
 
 <objective>
-Run 6-layer Swiss cheese verification to catch defects that individual checks miss.
+Run 7-layer Swiss cheese verification to catch defects that individual checks miss.
 
-**The 6 Layers:**
+**The 7 Layers:**
 1. Multi-agent cross-review — independent review from fresh context
 2. Guardrails — deterministic lint + health check
 3. BDD criteria check — acceptance criteria from PLAN.md
 4. Permission audit — file access, network, git boundary check
 5. Adversarial test — try to break it
 6. Cross-model verification (Codex) — eliminates same-model bias
+7. Human Eval — hands-on manual verification (AI's All Pass ≠ your All Pass)
 
 **Creates/Updates:**
 - `.planning/phases/[N]-*/[N]-VERIFICATION.md` — verification results with pass/fail per layer
@@ -205,6 +207,64 @@ Layer 6 SKIPPED = plugin not installed (does not block overall verification).
 
 ---
 
+## Layer 7: Human Eval (skip if --skip-human-eval)
+
+After all automated layers pass, present the user with a hands-on verification checklist.
+
+**Principle:** AI's All Pass ≠ your All Pass. Automated checks verify correctness; only a human can verify that the result *feels right*.
+
+**Step 1 — Show what was built:**
+List the key files created or modified during this phase with one-line descriptions:
+```
+Files changed in Phase [N]:
+  src/foo.ts       — Added Foo class with bar() and baz() methods
+  src/index.ts     — Exported Foo from package root
+  tests/foo.test.ts — Unit tests for Foo (6 cases)
+```
+
+**Step 2 — Suggest manual checks based on phase type:**
+
+Detect phase type from PLAN.md content and suggest targeted checks:
+
+- **If UI changes detected** (files in `components/`, `pages/`, `views/`, `ui/`, or `.tsx`/`.jsx` files):
+  "Open the app and test these user flows: [list flows mentioned in acceptance criteria]"
+
+- **If API changes detected** (files in `routes/`, `handlers/`, `controllers/`, or `api/`):
+  "Call these endpoints and verify responses: [list endpoints from acceptance criteria]"
+
+- **If CLI changes detected** (files in `commands/`, `cli/`, or `bin/`):
+  "Run these commands and check output: [list commands from acceptance criteria]"
+
+- **If library/utility changes** (files in `utils/`, `lib/`, `shared/`):
+  "Import and call the changed functions in a scratch file or REPL and verify behavior."
+
+- **If data/schema changes** (migrations, schema files):
+  "Run the migration, inspect the resulting schema, and verify existing data integrity."
+
+**Step 3 — Ask explicitly:**
+
+Present this prompt to the user:
+```
+Layer 7 (Human Eval) — manual verification required.
+
+[Show the list from Step 1 and the checklist from Step 2]
+
+Have you manually verified the above?
+  yes   → Layer 7 PASS
+  no    → Review checklist again (guidance below)
+  skip  → Layer 7 SKIPPED (flagged as risk in VERIFICATION.md)
+```
+
+- `yes` → Layer 7 PASS
+- `no` → Show the checklist again. Offer: "Which item do you need help with?"
+  Once the user confirms completion, mark PASS.
+- `skip` → Layer 7 SKIPPED. Record warning: "Human eval skipped — human has not confirmed hands-on testing."
+
+Layer 7 PASS = human explicitly confirmed hands-on testing.
+Layer 7 SKIPPED = human chose to skip (flagged as risk, does not block overall verification but is noted prominently).
+
+---
+
 ## Write VERIFICATION.md
 
 ```markdown
@@ -217,6 +277,7 @@ Layer 6 SKIPPED = plugin not installed (does not block overall verification).
 - Layer 4 (Permission audit): [PASS/WARN/FAIL]
 - Layer 5 (Adversarial): [PASS/WARN/FAIL/SKIPPED]
 - Layer 6 (Cross-model Codex): [PASS/WARN/FAIL/SKIPPED]
+- Layer 7 (Human Eval): [PASS/SKIPPED ⚠️]
 
 ## Overall: [PASS / NEEDS FIXES]
 
@@ -239,6 +300,10 @@ Layer 6 SKIPPED = plugin not installed (does not block overall verification).
 ## Layer 6 Details
 [cross-model findings or SKIPPED reason]
 
+## Layer 7 Details
+[human eval checklist shown, response: PASS / SKIPPED]
+[if SKIPPED: ⚠️ WARNING — human has not confirmed hands-on testing]
+
 ## Issues to Fix
 - [ ] [issue 1]
 - [ ] [issue 2]
@@ -246,6 +311,6 @@ Layer 6 SKIPPED = plugin not installed (does not block overall verification).
 
 ## Route
 
-If OVERALL PASS: "All 6 layers passed. Run `/sunco:ship [N]` to create the PR."
+If OVERALL PASS: "All 7 layers passed. Run `/sunco:ship [N]` to create the PR."
 If NEEDS FIXES: "Fix the issues listed above, then re-run `/sunco:verify [N]`."
 </process>
