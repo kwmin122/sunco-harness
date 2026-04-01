@@ -25,9 +25,7 @@
 {{files_modified_list}}
 ```
 
-**Files created (new):** {{created_count}}
-**Files modified (existing):** {{modified_count}}
-**Files deleted:** {{deleted_count}}
+**Created:** {{created_count}} | **Modified:** {{modified_count}} | **Deleted:** {{deleted_count}}
 
 ---
 
@@ -37,10 +35,7 @@
 {{test_output_summary}}
 ```
 
-**Passed:** {{tests_passed}}
-**Failed:** {{tests_failed}}
-**New tests added:** {{new_tests}}
-**Coverage delta:** {{coverage_delta}}
+**Passed:** {{tests_passed}} | **Failed:** {{tests_failed}} | **New tests added:** {{new_tests}}
 
 ---
 
@@ -69,35 +64,6 @@
 | {{criterion_1}} | {{criterion_1_status}} | {{criterion_1_evidence}} |
 | {{criterion_2}} | {{criterion_2_status}} | {{criterion_2_evidence}} |
 | {{criterion_3}} | {{criterion_3_status}} | {{criterion_3_evidence}} |
-
-*Status: ✓ VERIFIED | ✗ FAILED | ⚠️ PARTIAL*
-
----
-
-## Must-Haves Verification
-
-Derived from PLAN.md frontmatter. All must be true for plan to count as complete.
-
-### Truths
-
-| # | Truth | Status | Evidence |
-|---|-------|--------|----------|
-| 1 | {{truth_1}} | {{truth_1_status}} | {{truth_1_evidence}} |
-| 2 | {{truth_2}} | {{truth_2_status}} | {{truth_2_evidence}} |
-
-### Artifacts
-
-| Artifact | Status | Details |
-|----------|--------|---------|
-| `{{artifact_1}}` | {{artifact_1_status}} | {{artifact_1_details}} |
-| `{{artifact_2}}` | {{artifact_2_status}} | {{artifact_2_details}} |
-
-### Key Links
-
-| From | To | Status | Evidence |
-|------|----|--------|----------|
-| {{link_1_from}} | {{link_1_to}} | {{link_1_status}} | {{link_1_evidence}} |
-| {{link_2_from}} | {{link_2_to}} | {{link_2_status}} | {{link_2_evidence}} |
 
 ---
 

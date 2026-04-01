@@ -4,25 +4,23 @@ plan: {{plan_number}}
 type: execute
 wave: {{wave_number}}
 depends_on: {{depends_on}}
-files_modified:
-  - {{file_1}}
-  - {{file_2}}
-  - {{file_3}}
+files_modified: {{files_modified}}
 autonomous: {{autonomous}}
-requirements:
-  - {{requirement_1}}
-  - {{requirement_2}}
+requirements: {{requirements}}
 user_setup: {{user_setup}}
 
 must_haves:
-  truths:
-    - {{must_have_truth_1}}
-    - {{must_have_truth_2}}
-  artifacts:
-    - {{must_have_artifact_1}}
-    - {{must_have_artifact_2}}
-  key_links:
-    - {{must_have_link_1}}
+  truths: {{must_have_truths}}
+  artifacts: {{must_have_artifacts}}
+  key_links: {{must_have_key_links}}
+---
+
+# Phase {{phase_number}}-{{plan_number}} Execution Prompt
+
+> This file is the executable agent prompt for Plan {{plan_number}} of Phase {{phase_number}}.
+> It is created by `/sunco:plan {{phase_number}}` and consumed by `/sunco:execute {{phase_number}}`.
+> Naming convention: `{{phase_number}}-{{plan_number}}-PLAN.md`
+
 ---
 
 <objective>
@@ -34,36 +32,40 @@ must_haves:
 **Phase goal contribution:** {{phase_goal_contribution}}
 </objective>
 
+---
+
 <execution_context>
 @.planning/PROJECT.md
 @.planning/ROADMAP.md
 @.planning/STATE.md
 @.planning/phases/{{phase_number}}-{{phase_slug}}/CONTEXT.md
 
+{{#if prior_plan_summaries}}
+<!-- Prior plan summaries referenced only when genuine dependency exists -->
 {{prior_plan_summaries}}
+{{/if}}
 
+<!-- Relevant source files for this plan -->
 {{relevant_source_files}}
 </execution_context>
+
+---
 
 <harness>
 ## Execution Harness
 
 Before starting any task:
-1. Read all `<execution_context>` files
-2. Understand the phase goal and this plan's contribution
+1. Read all files listed in `<execution_context>` above
+2. Verify you understand the phase goal and how this plan contributes
 3. Do NOT start Task N+1 before Task N is complete and verified
-4. After ALL tasks: run verification checklist, then write SUMMARY.md
+4. After ALL tasks: run verification checklist and write SUMMARY.md
 
 **Lint gate:** `/sunco:lint` must pass with zero errors before declaring complete.
 **Type gate:** `npx tsc --noEmit` must pass with zero errors.
-**Test gate:** `{{test_command}}` must pass (or new tests written where none existed).
-
-**Do NOT leave in any file:**
-- `// TODO` or `// FIXME` comments
-- `placeholder` or `stub` implementations
-- `console.log` debug statements
-- `any` TypeScript types (unless explicitly justified)
+**Test gate:** `{{test_command}}` must pass (or new tests added where none existed).
 </harness>
+
+---
 
 <tasks>
 
@@ -74,10 +76,9 @@ Before starting any task:
   <action>
     {{task_1_action}}
 
-    **Concrete implementation:**
-    - {{task_1_concrete_1}}
-    - {{task_1_concrete_2}}
-    - {{task_1_concrete_3}}
+    **Concrete values:**
+    - {{task_1_concrete_value_1}}
+    - {{task_1_concrete_value_2}}
 
     **Do NOT:**
     - {{task_1_dont_1}}
@@ -99,9 +100,9 @@ Before starting any task:
   <action>
     {{task_2_action}}
 
-    **Concrete implementation:**
-    - {{task_2_concrete_1}}
-    - {{task_2_concrete_2}}
+    **Concrete values:**
+    - {{task_2_concrete_value_1}}
+    - {{task_2_concrete_value_2}}
 
     **Do NOT:**
     - {{task_2_dont_1}}
@@ -129,32 +130,9 @@ Before starting any task:
   <done>{{task_3_done_condition}}</done>
 </task>
 
-<!-- TDD task example — write tests first, then implement to pass -->
+<!-- Checkpoint task example — use when human decision or verification is required -->
 <!--
-<task id="{{phase_number}}-{{plan_number}}-04" type="tdd">
-  <name>{{tdd_task_name}}</name>
-  <files>{{tdd_test_file}}, {{tdd_impl_file}}</files>
-  <read_first>{{tdd_read_first}}</read_first>
-  <action>
-    1. Write failing tests in {{tdd_test_file}} first.
-    2. Run `{{test_command}}` — confirm tests FAIL.
-    3. Implement {{tdd_impl_file}} to make tests pass.
-    4. Run `{{test_command}}` — confirm tests PASS.
-    5. Refactor without breaking tests.
-  </action>
-  <verify>{{test_command}} --reporter verbose</verify>
-  <acceptance_criteria>
-    - All new tests pass
-    - No existing tests broken
-    - Implementation has no stubs
-  </acceptance_criteria>
-  <done>All tests green, implementation substantive</done>
-</task>
--->
-
-<!-- Checkpoint decision task example -->
-<!--
-<task id="{{phase_number}}-{{plan_number}}-05" type="checkpoint:decision" gate="blocking">
+<task id="{{phase_number}}-{{plan_number}}-04" type="checkpoint:decision" gate="blocking">
   <decision>{{checkpoint_decision_question}}</decision>
   <context>{{checkpoint_decision_context}}</context>
   <options>
@@ -173,35 +151,36 @@ Before starting any task:
 </task>
 -->
 
-<!-- Human verify task example -->
+<!-- Human-verify checkpoint example — use when visual/runtime check needed -->
 <!--
-<task id="{{phase_number}}-{{plan_number}}-06" type="checkpoint:human-verify" gate="blocking">
-  <what-built>{{what_was_built_description}}</what-built>
+<task id="{{phase_number}}-{{plan_number}}-05" type="checkpoint:human-verify" gate="blocking">
+  <what-built>{{what_was_built}}</what-built>
   <how-to-verify>{{how_to_verify_instructions}}</how-to-verify>
-  <resume-signal>Type "approved" or describe issues found</resume-signal>
+  <resume-signal>Type "approved" or describe issues</resume-signal>
 </task>
 -->
 
 </tasks>
 
+---
+
 <verification>
 ## Pre-Completion Checklist
 
-Before declaring this plan complete:
+Before declaring this plan complete, verify ALL of the following:
 
 - [ ] {{verification_check_1}}
 - [ ] {{verification_check_2}}
 - [ ] {{verification_check_3}}
 - [ ] `/sunco:lint` passes with zero errors
 - [ ] `npx tsc --noEmit` passes with zero errors
-- [ ] `{{test_command}}` passes (or new tests written for all new code)
-- [ ] No `TODO`, `FIXME`, `placeholder`, or `stub` in modified files
-- [ ] All task acceptance criteria verified individually
-- [ ] No files modified outside the `files_modified` list (unless justified in SUMMARY)
-- [ ] `must_haves.truths` are all observable in the running code
-- [ ] `must_haves.artifacts` all exist with real implementation
-- [ ] `must_haves.key_links` all verified as wired
+- [ ] `{{test_command}}` passes (or new tests written)
+- [ ] No `TODO`, `FIXME`, or `placeholder` comments left in modified files
+- [ ] All acceptance criteria from every task confirmed
+- [ ] No files modified outside `files_modified` list (unless justified)
 </verification>
+
+---
 
 <success_criteria>
 ## Plan Success Criteria
@@ -212,24 +191,24 @@ This plan is complete when:
 - [ ] {{success_criterion_2}}
 - [ ] {{success_criterion_3}}
 - [ ] All tasks completed and individually verified
-- [ ] Entire verification checklist above is checked
+- [ ] Verification checklist above is fully checked
 - [ ] SUMMARY.md written to `.planning/phases/{{phase_number}}-{{phase_slug}}/{{phase_number}}-{{plan_number}}-SUMMARY.md`
 </success_criteria>
+
+---
 
 <output>
 After completion, write:
 `.planning/phases/{{phase_number}}-{{phase_slug}}/{{phase_number}}-{{plan_number}}-SUMMARY.md`
 
-Include in the summary:
+Use the summary.md template format. Include:
 - All tasks completed with status and commit hashes
 - Files modified (created / modified / deleted counts)
 - Test results summary
-- Lint gate status (PASS/FAIL)
-- TypeScript gate status (PASS/FAIL)
+- Lint gate status
 - Acceptance criteria verification table
-- Issues encountered (empty if clean)
-- Decisions made during execution (empty if followed plan exactly)
-- Next steps
+- Any issues encountered or deviations from plan
+- Decisions made during execution
 </output>
 
 ---
@@ -241,18 +220,38 @@ Include in the summary:
 | `phase` | Yes | Phase identifier (e.g., `01-foundation`) |
 | `plan` | Yes | Plan number within phase (e.g., `01`, `02`) |
 | `type` | Yes | `execute` for standard, `tdd` for TDD plans |
-| `wave` | Yes | Execution wave. Pre-computed at plan time. |
-| `depends_on` | Yes | Plan IDs this plan requires. `[]` for Wave 1. |
+| `wave` | Yes | Execution wave number (1, 2, 3...). Pre-computed at plan time. |
+| `depends_on` | Yes | Array of plan IDs this plan requires. `[]` for Wave 1. |
 | `files_modified` | Yes | All files this plan creates or modifies. |
 | `autonomous` | Yes | `true` if no checkpoints, `false` if has checkpoints |
 | `requirements` | Yes | Requirement IDs from ROADMAP. MUST NOT be empty. |
-| `user_setup` | No | Human-required setup items (external services) |
+| `user_setup` | No | Array of human-required setup items (external services) |
 | `must_haves.truths` | Yes | Observable behaviors that must be true after execution |
 | `must_haves.artifacts` | Yes | Files that must exist with real implementation |
 | `must_haves.key_links` | Yes | Critical connections between artifacts |
 
+## Wave Assignment Rules
+
+**Wave 1 (parallel):** Plans with `depends_on: []` and no file conflicts.
+**Wave N+1 (sequential):** Plans that depend on Wave N output or share files.
+
+Two plans can run in parallel if they:
+1. Have no entries in `depends_on` pointing to each other
+2. Have zero overlap in `files_modified`
+3. Do not consume each other's exports
+
+## Task Type Reference
+
+| Type | When to Use |
+|------|-------------|
+| `auto` | Standard implementation task, no human input needed |
+| `tdd` | Write failing tests first, then implement to pass |
+| `checkpoint:decision` | Gate on a human architectural choice |
+| `checkpoint:human-verify` | Gate on visual/runtime verification |
+| `checkpoint:user-setup` | Gate on human action (API keys, account setup) |
+
 ---
 
-*Plan file: .planning/phases/{{phase_number}}-{{phase_slug}}/{{phase_number}}-{{plan_number}}-PLAN.md*
-*Created by: /sunco:plan {{phase_number}}*
-*Executed by: /sunco:execute {{phase_number}}*
+*Plan {{phase_number}}-{{plan_number}} created by: /sunco:plan {{phase_number}}*
+*Expected executor: /sunco:execute {{phase_number}}*
+*Created: {{created_date}}*

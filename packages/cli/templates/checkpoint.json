@@ -1,0 +1,51 @@
+{
+  "version": "{{checkpoint_version}}",
+  "checkpoint_id": "{{checkpoint_id}}",
+  "created": "{{checkpoint_timestamp}}",
+  "session_id": "{{session_id}}",
+
+  "position": {
+    "phase": "{{current_phase}}",
+    "plan": "{{current_plan}}",
+    "task": "{{current_task}}",
+    "task_status": "{{task_status}}",
+    "wave": {{current_wave}}
+  },
+
+  "state": {
+    "last_action": "{{last_action}}",
+    "next_action": "{{next_action}}",
+    "first_command_on_resume": "{{first_command_on_resume}}",
+    "files_in_flight": {{files_in_flight}},
+    "open_decisions": {{open_decisions}},
+    "active_blockers": {{active_blockers}}
+  },
+
+  "git": {
+    "branch": "{{git_branch}}",
+    "last_commit": "{{last_commit_hash}}",
+    "last_commit_message": "{{last_commit_message}}",
+    "uncommitted_files": {{uncommitted_files}},
+    "working_tree_clean": {{working_tree_clean}}
+  },
+
+  "quality": {
+    "last_lint_status": "{{last_lint_status}}",
+    "last_test_status": "{{last_test_status}}",
+    "last_tsc_status": "{{last_tsc_status}}",
+    "test_count_at_checkpoint": {{test_count}}
+  },
+
+  "context": {
+    "mental_model_snapshot": "{{mental_model_snapshot}}",
+    "session_decisions": {{session_decisions}},
+    "things_to_avoid": {{things_to_avoid}},
+    "files_to_read_on_resume": {{files_to_read_on_resume}}
+  },
+
+  "pause": {
+    "reason": "{{pause_reason}}",
+    "paused_by": "{{paused_by}}",
+    "expected_resume": "{{expected_resume}}"
+  }
+}

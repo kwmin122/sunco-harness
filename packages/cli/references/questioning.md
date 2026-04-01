@@ -255,3 +255,155 @@ When `--batch` is specified, group related questions by category and present the
 
 Good for: users who prefer to see the full picture before answering.
 Not good for: interdependent questions where answer 1 affects the options for answer 2.
+
+---
+
+## Advisor Mode
+
+Advisor mode activates when the user's profile tier is Expert or Principal and the phase is non-trivial. Instead of asking questions and waiting for answers, SUNCO states its interpretation and inferences, then asks the user to confirm or correct.
+
+**Standard mode flow:**
+```
+SUNCO: "Should the registry validate skill IDs before storing?"
+User: "Yes"
+SUNCO: "Should it throw or return an error object?"
+User: "Throw"
+```
+
+**Advisor mode flow:**
+```
+SUNCO: "My read: Registry validates IDs (non-empty string check), throws
+SkillConflictError on duplicate, throws InvalidSkillError on empty ID.
+Storing in Map<string, Skill> for O(1) lookup. Anything to correct?"
+User: "Looks right, but use InvalidIdError, not InvalidSkillError"
+```
+
+Advisor mode reduces turns by front-loading interpretation. The tradeoff: SUNCO may interpret incorrectly and the user must catch errors in the interpretation rather than being guided through each decision.
+
+### When to use advisor mode
+
+- User profile tier is Expert or Principal
+- `/sunco:discuss --advisor` flag is set explicitly
+- Phase is an incremental extension of an established pattern in the codebase
+
+### When to avoid advisor mode
+
+- Genuinely novel architecture decisions
+- User profile tier is Guided or Standard
+- The phase introduces a pattern not yet present in the codebase
+
+---
+
+## Calibration Tiers and Question Depth
+
+User profile tiers (from `user-profiling.md`) directly control how many questions `/sunco:discuss` asks per phase.
+
+### Tier 1: Guided — Maximum question depth
+
+Target: 5-8 questions per discuss session.
+
+- Ask all 5 categories for any phase larger than a single task
+- Explain the tradeoff for each option in 1-2 sentences
+- Add "why we're asking" context above each question
+- Provide a clear recommendation with rationale
+
+```
+**Config validation approach**
+[Why we're asking: Config parsing happens before any agent runs. If we
+choose wrong here, every downstream skill is affected.]
+
+When a required config field is missing, should SUNCO:
+  A) Fail immediately with an error pointing to the missing field — fastest
+     feedback, but shows only one error at a time
+  B) Collect all validation errors and report them together — more work for
+     first-time setup, but user sees everything at once (Recommended)
+  C) Use default values for missing required fields — most forgiving, but
+     hides misconfiguration silently
+```
+
+---
+
+### Tier 2: Standard — Normal question depth
+
+Target: 3-5 questions per discuss session.
+
+- Ask categories 2-4 (user personas, technical constraints, scope)
+- Explain tradeoffs briefly (1 sentence)
+- Skip "why we're asking" context
+- Mark recommendation clearly
+
+```
+Config validation approach:
+  A) Fail on first error
+  B) Collect all errors, report together (Recommended)
+  C) Use defaults for missing fields
+```
+
+---
+
+### Tier 3: Expert — Minimal question depth
+
+Target: 1-3 questions per discuss session.
+
+- Ask only genuinely blocking questions
+- Options with no explanation (expert understands the tradeoffs)
+- State the recommendation without justification
+
+```
+Config validation: fail-fast (A), collect-all (B, recommended), or defaults (C)?
+```
+
+---
+
+### Tier 4: Principal — Near-zero question depth
+
+Target: 0-1 questions per discuss session.
+
+- Apply all inferrable defaults automatically without asking
+- Only stop for decisions with no clear best answer
+- State what was decided, invite corrections
+
+```
+Proceeding with: collect-all validation, TOML format, fail on unknown keys.
+Anything to change?
+```
+
+---
+
+## Batch Patterns by Category
+
+When batching questions (--batch flag or advisor mode), group questions by dependency, not by category. Ask independent questions together. Ask dependent questions sequentially.
+
+### Independent questions (safe to batch)
+
+Questions whose answers do not affect each other's options:
+- Output format (JSON vs. plain text)
+- Error behavior (fail fast vs. collect all)
+- File overwrite behavior (error vs. backup vs. force)
+
+### Dependent questions (must be sequential)
+
+Questions where the answer to Q1 changes the options for Q2:
+- Storage backend choice → then ask about migration strategy
+- Error behavior choice → then ask about error message format
+- Auth provider choice → then ask about session handling
+
+**Rule:** If question 2 mentions "depending on your answer to question 1", the questions are dependent. Present them sequentially.
+
+---
+
+## Question Recycling
+
+If the user's answer to a question is unclear or incomplete, ask a follow-up before moving on. Do not interpret ambiguous answers liberally and proceed — this leads to rework.
+
+### Ambiguous answer patterns
+
+| User answer | Interpretation problem | Follow-up |
+|-------------|----------------------|-----------|
+| "Yes" to a multi-option question | Which option? | "Did you mean option A or B?" |
+| "Default" | Confirms the recommendation, or wants us to choose? | Almost always means "recommended" — proceed with recommended option |
+| "Whatever works" | No constraint given | Proceed with recommended option, note the decision |
+| "Both" to an either/or question | Wants a hybrid | "Walk me through what 'both' looks like for you" |
+| One-word answer to a complex question | May be shorthand or dismissal | Proceed with most charitable interpretation, note it |
+
+The goal is to resolve ambiguity in the discuss phase, not during execution. One clarifying follow-up is acceptable. Two clarifying follow-ups on the same question signals a poorly formed question — rephrase it.

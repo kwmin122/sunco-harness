@@ -1,0 +1,48 @@
+{
+  "version": "{{config_version}}",
+  "project": {
+    "name": "{{project_name}}",
+    "slug": "{{project_slug}}",
+    "description": "{{project_description}}",
+    "language": "{{project_language}}",
+    "runtime": "{{project_runtime}}"
+  },
+  "planning": {
+    "directory": ".planning",
+    "phases_directory": ".planning/phases",
+    "archive_directory": ".planning/archive",
+    "current_milestone": "{{current_milestone}}",
+    "current_phase": {{current_phase_number}},
+    "auto_lint_on_plan": true,
+    "auto_verify_on_complete": true
+  },
+  "agent": {
+    "provider": "{{agent_provider}}",
+    "model": "{{agent_model}}",
+    "autonomy": "{{agent_autonomy}}",
+    "checkpoint_frequency": "{{checkpoint_frequency}}",
+    "max_parallel_plans": {{max_parallel_plans}}
+  },
+  "quality": {
+    "lint_command": "{{lint_command}}",
+    "test_command": "{{test_command}}",
+    "type_check_command": "{{type_check_command}}",
+    "build_command": "{{build_command}}",
+    "coverage_threshold": {{coverage_threshold}},
+    "zero_lint_errors": {{zero_lint_errors}},
+    "zero_type_errors": {{zero_type_errors}}
+  },
+  "output": {
+    "language": "{{output_language}}",
+    "verbosity": "{{output_verbosity}}",
+    "color": true,
+    "emoji": false
+  },
+  "state": {
+    "db_file": ".sun/state.db",
+    "session_dir": ".sun/session",
+    "debug_dir": ".sun/debug"
+  },
+  "created": "{{created_date}}",
+  "updated": "{{updated_date}}"
+}
