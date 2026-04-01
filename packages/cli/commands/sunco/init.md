@@ -293,42 +293,87 @@ If `.gitignore` already exists, skip this step.
 
 ---
 
-## Step 7 — Generate CLAUDE.md
+## Step 7 — Generate Thin CLAUDE.md + Conditional Rules
 
-If `CLAUDE.md` does not already exist in the project root, create it using the detected values from earlier steps.
+Two separate layers are created. **Do not mix them.**
+
+- `.sun/rules/` — deterministic rules enforced by the lint engine (already created in Step 4)
+- `.claude/rules/` — contextual rules loaded by Claude Code based on file patterns
+
+### 7a. Generate `.claude/rules/` directory
+
+Create `.claude/rules/` with 3-5 rule files based on detected stack. Each file has `patterns:` frontmatter that controls when Claude loads it.
+
+**Always generate:**
+
+1. `test-conventions.md` — patterns: `["**/*.test.ts", "**/__tests__/**"]`
+   Content: test file naming, mock patterns, independence rules
+
+2. `architecture-context.md` — patterns based on detected source directories
+   Content: layer boundaries, import direction, naming conventions from Steps 2-5
+
+**Generate if relevant stack detected:**
+
+3. `api-safety.md` (if `src/api/`, `src/routes/`, or `express`/`hono` detected)
+   Content: input validation, error shapes, status codes
+
+4. `database-safety.md` (if `migrations/`, `prisma/`, `drizzle/`, or DB deps detected)
+   Content: migration safety, no destructive ops without approval
+
+5. `skill-patterns.md` (if `*.skill.ts` files detected)
+   Content: defineSkill pattern, skill lifecycle, deterministic-first
+
+Use the templates from `$HOME/.claude/sunco/templates/claude-rules/` as starting points, then fill in project-specific details from detection results.
+
+### 7b. Generate thin CLAUDE.md
+
+**If `CLAUDE.md` does not exist:** Create it using the thin template (`claude-md-thin.md`):
 
 ```markdown
 # {Project Name}
 
+{one-line description from package.json}
+
+## Stack
+{detected ecosystems, one line}
+
 ## Architecture
-- **Stack**: {detected ecosystems}
-- **Source root**: {detected source directory}
-- **Layers**: {detected layers with import rules}
-
-## Conventions
-- {detected naming conventions}
-- {detected import style}
-
-## Key Decisions
-(Add decisions here as the project evolves)
+{detected layers with import rules, or "flat structure"}
 
 ## Do NOT
-- Do not modify files outside src/ without explicit instruction
-- Do not change the package manager
-- Do not add dependencies without asking
+- Do not modify files outside the task's file list without explicit instruction
+- Do not add dependencies not in package.json without asking
+- Do not suppress lint/type errors with @ts-ignore, as any, or eslint-disable
+- Do not modify existing tests to make them pass — fix the implementation
+
+## Conventions
+{detected naming + import style from Step 5}
+
+## Contextual Rules
+Detailed rules load from `.claude/rules/` based on which files you edit:
+{list generated rule files with one-line descriptions}
+
+These activate automatically. Do NOT load all rules at once.
+
+## Key Decisions
+(Add decisions here as the project evolves via /sunco:discuss)
 ```
 
-Fill in the placeholders as follows:
-- `{Project Name}` — use the `name` field from `package.json`, or the directory name if unavailable
-- `{detected ecosystems}` — comma-separated ecosystem list from Step 2 (e.g. `typescript, nodejs, react`)
-- `{detected source directory}` — `sourceRoot` from Step 3 (e.g. `src/`) or `"not detected"`
-- `{detected layers with import rules}` — one line per layer in the format `layerName (can import: dep1, dep2)`, or `"none detected"` if Step 3 found no layers
-- `{detected naming conventions}` — naming convention from Step 5 conventions (e.g. `camelCase`)
-- `{detected import style}` — import style from Step 5 conventions (e.g. `relative` or `alias`)
+**If `CLAUDE.md` already exists:** Do NOT overwrite. Instead, output a warning:
+```
+⚠ CLAUDE.md already exists. Consider thinning it manually:
+  Move file-specific rules to .claude/rules/ with frontmatter patterns.
+  Keep CLAUDE.md under 60 lines for best agent focus.
+```
 
-If `CLAUDE.md` already exists, skip this step silently.
+### 7c. Principle: Two Rule Systems
 
-Add `CLAUDE.md` to the "Files written" list in Step 8 output if it was created.
+| System | Purpose | Enforced by | Location |
+|--------|---------|-------------|----------|
+| `.sun/rules/*.json` | Architecture boundaries, lint rules | ESLint plugin, `sunco:lint` | Deterministic |
+| `.claude/rules/*.md` | Agent context, conventions, safety | Claude Code frontmatter loader | Contextual |
+
+These are separate. `.sun/rules` catches violations at build time. `.claude/rules` guides the agent at work time. Both are needed. Neither replaces the other.
 
 ---
 
