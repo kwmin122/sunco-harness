@@ -1,196 +1,1061 @@
-# Discuss Phase Workflow
+<purpose>
+Extract implementation decisions that downstream agents need. Analyze the phase to identify gray areas, let the user choose what to discuss, then deep-dive each selected area until satisfied.
 
-Context-gathering flow for a single phase before planning begins. Used by `/sunco:discuss`. Surfaces ambiguities through either interactive Q&A or codebase-first assumptions.
+You are a thinking partner, not an interviewer. The user is the founder — you are the builder. Your job is to capture decisions that will guide research and planning, not to figure out implementation yourself.
+</purpose>
+
+<downstream_awareness>
+**CONTEXT.md feeds into:**
+
+1. **sunco-advisor-researcher** — Reads CONTEXT.md to know WHAT to research
+   - "User wants structured CLI output" → researcher investigates table/JSON formatting patterns
+   - "Skill-only architecture decided" → researcher looks into defineSkill() extension patterns
+
+2. **sunco-planner** — Reads CONTEXT.md to know WHAT decisions are locked
+   - "Deterministic-first approach" → planner ensures lint/test gates before any LLM step
+   - "Claude's Discretion: progress rendering" → planner can decide the approach
+
+**Your job:** Capture decisions clearly enough that downstream agents can act on them without asking the user again.
+
+**Not your job:** Figure out HOW to implement. That's what research and planning do with the decisions you capture.
+</downstream_awareness>
+
+<philosophy>
+**User = founder/visionary. Claude = builder.**
+
+The user knows:
+- How they imagine it working
+- What it should look/feel like
+- What's essential vs nice-to-have
+- Specific behaviors or references they have in mind
+
+The user doesn't know (and shouldn't be asked):
+- Codebase patterns (researcher reads the code)
+- Technical risks (researcher identifies these)
+- Implementation approach (planner figures this out)
+- Which TypeScript version to use (established in CLAUDE.md)
+
+Ask about vision and behavior choices. Capture decisions for downstream agents.
+</philosophy>
+
+<scope_guardrail>
+**CRITICAL: No scope creep.**
+
+The phase boundary comes from ROADMAP.md and is FIXED. Discussion clarifies HOW to implement what's scoped, never WHETHER to add new capabilities.
+
+**Allowed (clarifying ambiguity):**
+- "How should skill output be formatted?" (output style, verbosity, color)
+- "What happens when a skill fails mid-execution?" (error behavior within the feature)
+- "Progress bars or spinners for long-running skills?" (UX choice within scope)
+
+**Not allowed (scope creep):**
+- "Should we also add a plugin marketplace?" (new capability)
+- "What about a web dashboard?" (new capability)
+- "Maybe add GitHub Actions integration?" (new capability)
+
+**The heuristic:** Does this clarify how we implement what's already in the phase, or does it add a new capability that could be its own phase?
+
+**When user suggests scope creep:**
+```
+"[Feature X] would be a new capability — that's its own phase.
+Want me to note it for the roadmap backlog?
+
+For now, let's focus on [phase domain]."
+```
+
+Capture the idea in a "Deferred Ideas" section. Don't lose it, don't act on it.
+</scope_guardrail>
+
+<gray_area_identification>
+Gray areas are **implementation decisions the user cares about** — things that could go multiple ways and would change the result.
+
+**How to identify gray areas:**
+
+1. **Read the phase goal** from ROADMAP.md
+2. **Understand the domain** — What kind of thing is being built?
+   - Something users INVOKE → invocation syntax, flag design, defaults matter
+   - Something users SEE → output format, color, verbosity, progress display matter
+   - Something users CONFIGURE → config schema, defaults, override hierarchy matter
+   - Something that RUNs AGENTS → prompt structure, permissions, fallback behavior matter
+   - Something that GUARDS → lint rules, gates, blocking vs warning behavior matter
+   - Something that STORES STATE → persistence model, schema, migration behavior matter
+3. **Generate phase-specific gray areas** — Not generic categories, but concrete decisions for THIS phase
+
+**Don't use generic category labels** (UI, UX, Behavior). Generate specific gray areas:
+
+```
+Phase: "Skill registry and loader"
+→ Registration contract, hot-reload behavior, conflict resolution, error isolation
+
+Phase: "sunco init harness"
+→ Project detection strategy, template selection, overwrite policy, scaffolding verbosity
+
+Phase: "sun lint architecture enforcement"
+→ Rule authoring surface, violation severity model, fix-mode behavior, output format
+
+Phase: "Agent router abstraction"
+→ Provider fallback chain, streaming support, structured output contract, cost tracking
+
+Phase: "Proactive recommender engine"
+→ Trigger timing, recommendation ranking, dismissal persistence, rule authoring API
+```
+
+**The key question:** What decisions would change the outcome that the user should weigh in on?
+
+**Claude handles these (don't ask):**
+- Which exact npm package version (tech stack in CLAUDE.md)
+- Internal function naming
+- File organization within a package
+- Performance micro-optimization details
+- Scope (roadmap defines this)
+</gray_area_identification>
+
+<answer_validation>
+**IMPORTANT: Answer validation** — After every AskUserQuestion call, check if the response is empty or whitespace-only. If so:
+1. Retry the question once with the same parameters
+2. If still empty, present the options as a plain-text numbered list and ask the user to type their choice number
+Never proceed with an empty answer.
+
+**Text mode (`workflow.text_mode: true` in config or `--text` flag):**
+When text mode is active, **do not use AskUserQuestion at all**. Instead, present every
+question as a plain-text numbered list and ask the user to type their choice number.
+This is required for Claude Code remote sessions (`/rc` mode) where the Claude App
+cannot forward TUI menu selections back to the host.
+
+Enable text mode:
+- Per-session: pass `--text` flag to any command (e.g., `/sunco:discuss 3 --text`)
+- Per-project: `node $HOME/.claude/sunco/bin/sunco-tools.cjs config-set workflow.text_mode true`
+
+Text mode applies to ALL workflows in the session, not just discuss.
+</answer_validation>
+
+<process>
+
+**Express path available:** If you already have a PRD or acceptance criteria document, use `/sunco:plan {phase} --prd path/to/prd.md` to skip this discussion and go straight to planning.
+
+<step name="initialize" priority="first">
+Phase number from argument (required).
+
+```bash
+INIT=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE}")
+if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
+AGENT_SKILLS_ADVISOR=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" agent-skills sunco-advisor-researcher 2>/dev/null)
+```
+
+Parse JSON for: `commit_docs`, `phase_found`, `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `padded_phase`, `has_research`, `has_context`, `has_plans`, `has_verification`, `plan_count`, `roadmap_exists`, `planning_exists`.
+
+**If `phase_found` is false:**
+```
+Phase [X] not found in roadmap.
+
+Use /sunco:progress to see available phases.
+```
+Exit workflow.
+
+**If `phase_found` is true:** Continue to check_existing.
+
+**Flag detection** — Parse `$ARGUMENTS` for:
+- `--auto` → fully automated mode, no user prompts, pick recommended defaults
+- `--batch` / `--batch=N` / `--batch N` → group questions (2–5 per turn)
+- `--analyze` → include trade-off tables before each question
+- `--text` → disable AskUserQuestion, use plain-text numbered lists
+
+**Auto mode** — If `--auto` is present in ARGUMENTS:
+- In `check_existing`: auto-select "Skip" (if context exists) or continue without prompting (if no context/plans)
+- In `present_gray_areas`: auto-select ALL gray areas without asking the user
+- In `discuss_areas`: for each discussion question, choose the recommended option (first option, or the one marked "recommended") without using AskUserQuestion
+- Log each auto-selected choice inline so the user can review decisions in the context file
+- After discussion completes, auto-advance to `/sunco:plan`
+</step>
+
+<step name="check_existing">
+Check if CONTEXT.md already exists using `has_context` from init.
+
+```bash
+ls ${phase_dir}/*-CONTEXT.md 2>/dev/null || true
+```
+
+**If exists:**
+
+**If `--auto`:** Auto-select "Update it" — load existing context and continue to analyze_phase. Log: `[auto] Context exists — updating with auto-selected decisions.`
+
+**Otherwise:** Use AskUserQuestion:
+- header: "Context"
+- question: "Phase [X] already has context. What do you want to do?"
+- options:
+  - "Update it" — Review and revise existing context
+  - "View it" — Show me what's there
+  - "Skip" — Use existing context as-is
+
+If "Update": Load existing, continue to analyze_phase
+If "View": Display CONTEXT.md, then offer update/skip
+If "Skip": Exit workflow
+
+**If doesn't exist:**
+
+Check `has_plans` and `plan_count` from init. **If `has_plans` is true:**
+
+**If `--auto`:** Auto-select "Continue and replan after". Log: `[auto] Plans exist — continuing with context capture, will replan after.`
+
+**Otherwise:** Use AskUserQuestion:
+- header: "Plans exist"
+- question: "Phase [X] already has {plan_count} plan(s) created without user context. Your decisions here won't affect existing plans unless you replan."
+- options:
+  - "Continue and replan after" — Capture context, then run `/sunco:plan {X}` to replan
+  - "View existing plans" — Show plans before deciding
+  - "Cancel" — Skip discuss
+
+If "Continue and replan after": Continue to analyze_phase.
+If "View existing plans": Display plan files, then offer "Continue" / "Cancel".
+If "Cancel": Exit workflow.
+
+**If `has_plans` is false:** Continue to load_prior_context.
+</step>
+
+<step name="load_prior_context">
+Read project-level and prior phase context to avoid re-asking decided questions and maintain consistency.
+
+**Step 1: Read project-level files**
+```bash
+cat .planning/PROJECT.md 2>/dev/null || true
+cat .planning/REQUIREMENTS.md 2>/dev/null || true
+cat .planning/STATE.md 2>/dev/null || true
+```
+
+Extract from these:
+- **PROJECT.md** — Vision, principles, non-negotiables, SUNCO-specific constraints
+- **REQUIREMENTS.md** — Acceptance criteria, constraints, must-haves vs nice-to-haves
+- **STATE.md** — Current progress, any flags or session notes
+
+**Step 2: Read all prior CONTEXT.md files**
+```bash
+(find .planning/phases -name "*-CONTEXT.md" 2>/dev/null || true) | sort
+```
+
+For each CONTEXT.md where phase number < current phase:
+- Read the `<decisions>` section — these are locked preferences
+- Read `<specifics>` — particular references or "I want it like X" moments
+- Note any patterns (e.g., "user consistently prefers deterministic-first", "user rejected interactive prompts for CI-facing commands")
+
+**Step 3: Build internal `<prior_decisions>` context**
+
+Structure the extracted information:
+```
+<prior_decisions>
+## Project-Level
+- [Key principle or constraint from PROJECT.md]
+- [Requirement that affects this phase from REQUIREMENTS.md]
+
+## From Prior Phases
+### Phase N: [Name]
+- [Decision that may be relevant to current phase]
+- [Preference that establishes a pattern]
+
+### Phase M: [Name]
+- [Another relevant decision]
+</prior_decisions>
+```
+
+**Usage in subsequent steps:**
+- `analyze_phase`: Skip gray areas already decided in prior phases
+- `present_gray_areas`: Annotate options with prior decisions ("You chose X in Phase 5")
+- `discuss_areas`: Pre-fill answers or flag conflicts ("This contradicts Phase 3 — same here or different?")
+
+**If no prior context exists:** Continue without — this is expected for early phases.
+</step>
+
+<step name="cross_reference_todos">
+Check if any pending todos are relevant to this phase's scope. Surfaces backlog items that might otherwise be missed.
+
+**Load and match todos:**
+```bash
+TODO_MATCHES=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" todo match-phase "${PHASE_NUMBER}")
+```
+
+Parse JSON for: `todo_count`, `matches[]` (each with `file`, `title`, `area`, `score`, `reasons`).
+
+**If `todo_count` is 0 or `matches` is empty:** Skip silently — no workflow slowdown.
+
+**If matches found:**
+
+Present matched todos to the user. Show each match with its title, area, and why it matched:
+
+```
+Found {N} pending todo(s) that may be relevant to Phase {X}:
+
+{For each match:}
+- **{title}** (area: {area}, relevance: {score}) — matched on {reasons}
+```
+
+Use AskUserQuestion (multiSelect) asking which todos to fold into this phase's scope:
+
+```
+Which of these todos should be folded into Phase {X} scope?
+(Select any that apply, or none to skip)
+```
+
+**For selected (folded) todos:**
+- Store internally as `<folded_todos>` for inclusion in CONTEXT.md `<decisions>` section
+- These become additional scope items that downstream agents (researcher, planner) will see
+
+**For unselected (reviewed but not folded) todos:**
+- Store internally as `<reviewed_todos>` for inclusion in CONTEXT.md `<deferred>` section
+- This prevents future phases from re-surfacing the same todos as "missed"
+
+**Auto mode (`--auto`):** Fold all todos with score >= 0.4 automatically. Log the selection.
+</step>
+
+<step name="scout_codebase">
+Lightweight scan of existing code to inform gray area identification and discussion. Uses ~10% context — acceptable for an interactive session.
+
+**Step 1: Check for existing codebase maps**
+```bash
+ls .planning/codebase/*.md 2>/dev/null || true
+```
+
+**If codebase maps exist:** Read the most relevant ones (CONVENTIONS.md, STRUCTURE.md, STACK.md based on phase type). Extract:
+- Reusable skills, utilities, shared modules
+- Established patterns (defineSkill() contract, state management, config hierarchy)
+- Integration points (where new code would connect to core)
+
+Skip to Step 3 below.
+
+**Step 2: If no codebase maps, do targeted scan**
+
+Extract key terms from the phase goal (e.g., "skill registry" → "defineSkill", "registry", "loader"; "health" → "diagnostic", "score", "threshold").
+
+```bash
+# Find files related to phase goal terms
+grep -rl "{term1}\|{term2}" packages/ --include="*.ts" 2>/dev/null | head -10 || true
+
+# Inspect existing skill implementations
+ls packages/skills-harness/src/ 2>/dev/null || true
+ls packages/skills-workflow/src/ 2>/dev/null || true
+ls packages/core/src/ 2>/dev/null || true
+```
+
+Read the 3–5 most relevant files to understand existing patterns.
+
+**Step 3: Build internal codebase_context**
+
+From the scan, identify:
+- **Reusable assets** — existing skills, utilities, shared types that could be used in this phase
+- **Established patterns** — how the codebase does defineSkill(), state.set(), ui.result(), ctx.run()
+- **Integration points** — where new code would connect (skill registry, agent router, state engine, UI adapter)
+- **Constraints** — approaches the existing monorepo architecture enables or rules out
+
+Store as internal `<codebase_context>` for use in analyze_phase and present_gray_areas. This is NOT written to a file — it's used within this session only.
+</step>
+
+<step name="analyze_phase">
+Analyze the phase to identify gray areas worth discussing. **Use both `prior_decisions` and `codebase_context` to ground the analysis.**
+
+**Read the phase description from ROADMAP.md and determine:**
+
+1. **Domain boundary** — What capability is this phase delivering? State it clearly.
+
+1b. **Initialize canonical refs accumulator** — Start building the `<canonical_refs>` list for CONTEXT.md. This accumulates throughout the entire discussion, not just this step.
+
+   **Source 1 (now):** Copy `Canonical refs:` from ROADMAP.md for this phase. Expand each to a full relative path.
+   **Source 2 (now):** Check REQUIREMENTS.md and PROJECT.md for any specs/ADRs referenced for this phase.
+   **Source 3 (scout_codebase):** If existing code references docs (e.g., comments citing ADRs or CLAUDE.md sections), add those.
+   **Source 4 (discuss_areas):** When the user says "read X", "check Y", or references any doc/spec/ADR during discussion — add it immediately. These are often the MOST important refs because they represent docs the user specifically wants followed.
+
+   Always include `CLAUDE.md` as a canonical ref if SUNCO conventions apply to this phase. Every ref must have a full relative path so downstream agents can read it directly.
+
+2. **Check prior decisions** — Before generating gray areas, check if any were already decided:
+   - Scan `<prior_decisions>` for relevant choices (e.g., "Deterministic-first: no LLM for lint/health")
+   - These are **pre-answered** — don't re-ask unless this phase has conflicting needs
+   - Note applicable prior decisions for use in presentation
+
+3. **Gray areas by category** — For each relevant category, identify 1–2 specific ambiguities that would change implementation. **Annotate with code context where relevant** (e.g., "defineSkill() contract already established in core" or "No existing pattern for this yet").
+
+4. **Skip assessment** — If no meaningful gray areas exist (pure infrastructure, clear-cut implementation, or all already decided in prior phases), the phase may not need discussion.
+
+**Advisor Mode Detection:**
+
+Check if advisor mode should activate:
+
+1. Check for USER-PROFILE.md:
+   ```bash
+   PROFILE_PATH="$HOME/.claude/sunco/USER-PROFILE.md"
+   ```
+   ADVISOR_MODE = file exists at PROFILE_PATH → true, otherwise → false
+
+2. If ADVISOR_MODE is true, resolve vendor_philosophy calibration tier:
+   - Priority 1: Read `.planning/config.json` > preferences.vendor_philosophy (project-level override)
+   - Priority 2: Read USER-PROFILE.md Vendor Choices/Philosophy rating (global)
+   - Priority 3: Default to "standard" if neither has a value or value is UNSCORED
+
+   Map to calibration tier:
+   - conservative OR thorough-evaluator → full_maturity
+   - opinionated → minimal_decisive
+   - pragmatic-fast OR any other value OR empty → standard
+
+3. Resolve model for advisor agents:
+   ```bash
+   ADVISOR_MODEL=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" resolve-model sunco-advisor-researcher --raw)
+   ```
+
+If ADVISOR_MODE is false, skip all advisor-specific steps — workflow proceeds with existing conversational flow unchanged.
+
+**Output your analysis internally, then present to user.**
+
+Example analysis for "Skill Registry and Loader" phase (with code and prior context):
+```
+Domain: Loading and registering skills at runtime from packages and user extensions
+Existing: defineSkill() in packages/core/src/skills/, SkillRegistry stub in core
+Prior decisions: "Skill-Only architecture" (Phase 1), "No hardcoded commands" (PROJECT.md)
+Gray areas:
+- Registration: Static import vs dynamic discovery — no existing loader pattern yet
+- Conflict resolution: Same skill ID from two packages — needs a strategy
+- Error isolation: One failing skill blocks startup vs degrades gracefully
+- Reload behavior: Hot-reload during dev vs restart-required — no existing watcher yet
+- Skills from extensions: Where user-defined skills live, how they're found
+```
+</step>
+
+<step name="present_gray_areas">
+Present the domain boundary, prior decisions, and gray areas to user.
+
+**First, state the boundary and any prior decisions that apply:**
+```
+Phase [X]: [Name]
+Domain: [What this phase delivers — from your analysis]
+
+We'll clarify HOW to implement this.
+(New capabilities belong in other phases.)
+
+[If prior decisions apply:]
+**Carrying forward from earlier phases:**
+- [Decision from Phase N that applies here]
+- [Decision from Phase M that applies here]
+```
+
+**If `--auto`:** Auto-select ALL gray areas. Log: `[auto] Selected all gray areas: [list area names].` Skip the AskUserQuestion below and continue directly to discuss_areas with all areas selected.
+
+**Otherwise, use AskUserQuestion (multiSelect: true):**
+- header: "Discuss"
+- question: "Which areas do you want to discuss for [phase name]?"
+- options: Generate 3–4 phase-specific gray areas, each with:
+  - "[Specific area]" (label) — concrete, not generic
+  - [1–2 questions this covers + code context annotation] (description)
+  - **Highlight the recommended choice with brief explanation why**
+
+**Prior decision annotations:** When a gray area was already decided in a prior phase, annotate it:
+```
+Exit shortcuts — How should users quit a long-running skill?
+  (You decided "Ctrl+C only, no single-key shortcuts" in Phase 5 — revisit or keep?)
+```
+
+**Code context annotations:** When the scout found relevant existing code, annotate the gray area description:
+```
+Skill output format — Structured JSON vs human-readable table?
+  (SkillUi adapter already exists with result/progress/error primitives. Reusing it keeps consistency.)
+```
+
+**Combining both:** When both prior decisions and code context apply:
+```
+Config loading strategy — Hierarchy merge vs flat override?
+  (You chose hierarchy in Phase 2. smol-toml + Zod already handle parse and validation.)
+```
+
+**Do NOT include a "skip" or "you decide" option.** User ran this command to discuss — give them real choices.
+
+**Examples by domain (with code context):**
+
+For "Skill Registry and Loader" (runtime infrastructure):
+```
+Registration contract — How do skills declare themselves? (defineSkill() stub exists)
+Conflict resolution — Same ID from two packages? First-wins, last-wins, or error?
+Error isolation — Failing skill at load time blocks startup or degrades gracefully?
+User extension path — Where do user-defined skills live? How are they discovered?
+```
+
+For "sun lint architecture enforcement" (deterministic tooling):
+```
+Violation severity — Error vs warning vs advisory: who decides, how?
+Fix mode — --fix auto-corrects vs report-only vs interactive confirmation?
+Output format — Plain text, JSON, or SARIF for CI integration?
+Custom rule surface — How do projects add project-specific rules on top of core rules?
+```
+
+For "Proactive recommender engine" (background intelligence):
+```
+Trigger timing — After every skill completes, or on demand?
+Recommendation ranking — Score-based or rule priority order?
+Dismissal persistence — "Not now" vs "never show again" vs no persistence?
+Rule authoring API — Inline in skill file or separate *.rule.ts files?
+```
+
+For "sunco init harness" (project scaffolding):
+```
+Project detection strategy — Auto-detect stack or always ask?
+Template selection — Single template or branching by stack type?
+Overwrite policy — Fail if .sun/ exists, merge, or confirm each file?
+Scaffolding verbosity — Silent (just files), progress log, or annotated output?
+```
+
+Continue to discuss_areas with selected areas (or advisor_research if ADVISOR_MODE is true).
+</step>
+
+<step name="advisor_research">
+**Advisor Research** (only when ADVISOR_MODE is true)
+
+After user selects gray areas in present_gray_areas, spawn parallel research agents.
+
+1. Display brief status: "Researching {N} areas..."
+
+2. For EACH user-selected gray area, spawn a Task() in parallel:
+
+   Task(
+     prompt="First, read @$HOME/.claude/agents/sunco-advisor-researcher.md for your role and instructions.
+
+     <gray_area>{area_name}: {area_description from gray area identification}</gray_area>
+     <phase_context>{phase_goal and description from ROADMAP.md}</phase_context>
+     <project_context>{SUNCO — skill-based workspace OS for agent-era builders. TypeScript monorepo, Commander.js, defineSkill() architecture. Deterministic-first.}</project_context>
+     <calibration_tier>{resolved calibration tier: full_maturity | standard | minimal_decisive}</calibration_tier>
+
+     Research this gray area and return a structured comparison table with rationale.
+     ${AGENT_SKILLS_ADVISOR}",
+     subagent_type="general-purpose",
+     model="{ADVISOR_MODEL}",
+     description="Research: {area_name}"
+   )
+
+   All Task() calls spawn simultaneously — do NOT wait for one before starting the next.
+
+3. After ALL agents return, SYNTHESIZE results before presenting:
+   For each agent's return:
+   a. Parse the markdown comparison table and rationale paragraph
+   b. Verify all 5 columns present (Option | Pros | Cons | Complexity | Recommendation) — fill any missing columns rather than showing broken table
+   c. Verify option count matches calibration tier:
+      - full_maturity: 3–5 options acceptable
+      - standard: 2–4 options acceptable
+      - minimal_decisive: 1–2 options acceptable
+      If agent returned too many, trim least viable. If too few, accept as-is.
+   d. Rewrite rationale paragraph to weave in SUNCO's CLAUDE.md conventions and ongoing discussion context that the agent did not have access to
+   e. If agent returned only 1 option, convert from table format to direct recommendation: "Standard approach for {area}: {option}. {rationale}"
+
+4. Store synthesized tables for use in discuss_areas.
+
+**If ADVISOR_MODE is false:** Skip this step entirely — proceed directly from present_gray_areas to discuss_areas.
+</step>
+
+<step name="discuss_areas">
+Discuss each selected area with the user. Flow depends on advisor mode.
+
+**If ADVISOR_MODE is true:**
+
+Table-first discussion flow — present research-backed comparison tables, then capture user picks.
+
+**For each selected area:**
+
+1. **Present the synthesized comparison table + rationale paragraph** (from advisor_research step)
+
+2. **Use AskUserQuestion:**
+   - header: "{area_name}"
+   - question: "Which approach for {area_name}?"
+   - options: Extract from the table's Option column (AskUserQuestion adds "Other" automatically)
+
+3. **Record the user's selection:**
+   - If user picks from table options → record as locked decision for that area
+   - If user picks "Other" → receive their input, reflect it back for confirmation, record
+
+4. **After recording pick, Claude decides whether follow-up questions are needed:**
+   - If the pick has ambiguity that would affect downstream planning → ask 1–2 targeted follow-up questions using AskUserQuestion
+   - If the pick is clear and self-contained → move to next area
+   - Do NOT ask the standard 4 questions — the table already provided the context
+
+5. **After all areas processed:**
+   - header: "Done"
+   - question: "That covers [list areas]. Ready to create context?"
+   - options: "Create context" / "Revisit an area"
+
+**Scope creep handling (advisor mode):**
+If user mentions something outside the phase domain:
+```
+"[Feature] sounds like a new capability — that belongs in its own phase.
+I'll note it as a deferred idea.
+
+Back to [current area]: [return to current question]"
+```
+
+Track deferred ideas internally.
 
 ---
 
-## Overview
+**If ADVISOR_MODE is false:**
 
-Two modes, same output:
+For each selected area, conduct a focused discussion loop.
 
-- **discuss** (default) — Ask the user targeted questions about gray areas. Best when starting a new phase with open design decisions.
-- **assumptions** — Read the codebase first, generate a numbered assumption list, ask for confirmation. Best when continuing a project where patterns are established.
+**Text mode support:** Parse optional `--text` from `$ARGUMENTS`.
+- Accept `--text` flag OR read `workflow.text_mode` from config (from init context)
+- When active, replace ALL `AskUserQuestion` calls with plain-text numbered lists
+- User types a number to select, or types free text for "Other"
+- Required for Claude Code remote sessions (`/rc` mode) where TUI menus don't work through the Claude App
 
-Both modes produce a single output file: `{N}-CONTEXT.md`.
+**Batch mode support:** Parse optional `--batch` from `$ARGUMENTS`.
+- Accept `--batch`, `--batch=N`, or `--batch N`
+- Default to 4 questions per batch when no number is provided
+- Clamp explicit sizes to 2–5 so a batch stays answerable
+- If `--batch` is absent, keep the existing one-question-at-a-time flow
 
----
+**Analyze mode support:** Parse optional `--analyze` from `$ARGUMENTS`.
+When `--analyze` is active, before presenting each question (or question group in batch mode), provide a brief **trade-off analysis** for the decision:
+- 2–3 options with pros/cons based on codebase context and SUNCO conventions
+- A recommended approach with reasoning tied to existing patterns
+- Known pitfalls or constraints from prior phases
 
-## Mode Selection
-
-Choose based on what the user passes via `--mode`:
-
-| Mode | When to use |
-|------|-------------|
-| `--mode discuss` | New phase, open decisions, user wants to drive choices |
-| `--mode assumptions` | Established codebase, agent can infer most choices |
-| (no flag) | Default to `discuss` mode |
-
----
-
-## Phase 1: Load Phase Context
-
-Before asking anything, read:
-
-1. `.planning/ROADMAP.md` — find Phase N goal, deliverables, requirements covered
-2. `.planning/REQUIREMENTS.md` — which REQ-IDs this phase is responsible for
-3. `.planning/PROJECT.md` — tech stack, constraints, key decisions already made
-4. `.planning/STATE.md` — existing decisions and blockers
-5. `.planning/phases/[N]-*/[N]-CONTEXT.md` — if it already exists, read it to avoid re-asking resolved questions
-
-Create phase directory if it doesn't exist: `mkdir -p .planning/phases/[N]-[phase-name]/`
-
----
-
-## Phase 2A: Discussion Mode
-
-### Gray Area Detection
-
-Analyze the phase goal and relevant requirements. Identify ambiguous areas by feature type:
-
-**Architecture decisions** (how should X be structured)
-- Signals: new module, new abstraction layer, cross-cutting concern
-- Questions to ask: plugin vs hardcoded? class vs function? sync vs async?
-
-**API/interface design** (what should the interface look like)
-- Signals: new public function, new CLI flag, new config key
-- Questions to ask: naming, defaults, error return vs throw, optional vs required?
-
-**Data modeling** (how should data be structured/stored)
-- Signals: new schema, new file format, new state field
-- Questions to ask: flat vs nested? in-memory vs persistent? migration needed?
-
-**Integration choices** (which library/service to use for X)
-- Signals: new dependency, external service, external API
-- Questions to ask: specific library, version pinning, fallback behavior?
-
-**UX/behavior** (how should X behave when Y happens)
-- Signals: user-visible output, interactive flow, error messages
-- Questions to ask: verbose vs minimal? auto vs confirm? blocking vs streaming?
-
-**Error handling** (what should happen when X fails)
-- Signals: external calls, file I/O, network, subprocess
-- Questions to ask: retry policy? user-visible error? silent skip? fatal vs recoverable?
-
-**Performance** (acceptable limits and trade-offs)
-- Signals: file watchers, large inputs, parallel execution
-- Questions to ask: acceptable latency? memory limit? concurrency cap?
-
-### Question Format
-
-For each gray area, present the question as:
-
+Example with `--analyze`:
 ```
-[Gray area description]
+**Trade-off analysis: Error isolation strategy**
 
-Options:
-  A) [Option A] — [1-line tradeoff]
-  B) [Option B] — [1-line tradeoff] (Recommended)
-  C) Something else: [user input]
+| Approach | Pros | Cons |
+|----------|------|------|
+| Fail fast on load | Predictable, no silent errors | Bad DX for partial skill sets |
+| Graceful degrade | Works with broken extensions | Harder to debug missing features |
+| Isolated try/catch per skill | Best DX, full transparency | More complex loader logic |
+
+Recommended: Isolated try/catch per skill — SUNCO's extension model means user skills
+may break independently of core. Graceful degrade with clear error output fits the
+"quality DX" principle in CLAUDE.md.
+
+How should skill load errors be handled?
 ```
 
-Mark one option as `(Recommended)` based on existing project patterns from PROJECT.md and STATE.md.
+**Philosophy:** stay adaptive, but let the user choose the pacing.
+- Default mode: 4 single-question turns per area, then check whether to continue
+- `--batch` mode: 1 grouped turn with 2–5 numbered questions, then check whether to continue
 
-### Batching Option
+Each answer (or answer set, in batch mode) should reveal the next question or next batch.
 
-If `--batch` flag is present, group related questions by category and present them together:
-
+**Auto mode (`--auto`):** For each area, Claude selects the recommended option (first option, or the one explicitly marked "recommended") for every question without using AskUserQuestion. Log each auto-selected choice:
 ```
-**Architecture questions (2):**
-1. [Question 1]
-   A) ... B) ... (Recommended)
-2. [Question 2]
-   A) ... B) ... (Recommended)
+[auto] [Area] — Q: "[question text]" → Selected: "[chosen option]" (recommended default)
+```
+After all areas are auto-resolved, skip the "Explore more gray areas" prompt and proceed directly to write_context.
+
+**Interactive mode (no `--auto`):**
+
+**For each area:**
+
+1. **Announce the area:**
+   ```
+   Let's talk about [Area].
+   ```
+
+2. **Ask questions using the selected pacing:**
+
+   **Default (no `--batch`): Ask 4 questions using AskUserQuestion**
+   - header: "[Area]" (max 12 chars — abbreviate if needed)
+   - question: Specific decision for this area
+   - options: 2–3 concrete choices (AskUserQuestion adds "Other" automatically), with the recommended choice highlighted and brief explanation why
+   - **Annotate options with code context** when relevant:
+     ```
+     "How should skill output be structured?"
+     - SkillUi.result() with typed payload (reuses existing UI adapter — consistent)
+     - Raw console.log (simpler but breaks Ink adapter compatibility)
+     - Configurable per-skill via output: 'structured' | 'plain' in defineSkill()
+     ```
+   - Include "You decide" as an option when reasonable — captures Claude discretion
+   - **For library choices:** When a gray area involves library selection, fetch current npm/docs data to inform the options. Don't do this for every question — only when library-specific knowledge improves the options.
+
+   **Batch mode (`--batch`): Ask 2–5 numbered questions in one plain-text turn**
+   - Group closely related questions for the current area into a single message
+   - Keep each question concrete and answerable in one reply
+   - When options are helpful, include short inline choices per question rather than a separate AskUserQuestion for every item
+   - After the user replies, reflect back the captured decisions, note any unanswered items, and ask only the minimum follow-up needed before moving on
+   - Preserve adaptiveness between batches: use the full set of answers to decide the next batch or whether the area is sufficiently clear
+
+3. **After the current set of questions, check:**
+   - header: "[Area]" (max 12 chars)
+   - question: "More questions about [area], or move to next? (Remaining: [list other unvisited areas])"
+   - options: "More questions" / "Next area"
+
+   When building the question text, list the remaining unvisited areas so the user knows what's ahead. For example: "More questions about Output format, or move to next? (Remaining: Error isolation, Extension path)"
+
+   If "More questions" → ask another 4 single questions, or another 2–5 question batch when `--batch` is active, then check again
+   If "Next area" → proceed to next selected area
+   If "Other" (free text) → interpret intent: continuation phrases ("chat more", "keep going", "yes", "more") map to "More questions"; advancement phrases ("done", "move on", "next", "skip") map to "Next area". If ambiguous, ask: "Continue with more questions about [area], or move to the next area?"
+
+4. **After all initially-selected areas complete:**
+   - Summarize what was captured from the discussion so far
+   - AskUserQuestion:
+     - header: "Done"
+     - question: "We've discussed [list areas]. Which gray areas remain unclear?"
+     - options: "Explore more gray areas" / "I'm ready for context"
+   - If "Explore more gray areas":
+     - Identify 2–4 additional gray areas based on what was learned
+     - Return to present_gray_areas logic with these new areas
+     - Loop: discuss new areas, then prompt again
+   - If "I'm ready for context": Proceed to write_context
+
+**Canonical ref accumulation during discussion:**
+When the user references a doc, spec, or ADR during any answer — e.g., "read CLAUDE.md §Skill Patterns", "check the smol-toml docs", "per our architecture decision on agent router" — immediately:
+1. Read the referenced doc (or confirm it exists)
+2. Add it to the canonical refs accumulator with full relative path
+3. Use what you learned from the doc to inform subsequent questions
+
+These user-referenced docs are often MORE important than ROADMAP.md refs because they represent docs the user specifically wants downstream agents to follow. Never drop them.
+
+**Question design:**
+- Options should be concrete, not abstract ("Graceful degrade" not "Option B")
+- Each answer should inform the next question or next batch
+- If user picks "Other" to provide freeform input, ask your follow-up as plain text — NOT another AskUserQuestion. Wait for them to type at the normal prompt, then reflect their input back and confirm before resuming AskUserQuestion or the next numbered batch.
+- Max 4 questions per area in default mode — stop when the area is clear
+
+**Scope creep handling:**
+If user mentions something outside the phase domain:
+```
+"[Feature] sounds like a new capability — that belongs in its own phase.
+I'll note it as a deferred idea.
+
+Back to [current area]: [return to current question]"
 ```
 
-### Stopping Condition
+Track deferred ideas internally.
 
-Stop asking when:
-- All identified gray areas have been resolved
-- No remaining ambiguity would change the implementation approach
-- User indicates they want to proceed
+**Track discussion log data internally:**
+For each question asked, accumulate:
+- Area name
+- All options presented (label + description)
+- Which option the user selected (or their free-text response)
+- Any follow-up notes or clarifications the user provided
+This data is used to generate DISCUSSION-LOG.md in the `write_context` step.
+</step>
 
-Aim for 3–7 questions per phase. Fewer is better — only ask what would change the plan.
+<step name="write_context">
+Create CONTEXT.md capturing decisions made.
 
----
+**Also generate DISCUSSION-LOG.md** — a full audit trail of the discuss Q&A.
+This file is for human reference only (software audits, compliance reviews). It is NOT
+consumed by downstream agents (researcher, planner, executor).
 
-## Phase 2B: Assumptions Mode
+**Find or create phase directory:**
 
-### Codebase Scan
+Use values from init: `phase_dir`, `phase_slug`, `padded_phase`.
 
-Read the codebase relevant to this phase:
-- Scan `packages/` for existing code patterns (naming, structure, error handling)
-- Check `CLAUDE.md` for enforced conventions
-- Review plans and summaries from previous phases
-- Check `packages/core/` for established abstractions
-
-### Assumption Generation
-
-Produce a numbered list:
-
-```
-## What I would assume for Phase [N]:
-
-1. [Assumption about architecture/approach]
-   Reason: [existing pattern | convention from CLAUDE.md | implicit from requirements]
-   Confidence: high | medium | low
-
-2. [Assumption about implementation choice]
-   Reason: [...]
-   Confidence: [...]
-
-...
-
-## Questions I still have:
-
-1. [Genuine ambiguity that cannot be inferred — needs resolution]
+If `phase_dir` is null (phase exists in roadmap but no directory):
+```bash
+mkdir -p ".planning/phases/${padded_phase}-${phase_slug}"
 ```
 
-### Confirmation Step
+**File location:** `${phase_dir}/${padded_phase}-CONTEXT.md`
 
-Ask: "Are these assumptions correct? Which ones should I change?"
-
-Accept either:
-- "All good, proceed" — write CONTEXT.md with all assumptions confirmed
-- Numbered corrections — update affected assumptions before writing CONTEXT.md
-
----
-
-## Phase 3: Write CONTEXT.md
-
-Created at `.planning/phases/[N]-[phase-name]/[N]-CONTEXT.md`.
-
-Use template from `packages/cli/templates/context.md`. Fill in:
-
-- **Phase Goal** — from ROADMAP.md
-- **Requirements Covered** — REQ-IDs this phase addresses
-- **Decisions Made** — each decision with chosen option and reasoning
-- **Constraints** — any constraints relevant to execution
-- **Out of Scope (Phase N)** — explicit exclusions to prevent scope creep
-- **Open Questions** — should be empty before proceeding to plan; if non-empty, resolve them first
-
-### Decision Entry Format
+**Structure the content by what was discussed:**
 
 ```markdown
-### [Decision title]
-**Decision:** [what was decided]
-**Option chosen:** [A / B / other]
-**Reason:** [why — reference existing pattern or user preference]
-**Impact:** [files or areas affected by this choice]
-```
+# Phase [X]: [Name] - Context
+
+**Gathered:** [date]
+**Status:** Ready for planning
+
+<domain>
+## Phase Boundary
+
+[Clear statement of what this phase delivers — the scope anchor for downstream agents]
+
+</domain>
+
+<decisions>
+## Implementation Decisions
+
+### [Category 1 that was discussed]
+- **D-01:** [Decision or preference captured]
+- **D-02:** [Another decision if applicable]
+
+### [Category 2 that was discussed]
+- **D-03:** [Decision or preference captured]
+
+### Claude's Discretion
+[Areas where user said "you decide" — note that Claude has flexibility here. Be specific about the area so planner knows where discretion applies.]
+
+### Folded Todos
+[If any todos were folded into scope from the cross_reference_todos step, list them here.
+Each entry should include the todo title, original problem, and how it fits this phase's scope.
+If no todos were folded: omit this subsection entirely.]
+
+</decisions>
+
+<canonical_refs>
+## Canonical References
+
+**Downstream agents MUST read these before planning or implementing.**
+
+[MANDATORY section. Write the FULL accumulated canonical refs list here.
+Sources: ROADMAP.md refs + REQUIREMENTS.md refs + user-referenced docs during
+discussion + any docs discovered during codebase scout. Group by topic area.
+Every entry needs a full relative path — not just a name.]
+
+### SUNCO Conventions
+- `CLAUDE.md` — Skill patterns, file naming conventions, import rules, testing approach
+- `CLAUDE.md §Skill Patterns` — defineSkill() contract, two kinds (deterministic/prompt), lifecycle
+
+### [Topic area 1]
+- `path/to/adr-or-spec.md` — [What it decides/defines that's relevant]
+- `path/to/doc.md` §N — [Specific section reference]
+
+### [Topic area 2]
+- `path/to/feature-doc.md` — [What this doc defines]
+
+[If no additional external specs: "No external specs beyond CLAUDE.md — requirements fully captured in decisions above"]
+
+</canonical_refs>
+
+<code_context>
+## Existing Code Insights
+
+### Reusable Assets
+- [Skill/utility/shared type]: [How it could be used in this phase]
+
+### Established Patterns
+- [Pattern from codebase]: [How it constrains/enables this phase]
+
+### Integration Points
+- [Where new code connects to existing system in the monorepo]
+
+</code_context>
+
+<specifics>
+## Specific Ideas
+
+[Any particular references, examples, or "I want it like X" moments from discussion]
+[Include links or paths to any external references the user mentioned]
+
+[If none: "No specific requirements — open to standard approaches per CLAUDE.md"]
+
+</specifics>
+
+<deferred>
+## Deferred Ideas
+
+[Ideas that came up but belong in other phases. Don't lose them.]
+
+### Reviewed Todos (not folded)
+[If any todos were reviewed in cross_reference_todos but not folded into scope,
+list them here so future phases know they were considered.
+Each entry: todo title + reason it was deferred (out of scope, belongs in Phase Y, etc.)
+If no reviewed-but-deferred todos: omit this subsection entirely.]
+
+[If none: "None — discussion stayed within phase scope"]
+
+</deferred>
 
 ---
 
-## Phase 4: Route
-
-After writing CONTEXT.md, report:
-
-```
-Phase [N] context captured.
-  Decisions made: [N]
-  Open questions: [N — should be 0]
-  Output: .planning/phases/[N]-[name]/[N]-CONTEXT.md
+*Phase: XX-name*
+*Context gathered: [date]*
 ```
 
-Tell user: "Context captured. Run `/sunco:plan [N]` to create execution plans."
+Write file.
 
-If open questions remain: "Resolve these [N] open questions before planning to avoid rework."
+**Generate DISCUSSION-LOG.md:**
+
+```markdown
+# Phase [X]: [Name] - Discussion Log
+
+> **Audit trail only.** Do not use as input to planning, research, or execution agents.
+> Decisions are captured in CONTEXT.md — this log preserves the alternatives considered.
+
+**Date:** [ISO date]
+**Phase:** [phase number]-[phase name]
+**Areas discussed:** [comma-separated list]
+**Mode:** [interactive | batch | auto | advisor]
+
+---
+
+[For each gray area discussed:]
+
+## [Area Name]
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| [Option 1] | [Description from AskUserQuestion] | |
+| [Option 2] | [Description] | ✓ |
+| [Option 3] | [Description] | |
+
+**User's choice:** [Selected option or free-text response]
+**Notes:** [Any clarifications, follow-up context, or rationale the user provided]
+
+---
+
+[Repeat for each area]
+
+## Claude's Discretion
+
+[List areas where user said "you decide" or deferred to Claude]
+
+## Deferred Ideas
+
+[Ideas mentioned during discussion that were noted for future phases]
+```
+
+Write file.
+
+**Update state:**
+```bash
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state-update \
+  --phase "${PHASE_NUMBER}" \
+  --event "context-captured" \
+  --file "${phase_dir}/${padded_phase}-CONTEXT.md"
+```
+
+**Commit both files:**
+```bash
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit \
+  "docs(${padded_phase}): capture phase context" \
+  --files "${phase_dir}/${padded_phase}-CONTEXT.md" "${phase_dir}/${padded_phase}-DISCUSSION-LOG.md"
+```
+
+Confirm: "Committed: docs(${padded_phase}): capture phase context"
+</step>
+
+<step name="confirm_creation">
+Present summary and next steps:
+
+```
+Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
+
+## Decisions Captured
+
+### [Category]
+- [Key decision]
+
+### [Category]
+- [Key decision]
+
+[If deferred ideas exist:]
+## Noted for Later
+- [Deferred idea] — future phase
+
+---
+
+## Next Up
+
+**Phase ${PHASE}: [Name]** — [Goal from ROADMAP.md]
+
+/sunco:plan ${PHASE}
+
+/clear first — fresh context window for planning
+
+---
+
+**Also available:**
+- `/sunco:plan ${PHASE} --skip-research` — plan without research pass
+- `/sunco:research ${PHASE}` — run research first, then plan separately
+- Review/edit CONTEXT.md before continuing
+
+---
+```
+</step>
+
+<step name="update_state">
+Update STATE.md with session info:
+
+```bash
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state record-session \
+  --stopped-at "Phase ${PHASE} context gathered" \
+  --resume-file "${phase_dir}/${padded_phase}-CONTEXT.md"
+```
+
+Commit STATE.md:
+
+```bash
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit \
+  "docs(state): record phase ${PHASE} context session" \
+  --files .planning/STATE.md
+```
+</step>
+
+<step name="auto_advance">
+Check for auto-advance trigger:
+
+1. Parse `--auto` flag from $ARGUMENTS
+2. **Sync chain flag with intent** — if user invoked manually (no `--auto`), clear the ephemeral chain flag from any previous interrupted `--auto` chain. This does NOT touch `workflow.auto_advance` (the user's persistent settings preference):
+   ```bash
+   if [[ ! "$ARGUMENTS" =~ --auto ]]; then
+     node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-set workflow._auto_chain_active false 2>/dev/null
+   fi
+   ```
+3. Read both the chain flag and user preference:
+   ```bash
+   AUTO_CHAIN=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get workflow._auto_chain_active 2>/dev/null || echo "false")
+   AUTO_CFG=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get workflow.auto_advance 2>/dev/null || echo "false")
+   ```
+
+**If `--auto` flag present AND `AUTO_CHAIN` is not true:** Persist chain flag to config (handles direct `--auto` usage without new-project):
+```bash
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-set workflow._auto_chain_active true
+```
+
+**If `--auto` flag present OR `AUTO_CHAIN` is true OR `AUTO_CFG` is true:**
+
+Display banner:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SUNCO AUTO-ADVANCING TO PLAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Context captured. Launching plan...
+```
+
+Launch plan using the Skill tool to avoid nested Task sessions (which cause runtime freezes due to deep agent nesting):
+```
+Skill(skill="sunco:plan", args="${PHASE} --auto")
+```
+
+This keeps the auto-advance chain flat — discuss, plan, and execute all run at the same nesting level rather than spawning increasingly deep Task agents.
+
+**Handle plan return:**
+- **PHASE COMPLETE** → Full chain succeeded. Display:
+  ```
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SUNCO PHASE ${PHASE} COMPLETE
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Auto-advance pipeline finished: discuss → plan → execute
+
+  Next: /sunco:discuss ${NEXT_PHASE} --auto
+  /clear first — fresh context window
+  ```
+- **PLANNING COMPLETE** → Planning done, execution didn't complete:
+  ```
+  Auto-advance partial: Planning complete, execution did not finish.
+  Continue: /sunco:execute ${PHASE}
+  ```
+- **PLANNING INCONCLUSIVE / CHECKPOINT** → Stop chain:
+  ```
+  Auto-advance stopped: Planning needs input.
+  Continue: /sunco:plan ${PHASE}
+  ```
+- **GAPS FOUND** → Stop chain:
+  ```
+  Auto-advance stopped: Gaps found during execution.
+  Continue: /sunco:plan ${PHASE} --gaps
+  ```
+
+**If neither `--auto` nor config enabled:**
+Route to `confirm_creation` step (existing behavior — show manual next steps).
+</step>
+
+</process>
+
+<success_criteria>
+- Phase validated against roadmap
+- Prior context loaded (PROJECT.md, REQUIREMENTS.md, STATE.md, prior CONTEXT.md files)
+- Already-decided questions not re-asked (carried forward from prior phases)
+- Codebase scouted for reusable skills, utilities, patterns, and integration points
+- Gray areas identified through intelligent SUNCO-specific analysis with code and prior decision annotations
+- User selected which areas to discuss
+- Each selected area explored until user satisfied (with code-informed and prior-decision-informed options)
+- Scope creep redirected to deferred ideas
+- CONTEXT.md captures actual decisions, not vague vision
+- CONTEXT.md includes canonical_refs section with full file paths to every spec/ADR/doc downstream agents need — CLAUDE.md always included (MANDATORY — never omit)
+- CONTEXT.md includes code_context section with reusable assets and patterns from the monorepo
+- DISCUSSION-LOG.md generated as audit trail
+- Deferred ideas preserved for future phases
+- STATE.md updated with session info
+- sunco-tools.cjs state-update called
+- User knows next steps: /sunco:plan ${PHASE}
+</success_criteria>
