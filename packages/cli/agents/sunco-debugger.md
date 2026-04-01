@@ -640,6 +640,34 @@ Resolved in: [session file path]
 
 **Pattern quality rule:** A pattern must be specific enough to avoid false matches. "Test failed" is not a signature. "`DuplicateSkillError` thrown during `lifecycle.boot()` when scanner finds `.skill.ts` files importable by Node strip-types" is a signature.
 
+**Concrete KB Append Flow:**
+
+When the session resolves, execute these steps in order:
+```bash
+# 1. Determine next pattern ID
+LAST_ID=$(ls .planning/debug-knowledge/PATTERN-*.md 2>/dev/null | sort -V | tail -1 | grep -o '[0-9]*')
+NEXT_ID=$(printf "%03d" $((${LAST_ID:-0} + 1)))
+
+# 2. Write pattern file
+# (Agent writes this via Write tool — content from session's root cause + prevention)
+```
+
+The pattern file must include:
+- `Signature:` — at least 3 specific tokens (error class name, function name, package path)
+- `Root cause:` — the mechanism, not the symptom
+- `Fix:` — exact code change or config change
+- `Prevention:` — what lint rule, test, or architecture change prevents recurrence
+- `Resolved in:` — path to the session file
+
+**KB Match Algorithm on Session Start:**
+1. Read all `PATTERN-*.md` files (not `PARTIAL-*.md`)
+2. For each, tokenize the `Signature` field into individual terms
+3. Tokenize the current issue description
+4. Calculate overlap: `matched_terms / total_signature_terms`
+5. If overlap ≥ 0.8 → surface as "Known pattern match"
+6. If overlap 0.5-0.79 → surface as "Possible related pattern"
+7. If overlap < 0.5 → no match
+
 ---
 
 ### Session Lifecycle State Machine
@@ -673,6 +701,50 @@ Debug sessions follow a strict state machine. The state determines what actions 
               │ resolved/archived │ → Extract knowledge pattern, update STATE.md, report
               └───────────────────┘
 ```
+
+**Debug File Protocol:**
+
+The session file is the single source of truth. It is updated at every state transition. The file is append-only for observations, hypotheses, and tests — never delete evidence. Only the `## Status` and `## Checkpoint` fields are overwritten.
+
+**Write rules:**
+- `## Status` — overwrite on every state transition (e.g., `investigating` → `fixing`)
+- `## Observations` — append only. Each observation timestamped.
+- `## Hypotheses` — append new hypotheses. Mark disproven ones with `~~strikethrough~~` and reason.
+- `## Tests Run` — append each test with result. Never delete a test record.
+- `## Root Cause` — overwrite only when confirmed. Before confirmation, this reads "TBD".
+- `## Fix Applied` — overwrite only when fix is applied.
+- `## Checkpoint` — overwrite when checkpoint state changes.
+
+**Resume semantics:** When resuming from `--session`:
+1. Read `## Status` to know current state
+2. Read `## Observations` to know what was already observed (do not re-observe)
+3. Read `## Hypotheses` to know what was already tried (do not re-test disproven hypotheses)
+4. Read `## Tests Run` to know what was already tested
+5. Continue from the exact state — if status is `investigating`, go to Step 4. If `fixing`, go to Step 7.
+
+**Human-Verify Gate:**
+
+After applying a fix (Step 7) and before closing the session, if the fix involves:
+- User-facing behavior changes
+- Configuration file modifications
+- Environment-specific code
+
+Present a human verification prompt:
+```
+Fix applied and automated tests pass.
+
+This fix changes [user-facing behavior / config / environment logic].
+Please verify manually:
+  1. [specific check the user should perform]
+  2. [specific check]
+
+Have you verified? (yes / no / skip)
+  yes  → proceed to prevention + close
+  no   → describe what you found → investigate further
+  skip → note in session: "Human verification skipped — automated tests only"
+```
+
+This gate is NOT applied for purely internal fixes (type corrections, import fixes, test-only changes).
 
 **Blocked transitions:**
 - `investigating → fixing` is blocked until all 4 act-conditions are YES

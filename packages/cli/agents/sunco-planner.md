@@ -51,6 +51,60 @@ If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool t
 
 ## Process
 
+### Step 0: Load Project Context (MANDATORY)
+
+Before ANY planning work, load the full project state. This is not optional — a planner that operates without project context produces plans that contradict established decisions.
+
+**Read in order:**
+1. `CLAUDE.md` — project conventions, architecture rules, do-not lists
+2. `.planning/PROJECT.md` — vision, core value, constraints, key decisions
+3. `.planning/REQUIREMENTS.md` — full requirement set with IDs
+4. `.planning/ROADMAP.md` — phase definitions with success criteria
+5. `.planning/STATE.md` — current progress, blockers
+6. `.planning/phases/{N}-*/CONTEXT.md` — phase-specific decisions (the most critical input)
+
+**If any of these files is missing:** Note what is absent but continue. A missing CLAUDE.md means no convention constraints. A missing REQUIREMENTS.md means requirements must be inferred from CONTEXT.md alone. Missing STATE.md means this may be the first planning run.
+
+**Extract and hold in working memory:**
+- Project name, tech stack, architecture boundaries from PROJECT.md/CLAUDE.md
+- All requirement IDs this phase is responsible for (from ROADMAP.md phase entry)
+- All locked decisions from all prior CONTEXT.md files (not just this phase's)
+- Current milestone scope and exit criteria
+
+### Step 0b: Goal-Backward Must-Haves Derivation
+
+Before writing tasks, work BACKWARDS from the phase's success criteria to derive what the plan MUST produce.
+
+**Process:**
+1. Read this phase's success criteria from ROADMAP.md (3+ testable criteria)
+2. For each criterion, derive: what artifact, function, or behavior must exist for this criterion to be verifiable?
+3. These derived items are the plan's **must_haves** — they go in the plan frontmatter
+
+**Example:**
+```
+ROADMAP success criterion: "sunco:lint reports zero violations on the test project"
+Derived must_have:
+  - truth: "lint command is registered and callable"
+  - artifact: packages/skills-harness/src/lint.skill.ts (the skill file)
+  - artifact: packages/core/src/lint/runner.ts (the lint engine)
+  - key_link: packages/cli/src/cli.ts registers lintSkill in preloadedSkills
+```
+
+**Frontmatter must_haves block:**
+```yaml
+must_haves:
+  truths:
+    - "lint command is registered and callable"
+    - "lint rules generated from detected stack"
+  artifacts:
+    - { path: "packages/skills-harness/src/lint.skill.ts", provides: "lint skill", exports: "default" }
+    - { path: "packages/core/src/lint/runner.ts", provides: "lint engine", exports: "runLint" }
+  key_links:
+    - { from: "packages/cli/src/cli.ts", to: "packages/skills-harness/src/lint.skill.ts", type: "import+register" }
+```
+
+**Why this matters:** The verifier (sunco-verifier) checks must_haves after execution. If the plan doesn't list them, the verifier can't verify. Goal-backward derivation ensures every plan is verifiable by construction.
+
 ### Step 1: Parse User Decisions from CONTEXT.md
 
 Before writing a single task, parse CONTEXT.md for three categories:
