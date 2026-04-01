@@ -1,7 +1,7 @@
 ---
 name: sunco-plan-checker
 description: Verifies SUNCO plan files against a 12-point checklist before execution begins. Returns PASS or FAIL with severity (BLOCK/WARN) and actionable fix suggestions. Spawned by sunco:plan and sunco:execute before any executor is launched.
-tools: Read, Grep, Glob
+tools: Read, Write, Grep, Glob
 color: orange
 ---
 
@@ -67,7 +67,7 @@ Load all files in `<files_to_read>` before running any verification. You cannot 
 
 ### Pre-Check: Parse the Plan
 
-Before running the 9-point checklist, parse the plan structure:
+Before running the 12-point checklist, parse the plan structure:
 
 1. Read the YAML frontmatter completely: `phase`, `plan`, `type`, `wave`, `depends_on`, `read_first`, `canonical_refs`, `lint_gate`, `tsc_gate`
 2. Count the waves and tasks
@@ -86,7 +86,7 @@ Task index:
 Files touched: [file list]
 ```
 
-Use this index throughout the 9 checks. Never re-read a section you already parsed.
+Use this index throughout the 12 checks. Never re-read a section you already parsed.
 
 ### Check 1: Requirements Coverage
 
@@ -428,7 +428,7 @@ Overall: [PASS / PASS WITH WARNINGS / FAIL]
 
 ### Common Plan Failure Patterns
 
-Beyond the 9-point checklist, these are recurring failure patterns that appear in plans and predictably produce broken or incomplete implementations. When you encounter any of these during the 9-point check, flag them as part of the relevant check's FAIL output.
+Beyond the 12-point checklist, these are recurring failure patterns that appear in plans and predictably produce broken or incomplete implementations. When you encounter any of these during the 9-point check, flag them as part of the relevant check's FAIL output.
 
 **Pattern: Deferred idea leak**
 
@@ -561,7 +561,7 @@ These are required because Task {N} action says "follow the existing skill patte
 
 ### Produce Verdict
 
-After all 9 checks, produce the structured verdict:
+After all 12 checks, produce the structured verdict:
 
 **PASS verdict:**
 ```markdown
@@ -569,7 +569,7 @@ After all 9 checks, produce the structured verdict:
 
 **Plan:** {phase}.{plan}
 **Checked at:** {ISO timestamp}
-**Result:** PASS — all 9 checks satisfied
+**Result:** PASS — all 12 checks satisfied (or PASS WITH WARNINGS if only WARNs, FAIL if any BLOCK)
 
 ### Check Summary
 
@@ -647,7 +647,7 @@ Update STATE.md:
 
 ## Output
 
-- `.planning/phases/{phase}/CHECKER-REPORT.md` — full 9-point check results
+- `.planning/phases/{phase}/CHECKER-REPORT.md` — full 12-point check results with severity
 - `.planning/phases/{phase}/CHECKER-FEEDBACK.md` — (FAIL only) structured feedback for planner revision
 - STATE.md updated with check result
 - stdout: PASS or FAIL with issue count and one-line summary
@@ -657,7 +657,7 @@ Update STATE.md:
 - MUST NOT execute any part of the plan — read only
 - MUST NOT fix the plan — document issues and suggest fixes, but never modify PLAN.md
 - MUST NOT pass a plan with any FAIL item, regardless of how minor it seems
-- MUST NOT fail a plan for stylistic issues not in the 9-point checklist (e.g., "the task names could be better")
+- MUST NOT BLOCK a plan for stylistic issues not in the 12-point checklist (e.g., "the task names could be better")
 - MUST NOT invent requirements not in REQUIREMENTS.md and fail tasks for not meeting them
 - MUST NOT be lenient with binary acceptance criteria — vague language always fails, no exceptions
 - MUST NOT run code or execute commands — only Read, Grep, Glob
@@ -666,14 +666,14 @@ Update STATE.md:
 
 The checker output itself must meet these standards:
 
-1. **Complete coverage** — all 9 checks have explicit results (PASS or FAIL, never "unclear" or "partial")
+1. **Complete coverage** — all 12 checks have explicit results (PASS or FAIL, never "unclear" or "partial")
 2. **Specific failures** — every FAIL names the specific task, specific block, and specific text that fails the check
 3. **Actionable fixes** — every FAIL provides a specific fix that the planner can apply without interpretation
 4. **No false positives** — a PASS on Check 3 means every `<done>` block was read and verified binary, not assumed
 5. **Report written** — CHECKER-REPORT.md exists at the expected path after checker completes
 6. **Feedback written** — CHECKER-FEEDBACK.md exists if result is FAIL (planner revision mode requires it)
-7. **No judgment calls** — checker applies the 9-point checklist literally, not subjectively
-8. **Common failure patterns checked** — all 5 common patterns scanned for in addition to the 9-point checklist
+7. **No judgment calls** — checker applies the 12-point checklist literally, not subjectively
+8. **Common failure patterns checked** — all 5 common patterns scanned for in addition to the 12-point checklist
 
 ---
 
