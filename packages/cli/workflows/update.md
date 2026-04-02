@@ -1,6 +1,6 @@
 # Update Workflow
 
-Self-update SUNCO to the latest published version. Checks the npm registry for the current version, compares to what's installed, shows a changelog preview, downloads and applies the update, verifies the new binary works, and writes a `.sun/just-upgraded` marker so the next session can greet the user with what changed. Used by `/sunco:update`.
+Self-update SUNCO to the latest published version. Checks the npm registry for the current version, compares to what's installed, shows a changelog preview, downloads and applies the update, verifies the new binary works, and writes a `.sun/just-upgraded-from` marker so the next session can greet the user with what changed. Used by `/sunco:update`.
 
 ---
 
@@ -13,7 +13,7 @@ Six steps:
 3. **Confirm** — ask user before downloading
 4. **Download and apply** — npm install -g or equivalent
 5. **Verify** — confirm new binary responds correctly
-6. **Write upgrade marker** — `.sun/just-upgraded` for post-upgrade greeting
+6. **Write upgrade marker** — `.sun/just-upgraded-from` for post-upgrade greeting
 
 ---
 
@@ -125,7 +125,7 @@ The installer (`install.cjs`) automatically:
 - Copies commands, workflows, hooks, agents to the target runtime directory
 - Patches `settings.json` hooks (SessionStart update checker)
 - Registers `statusLine` command in `settings.json` (context gauge, tokens, cost)
-- Writes VERSION file and just-upgraded marker
+- Writes VERSION file and just-upgraded-from marker
 - Preserves user's existing settings
 
 ---
@@ -173,7 +173,7 @@ Write global upgrade marker (read by SessionStart hook for welcome message):
 
 ```bash
 mkdir -p ~/.sun
-cat > ~/.sun/just-upgraded << EOF
+cat > ~/.sun/just-upgraded-from << EOF
 from: 1.1.2
 to: 1.2.0
 upgraded_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -209,5 +209,5 @@ Next: /clear  — restart with new version
 - [ ] User confirmed before any download
 - [ ] Install command succeeded with no errors
 - [ ] `cat ~/.claude/sunco/VERSION` returns expected new version
-- [ ] `.sun/just-upgraded` written with from/to/new_commands
+- [ ] `.sun/just-upgraded-from` written with from/to/new_commands
 - [ ] User told to `/clear` and restart
