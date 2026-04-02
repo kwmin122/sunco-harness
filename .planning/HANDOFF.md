@@ -58,11 +58,23 @@
 - **대화 컨텍스트 게이지** — 경험치 바처럼 얼마나 찼는지 표시
 - **토큰 사용량 게이지** — 옆에 바 형태로 현재 세션 토큰 소비량 표시
 
+**조사 완료 — 바로 구현 가능:**
+
+Claude Code statusline API가 JSON으로 정확한 데이터를 제공함:
+- `context_window.used_percentage` — 컨텍스트 사용률 (정확함)
+- `context_window.total_input_tokens` / `total_output_tokens` — 토큰 수
+- `cost.total_cost_usd` — 비용
+- `model.display_name` — 모델명
+- ANSI 색상 지원 (초록→노란→빨강)
+
 구현 방향:
-- Claude Code의 statusline API 활용 가능성 조사 (settings.json statusline 설정)
-- 또는 hooks를 통한 구현 (PreToolUse/PostToolUse hook에서 토큰 추정)
-- 토큰 사용량 추정: 대화 길이 기반 근사치 (정확한 API는 없음)
-- 컨텍스트 게이지: 200K window 기준 대화 크기 추정
+- `sunco-statusline.cjs` 업그레이드 — stdin JSON 파싱 추가 (현재는 STATE.md만 읽음)
+- 컨텍스트 게이지: `[████████░░] 65%` (초록<70%, 노란70-90%, 빨강>90%)
+- 토큰 게이지: `tokens: 45.2K` 또는 바 형태
+- install.cjs에서 settings.json에 statusLine 설정 자동 등록
+- 색상: /sunco:mode 활성화 시 prefix를 노란색으로 변경
+
+**참고:** Claude Code 대화 렌더러에서는 ANSI 색상 안 됨 (strip됨). 하지만 statusline은 별도 렌더링이라 ANSI 색상 지원됨. 즉 statusline에서만 색상 가능.
 
 ### 이후
 2. **SUN Terminal** — Swift/AppKit + libghostty R&D
