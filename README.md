@@ -59,16 +59,19 @@ npx popcoru --claude --codex         # Claude Code + Codex only
 /sunco:mode
 ```
 
-Activates **auto-routing mode** — every message you type is automatically matched to the best `/sunco:*` command. No need to memorize commands. Just describe what you want.
+Activates **auto-routing mode**. Non-slash natural language input is intercepted by the `sunco-mode-router` hook and routed to the best `/sunco:*` command via `/sunco:do`.
+
+- **Claude Code**: System-level `UserPromptSubmit` hook auto-intercepts every message
+- **Codex/Cursor**: Mode-active marker + skill prompt routing (SKILL.md instruction)
 
 ```
-⚡ SUNCO > lint
+* SUNCO > lint
 Running architecture boundary check...
 
-⚡ SUNCO > debug
+* SUNCO > debug
 Analyzing the error...
 
-⚡ SUNCO Mode | Context: ██████████░░░░░░ 65% | Skills used: 3
+* SUNCO Mode | Context: [==========----] 65% | Skills used: 3
 ```
 
 ## The Complete Lifecycle
@@ -194,7 +197,7 @@ Each step has built-in quality gates:
 | `/sunco:workspaces` | Multi-project workspaces |
 | `/sunco:ui-phase` | UI design contract generation |
 | `/sunco:ui-review` | 6-pillar visual UI audit |
-| `/sunco:mode` | Auto-routing mode — every input finds the best skill |
+| `/sunco:mode` | Auto-routing mode (Claude: system hook, Codex/Cursor: skill prompt) |
 | `/sunco:manager` | Interactive command center |
 | `/sunco:stats` | Project statistics |
 | `/sunco:profile` | Model profile management |
@@ -232,17 +235,20 @@ Each step has built-in quality gates:
 
 ## What Gets Installed
 
+**Claude Code** (`~/.claude/`):
 ```
-~/<runtime>/              # e.g., ~/.claude/, ~/.codex/
-  commands/sunco/         # 81 slash commands
-  sunco/
-    bin/                  # Engine (deterministic skills)
-    workflows/            # 76 workflow logic files
-    references/           # 16 reference documents
-    templates/            # 48 artifact templates
-    VERSION
-  hooks/                  # 4 hooks (update check, statusline, context monitor, prompt guard)
+commands/sunco/           # 81 slash commands
+sunco/bin/                # Engine + sunco-tools.cjs
+sunco/workflows/          # 77 workflow files
+sunco/references/         # 16 reference documents
+sunco/templates/          # 49 artifact templates
+sunco/agents/             # 18 specialized agents
+sunco/VERSION
+hooks/                    # 5 hooks (update, statusline, context monitor, prompt guard, mode router)
 ```
+
+**Codex CLI** (`~/.codex/`): same engine/workflows/agents, but `skills/sunco-*/SKILL.md` instead of `commands/`.
+**Cursor** (`~/.cursor/`): same engine/workflows/agents, but `skills-cursor/sunco-*/SKILL.md` instead of `commands/`.
 
 ## Uninstall
 
@@ -339,7 +345,7 @@ AI 에이전트의 설정 폴더(`~/.claude/`, `~/.codex/` 등)에 명령어 파
 SUNCO 자체는 무료(MIT 라이선스)입니다. 다만 Claude Code 사용 시 Anthropic API 비용이 발생할 수 있습니다. 결정적 스킬(lint, health, guard)은 LLM을 사용하지 않아 비용이 0원입니다.
 
 **Q: Claude Code 없이도 쓸 수 있나요?**
-Claude Code와 Codex CLI는 완전 지원됩니다. Cursor와 Antigravity는 에셋 설치는 가능하며, 런타임 등록 연동을 준비 중입니다.
+Claude Code, Codex CLI, Cursor는 완전 지원됩니다. Antigravity는 에셋 설치까지 지원되며 런타임 등록은 스펙 확정 후 추가됩니다.
 
 ## License
 
