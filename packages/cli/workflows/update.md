@@ -22,8 +22,10 @@ Six steps:
 Get the installed version and the latest published version:
 
 ```bash
-# What's currently installed (check all runtimes, use first found)
-CURRENT_VERSION=$(cat ~/.claude/sunco/VERSION 2>/dev/null || cat ~/.codex/sunco/VERSION 2>/dev/null || cat ~/.cursor/sunco/VERSION 2>/dev/null || echo "unknown")
+# What's currently installed — sunco-tools.cjs queries the runtime registry
+CURRENT_VERSION=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" runtimes current-version | node -e "
+  let d=''; process.stdin.on('data',c=>d+=c); process.stdin.on('end',()=>console.log(JSON.parse(d).version));
+")
 
 # What's on npm
 LATEST_VERSION=$(npm view popcoru version 2>/dev/null)
@@ -135,21 +137,20 @@ The installer (`install.cjs`) automatically:
 Verify the update produced a working runtime for ALL installed runtimes:
 
 ```bash
-# Check each installed runtime
-for dir in ~/.claude ~/.codex ~/.cursor ~/.antigravity; do
-  [ -d "$dir/sunco" ] || continue
-  echo "=== $dir ==="
+# Query installed runtimes via sunco-tools.cjs (reads from runtime registry)
+INSTALLED=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" runtimes installed)
 
-  # sunco-tools.cjs runs?
-  node "$dir/sunco/bin/sunco-tools.cjs" --help >/dev/null 2>&1 && echo "  tools: OK" || echo "  tools: FAIL"
-
-  # VERSION matches?
-  echo "  version: $(cat $dir/sunco/VERSION 2>/dev/null || echo MISSING)"
-
-  # ESM package.json?
-  [ -f "$dir/sunco/bin/package.json" ] && echo "  esm: OK" || echo "  esm: MISSING"
-done
+# For each installed runtime, verify:
+#   1. sunco-tools.cjs runs
+#   2. VERSION file matches expected
+#   3. ESM package.json exists
+# Parse the JSON and check each runtime's binDir
 ```
+
+The agent should parse the JSON output from `sunco-tools.cjs runtimes installed` and verify each runtime entry:
+- Run `node <binDir>/sunco-tools.cjs --help` to confirm the binary works
+- Confirm `version` matches `$LATEST_VERSION`
+- Confirm `<binDir>/package.json` exists with `type: "module"`
 
 **All checks must pass for all installed runtimes.** If ANY check fails:
 
@@ -197,6 +198,6 @@ Next: /clear  — restart with new version
 - [ ] Changelog displayed (or "not available" noted)
 - [ ] User confirmed before any download
 - [ ] Install command succeeded with no errors
-- [ ] `cat ~/.claude/sunco/VERSION` returns expected new version
-- [ ] `.sun/just-upgraded-from` written with from/to/new_commands
+- [ ] VERSION file in each installed runtime returns expected new version
+- [ ] `~/.sun/just-upgraded-from` written with from/to/upgraded_at
 - [ ] User told to `/clear` and restart

@@ -22,9 +22,11 @@ Update SUNCO to the latest version via npx popcoru@latest. Shows what changed be
 ## Step 1: Check current version
 
 ```bash
-# Read installed version from the runtime's VERSION file
-cat "$HOME/.claude/sunco/VERSION" 2>/dev/null || cat "$HOME/.codex/sunco/VERSION" 2>/dev/null || cat "$HOME/.cursor/sunco/VERSION" 2>/dev/null || echo "not installed"
+# Read installed version via sunco-tools.cjs (queries runtime registry)
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" runtimes current-version
 ```
+
+Parse the JSON output — `version` field is the installed version.
 
 ## Step 2: Check available version
 
@@ -77,13 +79,11 @@ This handles:
 ## Step 5: Verify
 
 ```bash
-# Check version across all installed runtimes
-for dir in ~/.claude ~/.codex ~/.cursor; do
-  [ -f "$dir/sunco/VERSION" ] && echo "$dir: $(cat $dir/sunco/VERSION)"
-done
+# Check version across all installed runtimes via registry
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" runtimes installed
 ```
 
-Confirm new version matches expected across all installed runtimes.
+Parse the JSON output — each entry has `runtimeId`, `dir`, and `version`. Confirm all match the expected new version.
 
 ## Step 6: Report
 

@@ -44,12 +44,7 @@ for (let i = 0; i < args.length; i++) {
   if (args[i] === '--home' && args[i + 1]) homeDir = args[++i];
 }
 
-const RUNTIME_DIRS = {
-  claude: '.claude',
-  codex: '.codex',
-  cursor: '.cursor',
-  antigravity: '.antigravity',
-};
+const { RUNTIME_DIRS } = require('./runtime-registry.cjs');
 
 const runtimeDir = RUNTIME_DIRS[runtime] || '.claude';
 const targetDir = path.join(homeDir, runtimeDir);

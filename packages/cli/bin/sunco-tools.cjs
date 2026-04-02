@@ -2161,13 +2161,38 @@ async function main() {
       cmdImpactAnalysis(args, cwd);
       break;
 
+    case 'runtimes': {
+      const registry = require('./runtime-registry.cjs');
+      const sub = args[0];
+      if (sub === 'installed') {
+        const installed = registry.findAllInstalled(os.homedir());
+        out({ installed });
+      } else if (sub === 'current-version') {
+        const found = registry.findInstalledVersion(os.homedir());
+        out(found || { version: 'unknown', runtimeId: null, dir: null });
+      } else if (sub === 'list') {
+        out({ runtimes: registry.RUNTIMES });
+      } else {
+        // Default: return everything
+        const installed = registry.findAllInstalled(os.homedir());
+        const found = registry.findInstalledVersion(os.homedir());
+        out({
+          runtimes: registry.RUNTIMES,
+          supported_ids: registry.SUPPORTED_RUNTIME_IDS,
+          current: found || { version: 'unknown' },
+          installed,
+        });
+      }
+      break;
+    }
+
     default:
       fail(
         `Unknown command: ${command}. Valid commands: ` +
           'commit, config-new-project, config-get, config-set, ' +
           'init, state-update, transition, ' +
           'todo, resolve-model, agent-skills, begin-phase, complete-phase, checkpoint, ' +
-          'artifact-hash, rollback-point, impact-analysis'
+          'artifact-hash, rollback-point, impact-analysis, runtimes'
       );
   }
 }

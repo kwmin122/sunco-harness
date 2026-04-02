@@ -361,14 +361,9 @@ function patchDescriptions(commandsDir, descriptions) {
 }
 
 // ---------------------------------------------------------------------------
-// Runtime config map
+// Runtime config map — imported from single source of truth
 // ---------------------------------------------------------------------------
-const RUNTIMES = {
-  claude:      { name: 'Claude Code',  dir: '.claude',      nameKo: 'Claude Code' },
-  codex:       { name: 'Codex CLI',    dir: '.codex',       nameKo: 'Codex CLI' },
-  cursor:      { name: 'Cursor',       dir: '.cursor',      nameKo: 'Cursor' },
-  antigravity: { name: 'Antigravity',  dir: '.antigravity', nameKo: 'Antigravity' },
-};
+const { RUNTIMES } = require('./runtime-registry.cjs');
 
 // ---------------------------------------------------------------------------
 // UI messages (bilingual)
@@ -564,6 +559,13 @@ function install(targetDir, runtimeDir) {
   if (fs.existsSync(srcTools)) {
     ensureDir(destEngine);
     copyFileWithReplacement(srcTools, path.join(destEngine, 'sunco-tools.cjs'), runtimeDir);
+  }
+
+  // Copy runtime-registry.cjs (sunco-tools.cjs requires it via ./runtime-registry.cjs)
+  const srcRegistry = path.join(srcBin, 'runtime-registry.cjs');
+  if (fs.existsSync(srcRegistry)) {
+    ensureDir(destEngine);
+    fs.copyFileSync(srcRegistry, path.join(destEngine, 'runtime-registry.cjs'));
   }
 
   // P0-2: Write minimal package.json for ESM resolution (cli.js uses ESM imports)
