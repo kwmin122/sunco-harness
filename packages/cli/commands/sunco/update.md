@@ -22,7 +22,8 @@ Update SUNCO to the latest version via npx popcoru@latest. Shows what changed be
 ## Step 1: Check current version
 
 ```bash
-sunco --version 2>/dev/null || npx sunco --version 2>/dev/null
+# Read installed version from the runtime's VERSION file
+cat "$HOME/.claude/sunco/VERSION" 2>/dev/null || cat "$HOME/.codex/sunco/VERSION" 2>/dev/null || cat "$HOME/.cursor/sunco/VERSION" 2>/dev/null || echo "not installed"
 ```
 
 ## Step 2: Check available version
@@ -76,15 +77,13 @@ This handles:
 ## Step 5: Verify
 
 ```bash
-cat ~/.claude/sunco/VERSION
+# Check version across all installed runtimes
+for dir in ~/.claude ~/.codex ~/.cursor; do
+  [ -f "$dir/sunco/VERSION" ] && echo "$dir: $(cat $dir/sunco/VERSION)"
+done
 ```
 
-Confirm new version matches expected.
-
-Also verify statusLine is registered:
-```bash
-cat ~/.claude/settings.json | grep statusLine
-```
+Confirm new version matches expected across all installed runtimes.
 
 ## Step 6: Report
 

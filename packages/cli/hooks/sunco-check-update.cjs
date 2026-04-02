@@ -26,8 +26,8 @@ const BOLD    = '\x1b[1m';
 const RESET   = '\x1b[0m';
 const TIMEOUT_MS = 4000;
 
-// State directory
-const STATE_DIR = path.join(os.homedir(), '.sunco');
+// State directory (unified: ~/.sun/ per product contract)
+const STATE_DIR = path.join(os.homedir(), '.sun');
 const CACHE_FILE = path.join(STATE_DIR, 'last-update-check');
 const SNOOZE_FILE = path.join(STATE_DIR, 'update-snoozed');
 const UPGRADED_MARKER = path.join(STATE_DIR, 'just-upgraded-from');
@@ -163,7 +163,7 @@ function main() {
         if (!isSnoozed(cached.latest)) {
           console.error(
             `${EMERALD}[SUNCO]${RESET} ${YELLOW}Update available:${RESET} ${installed} → ${cached.latest}. ` +
-            `Run ${EMERALD}npx popcoru${RESET} to upgrade.`
+            `Run ${EMERALD}/sunco:update${RESET} or ${EMERALD}npx popcoru${RESET} to upgrade.`
           );
         }
         return;
@@ -179,7 +179,7 @@ function main() {
       if (!isSnoozed(latest)) {
         console.error(
           `${EMERALD}[SUNCO]${RESET} ${YELLOW}Update available:${RESET} ${installed} → ${latest}. ` +
-          `Run ${EMERALD}npx popcoru${RESET} to upgrade.`
+          `Run ${EMERALD}/sunco:update${RESET} or ${EMERALD}npx popcoru${RESET} to upgrade.`
         );
       }
     } else {

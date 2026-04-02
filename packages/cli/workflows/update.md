@@ -169,11 +169,11 @@ Do not proceed to Step 6 if artifact-gate failed.
 
 ## Step 6: Write Upgrade Marker
 
-Write `.sun/just-upgraded`:
+Write global upgrade marker (read by SessionStart hook for welcome message):
 
 ```bash
-mkdir -p .sun
-cat > .sun/just-upgraded << EOF
+mkdir -p ~/.sun
+cat > ~/.sun/just-upgraded << EOF
 from: 1.1.2
 to: 1.2.0
 upgraded_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
