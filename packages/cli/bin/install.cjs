@@ -214,6 +214,13 @@ function patchSettings(targetDir, runtimeDir) {
     command: `node ${hooksBase}/sunco-prompt-guard.cjs`
   });
 
+  // UserPromptSubmit: SUNCO Mode auto-router (intercepts natural language input when mode active)
+  if (!Array.isArray(settings.hooks.UserPromptSubmit)) settings.hooks.UserPromptSubmit = [];
+  settings.hooks.UserPromptSubmit.push({
+    matcher: '',
+    command: `node ${hooksBase}/sunco-mode-router.cjs`
+  });
+
   // --- StatusLine ---
   const statusLineCmd = `node ${hooksBase}/sunco-statusline.cjs`;
   settings.statusLine = {

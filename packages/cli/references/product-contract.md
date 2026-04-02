@@ -83,6 +83,7 @@ Source files use `$HOME/.claude/` as canonical default. The installer replaces
 | sunco-statusline.cjs | StatusLine | Terminal status display |
 | sunco-context-monitor.cjs | PostToolUse | Context window usage warning |
 | sunco-prompt-guard.cjs | PreToolUse (Write/Edit) | Prompt injection detection |
+| sunco-mode-router.cjs | UserPromptSubmit | SUNCO Mode auto-routing interceptor |
 
 All copied hooks MUST be registered. Unregistered hooks MUST NOT be shipped.
 

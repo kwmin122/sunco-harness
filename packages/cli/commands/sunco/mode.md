@@ -59,8 +59,8 @@ mkdir -p ~/.sun && echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ~/.sun/mode-active
                S U N C O
                M O D E
 
-         77 skills         armed
-         6-layer            online
+         81 skills         armed
+         7-layer            online
          harness          engaged
          auto-routing      active
 
@@ -70,6 +70,12 @@ mkdir -p ~/.sun && echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ~/.sun/mode-active
 ```
 
 After the banner, say: "그냥 말해. 알아서 라우팅한다."
+
+## System-Level Routing
+
+When mode is active, the `sunco-mode-router.cjs` UserPromptSubmit hook detects non-slash
+natural language input and signals auto-routing via `/sunco:do`. This is a real system
+interceptor, not just a prompt hint.
 
 ## Ongoing Behavior (while mode is active)
 
