@@ -36,7 +36,7 @@ By default: show only `status: pending` todos. `--all` includes done/cancelled.
 ### Primary: sunco-tools query
 
 ```bash
-TODOS=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" todo list \
+TODOS=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" todo list \
   --status "${SHOW_ALL:+all}" \
   --phase "${PHASE_FILTER}" \
   --priority "${PRIORITY_FILTER}" 2>/dev/null)
@@ -177,7 +177,7 @@ If `y`: invoke the route. Mark the todo `in_progress` in its frontmatter:
 ```bash
 # Update status in todo file
 sed -i '' 's/^status: pending/status: in_progress/' "$TODO_FILE"
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" todo update \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" todo update \
   --id "${SELECTED_ID}" --status "in_progress" 2>/dev/null
 ```
 
@@ -197,7 +197,7 @@ If `y`:
 ```bash
 sed -i '' 's/^status: in_progress/status: done/' "$TODO_FILE"
 echo "completed_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$TODO_FILE"
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" todo update \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" todo update \
   --id "${SELECTED_ID}" --status "done" 2>/dev/null
 echo "Todo ${SELECTED_ID} marked done."
 ```

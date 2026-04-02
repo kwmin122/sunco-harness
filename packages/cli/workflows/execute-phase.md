@@ -42,7 +42,7 @@ Rules:
 Load all context in one call. The sunco-tools binary is the single source of truth for phase, plan, and config state.
 
 ```bash
-INIT=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -72,17 +72,17 @@ Parse JSON fields:
 
 **Load STATE.md context:**
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load
 ```
 
-This reads `.sun/STATE.md` (or `.planning/STATE.md` for legacy layouts) and returns current phase, last completed plan, and any pending checkpoints.
+This reads `.planning/STATE.md` (or `.planning/STATE.md` for legacy layouts) and returns current phase, last completed plan, and any pending checkpoints.
 
 ### Artifact Integrity Check
 
 Before execution, verify no planning artifacts have drifted:
 
 ```bash
-HASH_CHECK=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" artifact-hash check 2>/dev/null)
+HASH_CHECK=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" artifact-hash check 2>/dev/null)
 ```
 
 Parse JSON for `changed` (boolean) and `artifacts` (array).
@@ -103,7 +103,7 @@ Options:
 Use AskUserQuestion. If option 1: invoke impact-analysis workflow and return. If option 3: exit workflow. If option 2: update hashes and continue.
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" artifact-hash compute 2>/dev/null
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" artifact-hash compute 2>/dev/null
 ```
 
 **If `changed` is false:** Continue to check_interactive_mode.
@@ -215,7 +215,7 @@ For each plan with `depends_on:` in its frontmatter:
 
 **Update STATE.md for phase start:**
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state begin-phase \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state begin-phase \
   --phase "${PHASE_NUMBER}" \
   --name "${PHASE_NAME}" \
   --plans "${PLAN_COUNT}"
@@ -232,7 +232,7 @@ Report: "Found {plan_count} plans in `{phase_dir}` ({incomplete_count} incomplet
 Load the plan inventory with wave grouping:
 
 ```bash
-PLAN_INDEX=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" phase-plan-index "${PHASE_NUMBER}")
+PLAN_INDEX=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" phase-plan-index "${PHASE_NUMBER}")
 ```
 
 Parse JSON fields per plan:
@@ -380,7 +380,7 @@ Task(
     <files_to_read>
     Read these files at the start using the Read tool:
     - {phase_dir}/{plan_id}-PLAN.md          (this plan)
-    - .sun/STATE.md                           (project state)
+    - .planning/STATE.md                           (project state)
     - .sun/config.toml                        (project config)
     - CLAUDE.md                               (project-level agent instructions, if present)
     - .planning/phases/{phase_dir}/CONTEXT.md (phase decisions and context)
@@ -514,7 +514,7 @@ All plans in Wave N must complete (SUMMARY.md written, lint-gate passed or expli
 Before spawning Wave N+1 agents, verify that key artifacts from Wave N exist:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" verify key-links \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" verify key-links \
   "{phase_dir}/{plan_id}-PLAN.md"
 ```
 
@@ -703,13 +703,13 @@ Path: `.planning/phases/{N}-{slug}/{N}-VERIFICATION.md`
 
 **Update STATE.md:**
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set \
   "current_phase.status" "executed"
 ```
 
 **Commit VERIFICATION.md:**
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" commit \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit \
   "docs(phase-${PHASE_NUMBER}): write execution VERIFICATION.md" \
   --files ".planning/phases/${PHASE_NUMBER}-${PHASE_SLUG}/${PHASE_NUMBER}-VERIFICATION.md"
 ```
@@ -739,7 +739,7 @@ If `--wave N` was used (WAVE_FILTER is set), apply special post-execution logic.
 Re-run plan discovery to see if the phase is fully complete:
 
 ```bash
-POST_INDEX=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" phase-plan-index "${PHASE_NUMBER}")
+POST_INDEX=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" phase-plan-index "${PHASE_NUMBER}")
 REMAINING=$(echo "$POST_INDEX" | node -e "
   const d = require('fs').readFileSync('/dev/stdin','utf8');
   process.stdout.write(String(JSON.parse(d).incomplete.length));

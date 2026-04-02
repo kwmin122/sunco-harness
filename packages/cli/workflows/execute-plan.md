@@ -54,7 +54,7 @@ PLAN_FILE="${FILE_ARG}"
 
 **If phase + plan name provided:**
 ```bash
-PHASE_STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
+PHASE_STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
 PHASE_DIR=$(echo "$PHASE_STATE" | node -e "... parse phase_dir")
 # Find matching plan
 PLAN_FILE=$(ls "${PHASE_DIR}/"*"${PLAN_NAME}"*-PLAN.md 2>/dev/null | head -1)
@@ -224,7 +224,7 @@ Otherwise:
 ```
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" lint check --files "${FILES_CHANGED}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" lint check --files "${FILES_CHANGED}"
 ```
 
 Where `FILES_CHANGED` is the union of all files modified across all tasks.
@@ -239,7 +239,7 @@ Display each error with file + line + rule name.
 
 Attempt auto-fix:
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" lint fix --files "${FILES_CHANGED}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" lint fix --files "${FILES_CHANGED}"
 ```
 
 Re-run lint. If errors remain → abort:

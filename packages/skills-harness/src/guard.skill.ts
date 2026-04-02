@@ -17,7 +17,7 @@
  * Requirements: HRN-14, HRN-15, HRN-16
  */
 
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { defineSkill } from '@sunco/core';
 import { generateBoundariesConfig } from './lint/config-generator.js';
@@ -26,6 +26,7 @@ import { detectPromotionCandidates, formatPromotionSuggestion } from './guard/pr
 import { loadTribalPatterns } from './guard/tribal-loader.js';
 import { createWatcher, stopWatcher } from './guard/watcher.js';
 import type { InitResult } from './init/types.js';
+import type { PromotionSuggestion } from './guard/types.js';
 
 export default defineSkill({
   id: 'harness.guard',
@@ -38,10 +39,12 @@ export default defineSkill({
   options: [
     { flags: '--watch', description: 'Continuous file watching mode (chokidar)' },
     { flags: '--json', description: 'Output results as JSON' },
+    { flags: '--draft-claude-rules', description: 'Generate .claude/rules/ files from repeated anti-patterns' },
   ],
 
   async execute(ctx) {
     const watchMode = (ctx.args.watch as boolean) ?? false;
+    const draftRules = (ctx.args['draft-claude-rules'] as boolean) ?? false;
 
     await ctx.ui.entry({
       title: 'Guard',
@@ -149,6 +152,54 @@ export default defineSkill({
         promotions: promotions.length,
         timestamp: new Date().toISOString(),
       });
+
+      // --draft-claude-rules: generate .claude/rules/ files from promotion candidates
+      if (draftRules && promotions.length > 0) {
+        const rulesDir = join(ctx.cwd, '.claude', 'rules');
+        await mkdir(rulesDir, { recursive: true });
+        let rulesWritten = 0;
+
+        for (const promo of promotions) {
+          const ruleId = promo.suggestedRule.id;
+          const ruleName = ruleId
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+          const rulePath = join(rulesDir, `${ruleName}.md`);
+
+          // Skip if rule file already exists
+          try { await access(rulePath); continue; } catch { /* doesn't exist, create it */ }
+
+          const ruleContent = [
+            `---`,
+            `description: ${promo.pattern} — auto-promoted from guard analysis`,
+            `globs:`,
+            `  - "**/*.ts"`,
+            `  - "**/*.tsx"`,
+            `---`,
+            ``,
+            `## ${promo.pattern}`,
+            ``,
+            `Pattern detected by \`sunco guard\`:`,
+            `- Occurrences: ${promo.occurrences}`,
+            `- Files: ${promo.files.join(', ')}`,
+            ``,
+            `### Rule`,
+            ``,
+            promo.message,
+            ``,
+          ].join('\n');
+
+          await writeFile(rulePath, ruleContent, 'utf8');
+          rulesWritten++;
+        }
+
+        if (rulesWritten > 0) {
+          details.push(`\n--- Draft Rules Generated ---`);
+          details.push(`  ${rulesWritten} rule(s) written to .claude/rules/`);
+          details.push(`  Review and commit these files to enforce the rules.`);
+        }
+      }
 
       return {
         success: result.lintViolations.length === 0,

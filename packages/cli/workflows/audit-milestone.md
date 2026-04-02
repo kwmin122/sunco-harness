@@ -27,7 +27,7 @@ Parse `$ARGUMENTS`:
 | `--verbose` | `VERBOSE` | false |
 | `--fix-hints` | `FIX_HINTS` | true |
 
-If `MILESTONE_ID` is not provided, read `current_milestone.name` from `.sun/STATE.md`.
+If `MILESTONE_ID` is not provided, read `current_milestone.name` from `.planning/STATE.md`.
 
 ---
 

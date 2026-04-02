@@ -46,7 +46,7 @@ If not found: "Phase ${PHASE_ARG} not found. Run `/sunco:status` to check availa
 Resolve Model B from config if not specified:
 
 ```bash
-MODEL_B_CFG=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" config-get pingpong.model_b 2>/dev/null || echo "codex")
+MODEL_B_CFG=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get pingpong.model_b 2>/dev/null || echo "codex")
 ```
 
 Use `MODEL_B_CFG` if `--model-b` was not passed.
@@ -65,7 +65,7 @@ mkdir -p "$PINGPONG_DIR"
 Gather all context that both models need. The input must be identical — any asymmetry defeats the purpose of independent comparison.
 
 ```bash
-INIT=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -198,7 +198,7 @@ Store the prepared prompt as `SHARED_PROMPT`.
 Display cost warning (first time only):
 
 ```bash
-WARNED=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state get "pingpong.cost_warned" 2>/dev/null || echo "false")
+WARNED=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state get "pingpong.cost_warned" 2>/dev/null || echo "false")
 ```
 
 If `WARNED !== "true"`:
@@ -219,7 +219,7 @@ If `WARNED !== "true"`:
 ```
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "pingpong.cost_warned" "true"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "pingpong.cost_warned" "true"
 ```
 
 If `DRY_RUN`: display the prompt and model configuration, then exit.
@@ -942,7 +942,7 @@ Next steps:
 Optionally clean up intermediate files. Debate artifacts can be large.
 
 ```bash
-KEEP_ARTIFACTS=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" config-get pingpong.keep_artifacts 2>/dev/null || echo "true")
+KEEP_ARTIFACTS=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get pingpong.keep_artifacts 2>/dev/null || echo "true")
 ```
 
 If `KEEP_ARTIFACTS == "false"`:

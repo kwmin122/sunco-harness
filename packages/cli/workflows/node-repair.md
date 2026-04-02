@@ -97,7 +97,7 @@ If not in PATH: FAIL — sunco global binary will not be found.
 ### Check 5: sunco-tools binary availability
 
 ```bash
-SUNCO_BIN=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" --version 2>/dev/null)
+SUNCO_BIN=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" --version 2>/dev/null)
 SUNCO_EXIT=$?
 ```
 
@@ -172,7 +172,7 @@ Group findings:
 **Manual-fix required (print instructions only):**
 - Node.js version too old → explain how to update via nvm/fnm/homebrew
 - npm version too old → `npm install -g npm@latest`
-- sunco not installed globally → `npm install -g sunco`
+- sunco not installed globally → `npm install -g popcoru`
 - Node/npm prefix mismatch → explain version manager consolidation
 - Node.js missing entirely → link to nodejs.org
 
@@ -251,5 +251,5 @@ After fixing, re-run: /sunco:node-repair
 | `npm install` fails | Show full error output, suggest `npm ci` as alternative |
 | `npm ci` fails | Show error, suggest clearing `node_modules` manually and retrying |
 | Node.js not found at all | Print download instructions for nodejs.org and nvm |
-| sunco not installed globally | Print `npm install -g sunco`, explain it is needed for sunco-tools |
+| sunco not installed globally | Print `npm install -g popcoru`, explain it is needed for sunco-tools |
 | Version manager conflict (nvm + homebrew) | Explain the conflict, suggest picking one |

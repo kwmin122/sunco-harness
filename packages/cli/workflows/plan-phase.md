@@ -19,7 +19,7 @@ Valid SUNCO subagent types (use exact names — do not fall back to general-purp
 Load project state in a single call:
 
 ```bash
-INIT=$(node "$(dirname "$0")/../bin/sunco-tools.cjs" init plan-phase)
+INIT=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init plan-phase)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -40,7 +40,7 @@ Exit workflow.
 Before proceeding, verify no planning artifacts have been modified since the last operation:
 
 ```bash
-HASH_CHECK=$(node "$(dirname "$0")/../bin/sunco-tools.cjs" artifact-hash check 2>/dev/null)
+HASH_CHECK=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" artifact-hash check 2>/dev/null)
 ```
 
 Parse JSON for `changed` (boolean) and `artifacts` (array).
@@ -59,7 +59,7 @@ Options:
 Use AskUserQuestion to let user choose. If option 1: invoke impact-analysis workflow and return. If option 3: invoke backtrack workflow and return. If option 2: update hashes and continue.
 
 ```bash
-node "$(dirname "$0")/../bin/sunco-tools.cjs" artifact-hash compute 2>/dev/null
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" artifact-hash compute 2>/dev/null
 ```
 
 **If `changed` is false or no stored hashes:** Continue to Parse Arguments.
@@ -214,7 +214,7 @@ Generating CONTEXT.md from requirements...
 
 5. Commit:
 ```bash
-node "$(dirname "$0")/../bin/sunco-tools.cjs" commit \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit \
   "docs(phase-${PHASE}): generate context from PRD" \
   --files "${PHASE_DIR}/${PADDED_PHASE}-CONTEXT.md"
 ```
@@ -934,7 +934,7 @@ If any plan file is missing: re-run the planner for missing plans before proceed
 ### Update STATE.md
 
 ```bash
-node "$(dirname "$0")/../bin/sunco-tools.cjs" state-update \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state-update \
   --phase "${PHASE}" \
   --status "planned" \
   --next "Execute Phase ${PHASE}: /sunco:execute ${PHASE}"
@@ -943,7 +943,7 @@ node "$(dirname "$0")/../bin/sunco-tools.cjs" state-update \
 ### Commit
 
 ```bash
-node "$(dirname "$0")/../bin/sunco-tools.cjs" commit \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit \
   "plan(phase-${PHASE}): create ${PLAN_COUNT} plan(s) for ${phase_name}" \
   --files "${PHASE_DIR}/${PADDED_PHASE}-"*-PLAN.md .planning/STATE.md
 ```
@@ -951,7 +951,7 @@ node "$(dirname "$0")/../bin/sunco-tools.cjs" commit \
 If `HAS_RESEARCH` and RESEARCH.md was created this session, include it in the commit:
 
 ```bash
-node "$(dirname "$0")/../bin/sunco-tools.cjs" commit \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit \
   "docs(phase-${PHASE}): add research and plans for ${phase_name}" \
   --files "${PHASE_DIR}/" .planning/STATE.md
 ```

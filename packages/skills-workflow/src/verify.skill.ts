@@ -1,8 +1,8 @@
 /**
  * @sunco/skills-workflow - Verify Skill
  *
- * 5-layer Swiss cheese verification pipeline orchestrator.
- * Executes all 5 verification layers sequentially, aggregates findings,
+ * 7-layer Swiss cheese verification pipeline orchestrator.
+ * Executes all 7 verification layers sequentially, aggregates findings,
  * computes verdict, handles human gates, and writes VERIFICATION.md.
  *
  * Layers:
@@ -11,12 +11,14 @@
  * 3. BDD Acceptance Criteria (done criteria + holdout scenarios)
  * 4. Permission Scoping (git diff vs declared scope)
  * 5. Adversarial Verification (adversarial + intent reconstruction)
+ * 6. Cross-Model Verification (different model blind spot detection)
+ * 7. Human Eval Gate (final human sign-off)
  *
  * Each layer runs independently -- a layer failure does NOT stop subsequent
  * layers. This is the Swiss cheese model: every layer catches what others miss.
  *
  * Requirements: VRF-01 through VRF-09, REV-02, REV-03
- * Decisions: D-01 (sequential 5-layer), D-02 through D-08, D-21, D-22
+ * Decisions: D-01 (sequential 7-layer), D-02 through D-08, D-21, D-22
  */
 
 import { defineSkill } from '@sunco/core';
@@ -34,6 +36,8 @@ import {
   runLayer3Acceptance,
   runLayer4PermissionScope,
   runLayer5Adversarial,
+  runLayer6CrossModel,
+  runLayer7HumanEval,
 } from './shared/verify-layers.js';
 
 // ---------------------------------------------------------------------------
@@ -47,6 +51,8 @@ const LAYER_NAMES = [
   'BDD Acceptance Criteria',
   'Permission Scoping',
   'Adversarial Verification',
+  'Cross-Model Verification',
+  'Human Eval Gate',
 ];
 
 // ---------------------------------------------------------------------------
@@ -63,8 +69,19 @@ interface QualityGate {
   maxMedium: number;
 }
 
-/** Default quality gate — zero tolerance for critical/high */
+/**
+ * Default quality gate — STOP-THE-LINE philosophy.
+ * Zero tolerance for ALL severities. No carry-forward allowed.
+ * Use --lenient to temporarily relax medium threshold (for development only).
+ */
 const DEFAULT_QUALITY_GATE: QualityGate = {
+  maxCritical: 0,
+  maxHigh: 0,
+  maxMedium: 0,
+};
+
+/** Lenient gate for development — still blocks critical/high */
+const LENIENT_QUALITY_GATE: QualityGate = {
   maxCritical: 0,
   maxHigh: 0,
   maxMedium: 5,
@@ -92,7 +109,9 @@ function computeVerdict(
   if (highCount > gate.maxHigh) return 'FAIL';
   if (mediumCount > gate.maxMedium) return 'FAIL';
 
-  if (findings.length > 0) return 'WARN';
+  // Stop-the-line: ANY remaining findings (including low) = FAIL
+  // No carry-forward allowed. Use --lenient only during development.
+  if (findings.length > 0) return 'FAIL';
   return 'PASS';
 }
 
@@ -150,19 +169,22 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
-  description: 'Run 5-layer Swiss cheese verification pipeline',
+  description: 'Run 7-layer Swiss cheese verification pipeline',
 
   options: [
     { flags: '-p, --phase <number>', description: 'Which phase to verify' },
     { flags: '--auto', description: 'Skip human gate prompts (for CI)' },
     { flags: '--strict', description: 'Fail on humanRequired findings' },
+    { flags: '--lenient', description: 'Allow up to 5 medium findings (development only, blocked for release)' },
+    { flags: '--skip-cross-model', description: 'Skip Layer 6 (cross-model verification)' },
+    { flags: '--skip-human-eval', description: 'Skip Layer 7 (human eval gate)' },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
     // --- Entry ---
     await ctx.ui.entry({
       title: 'Verify',
-      description: 'Starting 5-layer Swiss cheese verification...',
+      description: 'Starting 7-layer Swiss cheese verification...',
     });
 
     // --- Step 1: Resolve phase ---
@@ -227,12 +249,18 @@ export default defineSkill({
       ctx.log.warn('Git diff failed -- using empty diff');
     }
 
-    // --- Step 4: Execute all 5 layers sequentially (D-01) ---
+    // --- Step 4: Execute all 7 layers sequentially (D-01) ---
+    const isAuto = ctx.args.auto === true;
+    const isStrict = ctx.args.strict === true;
+    // In strict mode, skip flags are IGNORED — all layers must run
+    const skipCrossModel = isStrict ? false : (ctx.args['skip-cross-model'] === true || ctx.args.skipCrossModel === true);
+    const skipHumanEval = isStrict ? false : (ctx.args['skip-human-eval'] === true || ctx.args.skipHumanEval === true);
     const layerProgress = ctx.ui.progress({
       title: 'Verification layers',
-      total: 5,
+      total: 7,
     });
 
+    // Execute Layers 1-5 (core automated layers)
     const layerFunctions = [
       () => runLayer1MultiAgent(ctx, diff, phaseDir),
       () => runLayer2Deterministic(ctx),
@@ -275,8 +303,76 @@ export default defineSkill({
       }
     }
 
-    layerProgress.update({ completed: 5, message: 'All layers complete' });
-    layerProgress.done({ summary: 'All 5 layers executed' });
+    // Layer 6: Cross-Model Verification
+    layerProgress.update({ completed: 5, message: 'Layer 6: Cross-Model Verification' });
+
+    if (skipCrossModel) {
+      ctx.log.info('Layer 6 (Cross-Model) skipped via --skip-cross-model');
+      layerResults.push({
+        layer: 6,
+        name: 'Cross-Model Verification',
+        findings: [],
+        passed: true,
+        durationMs: 0,
+      });
+    } else {
+      try {
+        // Collect all findings from Layers 1-5 for cross-model context
+        const previousFindings: VerifyFinding[] = [];
+        for (const lr of layerResults) {
+          previousFindings.push(...lr.findings);
+        }
+
+        const layer6Result = await runLayer6CrossModel(ctx, diff, previousFindings);
+        layerResults.push(layer6Result);
+      } catch (err) {
+        ctx.log.warn('Layer 6 (Cross-Model) threw', { error: err });
+        layerResults.push({
+          layer: 6,
+          name: 'Cross-Model Verification',
+          findings: [
+            {
+              layer: 6,
+              source: 'cross-model' as VerifyFinding['source'],
+              severity: 'low',
+              description: `Layer 6 error: ${err instanceof Error ? err.message : String(err)}`,
+            },
+          ],
+          passed: true,
+          durationMs: 0,
+        });
+      }
+    }
+
+    // Layer 7: Human Eval Gate
+    layerProgress.update({ completed: 6, message: 'Layer 7: Human Eval Gate' });
+
+    try {
+      const layer7Result = await runLayer7HumanEval(ctx, layerResults, {
+        skipHumanEval,
+        isAuto,
+      });
+      layerResults.push(layer7Result);
+    } catch (err) {
+      ctx.log.warn('Layer 7 (Human Eval) threw', { error: err });
+      layerResults.push({
+        layer: 7,
+        name: 'Human Eval Gate',
+        findings: [
+          {
+            layer: 7,
+            source: 'human-eval' as VerifyFinding['source'],
+            severity: 'low',
+            description: `Layer 7 error: ${err instanceof Error ? err.message : String(err)}`,
+          },
+        ],
+        passed: true,
+        durationMs: 0,
+      });
+    }
+
+    layerProgress.update({ completed: 7, message: 'All layers complete' });
+    layerProgress.done({ summary: 'All 7 layers executed' });
 
     // --- Step 5: Aggregate findings ---
     const allFindings: VerifyFinding[] = [];
@@ -285,19 +381,19 @@ export default defineSkill({
     }
 
     // --- Step 6: Compute verdict against quality gate ---
-    // Read quality gate from state (user can configure via sunco settings)
+    // Default: STOP-THE-LINE (zero tolerance). --lenient: allow some mediums for development.
+    const isLenient = ctx.args.lenient === true;
+    const baseGate = isLenient ? LENIENT_QUALITY_GATE : DEFAULT_QUALITY_GATE;
     const gateConfig = await ctx.state.get<Partial<QualityGate>>('verify.qualityGate');
     const gate: QualityGate = {
-      maxCritical: gateConfig?.maxCritical ?? DEFAULT_QUALITY_GATE.maxCritical,
-      maxHigh: gateConfig?.maxHigh ?? DEFAULT_QUALITY_GATE.maxHigh,
-      maxMedium: gateConfig?.maxMedium ?? DEFAULT_QUALITY_GATE.maxMedium,
+      maxCritical: gateConfig?.maxCritical ?? baseGate.maxCritical,
+      maxHigh: gateConfig?.maxHigh ?? baseGate.maxHigh,
+      maxMedium: gateConfig?.maxMedium ?? baseGate.maxMedium,
     };
     let verdict = computeVerdict(allFindings, gate);
 
-    // --- Step 7: Human gate ---
+    // --- Step 7: Human gate (legacy -- retained for humanRequired findings from Layers 1-5) ---
     const humanGateRequired = allFindings.some((f) => f.humanRequired === true);
-    const isAuto = ctx.args.auto === true;
-    const isStrict = ctx.args.strict === true;
 
     // --strict: humanRequired findings = FAIL
     if (isStrict && humanGateRequired) {
@@ -350,13 +446,13 @@ export default defineSkill({
 
     // --- Step 11: Return result ---
     const success = verdict !== 'FAIL';
-    const summary = `Verification ${verdict}: ${allFindings.length} finding(s) across 5 layers`;
+    const summary = `Verification ${verdict}: ${allFindings.length} finding(s) across 7 layers`;
 
     // Verdict-aware output: succeed silently, fail loudly
     const details: string[] = [];
     if (verdict === 'PASS') {
       // Single line — succeed silently
-      details.push(`${allFindings.length} findings across 5 layers — all within quality gate`);
+      details.push(`${allFindings.length} findings across 7 layers — all within quality gate`);
     } else if (verdict === 'WARN') {
       // Brief summary + warning list
       details.push(`${allFindings.length} finding(s) — within quality gate thresholds`);

@@ -36,7 +36,7 @@ Collect all context needed for the handoff document.
 ### Read STATE.md
 
 ```bash
-STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load)
+STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load)
 ```
 
 Extract:
@@ -89,7 +89,7 @@ git status --short 2>/dev/null
 ### Read open todos
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" todos list 2>/dev/null | head -10
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" todos list 2>/dev/null | head -10
 ```
 
 ### Full mode: lint and diff
@@ -202,7 +202,7 @@ Plans done: {done}/{total}
 1. .planning/HANDOFF.md (this file)
 2. .planning/phases/{N}-*/CONTEXT.md
 3. .planning/phases/{N}-*/[next-plan]-PLAN.md (if resuming execution)
-4. .sun/STATE.md
+4. .planning/STATE.md
 
 {Suggested first command:}
 /sunco:resume
@@ -235,7 +235,7 @@ Append a new section at the top (after the title):
 Mark the session as paused:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set \
   "session.status" "paused" \
   "session.paused_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   "session.handoff_path" ".planning/HANDOFF.md"
@@ -246,7 +246,7 @@ node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set \
 ## Step 6: Commit (unless --no-commit)
 
 ```bash
-git add .planning/HANDOFF.md .sun/STATE.md
+git add .planning/HANDOFF.md .planning/STATE.md
 
 # If any .planning/phases/ files were modified this session:
 git add .planning/phases/

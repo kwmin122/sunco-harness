@@ -1,12 +1,12 @@
 # Verify Phase Workflow
 
-6-layer Swiss cheese verification for a completed phase. Each layer catches different failure modes. Layers are designed to have low correlation — a bug that slips through one layer is likely caught by another. Used by `/sunco:verify`.
+7-layer Swiss cheese verification for a completed phase. Each layer catches different failure modes. Layers are designed to have low correlation — a bug that slips through one layer is likely caught by another. Used by `/sunco:verify`.
 
 ---
 
 ## Overview
 
-The 6 layers:
+The 7 layers:
 
 | Layer | Name | Type | Catches |
 |-------|------|------|---------|
@@ -16,6 +16,7 @@ The 6 layers:
 | 4 | Permission audit | Deterministic | Scope violations, unauthorized file access, secrets |
 | 5 | Adversarial test | AI | Exploitable inputs, race conditions, bypass paths |
 | 6 | Cross-model verification | AI (different model) | Same-model blind spots, structural issues |
+| 7 | Human eval gate | Human | Final sign-off, subjective quality, UX judgment |
 
 Reference: `packages/cli/references/swiss-cheese.md` for the theoretical basis.
 
@@ -30,10 +31,11 @@ Read all phase artifacts:
 4. `.planning/REQUIREMENTS.md` — which requirements this phase covers
 
 Determine which layer(s) to run:
-- Default: run all 6 layers
+- Default: run all 7 layers
 - `--layer N`: run only layer N
 - `--skip-adversarial`: skip Layer 5
-- `--skip-codex`: skip Layer 6
+- `--skip-cross-model`: skip Layer 6
+- `--skip-human-eval`: skip Layer 7
 
 ---
 
@@ -226,41 +228,54 @@ If you cannot find issues after exhaustive testing: output "PASS — no exploita
 
 ---
 
-## Layer 6: Cross-Model Verification (skip with --skip-codex)
+## Layer 6: Cross-Model Verification (skip with --skip-cross-model)
 
 Eliminates same-model bias. Claude reviews Claude's code — systematic blind spots exist. A different model catches them.
 
-### Detection
+### Strategy
 
-```bash
-ls ~/.claude/commands/codex/ 2>/dev/null
-```
+1. **Multiple providers available**: Uses `crossVerify()` to send the verification prompt through a different AI provider than the primary one. True cross-model blind spot detection.
+2. **Single provider**: Falls back to the same model with a "skeptical reviewer" system prompt that shifts perspective — not as good as a different model, but catches some same-perspective blind spots.
 
-### If Codex plugin installed
+The cross-model agent receives:
+- The code diff
+- A summary of findings from Layers 1-5 (to avoid duplicating known issues)
+- Instructions to find what previous reviewers MISSED
 
-```
-/codex:adversarial-review [N]
-```
+### Skip behavior
 
-The Codex plugin runs independent review through OpenAI's model. Results include:
-- Structural issues Claude consistently misses
-- Alternative implementation approaches that may be more robust
-- Cross-language pattern violations (Node.js idioms vs general)
-
-### If Codex NOT installed
-
-Skip gracefully:
+Skip with `--skip-cross-model`:
 ```
 Layer 6 (Cross-model): SKIPPED
-Reason: Codex plugin not installed.
-Install: /plugin marketplace add openai/codex-plugin-cc
+Reason: --skip-cross-model flag set.
 Note: This does not block overall verification.
 ```
 
 **Layer 6 result:**
-- PASS: Codex finds no critical or structural issues
-- FAIL: Codex identifies exploitable or structural issue
-- SKIPPED: plugin not installed (does not block overall result)
+- PASS: No critical or structural issues found by cross-model review
+- FAIL: Cross-model review identifies exploitable or structural issue
+- SKIPPED: --skip-cross-model flag set (does not block overall result)
+
+---
+
+## Layer 7: Human Eval Gate (skip with --skip-human-eval or --auto)
+
+Final human sign-off. Presents a summary of all 6 automated layers' results and asks the user for approval.
+
+### User options
+
+- **Approve**: Verification passes. Proceed to ship.
+- **Block**: Verification fails. User provides reason. Must fix and re-verify.
+- **Skip**: Human eval is skipped. Automated verdict stands.
+
+### Auto behavior
+
+When `--auto` or `--skip-human-eval` is set, Layer 7 automatically passes without prompting. This is intended for CI/CD pipelines and fully automated workflows.
+
+**Layer 7 result:**
+- PASS: User approves or layer is auto-skipped
+- FAIL: User blocks with reason (finding added at critical severity)
+- SKIPPED: --auto or --skip-human-eval flag set
 
 ---
 
@@ -284,11 +299,12 @@ Generated: [date]
 | 3 | BDD criteria | PASS/PARTIAL/FAIL | [N]/[total] met |
 | 4 | Permission audit | PASS/WARN/FAIL | [summary] |
 | 5 | Adversarial | PASS/WARN/FAIL/SKIPPED | [summary] |
-| 6 | Cross-model (Codex) | PASS/FAIL/SKIPPED | [summary] |
+| 6 | Cross-model | PASS/FAIL/SKIPPED | [summary] |
+| 7 | Human eval | PASS/FAIL/SKIPPED | [summary] |
 
 ## Overall: PASS / NEEDS FIXES
 
-[If PASS]: All 6 layers passed. Ready to ship.
+[If PASS]: All 7 layers passed. Ready to ship.
 [If NEEDS FIXES]: Fix the issues listed below, then re-run /sunco:verify [N].
 
 ## Layer Details
@@ -312,7 +328,10 @@ Generated: [date]
 [attack vectors attempted, findings]
 
 ### Layer 6 — Cross-model
-[Codex findings or SKIPPED reason]
+[cross-model findings or SKIPPED reason]
+
+### Layer 7 — Human Eval
+[approval status, block reason if any, or SKIPPED]
 
 ## Issues to Fix
 - [ ] [issue 1 — layer N]

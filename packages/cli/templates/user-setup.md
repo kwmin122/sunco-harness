@@ -28,7 +28,7 @@ Before running `sunco init`, ensure you have:
 
 ```bash
 # Global install (recommended)
-npm install -g sunco
+npm install -g popcoru  # also available as: npx sunco
 
 # Or run without installing
 npx sunco

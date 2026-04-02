@@ -183,14 +183,14 @@ Evaluate each dormant seed's trigger against current state.
 
 ```bash
 # Current phase
-CURRENT_PHASE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load | jq -r '.current_phase.number')
-CURRENT_STATUS=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load | jq -r '.current_phase.status')
+CURRENT_PHASE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load | jq -r '.current_phase.number')
+CURRENT_STATUS=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load | jq -r '.current_phase.status')
 
 # Completed phases
 COMPLETED=$(ls ".planning/phases/"*"/VERIFICATION.md" 2>/dev/null | wc -l)
 
 # Current milestone
-MILESTONE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load | jq -r '.milestone.name')
+MILESTONE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load | jq -r '.milestone.name')
 ```
 
 ### Trigger evaluation rules

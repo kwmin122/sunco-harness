@@ -31,7 +31,7 @@ Parse `$ARGUMENTS`:
 | `--dry-run` | `DRY_RUN` | false |
 | `--version <semver>` | `VERSION` | read from package.json or STATE.md |
 
-If `MILESTONE_ID` is not provided, read `current_milestone.name` from `.sun/STATE.md`.
+If `MILESTONE_ID` is not provided, read `current_milestone.name` from `.planning/STATE.md`.
 
 If `--dry-run`: execute all checks and generate the summary document but do NOT archive, tag, or modify STATE.md. Print `[DRY RUN]` prefix on all output lines.
 
@@ -56,8 +56,8 @@ Extract from STATE.md:
 ### Resolve milestone metadata
 
 ```bash
-MILESTONE_NAME="${MILESTONE_ID:-$(grep 'current_milestone:' .sun/STATE.md | head -1 | sed 's/.*: //')}"
-VERSION="${VERSION:-$(node -p "require('./package.json').version" 2>/dev/null || grep 'version:' .sun/STATE.md | head -1 | sed 's/.*: //')}"
+MILESTONE_NAME="${MILESTONE_ID:-$(grep 'current_milestone:' .planning/STATE.md | head -1 | sed 's/.*: //')}"
+VERSION="${VERSION:-$(node -p "require('./package.json').version" 2>/dev/null || grep 'version:' .planning/STATE.md | head -1 | sed 's/.*: //')}"
 PADDED_PHASES=$(grep -A20 "phases:" .planning/STATE.md | grep "- " | sed 's/.*- //' | tr '\n' ' ')
 ```
 
@@ -221,7 +221,7 @@ For each phase in the milestone with a passing VERIFICATION.md:
 
 ```bash
 # Promote requirements that were covered in milestone phases
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" project promote-milestone "${MILESTONE_NAME}" 2>/dev/null || {
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" project promote-milestone "${MILESTONE_NAME}" 2>/dev/null || {
   # Manual fallback: mark requirements section
   echo "" >> "$PROJECT_FILE"
   echo "## Milestone: ${MILESTONE_NAME} (v${VERSION}) — Validated" >> "$PROJECT_FILE"
@@ -381,7 +381,7 @@ Populate each section by:
 Reset STATE.md to prepare for the next milestone:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set \
   "current_milestone.status" "complete" \
   "current_milestone.completed_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   "current_milestone.version" "${VERSION}" \
@@ -391,7 +391,7 @@ node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set \
 Clear active phase tracking:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set \
   "current_phase.number" "" \
   "current_phase.name" "" \
   "current_phase.status" "none"
@@ -422,7 +422,7 @@ git add .planning/MILESTONE-SUMMARY-${MILESTONE_NAME}.md
 git add .planning/PROJECT.md
 git add ".planning/archive/milestone-${MILESTONE_NAME}/"
 git add .planning/STATE.md
-git add .sun/STATE.md 2>/dev/null || true
+git add .planning/STATE.md 2>/dev/null || true
 ```
 
 Commit:

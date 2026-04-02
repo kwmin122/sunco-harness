@@ -7,7 +7,7 @@ Agent Workspace OS — harness engineering for AI coding agents
 
 ## What is SUNCO?
 
-SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 77 slash commands that enforce quality at every step — security audits, lint gates, blast radius analysis, 6-layer verification, multi-perspective reviews, and a proactive recommender.
+SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 81 slash commands that enforce quality at every step — security audits, lint gates, blast radius analysis, 7-layer verification, multi-perspective reviews, and a proactive recommender.
 
 **One command to install:**
 
@@ -15,7 +15,7 @@ SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 
 npx popcoru
 ```
 
-This copies commands, engine, hooks, workflows, references, and templates into `~/.claude/`. Then use `/sunco:help` in Claude Code.
+This copies commands, engine, hooks, workflows, references, and templates into your AI agent's config directory (`~/.claude/`, `~/.codex/`, etc.). Then use `/sunco:help` in Claude Code.
 
 ## Why SUNCO?
 
@@ -28,13 +28,13 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Adaptive lifecycle** — pivot, rethink, backtrack at any stage without losing progress
 - **Blast radius analysis** — dependency graph check before every execution
 - **Per-task checkpointing** — crash recovery resumes from exact task, not from scratch
-- **77 slash commands** covering the full development lifecycle
+- **81 slash commands** covering the full development lifecycle
 - **Security audit (CSO)** — OWASP Top 10, STRIDE, secret detection, supply chain risk
 - **Multi-perspective reviews** — CEO, engineering, design reviews before implementation
 - **Operations** — retro, benchmark, land-and-deploy, canary monitoring
 - **Safety guardrails** — destructive command warnings, directory freeze
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
-- **Korean i18n** — 77 commands with Korean descriptions, interactive installer
+- **Korean i18n** — 81 commands with Korean descriptions, interactive installer
 
 ## Quick Start
 
@@ -119,8 +119,6 @@ Each step has built-in quality gates:
 - **plan**: 12-point checker (requirements, scope, criteria, Nyquist, CLAUDE.md compliance)
 - **execute**: Mandatory lint-gate, blast radius check, per-task checkpointing
 - **verify**: 7-layer Swiss cheese (multi-agent review, guardrails, BDD, permissions, adversarial, cross-model, human eval)
-- **execute**: Parallel execution with mandatory lint-gate after each task
-- **verify**: 6-layer Swiss cheese verification pipeline
 - **ship**: Creates PR only after verification passes
 
 ## Command Catalog
@@ -151,7 +149,7 @@ Each step has built-in quality gates:
 | `/sunco:discuss` | Extract decisions and gray areas |
 | `/sunco:plan` | Create execution plans with BDD criteria |
 | `/sunco:execute` | Parallel execution with lint-gate |
-| `/sunco:verify` | 6-layer Swiss cheese verification |
+| `/sunco:verify` | 7-layer Swiss cheese verification |
 | `/sunco:review` | Multi-provider cross-review |
 | `/sunco:ship` | PR with verification pre-check |
 | `/sunco:auto` | Full autonomous pipeline with crash recovery |
@@ -235,13 +233,13 @@ Each step has built-in quality gates:
 ## What Gets Installed
 
 ```
-~/.claude/
-  commands/sunco/         # 77 slash commands
+~/<runtime>/              # e.g., ~/.claude/, ~/.codex/
+  commands/sunco/         # 81 slash commands
   sunco/
     bin/                  # Engine (deterministic skills)
-    workflows/            # 9 workflow logic files
-    references/           # 6 reference documents
-    templates/            # 7 artifact templates
+    workflows/            # 76 workflow logic files
+    references/           # 16 reference documents
+    templates/            # 48 artifact templates
     VERSION
   hooks/                  # 4 hooks (update check, statusline, context monitor, prompt guard)
 ```
@@ -254,14 +252,15 @@ npx popcoru --uninstall
 
 ## Multi-Runtime Support
 
-SUNCO supports multiple AI coding runtimes:
+| Runtime | Status | Install |
+|---------|--------|---------|
+| Claude Code | Full support | `npx popcoru --claude` |
+| Codex CLI | Full support (SKILL.md adapters) | `npx popcoru --codex` |
+| Cursor | Asset install ready, config registration pending | `npx popcoru --cursor` |
+| Antigravity | Asset install ready, config registration pending | `npx popcoru --antigravity` |
 
 ```bash
-npx popcoru --claude              # Claude Code (~/.claude/)
-npx popcoru --codex               # Codex CLI (~/.codex/)
-npx popcoru --cursor              # Cursor (~/.cursor/)
-npx popcoru --antigravity         # Antigravity (~/.antigravity/)
-npx popcoru --all                 # All runtimes at once
+npx popcoru --all                 # Install for all available runtimes
 ```
 
 ---
@@ -271,7 +270,7 @@ npx popcoru --all                 # All runtimes at once
 ### SUNCO가 뭔가요?
 
 SUNCO는 AI 코딩 에이전트(Claude Code 등)가 실수를 덜 하도록 도와주는 도구입니다.
-설치하면 77개의 슬래시 명령어(`/sunco:help`, `/sunco:lint` 등)가 추가되어, AI가 코드를 작성할 때 자동으로 품질을 검사하고 검증합니다.
+설치하면 81개의 슬래시 명령어(`/sunco:help`, `/sunco:lint` 등)가 추가되어, AI가 코드를 작성할 때 자동으로 품질을 검사하고 검증합니다.
 
 ### 설치 전 준비
 
@@ -301,7 +300,7 @@ npx popcoru
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝
 
- ✓ Installed commands/sunco (77 skills)
+ ✓ Installed commands/sunco (81 skills)
  ✓ Installed sunco engine
  ✓ Installed hooks
  ✓ Installed docs
@@ -334,13 +333,13 @@ npx popcoru --uninstall
 Node.js를 설치하면 자동으로 함께 설치됩니다. npm 패키지를 설치 없이 바로 실행하는 도구입니다.
 
 **Q: 설치하면 뭐가 어디에 깔리나요?**
-`~/.claude/` 폴더에 명령어 파일들이 복사됩니다. 시스템을 건드리지 않으며, `npx popcoru --uninstall`로 깔끔하게 삭제됩니다.
+AI 에이전트의 설정 폴더(`~/.claude/`, `~/.codex/` 등)에 명령어 파일들이 복사됩니다. 시스템을 건드리지 않으며, `npx popcoru --uninstall`로 깔끔하게 삭제됩니다.
 
 **Q: 요금이 드나요?**
 SUNCO 자체는 무료(MIT 라이선스)입니다. 다만 Claude Code 사용 시 Anthropic API 비용이 발생할 수 있습니다. 결정적 스킬(lint, health, guard)은 LLM을 사용하지 않아 비용이 0원입니다.
 
 **Q: Claude Code 없이도 쓸 수 있나요?**
-현재는 Claude Code 전용입니다. Codex, Cursor 등 다른 AI 코딩 도구 지원은 준비 중입니다.
+Claude Code와 Codex CLI는 완전 지원됩니다. Cursor와 Antigravity는 에셋 설치는 가능하며, 런타임 등록 연동을 준비 중입니다.
 
 ## License
 

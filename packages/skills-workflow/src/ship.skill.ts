@@ -14,6 +14,7 @@ import { defineSkill } from '@sunco/core';
 import type { SkillContext, SkillResult } from '@sunco/core';
 import { simpleGit } from 'simple-git';
 import { captureGitState } from './shared/git-state.js';
+import { proceedGate } from './shared/gates.js';
 import { buildShipPrBody } from './prompts/ship-pr-body.js';
 import type { VerifyReport } from './shared/verify-types.js';
 
@@ -43,8 +44,8 @@ export default defineSkill({
 
   options: [
     { flags: '-p, --phase <number>', description: 'Phase to ship' },
-    { flags: '--skip-verify', description: 'Skip verification pre-check' },
     { flags: '--draft', description: 'Create draft PR' },
+    // --skip-verify REMOVED: verification is mandatory before ship (stop-the-line)
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
@@ -55,7 +56,6 @@ export default defineSkill({
     });
 
     const phaseNumber = ctx.args.phase as number | undefined;
-    const skipVerify = ctx.args['skip-verify'] === true || ctx.args.skipVerify === true;
     const draft = ctx.args.draft === true;
 
     // --- Step 1: Capture git state ---
@@ -65,11 +65,11 @@ export default defineSkill({
       ctx.log.warn('Working tree has uncommitted changes');
     }
 
-    // --- Step 2: Verification pre-check ---
-    let verifyVerdict = 'SKIPPED';
+    // --- Step 2: Mandatory verification (stop-the-line — no skip) ---
+    let verifyVerdict = 'PENDING';
     let findingsCount = 0;
 
-    if (!skipVerify) {
+    {
       const verifyProgress = ctx.ui.progress({
         title: 'Verification pre-check',
         total: 1,
@@ -99,6 +99,13 @@ export default defineSkill({
       const report = verifyResult.data as VerifyReport | undefined;
       verifyVerdict = report?.verdict ?? 'PASS';
       findingsCount = report?.findings?.length ?? 0;
+    }
+
+    // --- Step 2b: Proceed Gate (shared stop-the-line gate) ---
+    const gate = await proceedGate(ctx);
+    if (!gate.passed) {
+      await ctx.ui.result({ success: false, title: 'Ship', summary: gate.reason });
+      return { success: false, summary: gate.reason };
     }
 
     // --- Step 3: Branch creation ---

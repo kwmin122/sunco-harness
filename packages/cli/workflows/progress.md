@@ -36,7 +36,7 @@ If `--json`: render all output as a JSON object (machine-readable for CI pipelin
 ### Load STATE.md
 
 ```bash
-STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load)
+STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load)
 ```
 
 Extract:

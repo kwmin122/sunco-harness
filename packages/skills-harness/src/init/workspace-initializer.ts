@@ -8,6 +8,8 @@
  */
 
 import { stringify } from 'smol-toml';
+import { writeFile, mkdir, access } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { FileStoreApi } from '@sunco/core';
 import type { InitResult, DetectedLayer } from './types.js';
 import { resolvePreset, type ProjectPreset } from './presets.js';
@@ -21,6 +23,8 @@ export interface InitializeWorkspaceOpts {
   initResult: InitResult;
   /** FileStoreApi for writing to .sun/ */
   fileStore: FileStoreApi;
+  /** Project root directory (cwd) for writing CLAUDE.md and .claude/rules/ */
+  cwd: string;
   /** Overwrite existing .sun/ configuration (default: false) */
   force?: boolean;
 }
@@ -32,6 +36,10 @@ export interface InitializeWorkspaceResult {
   rulesGenerated: number;
   /** Resolved project preset */
   preset: ProjectPreset;
+  /** Whether CLAUDE.md was generated (false if already existed) */
+  claudeMdGenerated: boolean;
+  /** Number of .claude/rules/ files generated */
+  claudeRulesGenerated: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,9 +179,129 @@ export async function initializeWorkspace(
   await fileStore.write('scenarios', '.gitkeep', '');
   await fileStore.write('planning', '.gitkeep', '');
 
+  // Generate thin CLAUDE.md + .claude/rules/ (Memory Strategy dogfood)
+  const { claudeMdGenerated, claudeRulesGenerated } = await generateClaudeMemoryFiles(
+    opts.cwd, initResult, preset, force,
+  );
+
   return {
     configPath: 'config.toml',
     rulesGenerated,
     preset,
+    claudeMdGenerated,
+    claudeRulesGenerated,
   };
+}
+
+// ---------------------------------------------------------------------------
+// CLAUDE.md + .claude/rules/ generation (Memory Strategy)
+// ---------------------------------------------------------------------------
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try { await access(filePath); return true; } catch { return false; }
+}
+
+async function generateClaudeMemoryFiles(
+  cwd: string,
+  initResult: InitResult,
+  preset: ProjectPreset,
+  force: boolean,
+): Promise<{ claudeMdGenerated: boolean; claudeRulesGenerated: number }> {
+  const claudeMdPath = join(cwd, 'CLAUDE.md');
+  const rulesDir = join(cwd, '.claude', 'rules');
+  let claudeMdGenerated = false;
+  let claudeRulesGenerated = 0;
+
+  // Generate thin root CLAUDE.md (≤60 lines)
+  if (force || !(await fileExists(claudeMdPath))) {
+    const ecosystems = initResult.ecosystems.ecosystems.join(', ') || 'unknown';
+    const primaryEco = initResult.ecosystems.primaryEcosystem ?? 'unknown';
+
+    const thinRoot = [
+      `## Project`,
+      ``,
+      `${primaryEco} project. Stack: ${ecosystems}. Preset: ${preset.id}.`,
+      ``,
+      `## Constraints`,
+      ``,
+      `- Follow conventions in .claude/rules/`,
+      `- Run \`sunco lint\` before committing`,
+      `- Run \`sunco verify\` before shipping`,
+      ``,
+      `## Key Rules`,
+      ``,
+      `- ESM-only imports (.js extension even for .ts files)`,
+      `- Prefer editing existing files over creating new ones`,
+      `- No hardcoded paths — use config/env resolution`,
+      `- Tests required for new functionality`,
+      ``,
+      `## Architecture`,
+      ``,
+      `See .claude/rules/architecture.md for structure details.`,
+      `See .claude/rules/conventions.md for naming and import patterns.`,
+      ``,
+      `## Workflow`,
+      ``,
+      `Use /sunco:* commands for the development lifecycle:`,
+      `- /sunco:discuss → /sunco:plan → /sunco:execute → /sunco:verify → /sunco:ship`,
+      ``,
+    ].join('\n');
+
+    await writeFile(claudeMdPath, thinRoot, 'utf8');
+    claudeMdGenerated = true;
+  }
+
+  // Generate .claude/rules/ directory with preset-appropriate rules
+  await mkdir(rulesDir, { recursive: true });
+
+  // Architecture rule (always generated)
+  const archRulePath = join(rulesDir, 'architecture.md');
+  if (force || !(await fileExists(archRulePath))) {
+    const layers = initResult.layers.layers.map((l) => `- **${l.name}**: \`${l.pattern}\``).join('\n');
+    await writeFile(archRulePath, [
+      `---`,
+      `description: Architecture layers and dependency boundaries`,
+      `globs:`,
+      `  - "src/**"`,
+      `  - "packages/**"`,
+      `---`,
+      ``,
+      `## Detected Layers`,
+      ``,
+      layers || '- No layers detected. Run `sunco init` after structuring your source.',
+      ``,
+      `## Dependency Rules`,
+      ``,
+      `- Higher layers may import from lower layers`,
+      `- Lower layers must NOT import from higher layers`,
+      `- Use \`sunco lint\` to enforce boundaries`,
+      ``,
+    ].join('\n'), 'utf8');
+    claudeRulesGenerated++;
+  }
+
+  // Conventions rule
+  const convRulePath = join(rulesDir, 'conventions.md');
+  if (force || !(await fileExists(convRulePath))) {
+    const naming = initResult.conventions.naming;
+    const importStyle = initResult.conventions.importStyle;
+    await writeFile(convRulePath, [
+      `---`,
+      `description: File naming, import style, and testing conventions`,
+      `globs:`,
+      `  - "**/*.ts"`,
+      `  - "**/*.tsx"`,
+      `  - "**/*.js"`,
+      `---`,
+      ``,
+      `## Naming: ${naming}`,
+      `## Import Style: ${importStyle}`,
+      `## Export Style: ${initResult.conventions.exportStyle}`,
+      `## Test Organization: ${initResult.conventions.testOrganization}`,
+      ``,
+    ].join('\n'), 'utf8');
+    claudeRulesGenerated++;
+  }
+
+  return { claudeMdGenerated, claudeRulesGenerated };
 }

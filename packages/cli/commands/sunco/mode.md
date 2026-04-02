@@ -32,7 +32,7 @@ Transform Claude Code into SUNCO-powered mode. Every input auto-routes to the be
 ## Activation
 
 If argument is "off":
-1. Delete the mode marker: `rm -f ~/.sunco/mode-active`
+1. Delete the mode marker: `rm -f ~/.sun/mode-active`
 2. Respond:
 ```
 ⚡ SUNCO Mode OFF
@@ -44,7 +44,7 @@ Back to normal. Use /sunco:help to see available commands.
 If argument is "on" or empty (default):
 1. Create mode marker:
 ```bash
-mkdir -p ~/.sunco && echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ~/.sunco/mode-active
+mkdir -p ~/.sun && echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ~/.sun/mode-active
 ```
 
 2. Display the transformation sequence — **Super Saiyan style.** Pure ASCII only. No block characters (they render as ugly checkerboards). No rainbow. No cute emojis. Raw power.
@@ -150,7 +150,7 @@ Estimate context usage based on conversation length:
 ## Deactivation
 
 If the user says "mode off", "/sunco:mode off", "turn off", "deactivate":
-1. Delete marker: `rm -f ~/.sunco/mode-active`
+1. Delete marker: `rm -f ~/.sun/mode-active`
 2. Show:
 ```
 ___________________________________

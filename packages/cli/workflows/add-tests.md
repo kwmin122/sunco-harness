@@ -44,7 +44,7 @@ Rules:
 ## Step 2: load_phase
 
 ```bash
-PHASE_STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
+PHASE_STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `plans`.
@@ -67,7 +67,7 @@ Load plans filtered by `PLAN_FILTER` (or all plans):
 
 ```bash
 for PLAN in "${PLANS[@]}"; do
-  node "$(npm root -g)/sunco/bin/sunco-tools.cjs" plan parse "${PLAN}"
+  node "$HOME/.claude/sunco/bin/sunco-tools.cjs" plan parse "${PLAN}"
 done
 ```
 

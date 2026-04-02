@@ -48,7 +48,7 @@ If `--no-phase` is set: `PHASE_LINK=""`. Otherwise:
 - Else: read STATE.md and extract `current_phase.number`.
 
 ```bash
-CURRENT_PHASE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load \
+CURRENT_PHASE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load \
   | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); \
     const s=JSON.parse(d); process.stdout.write(s.current_phase?.number ?? '')")
 PHASE_LINK="${PHASE_LINK:-$CURRENT_PHASE}"
@@ -117,7 +117,7 @@ If `START_DONE` is set: set `status: done` in frontmatter and add `completed_at:
 ## Step 4: Register with sunco-tools
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" todo add \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" todo add \
   --id "${TODO_ID}" \
   --title "${TODO_TITLE}" \
   --priority "${PRIORITY}" \
@@ -128,7 +128,7 @@ node "$(npm root -g)/sunco/bin/sunco-tools.cjs" todo add \
 If sunco-tools is unavailable (not installed globally), fall back to file-only mode:
 ```
 sunco-tools not found — todo saved to file only.
-To enable full state tracking, install: npm install -g sunco
+To enable full state tracking, install: npm install -g popcoru
 ```
 
 Continue regardless — the file is the source of truth.

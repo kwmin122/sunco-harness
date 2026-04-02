@@ -30,7 +30,7 @@ Parse `$ARGUMENTS`:
 
 If `PHASE_ARG` is absent, read from STATE.md:
 ```bash
-PHASE_ARG=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load \
+PHASE_ARG=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load \
   | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); \
     process.stdout.write(JSON.parse(d).current_phase?.number ?? '')")
 ```

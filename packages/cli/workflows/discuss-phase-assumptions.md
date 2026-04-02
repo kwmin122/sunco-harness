@@ -48,7 +48,7 @@ Rules:
 Load the phase specification from ROADMAP.md:
 
 ```bash
-PHASE_DETAIL=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" roadmap get-phase "${PHASE_ARG}")
+PHASE_DETAIL=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" roadmap get-phase "${PHASE_ARG}")
 if [[ "$PHASE_DETAIL" == @file:* ]]; then PHASE_DETAIL=$(cat "${PHASE_DETAIL#@file:}"); fi
 ```
 

@@ -52,7 +52,7 @@ A phase is eligible for archival when ALL of the following are true:
 
 ```bash
 # Load current phase from state
-CURRENT_PHASE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load \
+CURRENT_PHASE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load \
   | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); \
     process.stdout.write(JSON.parse(d).current_phase?.number ?? '')")
 
@@ -179,7 +179,7 @@ done
 
 Update the `last_cleanup` timestamp in STATE.md:
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set \
   "last_cleanup" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
 

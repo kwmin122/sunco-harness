@@ -25,7 +25,7 @@ Output the full command catalog below. Do NOT add project-specific analysis, git
 /sunco:discuss 1              → extract decisions for Phase 1
 /sunco:plan 1                 → create 2-3 atomic execution plans
 /sunco:execute 1              → run plans in parallel waves
-/sunco:verify 1               → 5-layer Swiss cheese verification
+/sunco:verify 1               → 7-layer Swiss cheese verification
 /sunco:ship                   → create PR and prepare release
 ```
 
@@ -87,7 +87,7 @@ The 6-stage review pipeline: discuss → plan → execute → verify → ship.
 | `/sunco:assume N` | Codebase-first assumptions (lightweight alternative to discuss) | `--silent`, `--all` |
 | `/sunco:plan N` | Create 2-3 atomic plans for Phase N | `--skip-research` |
 | `/sunco:execute N` | Execute all plans in parallel waves | `--wave N`, `--interactive` |
-| `/sunco:verify N` | 5-layer Swiss cheese verification | `--layer N`, `--skip-adversarial` |
+| `/sunco:verify N` | 7-layer Swiss cheese verification | `--layer N`, `--skip-adversarial`, `--skip-cross-model`, `--skip-human-eval` |
 | `/sunco:review N` | Cross-agent code review | `--focus security|performance|style` |
 | `/sunco:ship` | Create PR and prepare release notes | `--dry-run` |
 | `/sunco:validate N` | Validate phase against REQUIREMENTS.md | |

@@ -57,6 +57,7 @@ export default defineSkill({
     const result = await initializeWorkspace({
       initResult,
       fileStore: ctx.fileStore,
+      cwd: ctx.cwd,
       force: force ?? false,
     });
 

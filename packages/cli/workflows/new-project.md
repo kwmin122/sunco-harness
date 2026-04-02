@@ -57,11 +57,11 @@ The document should describe what you want to build.
 **MANDATORY FIRST STEP — Execute these checks before ANY user interaction:**
 
 ```bash
-INIT=$(node "$HOME/.sunco/bin/sunco-tools.cjs" init new-project)
+INIT=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init new-project)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
-AGENT_SKILLS_RESEARCHER=$(node "$HOME/.sunco/bin/sunco-tools.cjs" agent-skills sunco-project-researcher 2>/dev/null)
-AGENT_SKILLS_SYNTHESIZER=$(node "$HOME/.sunco/bin/sunco-tools.cjs" agent-skills sunco-research-synthesizer 2>/dev/null)
-AGENT_SKILLS_ROADMAPPER=$(node "$HOME/.sunco/bin/sunco-tools.cjs" agent-skills sunco-roadmapper 2>/dev/null)
+AGENT_SKILLS_RESEARCHER=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" agent-skills sunco-project-researcher 2>/dev/null)
+AGENT_SKILLS_SYNTHESIZER=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" agent-skills sunco-research-synthesizer 2>/dev/null)
+AGENT_SKILLS_ROADMAPPER=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" agent-skills sunco-roadmapper 2>/dev/null)
 ```
 
 Parse JSON for: `researcher_model`, `synthesizer_model`, `roadmapper_model`, `commit_docs`, `project_exists`, `has_codebase_map`, `planning_exists`, `has_existing_code`, `has_package_file`, `is_brownfield`, `needs_codebase_map`, `has_git`, `project_path`.
@@ -215,7 +215,7 @@ Create `.planning/config.json` with all settings:
 
 ```bash
 mkdir -p .planning
-node "$HOME/.sunco/bin/sunco-tools.cjs" config-new-project '{"mode":"yolo","granularity":"[selected]","parallelization":true|false,"commit_docs":true|false,"model_profile":"quality|balanced|budget|inherit","workflow":{"research":true|false,"plan_check":true|false,"verifier":true|false,"auto_advance":true}}'
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-new-project '{"mode":"yolo","granularity":"[selected]","parallelization":true|false,"commit_docs":true|false,"model_profile":"quality|balanced|budget|inherit","workflow":{"research":true|false,"plan_check":true|false,"verifier":true|false,"auto_advance":true}}'
 ```
 
 **If commit_docs = No:** Add `.planning/` to `.gitignore`.
@@ -223,13 +223,13 @@ node "$HOME/.sunco/bin/sunco-tools.cjs" config-new-project '{"mode":"yolo","gran
 **Commit config.json:**
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" commit "chore: add project config" --files .planning/config.json
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit "chore: add project config" --files .planning/config.json
 ```
 
 **Persist auto-advance chain flag to config (survives context compaction):**
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" config-set workflow._auto_chain_active true
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-set workflow._auto_chain_active true
 ```
 
 Proceed to Step 4 (skip Steps 3 and 5).
@@ -451,13 +451,13 @@ Do not compress. Capture everything gathered during questioning.
 
 ```bash
 mkdir -p .planning
-node "$HOME/.sunco/bin/sunco-tools.cjs" commit "docs: initialize project" --files .planning/PROJECT.md
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit "docs: initialize project" --files .planning/PROJECT.md
 ```
 
 **Create initial rollback point** (safety net for the entire project bootstrapping):
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" rollback-point create --label "after-project-init"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" rollback-point create --label "after-project-init"
 ```
 
 This creates `.planning/.rollback/` with a snapshot of all artifacts at this point. If anything goes wrong during research/roadmapping, the user can `/sunco:backtrack` to this clean state.
@@ -476,12 +476,12 @@ This creates `.planning/.rollback/` with a snapshot of all artifacts at this poi
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-**Check for global defaults** at `~/.sunco/defaults.json`. If the file exists, offer to use saved defaults:
+**Check for global defaults** at `~/.sun/defaults.json`. If the file exists, offer to use saved defaults:
 
 ```
 AskUserQuestion([
   {
-    question: "Use your saved default settings? (from ~/.sunco/defaults.json)",
+    question: "Use your saved default settings? (from ~/.sun/defaults.json)",
     header: "Defaults",
     multiSelect: false,
     options: [
@@ -492,9 +492,9 @@ AskUserQuestion([
 ])
 ```
 
-If "Yes": read `~/.sunco/defaults.json`, use those values for config.json, skip to **Commit config.json** below.
+If "Yes": read `~/.sun/defaults.json`, use those values for config.json, skip to **Commit config.json** below.
 
-If "No" or `~/.sunco/defaults.json` doesn't exist: proceed with the questions below.
+If "No" or `~/.sun/defaults.json` doesn't exist: proceed with the questions below.
 
 **Round 1 — Core workflow settings (4 questions):**
 
@@ -598,7 +598,7 @@ Create `.planning/config.json` with all settings:
 
 ```bash
 mkdir -p .planning
-node "$HOME/.sunco/bin/sunco-tools.cjs" config-new-project '{"mode":"[yolo|interactive]","granularity":"[selected]","git_branching":"[none|phase|milestone]","commit_docs":true|false,"model_profile":"quality|balanced|budget|inherit","workflow":{"research":true|false,"plan_check":true|false,"verifier":true|false}}'
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-new-project '{"mode":"[yolo|interactive]","granularity":"[selected]","git_branching":"[none|phase|milestone]","commit_docs":true|false,"model_profile":"quality|balanced|budget|inherit","workflow":{"research":true|false,"plan_check":true|false,"verifier":true|false}}'
 ```
 
 **Note:** Run `/sunco:settings` anytime to update model profile, workflow agents, branching strategy, and other preferences.
@@ -615,7 +615,7 @@ node "$HOME/.sunco/bin/sunco-tools.cjs" config-new-project '{"mode":"[yolo|inter
 **Commit config.json:**
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" commit "chore: add project config" --files .planning/config.json
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit "chore: add project config" --files .planning/config.json
 ```
 
 ---
@@ -1196,7 +1196,7 @@ If "adjust": Return to scoping. If "yes": commit.
 **Commit requirements:**
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" commit "docs: define v1 requirements" --files .planning/REQUIREMENTS.md
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit "docs: define v1 requirements" --files .planning/REQUIREMENTS.md
 ```
 
 ---
@@ -1399,7 +1399,7 @@ Status: not started
 STATE.md is written by the roadmapper agent in Step 8. This step verifies it exists and initializes it if the roadmapper failed to create it.
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" ensure-state-md
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" ensure-state-md
 ```
 
 ---
@@ -1409,7 +1409,7 @@ node "$HOME/.sunco/bin/sunco-tools.cjs" ensure-state-md
 Generate or update `.gitignore` with standard entries:
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" generate-gitignore
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" generate-gitignore
 ```
 
 Standard entries always included:
@@ -1468,7 +1468,7 @@ Commit `.gitignore` as part of the final atomic commit in Step 13.
 Generate project-level `CLAUDE.md` that provides Claude Code with project context and SUNCO workflow enforcement:
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" generate-claude-md
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" generate-claude-md
 ```
 
 The generated `CLAUDE.md` includes:
@@ -1522,7 +1522,7 @@ This ensures new projects get workflow-enforcement guidance and current project 
 **Only run this if Step 10 didn't already generate a complete .gitignore.** Verify:
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" verify-gitignore
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" verify-gitignore
 ```
 
 If missing entries, add them.
@@ -1534,7 +1534,7 @@ If missing entries, add them.
 Commit all artifacts in a single atomic commit:
 
 ```bash
-node "$HOME/.sunco/bin/sunco-tools.cjs" commit "docs: create roadmap ([N] phases)" \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" commit "docs: create roadmap ([N] phases)" \
   --files .planning/ROADMAP.md \
           .planning/STATE.md \
           .planning/REQUIREMENTS.md \
@@ -1596,7 +1596,7 @@ Exit skill and invoke `/sunco:discuss 1 --auto`.
 Check if Phase 1 has UI indicators (look for `UI hint: yes` in Phase 1 detail section of ROADMAP.md):
 
 ```bash
-PHASE1_SECTION=$(node "$HOME/.sunco/bin/sunco-tools.cjs" roadmap get-phase 1 2>/dev/null)
+PHASE1_SECTION=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" roadmap get-phase 1 2>/dev/null)
 PHASE1_HAS_UI=$(echo "$PHASE1_SECTION" | grep -qi "UI hint.*yes" && echo "true" || echo "false")
 ```
 

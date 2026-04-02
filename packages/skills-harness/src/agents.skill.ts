@@ -13,15 +13,30 @@
  */
 
 import { defineSkill } from '@sunco/core';
-import { access } from 'node:fs/promises';
+import { access, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { analyzeAgentDoc } from './agents/doc-analyzer.js';
 import { computeEfficiencyScore } from './agents/efficiency-scorer.js';
 import { generateSuggestions } from './agents/suggestion-engine.js';
 import type { AgentDocMetrics, AgentDocReport } from './agents/types.js';
 
-/** Candidate file names for agent instruction docs */
-const CANDIDATE_FILES = ['CLAUDE.md', 'agents.md', 'AGENTS.md', '.claude/agents.md'];
+/** Candidate file names for agent instruction docs (direct files) */
+const CANDIDATE_FILES = [
+  'CLAUDE.md',
+  'agents.md',
+  'AGENTS.md',
+  '.claude/agents.md',
+  '.cursorrules',
+  '.cursor/rules',
+];
+
+/** Directories to scan for rule/instruction files (glob-like) */
+const CANDIDATE_DIRS = [
+  { dir: '.claude/rules', pattern: '.md' },
+];
+
+/** Subdirectory CLAUDE.md pattern — scan one level deep */
+const NESTED_CLAUDE_DIRS = ['packages', 'apps', 'services', 'src'];
 
 export default defineSkill({
   id: 'harness.agents',
@@ -30,7 +45,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'harness',
   routing: 'directExec',
-  description: 'Analyze agent instruction files (CLAUDE.md, agents.md) -- efficiency score + suggestions',
+  description: 'Analyze agent instruction files (CLAUDE.md, .claude/rules/, nested CLAUDE.md, .cursorrules) -- efficiency score + suggestions',
   options: [
     { flags: '--json', description: 'Output analysis as JSON' },
     { flags: '--file <path>', description: 'Analyze specific file (default: auto-detect)' },
@@ -46,13 +61,45 @@ export default defineSkill({
       // --file specified: use that
       foundDocs.push(ctx.args.file as string);
     } else {
-      // Auto-detect candidate files
+      // Auto-detect: 1) direct candidate files
       for (const candidate of CANDIDATE_FILES) {
         try {
           await access(join(ctx.cwd, candidate));
           foundDocs.push(candidate);
         } catch {
           // File not found -- skip
+        }
+      }
+
+      // Auto-detect: 2) .claude/rules/*.md directory scan
+      for (const { dir, pattern } of CANDIDATE_DIRS) {
+        try {
+          const entries = await readdir(join(ctx.cwd, dir));
+          for (const entry of entries) {
+            if (entry.endsWith(pattern)) {
+              foundDocs.push(join(dir, entry));
+            }
+          }
+        } catch {
+          // Directory not found -- skip
+        }
+      }
+
+      // Auto-detect: 3) nested CLAUDE.md in subdirectories (one level)
+      for (const subdir of NESTED_CLAUDE_DIRS) {
+        try {
+          const entries = await readdir(join(ctx.cwd, subdir));
+          for (const entry of entries) {
+            const nested = join(subdir, entry, 'CLAUDE.md');
+            try {
+              await access(join(ctx.cwd, nested));
+              foundDocs.push(nested);
+            } catch {
+              // Not found -- skip
+            }
+          }
+        } catch {
+          // Directory not found -- skip
         }
       }
     }

@@ -68,7 +68,7 @@ DIRTY=$(git -C "${WORKTREE_PATH}" status --porcelain 2>/dev/null | wc -l | tr -d
 
 **Read SUNCO state if present:**
 ```bash
-STATE_FILE="${WORKTREE_PATH}/.sun/STATE.md"
+STATE_FILE="${WORKTREE_PATH}/.planning/STATE.md"
 if [[ -f "$STATE_FILE" ]]; then
   CURRENT_PHASE=$(grep -m1 "^Current Phase:" "$STATE_FILE" | sed 's/Current Phase: //')
   PHASE_STATUS=$(grep -m1 "^Status:" "$STATE_FILE" | sed 's/Status: //')

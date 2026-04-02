@@ -10,10 +10,9 @@
  * Direct imports take priority; scanner skips already-registered skill IDs (D-14).
  *
  * Usage:
- *   npx sunco          - run with npx
- *   sunco              - run globally installed
+ *   npx popcoru        - run installer with npx (or npx sunco)
+ *   sunco <skill>      - execute a skill (when globally installed)
  *   sunco --help       - show available commands
- *   sunco <skill>      - execute a skill
  *
  * Requirements: CLI-01 (sunco binary), D-03 (entry point)
  */

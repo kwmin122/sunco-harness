@@ -1,12 +1,14 @@
 /**
  * Verification layer execution functions for sunco verify.
  *
- * Implements the 5-layer Swiss cheese verification model:
+ * Implements the 7-layer Swiss cheese verification model:
  * - Layer 1: Multi-Agent Generation (4 experts + coordinator)
  * - Layer 2: Deterministic Guardrails (lint + guard via ctx.run())
  * - Layer 3: BDD Acceptance Criteria (done criteria + holdout scenarios)
  * - Layer 4: Permission Scoping (git diff vs declared files_modified)
  * - Layer 5: Adversarial Verification (adversarial + intent reconstruction)
+ * - Layer 6: Cross-Model Verification (different model blind spot detection)
+ * - Layer 7: Human Eval Gate (final human sign-off)
  *
  * Each layer returns a LayerResult. Layers never throw -- all failures
  * are captured as findings. This is the Swiss cheese model: every layer
@@ -851,4 +853,326 @@ async function runAdversarialChecks(
     passed: !hasCriticalOrHigh,
     durationMs: Date.now() - start,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Layer 6: Cross-Model Verification (VRF-06, D-22)
+// ---------------------------------------------------------------------------
+
+/** System prompt for skeptical reviewer fallback (same model, different perspective) */
+const SKEPTICAL_REVIEWER_SYSTEM = `You are a skeptical code reviewer from a completely different engineering culture. You distrust the primary reviewer's conclusions and actively look for:
+1. Assumptions that were accepted without evidence
+2. Edge cases that "optimistic" reviewers always miss
+3. Structural problems that are hard to see when you wrote the code yourself
+4. Security issues that get hand-waved as "we'll fix it later"
+5. Performance cliffs that only appear at scale
+
+You are NOT trying to be helpful. You are trying to find what others missed.`;
+
+/**
+ * Build the cross-model verification prompt.
+ * Includes the diff and a summary of previous layer findings for context.
+ */
+function buildCrossModelPrompt(diff: string, previousFindings: VerifyFinding[]): string {
+  const findingSummary = previousFindings.length > 0
+    ? previousFindings
+        .slice(0, 20)
+        .map((f) => `- [${f.severity}] Layer ${f.layer} (${f.source}): ${f.description}`)
+        .join('\n')
+    : 'No findings from previous layers.';
+
+  return `You are reviewing code changes that have already been reviewed by another AI model. Your job is to find what the first reviewer missed.
+
+## Previous Reviewer's Findings
+
+${findingSummary}
+
+## Code Diff
+
+\`\`\`diff
+${diff.slice(0, 50_000)}
+\`\`\`
+
+## Instructions
+
+1. Do NOT repeat findings already listed above. Focus on what was MISSED.
+2. Look for: structural blind spots, implicit assumptions, missing error paths, subtle type issues, unhandled state transitions, incorrect abstractions.
+3. Consider: would this code survive a production incident? A malicious user? A junior developer maintaining it?
+
+## Output Format
+
+\`\`\`json
+{
+  "findings": [
+    {
+      "severity": "critical|high|medium|low",
+      "description": "what was missed and why it matters",
+      "file": "path/to/file (if identifiable)",
+      "suggestion": "how to fix"
+    }
+  ]
+}
+\`\`\`
+
+If the previous review was thorough and you find nothing new: output an empty findings array.
+Only output the JSON. No explanation before or after.`;
+}
+
+/**
+ * Layer 6: Cross-Model Verification.
+ *
+ * Runs the verification prompt through a different model/provider to detect
+ * same-model blind spots. Strategy:
+ *
+ * 1. If multiple providers are available, use crossVerify() to run through
+ *    a different provider than the primary one.
+ * 2. If only one provider is available, use the same model with a skeptical
+ *    reviewer system prompt to shift perspective.
+ *
+ * Compares findings between the primary review (Layers 1-5) and this layer,
+ * flagging any disagreements or new issues.
+ */
+export async function runLayer6CrossModel(
+  ctx: SkillContext,
+  diff: string,
+  previousFindings: VerifyFinding[],
+): Promise<LayerResult> {
+  const start = Date.now();
+  const findings: VerifyFinding[] = [];
+
+  try {
+    const providers = await ctx.agent.listProviders();
+    const prompt = buildCrossModelPrompt(diff, previousFindings);
+
+    if (providers.length >= 2) {
+      // Multiple providers available -- use crossVerify for true cross-model check
+      ctx.log.info('Cross-model verification: using crossVerify with multiple providers');
+
+      try {
+        const results = await ctx.agent.crossVerify(
+          {
+            role: 'verification',
+            prompt,
+            permissions: VERIFICATION_PERMISSIONS,
+            timeout: EXPERT_TIMEOUT,
+          },
+          providers.slice(0, 2), // Use first two different providers
+        );
+
+        for (const result of results) {
+          const parsed = parseExpertFindings(result.outputText, 'cross-model', 6);
+          findings.push(...parsed);
+        }
+      } catch (err) {
+        ctx.log.warn('crossVerify failed, falling back to skeptical reviewer', { error: err });
+        // Fall through to single-model fallback below
+        await runSkepticalReviewer(ctx, prompt, findings);
+      }
+    } else {
+      // Single provider -- use skeptical reviewer system prompt
+      ctx.log.info('Cross-model verification: single provider, using skeptical reviewer persona');
+      await runSkepticalReviewer(ctx, prompt, findings);
+    }
+  } catch (err) {
+    findings.push({
+      layer: 6,
+      source: 'cross-model',
+      severity: 'low',
+      description: `Layer 6 execution error: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
+
+  const hasCriticalOrHigh = findings.some(
+    (f) => f.severity === 'critical' || f.severity === 'high',
+  );
+
+  return {
+    layer: 6,
+    name: 'Cross-Model Verification',
+    findings,
+    passed: !hasCriticalOrHigh,
+    durationMs: Date.now() - start,
+  };
+}
+
+/**
+ * Fallback: run the same model with a skeptical reviewer system prompt.
+ */
+async function runSkepticalReviewer(
+  ctx: SkillContext,
+  prompt: string,
+  findings: VerifyFinding[],
+): Promise<void> {
+  try {
+    const result = await ctx.agent.run({
+      role: 'verification',
+      prompt,
+      systemPrompt: SKEPTICAL_REVIEWER_SYSTEM,
+      permissions: VERIFICATION_PERMISSIONS,
+      timeout: EXPERT_TIMEOUT,
+    });
+
+    const parsed = parseExpertFindings(result.outputText, 'cross-model', 6);
+    findings.push(...parsed);
+  } catch (err) {
+    ctx.log.warn('Skeptical reviewer agent failed', { error: err });
+    findings.push({
+      layer: 6,
+      source: 'cross-model',
+      severity: 'low',
+      description: `Skeptical reviewer failed: ${err instanceof Error ? err.message : String(err)}`,
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Layer 7: Human Eval Gate (VRF-09)
+// ---------------------------------------------------------------------------
+
+/**
+ * Format a human-readable summary of all automated layer results.
+ */
+function formatLayerSummaryForHuman(layerResults: LayerResult[]): string {
+  const lines: string[] = ['## Automated Verification Summary', ''];
+
+  for (const layer of layerResults) {
+    const status = layer.passed ? 'PASS' : 'FAIL';
+    const findingCount = layer.findings.length;
+    const criticals = layer.findings.filter((f) => f.severity === 'critical').length;
+    const highs = layer.findings.filter((f) => f.severity === 'high').length;
+
+    lines.push(`**Layer ${layer.layer}: ${layer.name}** -- ${status} (${findingCount} findings${criticals > 0 ? `, ${criticals} critical` : ''}${highs > 0 ? `, ${highs} high` : ''})`);
+
+    // Show critical/high findings inline
+    const importantFindings = layer.findings.filter(
+      (f) => f.severity === 'critical' || f.severity === 'high',
+    );
+    for (const f of importantFindings) {
+      lines.push(`  - [${f.severity.toUpperCase()}] ${f.description.slice(0, 150)}`);
+    }
+  }
+
+  lines.push('');
+  const totalFindings = layerResults.reduce((sum, l) => sum + l.findings.length, 0);
+  const anyFail = layerResults.some((l) => !l.passed);
+  lines.push(`**Total findings:** ${totalFindings}`);
+  lines.push(`**Automated verdict:** ${anyFail ? 'FAIL' : totalFindings > 0 ? 'WARN' : 'PASS'}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Layer 7: Human Eval Gate.
+ *
+ * Presents a summary of all automated layer results (Layers 1-6) to the user
+ * and asks for final sign-off. The user can:
+ *
+ * - **Approve**: verification passes (PASS)
+ * - **Block**: verification fails with user-provided reason (FAIL)
+ * - **Skip**: human eval is skipped, automated verdict stands
+ *
+ * If --auto or --skip-human-eval is set, this layer is automatically skipped
+ * with a PASS result.
+ */
+export async function runLayer7HumanEval(
+  ctx: SkillContext,
+  layerResults: LayerResult[],
+  options: { skipHumanEval: boolean; isAuto: boolean },
+): Promise<LayerResult> {
+  const start = Date.now();
+  const findings: VerifyFinding[] = [];
+
+  // Skip if --auto or --skip-human-eval
+  if (options.skipHumanEval || options.isAuto) {
+    ctx.log.info(`Human eval skipped (${options.isAuto ? '--auto' : '--skip-human-eval'})`);
+    return {
+      layer: 7,
+      name: 'Human Eval Gate',
+      findings: [],
+      passed: true,
+      durationMs: Date.now() - start,
+    };
+  }
+
+  try {
+    const summary = formatLayerSummaryForHuman(layerResults);
+
+    const choice = await ctx.ui.ask({
+      message: `${summary}\n\nDo you approve these verification results?`,
+      options: [
+        { id: 'approve', label: 'Approve -- verification passes' },
+        { id: 'block', label: 'Block -- override verdict to FAIL' },
+        { id: 'skip', label: 'Skip human eval -- use automated verdict' },
+      ],
+    });
+
+    if (choice.selectedId === 'block') {
+      // Ask for reason
+      let reason = 'User blocked without providing reason';
+      try {
+        const reasonResponse = await ctx.ui.askText({
+          message: 'Why are you blocking? (Enter reason)',
+        });
+        if (reasonResponse.text && reasonResponse.text.trim()) {
+          reason = reasonResponse.text.trim();
+        }
+      } catch {
+        // If askText fails (e.g. non-interactive), use default reason
+      }
+
+      findings.push({
+        layer: 7,
+        source: 'human-eval',
+        severity: 'critical',
+        description: `Human eval BLOCKED: ${reason}`,
+        humanRequired: true,
+      });
+
+      return {
+        layer: 7,
+        name: 'Human Eval Gate',
+        findings,
+        passed: false,
+        durationMs: Date.now() - start,
+      };
+    }
+
+    if (choice.selectedId === 'skip') {
+      ctx.log.info('Human eval skipped by user choice');
+      return {
+        layer: 7,
+        name: 'Human Eval Gate',
+        findings: [],
+        passed: true,
+        durationMs: Date.now() - start,
+      };
+    }
+
+    // Approved
+    ctx.log.info('Human eval approved');
+    return {
+      layer: 7,
+      name: 'Human Eval Gate',
+      findings: [],
+      passed: true,
+      durationMs: Date.now() - start,
+    };
+  } catch (err) {
+    // If UI interaction fails (non-interactive context), skip gracefully
+    ctx.log.warn('Human eval gate UI failed -- skipping', { error: err });
+    findings.push({
+      layer: 7,
+      source: 'human-eval',
+      severity: 'low',
+      description: `Human eval skipped (UI unavailable): ${err instanceof Error ? err.message : String(err)}`,
+    });
+
+    return {
+      layer: 7,
+      name: 'Human Eval Gate',
+      findings,
+      passed: true,
+      durationMs: Date.now() - start,
+    };
+  }
 }

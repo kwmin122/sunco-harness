@@ -32,7 +32,7 @@ Parse `$ARGUMENTS`:
 If `PHASE_ARG` is absent, detect the most recently executed phase from STATE.md:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load
 ```
 
 Read `current_phase.number` and `current_phase.status`. If `status != "executed"` and `status != "verified"`, warn:

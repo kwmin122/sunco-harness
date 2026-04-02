@@ -18,7 +18,7 @@ allowed-tools:
 **Flags:**
 - `--layer N` — Run only layer N (1-7). Use when re-running after fixing specific issues.
 - `--skip-adversarial` — Skip Layer 5 (adversarial test). Use for non-security-critical phases.
-- `--skip-codex` — Skip Layer 6 (cross-model). Use when Codex plugin is not installed.
+- `--skip-cross-model` — Skip Layer 6 (cross-model verification). Use when cross-model check is not needed.
 - `--skip-human-eval` — Skip Layer 7 (human eval). Use only in fully automated/CI contexts.
 </context>
 

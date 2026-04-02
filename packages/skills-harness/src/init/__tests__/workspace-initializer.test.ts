@@ -92,7 +92,7 @@ describe('initializeWorkspace', () => {
   });
 
   it('writes config.toml to root via FileStoreApi', async () => {
-    await initializeWorkspace({ initResult, fileStore });
+    await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project' });
 
     expect(fileStore.files.has('config.toml')).toBe(true);
     const content = fileStore.files.get('config.toml')!;
@@ -102,7 +102,7 @@ describe('initializeWorkspace', () => {
   });
 
   it('config.toml contains [stack] section with detected ecosystems', async () => {
-    await initializeWorkspace({ initResult, fileStore });
+    await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project' });
 
     const content = fileStore.files.get('config.toml')!;
     const parsed = parseToml(content) as Record<string, unknown>;
@@ -115,7 +115,7 @@ describe('initializeWorkspace', () => {
   });
 
   it('config.toml contains [layers] section with detected layer names + patterns', async () => {
-    await initializeWorkspace({ initResult, fileStore });
+    await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project' });
 
     const content = fileStore.files.get('config.toml')!;
     const parsed = parseToml(content) as Record<string, unknown>;
@@ -132,7 +132,7 @@ describe('initializeWorkspace', () => {
   });
 
   it('writes boundary lint rule JSON to .sun/rules/arch-layers.json', async () => {
-    await initializeWorkspace({ initResult, fileStore });
+    await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project' });
 
     expect(fileStore.files.has('rules/arch-layers.json')).toBe(true);
     const content = fileStore.files.get('rules/arch-layers.json')!;
@@ -141,7 +141,7 @@ describe('initializeWorkspace', () => {
   });
 
   it('lint rule JSON has correct structure with boundaries/dependencies', async () => {
-    await initializeWorkspace({ initResult, fileStore });
+    await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project' });
 
     const content = fileStore.files.get('rules/arch-layers.json')!;
     const rule = JSON.parse(content) as Record<string, unknown>;
@@ -167,7 +167,7 @@ describe('initializeWorkspace', () => {
   });
 
   it('creates placeholder .gitkeep files for tribal, scenarios, planning directories', async () => {
-    await initializeWorkspace({ initResult, fileStore });
+    await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project' });
 
     expect(fileStore.files.has('tribal/.gitkeep')).toBe(true);
     expect(fileStore.files.has('scenarios/.gitkeep')).toBe(true);
@@ -178,7 +178,7 @@ describe('initializeWorkspace', () => {
     // Pre-populate config.toml
     await fileStore.write('', 'config.toml', '# existing config');
 
-    const result = await initializeWorkspace({ initResult, fileStore, force: false });
+    const result = await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project', force: false });
 
     // Should not overwrite existing config
     expect(fileStore.files.get('config.toml')).toBe('# existing config');
@@ -188,7 +188,7 @@ describe('initializeWorkspace', () => {
   it('overwrites existing config when force=true', async () => {
     await fileStore.write('', 'config.toml', '# existing config');
 
-    const result = await initializeWorkspace({ initResult, fileStore, force: true });
+    const result = await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project', force: true });
 
     // Should overwrite
     const content = fileStore.files.get('config.toml')!;
@@ -197,7 +197,7 @@ describe('initializeWorkspace', () => {
   });
 
   it('returns rulesGenerated count and resolved preset', async () => {
-    const result = await initializeWorkspace({ initResult, fileStore });
+    const result = await initializeWorkspace({ initResult, fileStore, cwd: '/tmp/test-project' });
 
     expect(result.rulesGenerated).toBeGreaterThanOrEqual(1);
     expect(result.preset.id).toBe('typescript-node');

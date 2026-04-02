@@ -48,7 +48,7 @@ Rules:
 Load phase context:
 
 ```bash
-PHASE_STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
+PHASE_STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_ARG}")
 ```
 
 Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `plans`.
@@ -74,7 +74,7 @@ For each PLAN.md, extract the `## Acceptance Criteria` section:
 
 ```bash
 for PLAN in "${PLANS[@]}"; do
-  CRITERIA=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" plan extract-criteria "${PLAN}")
+  CRITERIA=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" plan extract-criteria "${PLAN}")
   echo "$CRITERIA"
 done
 ```
@@ -194,7 +194,7 @@ For each criterion:
 
 **6a. Determine test location:**
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" plan locate-test-target "${CRITERION_ID}" "${PHASE_DIR}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" plan locate-test-target "${CRITERION_ID}" "${PHASE_DIR}"
 ```
 
 This returns: `package`, `file_path`, `test_file_path`, `test_strategy`.

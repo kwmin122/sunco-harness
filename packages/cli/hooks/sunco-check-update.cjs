@@ -39,8 +39,12 @@ function ensureStateDir() {
 }
 
 function readInstalledVersion() {
+  // Detect runtime from this hook's install location: $HOME/.<runtime>/hooks/
+  // Falls back to .claude if detection fails.
+  const hookDir = __dirname; // e.g., /Users/foo/.claude/hooks
+  const runtimeRoot = path.dirname(hookDir); // e.g., /Users/foo/.claude
+  const versionFile = path.join(runtimeRoot, 'sunco', 'VERSION');
   try {
-    const versionFile = path.join(os.homedir(), '.claude', 'sunco', 'VERSION');
     return fs.readFileSync(versionFile, 'utf8').trim() || null;
   } catch {
     return null;

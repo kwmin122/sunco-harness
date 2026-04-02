@@ -39,7 +39,7 @@ If `--do` is set: skip all rendering and immediately route to the named action (
 Load all project context. Reuse cache if available and `--refresh` not set.
 
 ```bash
-INIT=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init manager)
+INIT=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init manager)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -59,7 +59,7 @@ Additionally, read:
 ROADMAP=$(cat .planning/ROADMAP.md 2>/dev/null)
 
 # Open todos
-TODOS=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" todos list 2>/dev/null | head -10)
+TODOS=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" todos list 2>/dev/null | head -10)
 
 # Recent seeds that have triggered
 SEEDS=$(grep -l "triggered: true" .planning/seeds/*.md 2>/dev/null | head -3)

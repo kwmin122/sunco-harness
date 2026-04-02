@@ -23,7 +23,7 @@ Get the installed version and the latest published version:
 
 ```bash
 # What's currently installed
-CURRENT_VERSION=$(cat ~/.claude/sunco/VERSION 2>/dev/null || npx sunco@current --version 2>/dev/null)
+CURRENT_VERSION=$(cat ~/.claude/sunco/VERSION 2>/dev/null || npx popcoru@latest --version 2>/dev/null)
 
 # What's on npm
 LATEST_VERSION=$(npm view popcoru version 2>/dev/null)
@@ -130,36 +130,40 @@ The installer (`install.cjs`) automatically:
 
 ---
 
-## Step 5: Verify
+## Step 5: Artifact Gate (mandatory)
 
-Confirm the update applied:
+Run the install smoke test to verify the update produced a working runtime:
+
+```bash
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" --help
+```
+
+If sunco-tools.cjs runs without error, continue. If it fails, STOP and report.
+
+Then verify install tree:
 
 ```bash
 # Version should match latest
 cat ~/.claude/sunco/VERSION
 
+# ESM package.json exists
+cat ~/.claude/sunco/bin/package.json
+
 # Verify statusLine is registered
 grep -A3 statusLine ~/.claude/settings.json
+
+# Verify hooks registered
+grep -A2 sunco- ~/.claude/settings.json
 ```
 
-**If version matches:**
+**All checks must pass.** If ANY check fails:
 
 ```
-Verification: OK
-  VERSION → v1.2.0 ✓
-  statusLine registered ✓
+Update artifact-gate FAILED.
+Do not proceed. Report the failing check to the user.
 ```
 
-**If version mismatch:**
-
-```
-Verification FAILED.
-VERSION still reports v1.1.2 after install.
-
-Manual fix: npx popcoru@latest --claude
-```
-
-Do not proceed to Step 6 if verification failed — leave user with diagnosis.
+Do not proceed to Step 6 if artifact-gate failed.
 
 ---
 

@@ -49,7 +49,7 @@ Rules:
 Bootstrap via milestone-level init:
 
 ```bash
-INIT=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init milestone-op)
+INIT=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init milestone-op)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 ```
 
@@ -73,7 +73,7 @@ Parse JSON fields:
 Load checkpoint state:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load
 ```
 
 Parse `last_completed_phase`, `checkpoint_phase`, `retry_counts` (map of phase → retry count).
@@ -98,7 +98,7 @@ Display startup banner:
 Analyze ROADMAP.md to build the phase execution list:
 
 ```bash
-ROADMAP=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" roadmap analyze)
+ROADMAP=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" roadmap analyze)
 ```
 
 Parse the `phases` array. Each phase has: `number`, `name`, `goal`, `disk_status`, `roadmap_complete`.
@@ -148,7 +148,7 @@ Phases to execute: {N}
 Evaluate token budget before starting the loop:
 
 ```bash
-CURRENT_TOKENS=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state get session.tokens_used 2>/dev/null || echo "0")
+CURRENT_TOKENS=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state get session.tokens_used 2>/dev/null || echo "0")
 ```
 
 If `MAX_TOKENS > 0` AND `CURRENT_TOKENS >= MAX_TOKENS`:
@@ -186,7 +186,7 @@ Where T = `phase_count`, P = `(completed_phases / phase_count) × 100`.
 Check for existing checkpoint:
 
 ```bash
-PHASE_STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_NUM}")
+PHASE_STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_NUM}")
 ```
 
 Parse: `has_context`, `has_plans`, `has_summaries`, `has_verification`, `incomplete_count`.
@@ -211,7 +211,7 @@ Skip to **5d (plan)**.
 Check `SKIP_DISCUSS` flag and config:
 
 ```bash
-CFG_SKIP=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" config-get workflow.skip_discuss 2>/dev/null || echo "false")
+CFG_SKIP=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get workflow.skip_discuss 2>/dev/null || echo "false")
 ```
 
 If `SKIP_DISCUSS=true` OR `CFG_SKIP=true`:
@@ -234,7 +234,7 @@ Skill(skill="sunco:plan", args="${PHASE_NUM}")
 Verify plan produced output:
 
 ```bash
-PHASE_STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_NUM}")
+PHASE_STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_NUM}")
 ```
 
 Check `has_plans`. If false → go to **handle_blocker**: "Plan stage did not produce any plans for phase ${PHASE_NUM}."
@@ -248,7 +248,7 @@ Skill(skill="sunco:execute", args="${PHASE_NUM} --no-transition")
 After execution, check completion:
 
 ```bash
-PHASE_STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_NUM}")
+PHASE_STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${PHASE_NUM}")
 ```
 
 If `incomplete_count > 0` → go to **handle_stuck**: "${incomplete_count} plans still incomplete after execute."
@@ -309,7 +309,7 @@ If `PHASE_RETRY >= 3` → go to **handle_blocker**.
 After each successful phase, re-read ROADMAP.md to catch dynamically inserted phases:
 
 ```bash
-UPDATED_ROADMAP=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" roadmap analyze)
+UPDATED_ROADMAP=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" roadmap analyze)
 ```
 
 Diff the phase list against the original discovery. If new phases were inserted:
@@ -330,8 +330,8 @@ Skill(skill="sunco:transition", args="${PHASE_NUM}")
 Save checkpoint:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "autonomous.last_completed" "${PHASE_NUM}"
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "autonomous.retry_counts.${PHASE_NUM}" "0"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "autonomous.last_completed" "${PHASE_NUM}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "autonomous.retry_counts.${PHASE_NUM}" "0"
 ```
 
 ### 5j. budget_check (per-phase)
@@ -339,7 +339,7 @@ node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "autonomous.retry_coun
 After each phase:
 
 ```bash
-CURRENT_TOKENS=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state get session.tokens_used 2>/dev/null || echo "0")
+CURRENT_TOKENS=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state get session.tokens_used 2>/dev/null || echo "0")
 ```
 
 If `MAX_TOKENS > 0` AND `CURRENT_TOKENS >= MAX_TOKENS`:
@@ -358,9 +358,9 @@ Exit cleanly.
 Called when any stage cannot auto-recover.
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "autonomous.blocker.phase" "${PHASE_NUM}"
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "autonomous.blocker.message" "${BLOCKER_MSG}"
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "autonomous.blocker.timestamp" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "autonomous.blocker.phase" "${PHASE_NUM}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "autonomous.blocker.message" "${BLOCKER_MSG}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "autonomous.blocker.timestamp" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
 
 Display:
@@ -437,7 +437,7 @@ The lint gate runs at step 5f after every execute. It is never optional in the a
 Lint gate configuration:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" config-get lint.strict_mode
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get lint.strict_mode
 ```
 
 If `strict_mode: true` → zero warnings allowed. If `strict_mode: false` (default) → zero errors allowed, warnings OK.
@@ -446,7 +446,7 @@ If `strict_mode: true` → zero warnings allowed. If `strict_mode: false` (defau
 
 ## State Persistence
 
-All autonomous state is written to `.sun/STATE.md` under the `autonomous.*` key namespace:
+All autonomous state is written to `.planning/STATE.md` under the `autonomous.*` key namespace:
 
 | Key | Description |
 |-----|-------------|

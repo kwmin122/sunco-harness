@@ -99,7 +99,7 @@ function parseState(content) {
 // ---------------------------------------------------------------------------
 function isModeActive() {
   try {
-    return fs.existsSync(path.join(os.homedir(), '.sunco', 'mode-active'));
+    return fs.existsSync(path.join(os.homedir(), '.sun', 'mode-active'));
   } catch {
     return false;
   }

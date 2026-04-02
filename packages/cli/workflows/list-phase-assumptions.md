@@ -28,7 +28,7 @@ Parse `$ARGUMENTS`:
 
 If `PHASE_ARG` is absent, read STATE.md:
 ```bash
-PHASE_ARG=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state load \
+PHASE_ARG=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state load \
   | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); \
     process.stdout.write(JSON.parse(d).current_phase?.number ?? '')")
 ```
@@ -188,7 +188,7 @@ What would you like to do?
 
 For each `critical` or `high` assumption:
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" todo add \
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" todo add \
   --title "Verify assumption: {assumption_text_truncated}" \
   --priority "high" \
   --phase "${PHASE_ARG}" \

@@ -21,6 +21,7 @@ import { join, resolve, relative } from 'node:path';
 import { buildPlanCreatePrompt, buildPlanRevisePrompt } from './prompts/plan-create.js';
 import { buildPlanCheckerPrompt } from './prompts/plan-checker.js';
 import { parseRoadmap } from './shared/roadmap-parser.js';
+import { planGate } from './shared/gates.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -202,6 +203,13 @@ export default defineSkill({
         summary: msg,
       });
       return { success: false, summary: msg };
+    }
+
+    // ----- Step 0b: Plan Gate (shared stop-the-line gate) -----
+    const planCheck = await planGate(ctx);
+    if (!planCheck.passed) {
+      await ctx.ui.result({ success: false, title: 'Plan', summary: planCheck.reason });
+      return { success: false, summary: planCheck.reason };
     }
 
     // ----- Step 1: Determine phase number -----

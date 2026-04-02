@@ -44,7 +44,7 @@ Identify the current phase number from STATE.md (`current_phase` field).
 Load phase state:
 
 ```bash
-PHASE_STATE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" init phase-op "${CURRENT_PHASE}")
+PHASE_STATE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" init phase-op "${CURRENT_PHASE}")
 if [[ "$PHASE_STATE" == @file:* ]]; then PHASE_STATE=$(cat "${PHASE_STATE#@file:}"); fi
 ```
 
@@ -53,7 +53,7 @@ Parse: `phase_dir`, `phase_number`, `phase_name`, `phase_slug`, `plan_count`, `s
 Load config:
 
 ```bash
-CONFIG=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" config-get-all)
+CONFIG=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get-all)
 ```
 
 Parse: `git.branching_strategy` (`none` | `phase` | `milestone`), `git.commit_docs`, `git.main_branch`.
@@ -91,7 +91,7 @@ If user says no → abort. If user says yes → proceed with warning.
 **Check lint gate:**
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" lint check --phase "${CURRENT_PHASE}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" lint check --phase "${CURRENT_PHASE}"
 ```
 
 If lint errors exist → abort transition: "Lint gate not passed. Run `/sunco:lint --fix` before transitioning."
@@ -129,14 +129,14 @@ This does NOT block transition — it ensures the debt is visible before committ
 Mark current phase complete in STATE.md:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "phases.${CURRENT_PHASE}.status" "complete"
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "phases.${CURRENT_PHASE}.completed_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "phases.${CURRENT_PHASE}.status" "complete"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "phases.${CURRENT_PHASE}.completed_at" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
 
 Look up the next phase:
 
 ```bash
-NEXT_PHASE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" roadmap next-phase "${CURRENT_PHASE}")
+NEXT_PHASE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" roadmap next-phase "${CURRENT_PHASE}")
 ```
 
 Parse `next_phase_number`, `next_phase_name`, `next_phase_slug`, `is_last_phase`.
@@ -144,11 +144,11 @@ Parse `next_phase_number`, `next_phase_name`, `next_phase_slug`, `is_last_phase`
 Update STATE.md current position:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "current_phase" "${NEXT_PHASE_NUM}"
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" state set "last_transition" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "current_phase" "${NEXT_PHASE_NUM}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" state set "last_transition" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
 
-Update `.sun/STATE.md` narrative section:
+Update `.planning/STATE.md` narrative section:
 
 ```markdown
 ## Current Position
@@ -234,7 +234,7 @@ If this is the last phase → skip directory creation, display milestone complet
 Evaluate branching strategy:
 
 ```bash
-STRATEGY=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" config-get git.branching_strategy 2>/dev/null || echo "none")
+STRATEGY=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get git.branching_strategy 2>/dev/null || echo "none")
 ```
 
 **Strategy: `none`** — do nothing. All work stays on current branch.
@@ -245,7 +245,7 @@ Check if on a phase branch:
 
 ```bash
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-MAIN=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" config-get git.main_branch 2>/dev/null || echo "main")
+MAIN=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" config-get git.main_branch 2>/dev/null || echo "main")
 ```
 
 If `CURRENT_BRANCH` matches pattern `phase/{N}-*`:
@@ -273,7 +273,7 @@ Do not merge on phase transition — milestone branches merge at milestone compl
 Update ROADMAP.md to reflect phase completion:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" roadmap mark-complete "${CURRENT_PHASE}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" roadmap mark-complete "${CURRENT_PHASE}"
 ```
 
 Verify the update:
@@ -287,7 +287,7 @@ If the roadmap update tool is unavailable, manually update: find the phase entry
 Update PROJECT.md if requirements were validated in this phase:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" project promote-requirements "${CURRENT_PHASE}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" project promote-requirements "${CURRENT_PHASE}"
 ```
 
 This moves requirements from `Active` to `Validated` in PROJECT.md based on VERIFICATION.md results.
@@ -326,13 +326,13 @@ If `git.commit_docs: false` → skip the commit. Display a reminder to commit pl
 After the transition commit, create a rollback point marking this phase boundary:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" rollback-point create --label "after-transition-phase-${CURRENT_PHASE}-to-${NEXT_PHASE_NUM}"
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" rollback-point create --label "after-transition-phase-${CURRENT_PHASE}-to-${NEXT_PHASE_NUM}"
 ```
 
 Also update artifact hashes to reflect the new baseline:
 
 ```bash
-node "$(npm root -g)/sunco/bin/sunco-tools.cjs" artifact-hash compute
+node "$HOME/.claude/sunco/bin/sunco-tools.cjs" artifact-hash compute
 ```
 
 This ensures the next command invocation has a clean hash baseline and a named rollback point at this phase boundary.
@@ -539,7 +539,7 @@ Both contexts produce the same transition commit and STATE.md update. The differ
 When transitioning out of the last phase, the workflow recognizes this and routes to milestone completion:
 
 ```bash
-NEXT_PHASE=$(node "$(npm root -g)/sunco/bin/sunco-tools.cjs" roadmap next-phase "${CURRENT_PHASE}")
+NEXT_PHASE=$(node "$HOME/.claude/sunco/bin/sunco-tools.cjs" roadmap next-phase "${CURRENT_PHASE}")
 IS_LAST=$(echo "$NEXT_PHASE" | node -e "... parse is_last_phase")
 ```
 

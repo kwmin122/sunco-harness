@@ -206,7 +206,7 @@ The token estimate is labeled "rough estimate" in all output — it is not autho
 ## Step 7: Read STATE.md for Current Context
 
 ```bash
-cat .sun/STATE.md 2>/dev/null || cat .planning/STATE.md 2>/dev/null
+cat .planning/STATE.md 2>/dev/null || cat .planning/STATE.md 2>/dev/null
 ```
 
 Extract:

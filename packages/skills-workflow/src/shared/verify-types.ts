@@ -7,9 +7,11 @@
  * - Layer 3: BDD Acceptance Criteria (holdout scenarios)
  * - Layer 4: Permission Scoping (file path verification)
  * - Layer 5: Adversarial Verification (intent reconstruction)
+ * - Layer 6: Cross-Model Verification (different model blind spot detection)
+ * - Layer 7: Human Eval Gate (final human sign-off)
  *
  * Requirements: VRF-06, VRF-10
- * Decisions: D-01 (5-layer model), D-02 (layer structure), D-10 (expert agents),
+ * Decisions: D-01 (7-layer model), D-02 (layer structure), D-10 (expert agents),
  *   D-11 (coordinator synthesis), D-13/D-14/D-15 (coverage audit)
  */
 
@@ -19,7 +21,7 @@
 
 /** Individual finding from any verification layer or source */
 export interface VerifyFinding {
-  /** Which layer produced this finding (1-5) */
+  /** Which layer produced this finding (1-7) */
   layer: number;
   /** Source agent or tool that produced the finding */
   source:
@@ -35,7 +37,9 @@ export interface VerifyFinding {
     | 'scope'
     | 'adversarial'
     | 'intent'
-    | 'scenario';
+    | 'scenario'
+    | 'cross-model'
+    | 'human-eval';
   /** Severity level */
   severity: 'critical' | 'high' | 'medium' | 'low';
   /** Description of the issue */
@@ -59,7 +63,7 @@ export type VerifyVerdict = 'PASS' | 'WARN' | 'FAIL';
 
 /** Result from a single verification layer */
 export interface LayerResult {
-  /** Layer number (1-5) */
+  /** Layer number (1-7) */
   layer: number;
   /** Human-readable layer name */
   name: string;

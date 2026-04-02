@@ -17,6 +17,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { simpleGit } from 'simple-git';
 import { captureGitState } from './shared/git-state.js';
+import { artifactGate } from './shared/gates.js';
 import { bumpVersion, updateAllVersions } from './shared/version-bumper.js';
 import {
   parseGitLog,
@@ -193,7 +194,29 @@ export default defineSkill({
     tagProgress.update({ completed: 1 });
     tagProgress.done({ summary: tagCreated ? `Tagged ${tagName}` : `Tag ${tagName} already exists` });
 
-    // --- Step 10: npm publish ---
+    // --- Step 10a: Artifact Gate (shared stop-the-line gate) ---
+    const artifactCheck = await artifactGate(ctx);
+    if (!artifactCheck.passed) {
+      await ctx.ui.result({ success: false, title: 'Release', summary: artifactCheck.reason });
+      return { success: false, summary: artifactCheck.reason };
+    }
+    ctx.log.info(artifactCheck.reason);
+
+    // --- Step 10b: Proceed Gate — fresh re-verify (mandatory before publish) ---
+    // Do NOT trust cached verify.lastResult — code may have changed since last verify.
+    // Run a fresh lightweight verification to ensure current state is clean.
+    ctx.log.info('proceed-gate: Running fresh verification before publish...');
+    const freshVerify = await ctx.run('workflow.verify', { auto: true });
+    if (!freshVerify.success) {
+      const report = freshVerify.data as { verdict?: string; findings?: unknown[] } | undefined;
+      const findingsCount = report?.findings?.length ?? 0;
+      const summary = `Release blocked by proceed-gate: fresh verify failed (${findingsCount} finding(s), verdict: ${report?.verdict ?? 'FAIL'}). Resolve all findings before release.`;
+      await ctx.ui.result({ success: false, title: 'Release', summary });
+      return { success: false, summary };
+    }
+    ctx.log.info('proceed-gate: Fresh verification PASSED');
+
+    // --- Step 10c: npm publish ---
     const skipPublish = ctx.args['skip-publish'] === true || ctx.args.skipPublish === true;
     let published = false;
 

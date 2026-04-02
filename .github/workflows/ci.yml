@@ -23,6 +23,18 @@ jobs:
       - run: npx vitest run
       - run: node packages/cli/dist/cli.js --help
 
+      # --- Stop-the-line gates (required) ---
+      - name: Claude smoke test
+        run: |
+          node packages/cli/bin/install.cjs --claude --lang en
+          node packages/cli/bin/smoke-test.cjs --runtime claude
+      - name: Codex smoke test
+        run: |
+          node packages/cli/bin/install.cjs --codex --lang en
+          node packages/cli/bin/smoke-test.cjs --runtime codex
+      - name: Contract lint
+        run: node packages/cli/bin/contract-lint.cjs
+
   publish:
     needs: test
     if: startsWith(github.ref, 'refs/tags/v')
@@ -36,6 +48,30 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx turbo build
-      - run: cd packages/cli && npm publish
+
+      # --- Pre-publish gates (stop-the-line, same as test job) ---
+      - name: Claude smoke test
+        run: |
+          node packages/cli/bin/install.cjs --claude --lang en
+          node packages/cli/bin/smoke-test.cjs --runtime claude
+      - name: Codex smoke test
+        run: |
+          node packages/cli/bin/install.cjs --codex --lang en
+          node packages/cli/bin/smoke-test.cjs --runtime codex
+      - name: Contract lint
+        run: node packages/cli/bin/contract-lint.cjs
+
+      # NOTE: npm publish is gated by artifact-gate + fresh verify in release.skill.ts.
+      # For CI, we run the gates inline since the skill needs a running agent.
+      # If any gate fails here, publish is blocked.
+      - name: Artifact gate (tarball check)
+        run: |
+          cd packages/cli
+          npm pack --dry-run 2>&1 | grep -q 'bin/sunco-tools.cjs' || (echo "FAIL: sunco-tools.cjs missing" && exit 1)
+          npm pack --dry-run 2>&1 | grep -q 'bin/install.cjs' || (echo "FAIL: install.cjs missing" && exit 1)
+          npm pack --dry-run 2>&1 | grep -q 'dist/cli.js' || (echo "FAIL: cli.js missing" && exit 1)
+          echo "Artifact gate PASSED"
+      - name: Publish to npm
+        run: cd packages/cli && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

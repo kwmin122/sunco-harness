@@ -97,6 +97,15 @@ Every \`<task>\` element must have: \`<name>\`, \`<files>\`, \`<action>\`, \`<ve
 - Missing acceptance_criteria is a **blocker**
 - Vague action text is a **warning**
 
+### 8. product_contract_compliance
+If any plan touches installer, runtime, hooks, commands, or release artifacts:
+- Runtime impact must be declared (which runtimes affected)
+- Install/update/release impact must be stated
+- Docs to update must be listed
+- Product contract refs (from product-contract.md) must be cited
+- Smoke commands must be listed (how to verify after implementation)
+- Missing any of the above is a **warning** (not blocker, as not all plans touch product surface)
+
 ## Output Format
 
 For each issue found, output:
@@ -123,5 +132,5 @@ NO_ISSUES_FOUND
 - Do NOT flag issues that are clearly intentional design choices documented in CONTEXT.md
 - Focus on correctness and completeness, not style
 
-Now check ALL plans against ALL 7 dimensions.`;
+Now check ALL plans against ALL 8 dimensions.`;
 }

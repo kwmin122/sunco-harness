@@ -97,6 +97,59 @@ function copyGlob(srcDir, pattern, destDir) {
   return count;
 }
 
+// ---------------------------------------------------------------------------
+// Runtime-aware path replacement (P0-4)
+//
+// Source files use $HOME/.claude/ as the canonical default path.
+// For non-Claude runtimes, we replace .claude/ with .<runtime>/ at copy time.
+// This is the same approach GSD uses: separate copies per runtime.
+//
+// Path patterns replaced:
+//   .claude/sunco/     → .<runtime>/sunco/
+//   .claude/hooks/     → .<runtime>/hooks/
+//   .claude/commands/  → .<runtime>/commands/
+//   .claude/agents/    → .<runtime>/sunco/agents/ (agents live under sunco/)
+// ---------------------------------------------------------------------------
+const PATH_REPLACEMENT_EXTENSIONS = new Set(['.md', '.cjs', '.js', '.json', '.toml', '.txt']);
+
+function shouldReplacePaths(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  return PATH_REPLACEMENT_EXTENSIONS.has(ext);
+}
+
+function replaceRuntimePaths(content, runtimeDir) {
+  if (runtimeDir === '.claude') return content;
+  // Replace all .claude/ references with the target runtime directory
+  return content.replace(/\.claude\//g, `${runtimeDir}/`);
+}
+
+function copyFileWithReplacement(srcPath, destPath, runtimeDir) {
+  if (runtimeDir && runtimeDir !== '.claude' && shouldReplacePaths(srcPath)) {
+    const content = fs.readFileSync(srcPath, 'utf8');
+    fs.writeFileSync(destPath, replaceRuntimePaths(content, runtimeDir), 'utf8');
+  } else {
+    fs.copyFileSync(srcPath, destPath);
+  }
+}
+
+function copyDirWithReplacement(src, dest, runtimeDir) {
+  if (!fs.existsSync(src)) return 0;
+  ensureDir(dest);
+  let count = 0;
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath  = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      count += copyDirWithReplacement(srcPath, destPath, runtimeDir);
+    } else {
+      copyFileWithReplacement(srcPath, destPath, runtimeDir);
+      count++;
+    }
+  }
+  return count;
+}
+
 function removeDirIfExists(dirPath) {
   if (fs.existsSync(dirPath)) {
     fs.rmSync(dirPath, { recursive: true, force: true });
@@ -108,7 +161,7 @@ function removeDirIfExists(dirPath) {
 // ---------------------------------------------------------------------------
 // settings.json patching
 // ---------------------------------------------------------------------------
-function patchSettings(targetDir) {
+function patchSettings(targetDir, runtimeDir) {
   const settingsPath = path.join(targetDir, 'settings.json');
   let settings = {};
 
@@ -116,40 +169,58 @@ function patchSettings(targetDir) {
     try {
       settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
     } catch {
-      // If parse fails, start fresh (don't nuke existing file on error though)
       settings = {};
     }
   }
 
-  // Ensure hooks structure exists
+  const hooksBase = `$HOME/${runtimeDir}/hooks`;
+
+  // --- Idempotent hook cleanup (P0-8) ---
+  // Remove ALL existing sunco hook entries in any format (flat or nested)
+  // before re-adding in the canonical flat format.
   if (!settings.hooks) settings.hooks = {};
+
+  for (const eventType of ['SessionStart', 'PreToolUse', 'PostToolUse']) {
+    if (!Array.isArray(settings.hooks[eventType])) continue;
+    settings.hooks[eventType] = settings.hooks[eventType].filter((h) => {
+      // Flat format: { matcher, command }
+      if (h.command && h.command.includes('sunco-')) return false;
+      // Nested format: { matcher, hooks: [{ type, command }] }
+      if (Array.isArray(h.hooks) && h.hooks.some((inner) => inner.command && inner.command.includes('sunco-'))) return false;
+      return true;
+    });
+  }
+
+  // --- Register hooks (P0-7: all copied hooks get wired) ---
+
+  // SessionStart: update check
   if (!Array.isArray(settings.hooks.SessionStart)) settings.hooks.SessionStart = [];
-
-  const hookEntry = {
+  settings.hooks.SessionStart.push({
     matcher: '',
-    command: 'node $HOME/.claude/hooks/sunco-check-update.cjs'
+    command: `node ${hooksBase}/sunco-check-update.cjs`
+  });
+
+  // PostToolUse: context window monitor
+  if (!Array.isArray(settings.hooks.PostToolUse)) settings.hooks.PostToolUse = [];
+  settings.hooks.PostToolUse.push({
+    matcher: '',
+    command: `node ${hooksBase}/sunco-context-monitor.cjs`
+  });
+
+  // PreToolUse: prompt injection guard (advisory, Write/Edit tools)
+  if (!Array.isArray(settings.hooks.PreToolUse)) settings.hooks.PreToolUse = [];
+  settings.hooks.PreToolUse.push({
+    matcher: 'Write|Edit',
+    command: `node ${hooksBase}/sunco-prompt-guard.cjs`
+  });
+
+  // --- StatusLine ---
+  const statusLineCmd = `node ${hooksBase}/sunco-statusline.cjs`;
+  settings.statusLine = {
+    type: 'command',
+    command: statusLineCmd,
+    padding: 2
   };
-
-  // Only add if not already present (check both .js and .cjs variants for idempotency)
-  const alreadyPresent = settings.hooks.SessionStart.some(
-    (h) =>
-      h.command === hookEntry.command ||
-      h.command === 'node $HOME/.claude/hooks/sunco-check-update.js'
-  );
-
-  if (!alreadyPresent) {
-    settings.hooks.SessionStart.push(hookEntry);
-  }
-
-  // Register statusLine command
-  const statusLineCmd = 'node $HOME/.claude/hooks/sunco-statusline.cjs';
-  if (!settings.statusLine || settings.statusLine.command !== statusLineCmd) {
-    settings.statusLine = {
-      type: 'command',
-      command: statusLineCmd,
-      padding: 2
-    };
-  }
 
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf8');
 }
@@ -165,13 +236,17 @@ function unpatchSettings(targetDir) {
     return;
   }
 
-  if (!settings.hooks || !settings.hooks.SessionStart) return;
-
-  settings.hooks.SessionStart = settings.hooks.SessionStart.filter(
-    (h) =>
-      h.command !== 'node $HOME/.claude/hooks/sunco-check-update.cjs' &&
-      h.command !== 'node $HOME/.claude/hooks/sunco-check-update.js'
-  );
+  // Remove ALL sunco hooks in any format (flat or nested) from all event types
+  if (settings.hooks) {
+    for (const eventType of Object.keys(settings.hooks)) {
+      if (!Array.isArray(settings.hooks[eventType])) continue;
+      settings.hooks[eventType] = settings.hooks[eventType].filter((h) => {
+        if (h.command && h.command.includes('sunco-')) return false;
+        if (Array.isArray(h.hooks) && h.hooks.some((inner) => inner.command && inner.command.includes('sunco-'))) return false;
+        return true;
+      });
+    }
+  }
 
   // Remove statusLine if it's ours
   if (
@@ -321,14 +396,107 @@ const MSG = {
 };
 
 // ---------------------------------------------------------------------------
+// Codex SKILL.md generation (P1-1)
+//
+// Codex uses skills/<name>/SKILL.md instead of commands/<name>.md.
+// We read each Claude command .md, extract frontmatter, and generate
+// a Codex-compatible SKILL.md with adapter blocks.
+// ---------------------------------------------------------------------------
+function generateCodexSkills(srcCommands, targetDirOrOpts, runtimeDir) {
+  // Accept either targetDir string or { skillsDir } options
+  const skillsRoot = (typeof targetDirOrOpts === 'string')
+    ? path.join(targetDirOrOpts, 'skills')
+    : targetDirOrOpts.skillsDir;
+  if (!fs.existsSync(srcCommands)) return 0;
+  const pkgRoot = path.join(__dirname, '..');
+  const adapterHeader = path.join(pkgRoot, 'templates', 'codex-skill-adapter-header.md');
+  let adapterContent = '';
+  try { adapterContent = fs.readFileSync(adapterHeader, 'utf8'); } catch { /* no adapter template */ }
+
+  const files = fs.readdirSync(srcCommands).filter((f) => f.endsWith('.md'));
+  let count = 0;
+
+  for (const file of files) {
+    const cmdPath = path.join(srcCommands, file);
+    const content = fs.readFileSync(cmdPath, 'utf8');
+
+    // Extract frontmatter
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!fmMatch) continue;
+    const fm = fmMatch[1];
+
+    // Parse name and description from YAML frontmatter
+    const nameMatch = fm.match(/^name:\s*(.+)$/m);
+    const descMatch = fm.match(/^description:\s*(.+)$/m);
+    if (!nameMatch) continue;
+
+    const cmdName = nameMatch[1].trim();  // e.g., sunco:status
+    // Strip surrounding quotes from description if present (YAML may have "..." already)
+    let description = descMatch ? descMatch[1].trim() : cmdName;
+    if (description.startsWith('"') && description.endsWith('"')) {
+      description = description.slice(1, -1);
+    }
+    const skillName = cmdName.replace(':', '-');  // e.g., sunco-status
+
+    // Extract sections after frontmatter
+    const body = content.slice(fmMatch[0].length).trim();
+
+    // Build SKILL.md
+    const skillContent = [
+      '---',
+      `name: "${skillName}"`,
+      `description: "${description}"`,
+      'metadata:',
+      `  short-description: "${description}"`,
+      '---',
+      '',
+      adapterContent.replace(/\{\{SKILL_NAME\}\}/g, skillName),
+      '',
+      body,
+    ].join('\n');
+
+    // Apply runtime path replacement
+    const finalContent = replaceRuntimePaths(skillContent, runtimeDir);
+
+    // Write to <skillsRoot>/<skillName>/SKILL.md
+    const skillDir = path.join(skillsRoot, skillName);
+    ensureDir(skillDir);
+    fs.writeFileSync(path.join(skillDir, 'SKILL.md'), finalContent, 'utf8');
+    count++;
+  }
+
+  return count;
+}
+
+// ---------------------------------------------------------------------------
+// Runtime Contract (P0-1)
+//
+// Each runtime installs SUNCO into:
+//   $HOME/.<runtime>/
+//     commands/sunco/       ← slash commands (*.md)
+//     sunco/
+//       bin/                ← engine (cli.js + chunks), sunco-tools.cjs, package.json
+//       agents/             ← agent prompt files (*.md)
+//       workflows/          ← workflow files (*.md)
+//       references/         ← reference docs (*.md)
+//       templates/          ← template files (*.md)
+//       VERSION             ← installed version
+//     hooks/                ← hook scripts (*.cjs)
+//
+// Source files use $HOME/.claude/ as the canonical path. For non-Claude
+// runtimes, paths are replaced at install time (P0-4).
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
 // Install (single runtime directory)
 // ---------------------------------------------------------------------------
-function install(targetDir) {
+function install(targetDir, runtimeDir) {
   const pkgRoot = path.join(__dirname, '..');
 
   // Source paths (relative to the npm package root)
   const srcCommands   = path.join(pkgRoot, 'commands', 'sunco');
   const srcEngine     = path.join(pkgRoot, 'dist');
+  const srcBin        = path.join(pkgRoot, 'bin');
   const srcHooks      = path.join(pkgRoot, 'hooks');
   const srcAgents     = path.join(pkgRoot, 'agents');
   const srcWorkflows  = path.join(pkgRoot, 'workflows');
@@ -346,40 +514,104 @@ function install(targetDir) {
 
   const skillCount = countSkills(srcCommands);
 
-  // Copy commands
-  const cmdCopied = copyDirRecursive(srcCommands, destCommands);
+  // Clean previous install artifacts to prevent stale files from prior installs
+  // (e.g., Codex used to get commands/sunco/ but now gets skills/sunco-*)
+  removeDirIfExists(path.join(targetDir, 'commands', 'sunco'));
+  removeDirIfExists(path.join(targetDir, 'sunco'));
+  // Clean runtime-specific skill dirs from prior installs
+  if (runtimeDir === '.codex') {
+    removeDirIfExists(path.join(targetDir, 'skills'));
+  } else if (runtimeDir === '.cursor') {
+    // Cursor skills are in skills-cursor/sunco-*/
+    const cursorSkillsDir = path.join(targetDir, 'skills-cursor');
+    if (fs.existsSync(cursorSkillsDir)) {
+      const entries = fs.readdirSync(cursorSkillsDir).filter(d => d.startsWith('sunco-'));
+      for (const d of entries) removeDirIfExists(path.join(cursorSkillsDir, d));
+    }
+  }
 
-  // Copy engine (dist/ -> {target}/sunco/bin/)
+  // Copy commands:
+  //   - Claude: commands/sunco/*.md (slash commands)
+  //   - Codex: skills/sunco-*/SKILL.md (Codex skill adapter format)
+  //   - Others: commands/sunco/*.md (same as Claude for now)
+  let cmdCopied = 0;
+  let codexSkillsCopied = 0;
+  if (runtimeDir === '.codex') {
+    // Codex: generate SKILL.md adapters in skills/sunco-*/
+    codexSkillsCopied = generateCodexSkills(srcCommands, targetDir, runtimeDir);
+    cmdCopied = codexSkillsCopied;
+  } else if (runtimeDir === '.cursor') {
+    // Cursor: uses skills-cursor/<name>/SKILL.md format (same as Codex SKILL.md)
+    const cursorSkillsDir = path.join(targetDir, 'skills-cursor');
+    codexSkillsCopied = generateCodexSkills(srcCommands, { skillsDir: cursorSkillsDir }, runtimeDir);
+    cmdCopied = codexSkillsCopied;
+  } else {
+    cmdCopied = copyDirWithReplacement(srcCommands, destCommands, runtimeDir);
+  }
+
+  // Copy engine (dist/ -> {target}/sunco/bin/) — binary files, no path replacement
   const engCopied = copyDirRecursive(srcEngine, destEngine);
+
+  // P0-3: Copy sunco-tools.cjs (critical: 168+ workflow callsites depend on this)
+  const srcTools = path.join(srcBin, 'sunco-tools.cjs');
+  if (fs.existsSync(srcTools)) {
+    ensureDir(destEngine);
+    copyFileWithReplacement(srcTools, path.join(destEngine, 'sunco-tools.cjs'), runtimeDir);
+  }
+
+  // P0-2: Write minimal package.json for ESM resolution (cli.js uses ESM imports)
+  const runtimePkg = JSON.stringify({ type: 'module' }, null, 2) + '\n';
+  ensureDir(destEngine);
+  fs.writeFileSync(path.join(destEngine, 'package.json'), runtimePkg, 'utf8');
 
   // Write VERSION file alongside engine + just-upgraded marker
   const version = readVersion();
   ensureDir(path.join(targetDir, 'sunco'));
   const versionPath = path.join(targetDir, 'sunco', 'VERSION');
-  // Read old version before overwriting (for just-upgraded notification)
   let oldVersion = null;
   try { oldVersion = fs.readFileSync(versionPath, 'utf8').trim(); } catch { /* first install */ }
   fs.writeFileSync(versionPath, version + '\n', 'utf8');
-  // Write just-upgraded marker if version changed
   if (oldVersion && oldVersion !== version) {
-    const stateDir = path.join(os.homedir(), '.sunco');
+    const stateDir = path.join(os.homedir(), '.sun');
     ensureDir(stateDir);
     fs.writeFileSync(path.join(stateDir, 'just-upgraded-from'), oldVersion, 'utf8');
   }
 
-  // Copy hooks (.cjs files — CJS format required to run standalone outside ESM package)
-  const hooksCopied = copyGlob(srcHooks, '*.cjs', destHooks);
+  // Copy hooks (.cjs files — with path replacement for runtime-aware hook paths)
+  let hooksCopied = 0;
+  if (fs.existsSync(srcHooks)) {
+    ensureDir(destHooks);
+    const entries = fs.readdirSync(srcHooks, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith('.cjs')) continue;
+      copyFileWithReplacement(
+        path.join(srcHooks, entry.name),
+        path.join(destHooks, entry.name),
+        runtimeDir
+      );
+      hooksCopied++;
+    }
+  }
 
-  // Copy workflows, references, templates
-  const agCopied  = copyDirRecursive(srcAgents, destAgents);
-  const wfCopied  = copyDirRecursive(srcWorkflows, destWorkflows);
-  const refCopied = copyDirRecursive(srcReferences, destReferences);
-  const tplCopied = copyDirRecursive(srcTemplates, destTemplates);
+  // Copy workflows, agents, references, templates (all with path replacement)
+  const agCopied  = copyDirWithReplacement(srcAgents, destAgents, runtimeDir);
+  const wfCopied  = copyDirWithReplacement(srcWorkflows, destWorkflows, runtimeDir);
+  const refCopied = copyDirWithReplacement(srcReferences, destReferences, runtimeDir);
+  const tplCopied = copyDirWithReplacement(srcTemplates, destTemplates, runtimeDir);
 
-  // Patch settings.json (only for Claude Code — settings.json is Claude-specific)
-  const runtimeDirName = path.basename(targetDir);
-  if (runtimeDirName === '.claude') {
-    patchSettings(targetDir);
+  // Runtime-specific registration
+  if (runtimeDir === '.claude') {
+    // Claude Code: patch settings.json for hooks + statusLine
+    patchSettings(targetDir, runtimeDir);
+  } else if (runtimeDir === '.codex') {
+    // Codex: agents are registered via skills/SKILL.md (done in generateCodexSkills)
+    // No config.toml wiring needed — Codex discovers skills/ directory automatically
+  } else if (runtimeDir === '.cursor') {
+    // Cursor: SKILL.md files installed to skills-cursor/sunco-*/
+    // Cursor may auto-discover these, or user can register via Cursor's create-skill
+  } else if (runtimeDir === '.antigravity') {
+    // Antigravity: commands/sunco/*.md format (same as Claude, with .antigravity paths)
+    // Registration mechanism TBD — for now, copy assets with correct paths
   }
 
   return { cmdCopied, engCopied, hooksCopied, agCopied, wfCopied, refCopied, tplCopied, skillCount, version, destCommands };
@@ -619,27 +851,47 @@ async function main() {
   console.log(`  ${BOLD}SUNCO v${version}${RESET}`);
   console.log(`  ${DIM}Agent Workspace OS — harness engineering for AI agents${RESET}\n`);
 
-  // ---- UNINSTALL -----------------------------------------------------------
+  // ---- UNINSTALL (P0-9: multi-runtime) ------------------------------------
   if (flags.uninstall) {
-    const targetDir = flags.local
-      ? path.join(process.cwd(), '.claude')
-      : path.join(os.homedir(), '.claude');
+    // Determine which runtimes to uninstall
+    const uninstallKeys = flags.runtime
+      ? resolveRuntimeKeys(flags.runtime)
+      : Object.keys(RUNTIMES); // default: uninstall ALL runtimes
 
-    console.log(`  Uninstalling from ${DIM}${targetDir}${RESET} ...\n`);
+    const base = flags.local ? process.cwd() : os.homedir();
+    let totalRemoved = 0;
 
-    try {
-      const removed = uninstall(targetDir);
-      if (removed.length === 0) {
-        console.log(`  ${DIM}Nothing to uninstall.${RESET}\n`);
-      } else {
-        for (const p of removed) {
-          console.log(`  ${GREEN}✓${RESET} Removed ${DIM}${path.relative(targetDir, p)}${RESET}`);
-        }
-        console.log(`\n  Done! SUNCO has been uninstalled.\n`);
+    for (const key of uninstallKeys) {
+      const runtime = RUNTIMES[key];
+      if (!runtime) continue;
+      const targetDir = path.join(base, runtime.dir);
+
+      // Skip if runtime dir doesn't exist or has no sunco artifacts
+      if (!fs.existsSync(path.join(targetDir, 'sunco')) &&
+          !fs.existsSync(path.join(targetDir, 'commands', 'sunco'))) {
+        continue;
       }
-    } catch (err) {
-      console.error(`\n  Error during uninstall: ${err.message}\n`);
-      process.exit(1);
+
+      console.log(`  Uninstalling from ${DIM}${runtime.name}${RESET} (${DIM}~/${runtime.dir}/${RESET}) ...\n`);
+
+      try {
+        const removed = uninstall(targetDir);
+        if (removed.length > 0) {
+          for (const p of removed) {
+            console.log(`  ${GREEN}✓${RESET} Removed ${DIM}${path.relative(targetDir, p)}${RESET}`);
+          }
+          totalRemoved += removed.length;
+          console.log('');
+        }
+      } catch (err) {
+        console.error(`  Error uninstalling from ${runtime.name}: ${err.message}\n`);
+      }
+    }
+
+    if (totalRemoved === 0) {
+      console.log(`  ${DIM}Nothing to uninstall.${RESET}\n`);
+    } else {
+      console.log(`  Done! SUNCO has been uninstalled from ${uninstallKeys.length} runtime(s).\n`);
     }
     return;
   }
@@ -687,7 +939,7 @@ async function main() {
     console.log(`  ${msg.installing} ${BOLD}${displayName}${RESET} (${DIM}${displayPath}${RESET}) ...\n`);
 
     try {
-      const r = install(targetDir);
+      const r = install(targetDir, runtime.dir);
       if (lang === 'ko') patchDescriptions(r.destCommands, DESCRIPTIONS_KO);
       printInstallResult(r, displayName, lang);
       console.log('');
