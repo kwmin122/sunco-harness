@@ -124,6 +124,12 @@ if (fs.existsSync(repoReadme)) {
   }
   // No "Claude Code 전용" if Codex is full support
   check('README: no outdated "Claude Code only" claim', !readmeContent.includes('현재는 Claude Code 전용'));
+  // Cursor support must match between README and product contract
+  const readmeHasCursorFull = readmeContent.includes('Cursor') && readmeContent.includes('Full support');
+  const contractContent = fs.readFileSync(contractPath, 'utf8');
+  const contractHasCursorFull = contractContent.includes('Cursor') && contractContent.includes('Full support');
+  check('README ↔ contract: Cursor support level matches', readmeHasCursorFull === contractHasCursorFull,
+    readmeHasCursorFull !== contractHasCursorFull ? `README: ${readmeHasCursorFull}, contract: ${contractHasCursorFull}` : '');
 }
 
 // 8. Gate enforcement in ship/release (stop-the-line check)

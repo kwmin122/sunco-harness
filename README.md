@@ -256,8 +256,8 @@ npx popcoru --uninstall
 |---------|--------|---------|
 | Claude Code | Full support | `npx popcoru --claude` |
 | Codex CLI | Full support (SKILL.md adapters) | `npx popcoru --codex` |
-| Cursor | Asset install ready, config registration pending | `npx popcoru --cursor` |
-| Antigravity | Asset install ready, config registration pending | `npx popcoru --antigravity` |
+| Cursor | Full support (SKILL.md in skills-cursor/) | `npx popcoru --cursor` |
+| Antigravity | Partial (asset install, config registration pending spec) | `npx popcoru --antigravity` |
 
 ```bash
 npx popcoru --all                 # Install for all available runtimes
