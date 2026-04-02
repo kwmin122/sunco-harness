@@ -64,6 +64,12 @@ vi.mock('node:fs/promises', () => ({
   writeFile: mocks.mockWriteFile,
 }));
 
+vi.mock('../shared/gates.js', () => ({
+  artifactGate: vi.fn().mockResolvedValue({ passed: true, verdict: 'PASS', reason: 'mock' }),
+  proceedGate: vi.fn().mockResolvedValue({ passed: true, verdict: 'PASS', reason: 'mock' }),
+  planGate: vi.fn().mockResolvedValue({ passed: true, verdict: 'PASS', reason: 'mock' }),
+}));
+
 vi.mock('simple-git', () => ({
   simpleGit: vi.fn(() => ({
     log: mocks.mockLog,

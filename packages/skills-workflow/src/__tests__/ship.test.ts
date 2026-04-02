@@ -42,6 +42,12 @@ vi.mock('../prompts/ship-pr-body.js', () => ({
   buildShipPrBody: mocks.mockBuildShipPrBody,
 }));
 
+vi.mock('../shared/gates.js', () => ({
+  proceedGate: vi.fn().mockResolvedValue({ passed: true, verdict: 'PASS', reason: 'mock' }),
+  artifactGate: vi.fn().mockResolvedValue({ passed: true, verdict: 'PASS', reason: 'mock' }),
+  planGate: vi.fn().mockResolvedValue({ passed: true, verdict: 'PASS', reason: 'mock' }),
+}));
+
 // ---------------------------------------------------------------------------
 // Mock context factory
 // ---------------------------------------------------------------------------
@@ -202,8 +208,8 @@ describe('shipSkill', () => {
     expect(ctx.run).toHaveBeenCalledWith('workflow.verify', expect.any(Object));
   });
 
-  // Test 4: --skip-verify skips verification
-  it('skips verification when --skip-verify is set', async () => {
+  // Test 4: verify is mandatory (--skip-verify was removed, stop-the-line)
+  it('always runs verification before ship (no skip)', async () => {
     vi.doMock('execa', () => ({
       execa: mocks.mockExeca,
     }));
@@ -212,14 +218,14 @@ describe('shipSkill', () => {
     mocks.mockExeca.mockResolvedValueOnce({ stdout: 'https://github.com/test/repo/pull/2' });
 
     const ctx = createMockContext({
-      args: { phase: 8, 'skip-verify': true, skipVerify: true },
+      args: { phase: 8 },
     });
 
     const { default: shipSkill } = await import('../ship.skill.js');
-    const result = await shipSkill.execute(ctx);
+    await shipSkill.execute(ctx);
 
-    expect(result.success).toBe(true);
-    expect(ctx.run).not.toHaveBeenCalled();
+    // verify must always be called — no skip possible
+    expect(ctx.run).toHaveBeenCalledWith('workflow.verify', expect.any(Object));
   });
 
   // Test 5: gh CLI not available -> fallback

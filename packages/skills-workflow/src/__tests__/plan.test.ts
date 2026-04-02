@@ -162,7 +162,11 @@ function createMockContext(
   return {
     config: {} as SkillContext['config'],
     state: {
-      get: vi.fn().mockResolvedValue(null),
+      get: vi.fn().mockImplementation((key: string) => {
+        // planGate needs discuss.lastResult to pass
+        if (key === 'discuss.lastResult') return Promise.resolve({ phaseNumber: 7, timestamp: '2026-01-01T00:00:00Z' });
+        return Promise.resolve(null);
+      }),
       set: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(false),
       list: vi.fn().mockResolvedValue([]),

@@ -18,7 +18,7 @@ import type { SkillContext, AgentResult } from '@sunco/core';
 import type { LayerResult, VerifyFinding } from '../shared/verify-types.js';
 
 // ---------------------------------------------------------------------------
-// Mock verify-layers (all 5 layer functions)
+// Mock verify-layers (all 7 layer functions)
 // ---------------------------------------------------------------------------
 
 const mockRunLayer1 = vi.fn<(...args: unknown[]) => Promise<LayerResult>>();
@@ -26,6 +26,8 @@ const mockRunLayer2 = vi.fn<(...args: unknown[]) => Promise<LayerResult>>();
 const mockRunLayer3 = vi.fn<(...args: unknown[]) => Promise<LayerResult>>();
 const mockRunLayer4 = vi.fn<(...args: unknown[]) => Promise<LayerResult>>();
 const mockRunLayer5 = vi.fn<(...args: unknown[]) => Promise<LayerResult>>();
+const mockRunLayer6 = vi.fn<(...args: unknown[]) => Promise<LayerResult>>();
+const mockRunLayer7 = vi.fn<(...args: unknown[]) => Promise<LayerResult>>();
 
 vi.mock('../shared/verify-layers.js', () => ({
   runLayer1MultiAgent: (...args: unknown[]) => mockRunLayer1(...args),
@@ -33,6 +35,8 @@ vi.mock('../shared/verify-layers.js', () => ({
   runLayer3Acceptance: (...args: unknown[]) => mockRunLayer3(...args),
   runLayer4PermissionScope: (...args: unknown[]) => mockRunLayer4(...args),
   runLayer5Adversarial: (...args: unknown[]) => mockRunLayer5(...args),
+  runLayer6CrossModel: (...args: unknown[]) => mockRunLayer6(...args),
+  runLayer7HumanEval: (...args: unknown[]) => mockRunLayer7(...args),
   VERIFICATION_PERMISSIONS: {
     role: 'verification',
     readPaths: ['**'],
@@ -134,6 +138,8 @@ function makePassingLayers(): void {
   mockRunLayer3.mockResolvedValue(makeLayerResult(3, 'BDD Acceptance Criteria'));
   mockRunLayer4.mockResolvedValue(makeLayerResult(4, 'Permission Scoping'));
   mockRunLayer5.mockResolvedValue(makeLayerResult(5, 'Adversarial Verification'));
+  mockRunLayer6.mockResolvedValue(makeLayerResult(6, 'Cross-Model Verification'));
+  mockRunLayer7.mockResolvedValue(makeLayerResult(7, 'Human Eval Gate'));
 }
 
 function makeFinding(overrides: Partial<VerifyFinding> = {}): VerifyFinding {
@@ -249,7 +255,7 @@ describe('verifySkill', () => {
 
     expect(verifySkill.id).toBe('workflow.verify');
     expect(verifySkill.kind).toBe('prompt');
-    expect(verifySkill.description).toMatch(/5-layer/i);
+    expect(verifySkill.description).toMatch(/7-layer/i);
 
     // Check options include --phase, --auto, --strict
     const optionFlags = verifySkill.options?.map((o) => o.flags) ?? [];
@@ -258,8 +264,8 @@ describe('verifySkill', () => {
     expect(optionFlags.some((f) => f.includes('--strict'))).toBe(true);
   });
 
-  // Test 2: Executes all 5 layers and produces VerifyReport
-  it('executes all 5 layers sequentially and produces VerifyReport', async () => {
+  // Test 2: Executes all 7 layers and produces VerifyReport
+  it('executes all 7 layers sequentially and produces VerifyReport', async () => {
     const { default: verifySkill } = await import('../verify.skill.js');
     const ctx = createMockContext();
 
@@ -277,7 +283,7 @@ describe('verifySkill', () => {
 
     const report = result.data as Record<string, unknown>;
     expect(report.verdict).toBe('PASS');
-    expect(report.layers).toHaveLength(5);
+    expect(report.layers).toHaveLength(7);
     expect(report.findings).toHaveLength(0);
   });
 
@@ -299,8 +305,8 @@ describe('verifySkill', () => {
     expect(report.verdict).toBe('FAIL');
   });
 
-  // Test 4: WARN when only medium/low severity findings
-  it('verdict is WARN when findings are only medium/low severity', async () => {
+  // Test 4: FAIL when any findings exist (zero-tolerance, stop-the-line)
+  it('verdict is FAIL when findings are only medium/low severity (zero tolerance)', async () => {
     const { default: verifySkill } = await import('../verify.skill.js');
 
     mockRunLayer2.mockResolvedValue(
@@ -312,9 +318,9 @@ describe('verifySkill', () => {
     const ctx = createMockContext();
     const result = await verifySkill.execute(ctx);
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
     const report = result.data as Record<string, unknown>;
-    expect(report.verdict).toBe('WARN');
+    expect(report.verdict).toBe('FAIL');
   });
 
   // Test 5: PASS when no findings
@@ -348,7 +354,7 @@ describe('verifySkill', () => {
     // Result should still be produced (with the error captured)
     expect(result.data).toBeDefined();
     const report = result.data as Record<string, unknown>;
-    expect(report.layers).toHaveLength(5);
+    expect(report.layers).toHaveLength(7);
   });
 
   // Test 7: humanGateRequired when any finding has humanRequired=true

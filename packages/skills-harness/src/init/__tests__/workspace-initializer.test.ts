@@ -2,7 +2,7 @@
  * Tests for workspace initialization.
  * Uses in-memory FileStoreApi mock.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { parse as parseToml } from 'smol-toml';
 import { initializeWorkspace } from '../workspace-initializer.js';
 import type { InitResult } from '../types.js';
@@ -85,10 +85,20 @@ function createFixtureInitResult(): InitResult {
 describe('initializeWorkspace', () => {
   let fileStore: ReturnType<typeof createMockFileStore>;
   let initResult: InitResult;
+  const testDir = '/tmp/test-project';
 
-  beforeEach(() => {
+  beforeEach(async () => {
     fileStore = createMockFileStore();
     initResult = createFixtureInitResult();
+    // Ensure test directory exists for CLAUDE.md + .claude/rules/ generation
+    const { mkdir } = await import('node:fs/promises');
+    await mkdir(testDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    // Cleanup test artifacts
+    const { rm } = await import('node:fs/promises');
+    await rm(testDir, { recursive: true, force: true }).catch(() => {});
   });
 
   it('writes config.toml to root via FileStoreApi', async () => {
