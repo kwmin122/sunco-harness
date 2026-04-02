@@ -47,33 +47,27 @@ If argument is "on" or empty (default):
 mkdir -p ~/.sunco && echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ~/.sunco/mode-active
 ```
 
-2. Display the transformation sequence — **Super Saiyan style.** Gold/yellow energy aura. No rainbow. No cute emojis. Raw power.
+2. Display the transformation sequence — **Super Saiyan style.** Pure ASCII only. No block characters (they render as ugly checkerboards). No rainbow. No cute emojis. Raw power.
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  _______________________________________________
 
-              ░░░▒▒▒▓▓███████▓▓▒▒▒░░░
-          ░▒▓█▓▒░                  ░▒▓█▓▒░
-        ▒█▓░    ╔════════════════╗    ░▓█▒
-      ▓█░       ║  S U N C O     ║       ░█▓
-     █▓    ▲    ║  M O D E       ║    ▲    ▓█
-    █▒   ▲▲▲   ╚════════════════╝   ▲▲▲   ▒█
-   █▒  ▲▲▲▲▲                       ▲▲▲▲▲  ▒█
-   █░ ▲▲▲▲▲▲▲    77 skills armed  ▲▲▲▲▲▲▲ ░█
-   █░  ▲▲▲▲▲   6-layer Swiss cheese ▲▲▲▲▲  ░█
-    █▒  ▲▲▲    Harness engineering   ▲▲▲  ▒█
-     █▓  ▲     Auto-routing online    ▲  ▓█
-      ▓█░                                ░█▓
-        ▒█▓░                          ░▓█▒
-          ░▒▓█▓▒░                ░▒▓█▓▒░
-              ░░░▒▒▒▓▓██████▓▓▒▒▒░░░
+          *  .  *       *     .    *
+       .    \|/    *      \|/       .
+     *    --***--      --***--    *
+          /|\        /|\
+               S U N C O
+               M O D E
 
-            ━━ POWER: UNLIMITED ━━
+         77 skills         armed
+         6-layer            online
+         harness          engaged
+         auto-routing      active
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         >>> POWER: UNLIMITED <<<
+
+  _______________________________________________
 ```
-
-**The "aura" is the double-line border of block characters.** It represents the ki energy radiating outward. The `▲` characters are rising energy spikes — like Goku's hair standing up during transformation.
 
 After the banner, say: "그냥 말해. 알아서 라우팅한다."
 
@@ -109,36 +103,36 @@ From this point on, for EVERY user message:
 | Simple question or unclear | Answer directly, no skill needed |
 
 3. **Execute** — Run the matched skill with the user's input as context
-4. **Ki prefix** — Start every response with the golden energy indicator
+4. **Prefix** — Start every response with the mode indicator
 
 ## Response Format (while mode is active)
 
-Every response MUST start with the ki gauge. Gold/yellow theme only.
+Every response MUST start with:
 
 ```
-▓▓ SUNCO ▸ [skill-name or "direct"]
+* SUNCO > [skill-name or "direct"]
 ```
 
 Examples:
 ```
-▓▓ SUNCO ▸ lint
+* SUNCO > lint
 아키텍처 경계 검사 중...
 
-▓▓ SUNCO ▸ debug
+* SUNCO > debug
 에러 분석 중...
 
-▓▓ SUNCO ▸ direct
+* SUNCO > direct
 답변...
 ```
 
 ## Context Bar
 
-At the end of significant responses, show the context bar:
+At the end of significant responses, show the context bar using simple ASCII:
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▓▓ SUNCO Mode | Context: ████████████░░░░ 65% | Skills used: 3
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+___________________________________________________
+* SUNCO Mode | Context: [==========----] 65% | Skills used: 3
+___________________________________________________
 ```
 
 Estimate context usage based on conversation length:
@@ -149,7 +143,8 @@ Estimate context usage based on conversation length:
 
 **Style rules:**
 - NO rainbow colors. NO emoji spam. NO cute symbols.
-- Gold/yellow energy. Block characters (▓█▒░▲). Sharp lines (━).
+- NO Unicode block characters (they render as checkerboard in Claude Code terminal).
+- Use only: plain ASCII (`*`, `-`, `=`, `_`, `>`, `|`, `/`, `\`).
 - Tone: terse, powerful, zero fluff. Like Goku — doesn't talk much, just acts.
 
 ## Deactivation
@@ -158,9 +153,9 @@ If the user says "mode off", "/sunco:mode off", "turn off", "deactivate":
 1. Delete marker: `rm -f ~/.sunco/mode-active`
 2. Show:
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▓▓ SUNCO MODE — 파워 다운
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+___________________________________
+  SUNCO MODE -- power down
+___________________________________
 
   Skills used: [count]
   Duration: [time]
