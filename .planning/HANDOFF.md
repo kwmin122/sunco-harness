@@ -92,11 +92,28 @@ site/
 
 ## 다음 세션 작업
 
-1. **v0.4.0 Publish** — 버전 범프 + npm publish (ISSUE-001/002 반영)
-2. **Codex 실행** — codex-benchmark.cjs로 실제 A/B 테스트 실행
-3. **SUNCO HQ 레포 생성** — bootstrap-hq.sh 실행 → /sunco:new 파이프라인
-4. **ISSUE-001 워크플로 통합 테스트** — pivot/backtrack/rethink 실제 실행 검증
-5. **SUN Terminal** — Swift/AppKit + libghostty R&D 시작
+### 즉시 (v0.4.0)
+1. **gstack 기능 흡수 Tier 1** — 5개 신규 스킬 (워크플로 + 커맨드 + 필요시 sunco-tools.cjs)
+   - `/sunco:cso` — 보안 감사 (OWASP Top 10, STRIDE, npm audit, secret detection). 결정적 스킬 가능.
+   - `/sunco:careful` + `/sunco:freeze` — 파괴적 명령어 경고 + 디렉토리 스코프 잠금
+   - `/sunco:retro` — 주간 회고 (git log 분석, 커밋 패턴, 테스트 건강도 추세)
+   - `/sunco:benchmark` — 성능 베이스라인 (vitest bench, 번들 사이즈, 빌드 시간)
+   - `/sunco:land` — 배포 파이프라인 (PR 머지 → CI 대기 → 배포 → 헬스체크, gh CLI)
+
+2. **gstack 기능 흡수 Tier 2** — 5개 신규 스킬
+   - `/sunco:office-hours` — 프로젝트 시작 전 강제 질문 (6가지 핵심 질문)
+   - `/sunco:ceo-review` — CEO 관점 플랜 리뷰 (스코프, 10-star 제품)
+   - `/sunco:eng-review` — Eng 관점 플랜 리뷰 (아키텍처, 데이터 플로우, 엣지 케이스)
+   - `/sunco:design-review` — 디자인 관점 리뷰 (차원별 0-10 점수)
+   - `/sunco:canary` — 배포 후 모니터링 (헬스체크, 에러 로그, 롤백 트리거)
+
+3. **v0.4.0 배포** — 버전 범프 + npm publish + 랜딩 페이지 업데이트 (75 skills)
+
+### 이후
+4. **SUN Terminal** — Swift/AppKit + libghostty R&D
+5. **gstack Tier 3** — `/sunco:qa`, `/sunco:browse` (SUN Terminal + Playwright)
+6. **Codex 실행** — codex-benchmark.cjs 실제 A/B
+7. **SUNCO HQ** — bootstrap-hq.sh 실행
 
 ## 빌드/테스트
 
