@@ -28,7 +28,7 @@ sunco --version 2>/dev/null || npx sunco --version 2>/dev/null
 ## Step 2: Check available version
 
 ```bash
-npm view sunco version 2>/dev/null
+npm view popcoru version 2>/dev/null
 ```
 
 Compare: current vs latest.
@@ -40,8 +40,8 @@ Stop here.
 ## Step 3: Fetch changelog
 
 ```bash
-npm view sunco dist-tags.latest
-npx sunco changelog 2>/dev/null || npm view sunco description
+npm view popcoru dist-tags.latest
+npm view popcoru description
 ```
 
 Or fetch from GitHub releases if available.
@@ -55,9 +55,6 @@ Latest:  v[latest]
 
 What's new in v[latest]:
 [changelog content]
-
-What's new in v[other versions between current and latest]:
-[changelog content]
 ```
 
 If `--changelog-only`: stop here.
@@ -70,17 +67,24 @@ npx popcoru@latest
 
 This handles:
 - Downloading latest version
-- Installing to same location
+- Installing to same location (detected runtimes)
 - Preserving local skill customizations
-- Updating command files
+- Updating command files, hooks, workflows
+- Auto-registering statusLine in settings.json
+- Writing just-upgraded marker for welcome message
 
 ## Step 5: Verify
 
 ```bash
-sunco --version
+cat ~/.claude/sunco/VERSION
 ```
 
 Confirm new version matches expected.
+
+Also verify statusLine is registered:
+```bash
+cat ~/.claude/settings.json | grep statusLine
+```
 
 ## Step 6: Report
 

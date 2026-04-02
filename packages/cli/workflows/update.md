@@ -23,13 +23,13 @@ Get the installed version and the latest published version:
 
 ```bash
 # What's currently installed
-CURRENT_VERSION=$(sunco --version 2>/dev/null || npx sunco@current --version 2>/dev/null)
+CURRENT_VERSION=$(cat ~/.claude/sunco/VERSION 2>/dev/null || npx sunco@current --version 2>/dev/null)
 
 # What's on npm
-LATEST_VERSION=$(npm view sunco version 2>/dev/null)
+LATEST_VERSION=$(npm view popcoru version 2>/dev/null)
 
 # Full version info from registry
-npm view sunco versions --json 2>/dev/null | tail -5
+npm view popcoru versions --json 2>/dev/null | tail -5
 ```
 
 Compare versions. If already on latest:
@@ -67,10 +67,10 @@ Fetch the changelog from npm metadata or the package's GitHub releases:
 
 ```bash
 # Try npm changelog field
-npm view sunco@latest changelog 2>/dev/null
+npm view popcoru@latest changelog 2>/dev/null
 
 # Fall back to GitHub releases
-REPO=$(npm view sunco repository.url 2>/dev/null)
+REPO=$(npm view popcoru repository.url 2>/dev/null)
 # Parse owner/repo from REPO url, then:
 gh release view v${LATEST_VERSION} --repo [owner/repo] 2>/dev/null || true
 ```
@@ -115,81 +115,48 @@ If yes: continue to Step 4.
 
 ## Step 4: Download and Apply
 
-Detect how SUNCO was installed:
+Always use `npx popcoru@latest` — the installer handles everything:
 
 ```bash
-# Global npm install
-npm list -g sunco 2>/dev/null | head -2
-
-# npx / local
-ls node_modules/.bin/sunco 2>/dev/null
-ls package.json 2>/dev/null | xargs grep '"sunco"' 2>/dev/null
+npx popcoru@latest
 ```
 
-**If globally installed:**
-
-```bash
-npm install -g sunco@latest 2>&1
-```
-
-Display progress:
-
-```
-Downloading sunco@1.2.0...
-```
-
-**If locally installed in workspace:**
-
-```bash
-npm install sunco@latest 2>&1
-```
-
-**If installed via npx (no persistent install):**
-
-```
-SUNCO is run via npx. The next npx sunco invocation will automatically use the latest version.
-
-To pin a version, add sunco to your devDependencies:
-  npm install --save-dev sunco@latest
-```
-
-Mark as "no install needed" and jump to Step 6 with a note.
+The installer (`install.cjs`) automatically:
+- Copies commands, workflows, hooks, agents to the target runtime directory
+- Patches `settings.json` hooks (SessionStart update checker)
+- Registers `statusLine` command in `settings.json` (context gauge, tokens, cost)
+- Writes VERSION file and just-upgraded marker
+- Preserves user's existing settings
 
 ---
 
 ## Step 5: Verify
 
-Confirm the new binary responds correctly:
+Confirm the update applied:
 
 ```bash
 # Version should match latest
-NEW_VERSION=$(sunco --version 2>/dev/null)
+cat ~/.claude/sunco/VERSION
 
-# Basic health check
-sunco health --json 2>/dev/null | head -5
+# Verify statusLine is registered
+grep -A3 statusLine ~/.claude/settings.json
 ```
 
 **If version matches:**
 
 ```
 Verification: OK
-  sunco --version → v1.2.0 ✓
+  VERSION → v1.2.0 ✓
+  statusLine registered ✓
 ```
 
-**If version mismatch (update didn't apply):**
+**If version mismatch:**
 
 ```
 Verification FAILED.
-sunco --version still reports v1.1.2 after install.
+VERSION still reports v1.1.2 after install.
 
-Common causes:
-  - PATH has a different sunco binary ahead of the updated one
-  - sudo required for global install on this system
-
-Try: which sunco
-     npm root -g
-
-Manual fix: npm install -g sunco@1.2.0 --force
+Manual fix: npx popcoru@latest --claude
 ```
 
 Do not proceed to Step 6 if verification failed — leave user with diagnosis.
@@ -237,6 +204,6 @@ Next: /clear  — restart with new version
 - [ ] Changelog displayed (or "not available" noted)
 - [ ] User confirmed before any download
 - [ ] Install command succeeded with no errors
-- [ ] `sunco --version` returns expected new version
+- [ ] `cat ~/.claude/sunco/VERSION` returns expected new version
 - [ ] `.sun/just-upgraded` written with from/to/new_commands
 - [ ] User told to `/clear` and restart
