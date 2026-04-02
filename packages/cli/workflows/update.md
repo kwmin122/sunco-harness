@@ -22,8 +22,8 @@ Six steps:
 Get the installed version and the latest published version:
 
 ```bash
-# What's currently installed
-CURRENT_VERSION=$(cat ~/.claude/sunco/VERSION 2>/dev/null || npx popcoru@latest --version 2>/dev/null)
+# What's currently installed (check all runtimes, use first found)
+CURRENT_VERSION=$(cat ~/.claude/sunco/VERSION 2>/dev/null || cat ~/.codex/sunco/VERSION 2>/dev/null || cat ~/.cursor/sunco/VERSION 2>/dev/null || echo "unknown")
 
 # What's on npm
 LATEST_VERSION=$(npm view popcoru version 2>/dev/null)
@@ -130,37 +130,32 @@ The installer (`install.cjs`) automatically:
 
 ---
 
-## Step 5: Artifact Gate (mandatory)
+## Step 5: Artifact Gate (mandatory, runtime-aware)
 
-Run the install smoke test to verify the update produced a working runtime:
-
-```bash
-node "$HOME/.claude/sunco/bin/sunco-tools.cjs" --help
-```
-
-If sunco-tools.cjs runs without error, continue. If it fails, STOP and report.
-
-Then verify install tree:
+Verify the update produced a working runtime for ALL installed runtimes:
 
 ```bash
-# Version should match latest
-cat ~/.claude/sunco/VERSION
+# Check each installed runtime
+for dir in ~/.claude ~/.codex ~/.cursor ~/.antigravity; do
+  [ -d "$dir/sunco" ] || continue
+  echo "=== $dir ==="
 
-# ESM package.json exists
-cat ~/.claude/sunco/bin/package.json
+  # sunco-tools.cjs runs?
+  node "$dir/sunco/bin/sunco-tools.cjs" --help >/dev/null 2>&1 && echo "  tools: OK" || echo "  tools: FAIL"
 
-# Verify statusLine is registered
-grep -A3 statusLine ~/.claude/settings.json
+  # VERSION matches?
+  echo "  version: $(cat $dir/sunco/VERSION 2>/dev/null || echo MISSING)"
 
-# Verify hooks registered
-grep -A2 sunco- ~/.claude/settings.json
+  # ESM package.json?
+  [ -f "$dir/sunco/bin/package.json" ] && echo "  esm: OK" || echo "  esm: MISSING"
+done
 ```
 
-**All checks must pass.** If ANY check fails:
+**All checks must pass for all installed runtimes.** If ANY check fails:
 
 ```
 Update artifact-gate FAILED.
-Do not proceed. Report the failing check to the user.
+Do not proceed. Report the failing check and runtime to the user.
 ```
 
 Do not proceed to Step 6 if artifact-gate failed.
@@ -169,13 +164,13 @@ Do not proceed to Step 6 if artifact-gate failed.
 
 ## Step 6: Write Upgrade Marker
 
-Write global upgrade marker (read by SessionStart hook for welcome message).
-Format: single line containing the OLD version string. The hook reads this,
-compares to the current VERSION, and displays "Updated! old → new".
+Write global upgrade marker as JSON (read by SessionStart hook for welcome message):
 
 ```bash
 mkdir -p ~/.sun
-echo "${OLD_VERSION}" > ~/.sun/just-upgraded-from
+cat > ~/.sun/just-upgraded-from << MARKER
+{"from":"${OLD_VERSION}","to":"${NEW_VERSION}","upgraded_at":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+MARKER
 ```
 
 This file is consumed (read + deleted) by the SessionStart hook on the next session.

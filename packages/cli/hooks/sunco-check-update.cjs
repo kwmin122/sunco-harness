@@ -128,11 +128,17 @@ function isSnoozed(latestVersion) {
 function checkJustUpgraded(currentVersion) {
   try {
     if (!fs.existsSync(UPGRADED_MARKER)) return null;
-    const oldVersion = fs.readFileSync(UPGRADED_MARKER, 'utf8').trim();
+    const raw = fs.readFileSync(UPGRADED_MARKER, 'utf8').trim();
     fs.unlinkSync(UPGRADED_MARKER);
     try { fs.unlinkSync(SNOOZE_FILE); } catch { /* ok */ }
     try { fs.unlinkSync(CACHE_FILE); } catch { /* ok */ }
-    return oldVersion;
+    // Parse JSON marker (v0.5.2+) or fall back to plain version string (legacy)
+    try {
+      const marker = JSON.parse(raw);
+      return marker;  // { from, to, upgraded_at, new_commands?, changelog_summary? }
+    } catch {
+      return { from: raw };  // legacy: plain oldVersion string
+    }
   } catch {
     return null;
   }
@@ -146,12 +152,17 @@ function main() {
     const installed = readInstalledVersion();
     if (!installed) return;
 
-    // Check just-upgraded marker
-    const upgradedFrom = checkJustUpgraded(installed);
-    if (upgradedFrom && upgradedFrom !== installed) {
-      console.error(
-        `${GREEN}[SUNCO]${RESET} ${BOLD}Updated!${RESET} ${DIM}${upgradedFrom}${RESET} → ${GREEN}${installed}${RESET}`
-      );
+    // Check just-upgraded marker (JSON: { from, to, new_commands?, changelog_summary? })
+    const marker = checkJustUpgraded(installed);
+    if (marker && marker.from && marker.from !== installed) {
+      let msg = `${GREEN}[SUNCO]${RESET} ${BOLD}Updated!${RESET} ${DIM}${marker.from}${RESET} → ${GREEN}${installed}${RESET}`;
+      if (marker.changelog_summary) {
+        msg += `\n${DIM}  ${marker.changelog_summary}${RESET}`;
+      }
+      if (marker.new_commands && marker.new_commands.length > 0) {
+        msg += `\n${DIM}  New: ${marker.new_commands.join(', ')}${RESET}`;
+      }
+      console.error(msg);
       return;
     }
 

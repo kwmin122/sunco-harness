@@ -581,7 +581,12 @@ function install(targetDir, runtimeDir) {
   if (oldVersion && oldVersion !== version) {
     const stateDir = path.join(os.homedir(), '.sun');
     ensureDir(stateDir);
-    fs.writeFileSync(path.join(stateDir, 'just-upgraded-from'), oldVersion, 'utf8');
+    const marker = JSON.stringify({
+      from: oldVersion,
+      to: version,
+      upgraded_at: new Date().toISOString(),
+    });
+    fs.writeFileSync(path.join(stateDir, 'just-upgraded-from'), marker, 'utf8');
   }
 
   // Copy hooks (.cjs files — with path replacement for runtime-aware hook paths)
