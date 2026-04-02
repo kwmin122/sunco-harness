@@ -295,6 +295,128 @@ Planning artifacts and project lifecycle.
 
 ---
 
+## Security & Safety Commands
+
+Protect your codebase and enforce safety boundaries.
+
+| Command | Description | Key Flags |
+|---------|-------------|-----------|
+| `sunco cso` | Chief Security Officer audit — OWASP Top 10, STRIDE, secrets | `--diff`, `--scope <domain>`, `--supply-chain` |
+| `sunco careful` | Destructive command guardrails (rm -rf, DROP TABLE, force-push) | |
+| `sunco freeze [dir]` | Restrict edits to a specific directory | |
+| `sunco unfreeze` | Remove freeze boundary | |
+
+### `/sunco:cso`
+Full security posture audit. Maps attack surface, runs OWASP Top 10 assessment, STRIDE threat model, data classification, and produces findings with exploit scenarios. Read-only — never modifies code.
+```
+/sunco:cso
+/sunco:cso --diff
+/sunco:cso --scope auth
+/sunco:cso --supply-chain
+```
+
+### `/sunco:careful`
+Activates safety mode. Every bash command is checked for destructive patterns before execution. Warns on rm -rf, DROP TABLE, force-push, git reset --hard, kubectl delete, etc. User can override each warning.
+```
+/sunco:careful
+```
+
+### `/sunco:freeze`
+Locks edits to a specific directory. Edit and Write tools are blocked outside the boundary. Read, Bash, Glob, Grep are unaffected.
+```
+/sunco:freeze packages/core/
+/sunco:unfreeze
+```
+
+---
+
+## Review Commands
+
+Multi-perspective plan review before implementation.
+
+| Command | Description | Key Flags |
+|---------|-------------|-----------|
+| `sunco office-hours` | Pre-project brainstorming with forced questions | |
+| `sunco ceo-review` | CEO/founder-mode plan review — scope, 10-star, premises | `--expand`, `--hold`, `--selective` |
+| `sunco eng-review` | Engineering review — architecture, tests, performance | |
+| `sunco design-review` | Designer's eye — dimensional scoring 0-10 | `--lite` |
+
+### `/sunco:office-hours`
+Structured brainstorming before building. Two modes: Startup (6 diagnostic forcing questions) or Builder (generative design partner). Produces a design doc, never code.
+```
+/sunco:office-hours
+```
+
+### `/sunco:ceo-review`
+Reviews the plan from a product/founder perspective. Restates the problem, describes the 10-star version, challenges premises, and makes scope decisions.
+```
+/sunco:ceo-review
+/sunco:ceo-review --expand
+/sunco:ceo-review --hold
+```
+
+### `/sunco:eng-review`
+Reviews the plan from an engineering manager perspective. Architecture, code quality, test coverage (with ASCII coverage diagram), and performance. Interactive — one issue at a time.
+```
+/sunco:eng-review
+```
+
+### `/sunco:design-review`
+Reviews the plan from a design director perspective. Scores 6 dimensions 0-10, explains what would make each a 10, and proposes specific fixes.
+```
+/sunco:design-review
+/sunco:design-review --lite
+```
+
+---
+
+## Operations Commands
+
+Performance tracking, deployment, and post-deploy monitoring.
+
+| Command | Description | Key Flags |
+|---------|-------------|-----------|
+| `sunco retro [window]` | Weekly engineering retrospective with trends | `compare`, `--team` |
+| `sunco benchmark` | Performance baseline and regression detection | `--baseline`, `--compare`, `--trend` |
+| `sunco land [#PR] [url]` | Merge PR → wait CI → deploy → health check | |
+| `sunco canary <url>` | Post-deploy continuous monitoring | `--duration`, `--baseline`, `--quick` |
+
+### `/sunco:retro`
+Comprehensive retrospective: commit analysis, session detection, hotspot analysis, streak tracking, and actionable insights. Saves history for trend tracking.
+```
+/sunco:retro
+/sunco:retro 14d
+/sunco:retro compare
+/sunco:retro 30d --team
+```
+
+### `/sunco:benchmark`
+Measures build time, bundle size, test speed, and vitest bench results. Compares against baselines to detect regressions.
+```
+/sunco:benchmark --baseline
+/sunco:benchmark --compare
+/sunco:benchmark --trend
+```
+
+### `/sunco:land`
+Complete deploy pipeline: merge PR, wait for CI, detect deploy platform, verify production health. Mostly automated with a pre-merge readiness gate.
+```
+/sunco:land
+/sunco:land #42
+/sunco:land https://myapp.com
+```
+
+### `/sunco:canary`
+Post-deploy monitoring using HTTP health checks. Periodic checks, performance tracking, regression alerts, rollback trigger.
+```
+/sunco:canary https://myapp.com
+/sunco:canary https://myapp.com --duration 5m
+/sunco:canary https://myapp.com --baseline
+/sunco:canary https://myapp.com --quick
+```
+
+---
+
 ## Quick Reference: Flags That Appear Everywhere
 
 | Flag | Meaning |

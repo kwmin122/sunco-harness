@@ -7,7 +7,7 @@ Agent Workspace OS — harness engineering for AI coding agents
 
 ## What is SUNCO?
 
-SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 57 slash commands that enforce quality at every step — lint gates, blast radius analysis, 6-layer verification, and a proactive recommender.
+SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 77 slash commands that enforce quality at every step — security audits, lint gates, blast radius analysis, 6-layer verification, multi-perspective reviews, and a proactive recommender.
 
 **One command to install:**
 
@@ -28,9 +28,13 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Adaptive lifecycle** — pivot, rethink, backtrack at any stage without losing progress
 - **Blast radius analysis** — dependency graph check before every execution
 - **Per-task checkpointing** — crash recovery resumes from exact task, not from scratch
-- **58 slash commands** covering the full development lifecycle
-- **Multi-model design pingpong** — Claude + Codex parallel design with merge (coming in v0.4)
-- **Korean i18n** — 58 commands with Korean descriptions, interactive installer
+- **77 slash commands** covering the full development lifecycle
+- **Security audit (CSO)** — OWASP Top 10, STRIDE, secret detection, supply chain risk
+- **Multi-perspective reviews** — CEO, engineering, design reviews before implementation
+- **Operations** — retro, benchmark, land-and-deploy, canary monitoring
+- **Safety guardrails** — destructive command warnings, directory freeze
+- **Multi-model design pingpong** — Claude + Codex parallel design with merge
+- **Korean i18n** — 77 commands with Korean descriptions, interactive installer
 
 ## Quick Start
 
@@ -201,11 +205,38 @@ Each step has built-in quality gates:
 | `/sunco:pr-branch` | Clean PR branch creation |
 | `/sunco:audit-uat` | User acceptance testing audit |
 
+### Security & Safety
+
+| Command | Description |
+|---------|-------------|
+| `/sunco:cso` | Chief Security Officer audit — OWASP, STRIDE, secrets |
+| `/sunco:careful` | Destructive command guardrails |
+| `/sunco:freeze` | Restrict edits to a specific directory |
+| `/sunco:unfreeze` | Remove freeze boundary |
+
+### Reviews
+
+| Command | Description |
+|---------|-------------|
+| `/sunco:office-hours` | Pre-project brainstorming with forced questions |
+| `/sunco:ceo-review` | CEO/founder-mode plan review |
+| `/sunco:eng-review` | Engineering manager plan review |
+| `/sunco:design-review` | Designer's eye dimensional scoring |
+
+### Operations
+
+| Command | Description |
+|---------|-------------|
+| `/sunco:retro` | Weekly engineering retrospective with trends |
+| `/sunco:benchmark` | Performance baseline and regression detection |
+| `/sunco:land` | Merge PR, deploy, verify production |
+| `/sunco:canary` | Post-deploy continuous monitoring |
+
 ## What Gets Installed
 
 ```
 ~/.claude/
-  commands/sunco/         # 57 slash commands
+  commands/sunco/         # 77 slash commands
   sunco/
     bin/                  # Engine (deterministic skills)
     workflows/            # 9 workflow logic files
@@ -240,7 +271,7 @@ npx popcoru --all                 # All runtimes at once
 ### SUNCO가 뭔가요?
 
 SUNCO는 AI 코딩 에이전트(Claude Code 등)가 실수를 덜 하도록 도와주는 도구입니다.
-설치하면 57개의 슬래시 명령어(`/sunco:help`, `/sunco:lint` 등)가 추가되어, AI가 코드를 작성할 때 자동으로 품질을 검사하고 검증합니다.
+설치하면 77개의 슬래시 명령어(`/sunco:help`, `/sunco:lint` 등)가 추가되어, AI가 코드를 작성할 때 자동으로 품질을 검사하고 검증합니다.
 
 ### 설치 전 준비
 
@@ -270,7 +301,7 @@ npx popcoru
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝
 
- ✓ Installed commands/sunco (58 skills)
+ ✓ Installed commands/sunco (77 skills)
  ✓ Installed sunco engine
  ✓ Installed hooks
  ✓ Installed docs
