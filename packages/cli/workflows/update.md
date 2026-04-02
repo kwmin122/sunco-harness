@@ -169,22 +169,16 @@ Do not proceed to Step 6 if artifact-gate failed.
 
 ## Step 6: Write Upgrade Marker
 
-Write global upgrade marker (read by SessionStart hook for welcome message):
+Write global upgrade marker (read by SessionStart hook for welcome message).
+Format: single line containing the OLD version string. The hook reads this,
+compares to the current VERSION, and displays "Updated! old → new".
 
 ```bash
 mkdir -p ~/.sun
-cat > ~/.sun/just-upgraded-from << EOF
-from: 1.1.2
-to: 1.2.0
-upgraded_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
-new_commands:
-  - /sunco:ui-phase
-  - /sunco:forensics
-changelog_summary: "2 new commands, verification resume fix, progress bar fix"
-EOF
+echo "${OLD_VERSION}" > ~/.sun/just-upgraded-from
 ```
 
-This file is read by `/sunco:resume` and `/sunco:status` on the next session to display a "What's new" banner.
+This file is consumed (read + deleted) by the SessionStart hook on the next session.
 
 Display completion:
 
