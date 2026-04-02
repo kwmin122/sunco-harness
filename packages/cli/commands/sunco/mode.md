@@ -68,14 +68,14 @@ mkdir -p ~/.sunco && echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ~/.sunco/mode-activ
           ░▒▓█▓▒░                ░▒▓█▓▒░
               ░░░▒▒▒▓▓██████▓▓▒▒▒░░░
 
-            ━━ 전투력 측정 불가 ━━
+            ━━ POWER: UNLIMITED ━━
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 **The "aura" is the double-line border of block characters.** It represents the ki energy radiating outward. The `▲` characters are rising energy spikes — like Goku's hair standing up during transformation.
 
-After the banner, say: "전투력 측정 불가. 그냥 말해. 내가 알아서 라우팅한다."
+After the banner, say: "그냥 말해. 알아서 라우팅한다."
 
 ## Ongoing Behavior (while mode is active)
 
@@ -131,13 +131,13 @@ Examples:
 답변...
 ```
 
-## Ki Gauge (전투력 게이지)
+## Context Bar
 
-At the end of significant responses, show the ki gauge — **gold blocks only, no rainbow:**
+At the end of significant responses, show the context bar:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-▓▓ SUNCO | 전투력: ████████████░░░░ 65% | 스킬: 3회
+▓▓ SUNCO Mode | Context: ████████████░░░░ 65% | Skills used: 3
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -162,8 +162,8 @@ If the user says "mode off", "/sunco:mode off", "turn off", "deactivate":
 ▓▓ SUNCO MODE — 파워 다운
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  스킬 발동: [count]회
-  전투 시간: [time]
+  Skills used: [count]
+  Duration: [time]
 
   "...다음에 또 변신하지."
 ```
