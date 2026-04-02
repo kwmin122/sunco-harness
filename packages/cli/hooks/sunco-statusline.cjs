@@ -3,21 +3,53 @@
 
 /**
  * sunco-statusline.cjs
- * Outputs a one-line status string for Claude Code's status bar.
- * Reads .planning/STATE.md + context usage + mode state.
+ * Claude Code statusLine command — reads JSON from stdin, outputs ANSI-colored status.
  *
- * Output examples:
- *   SUNCO | Phase 3: Execution | 60%
- *   ⚡ SUNCO | Phase 3: Execution | 60% | ctx 45%
- *   SUNCO | No project
+ * Output (2 lines):
+ *   Line 1: SUNCO | Phase 3: Execution | 60%
+ *   Line 2: [████████░░] 65% | tokens 45.2K | $0.12
+ *
+ * When /sunco:mode active:
+ *   Line 1 prefix turns yellow: ⚡ SUNCO
  */
 
 const fs   = require('fs');
 const path = require('path');
 const os   = require('os');
 
-const FALLBACK = 'SUNCO | No project';
+// ---------------------------------------------------------------------------
+// ANSI colors
+// ---------------------------------------------------------------------------
+const GREEN  = '\x1b[32m';
+const YELLOW = '\x1b[33m';
+const RED    = '\x1b[31m';
+const BOLD   = '\x1b[1m';
+const DIM    = '\x1b[2m';
+const RESET  = '\x1b[0m';
 
+// ---------------------------------------------------------------------------
+// Read stdin (Claude Code pipes JSON here)
+// ---------------------------------------------------------------------------
+function readStdin() {
+  try {
+    return fs.readFileSync(0, 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+function parseStdinJson(raw) {
+  if (!raw || !raw.trim()) return null;
+  try {
+    return JSON.parse(raw.trim());
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// STATE.md parsing (project phase info)
+// ---------------------------------------------------------------------------
 function readStateMd() {
   try {
     const statePath = path.join(process.cwd(), '.planning', 'STATE.md');
@@ -74,57 +106,126 @@ function isModeActive() {
 }
 
 // ---------------------------------------------------------------------------
-// Context usage from env (PostToolUse hook provides these)
+// Format helpers
 // ---------------------------------------------------------------------------
-function getContextUsage() {
-  const used  = parseInt(process.env.CLAUDE_CONTEXT_TOKENS_USED  || '', 10);
-  const total = parseInt(process.env.CLAUDE_CONTEXT_WINDOW_SIZE  || '', 10);
-  if (!used || !total || total === 0) return null;
-  return Math.round((used / total) * 100);
+function formatTokens(n) {
+  if (n == null || isNaN(n)) return null;
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return String(n);
+}
+
+function formatCost(usd) {
+  if (usd == null || isNaN(usd)) return null;
+  if (usd < 0.01) return '$' + usd.toFixed(3);
+  return '$' + usd.toFixed(2);
+}
+
+function barColor(pct) {
+  if (pct >= 90) return RED;
+  if (pct >= 70) return YELLOW;
+  return GREEN;
+}
+
+function buildBar(pct) {
+  const clamped = Math.max(0, Math.min(100, pct));
+  const filled = Math.round(clamped / 10);
+  const empty  = 10 - filled;
+  return '\u2588'.repeat(filled) + '\u2591'.repeat(empty);
 }
 
 // ---------------------------------------------------------------------------
-// Build status line
+// Build status lines
 // ---------------------------------------------------------------------------
-function buildStatusLine(state) {
-  const mode = isModeActive();
-  const prefix = mode ? '\u26A1 SUNCO' : 'SUNCO';
-  const parts = [prefix];
+function buildOutput(state, stdinData) {
+  const mode   = isModeActive();
+  const lines  = [];
+
+  // --- Line 1: SUNCO | Phase info ---
+  const prefixColor = mode ? YELLOW : '';
+  const prefixReset = mode ? RESET : '';
+  const prefix = mode
+    ? `${prefixColor}${BOLD}\u26A1 SUNCO${RESET}`
+    : `${BOLD}SUNCO${RESET}`;
+
+  const line1Parts = [prefix];
 
   if (state) {
     if (state.phaseNum || state.phaseName) {
       let phaseStr = 'Phase';
       if (state.phaseNum) phaseStr += ` ${state.phaseNum}`;
       if (state.phaseName) phaseStr += `: ${state.phaseName}`;
-      parts.push(phaseStr);
+      line1Parts.push(phaseStr);
     }
-    if (state.progress !== null && state.progress !== undefined) {
-      parts.push(`${state.progress}%`);
+    if (state.progress != null) {
+      line1Parts.push(`${state.progress}%`);
     }
   } else {
-    parts.push('No project');
+    line1Parts.push('Ready');
   }
 
-  // Context usage
-  const ctxPct = getContextUsage();
-  if (ctxPct !== null) {
-    // Build mini bar: ████░░░░ 45%
-    const filled = Math.round(ctxPct / 10);
-    const empty  = 10 - filled;
-    const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(empty);
-    parts.push(`ctx ${bar} ${ctxPct}%`);
+  // Add model name if available
+  if (stdinData && stdinData.model && stdinData.model.display_name) {
+    line1Parts.push(`${DIM}${stdinData.model.display_name}${RESET}`);
   }
 
-  return parts.join(' | ');
+  lines.push(line1Parts.join(' | '));
+
+  // --- Line 2: Context gauge + tokens + cost ---
+  if (stdinData && stdinData.context_window) {
+    const cw = stdinData.context_window;
+    const pct = cw.used_percentage;
+    const line2Parts = [];
+
+    if (pct != null && !isNaN(pct)) {
+      const color = barColor(pct);
+      const bar = buildBar(pct);
+      line2Parts.push(`${color}${bar}${RESET} ${pct}%`);
+    }
+
+    // Total tokens (input + output)
+    const totalIn  = cw.total_input_tokens;
+    const totalOut = cw.total_output_tokens;
+    if (totalIn != null || totalOut != null) {
+      const total = (totalIn || 0) + (totalOut || 0);
+      const formatted = formatTokens(total);
+      if (formatted) {
+        line2Parts.push(`${DIM}tokens${RESET} ${formatted}`);
+      }
+    }
+
+    // Cost
+    if (stdinData.cost && stdinData.cost.total_cost_usd != null) {
+      const costStr = formatCost(stdinData.cost.total_cost_usd);
+      if (costStr) {
+        line2Parts.push(`${DIM}${costStr}${RESET}`);
+      }
+    }
+
+    if (line2Parts.length > 0) {
+      lines.push(line2Parts.join(' | '));
+    }
+  }
+
+  return lines;
 }
 
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
 function main() {
   try {
-    const content = readStateMd();
-    const state   = parseState(content);
-    console.log(buildStatusLine(state));
+    const rawStdin  = readStdin();
+    const stdinData = parseStdinJson(rawStdin);
+    const content   = readStateMd();
+    const state     = parseState(content);
+
+    const lines = buildOutput(state, stdinData);
+    for (const line of lines) {
+      console.log(line);
+    }
   } catch {
-    console.log(FALLBACK);
+    console.log('SUNCO');
   }
 }
 

@@ -3,7 +3,7 @@
 ## 현재 상태
 
 **프로젝트**: SUNCO — 에이전트 워크스페이스 OS
-**v0.4.1**: npm published as `popcoru`
+**v0.4.2**: npm published as `popcoru`
 **브랜치**: main
 **GitHub**: https://github.com/kwmin122/sunco-harness
 **npm**: https://www.npmjs.com/package/popcoru
@@ -52,29 +52,15 @@
 
 ## 다음 세션 작업
 
-### 1. 터미널 하단 상시 상태바 (핵심 신규 기능)
+### 1. 터미널 하단 상시 상태바 ✅
 
-사용자 요청: 터미널 하단에 항상 보이는 상태바
-- **대화 컨텍스트 게이지** — 경험치 바처럼 얼마나 찼는지 표시
-- **토큰 사용량 게이지** — 옆에 바 형태로 현재 세션 토큰 소비량 표시
-
-**조사 완료 — 바로 구현 가능:**
-
-Claude Code statusline API가 JSON으로 정확한 데이터를 제공함:
-- `context_window.used_percentage` — 컨텍스트 사용률 (정확함)
-- `context_window.total_input_tokens` / `total_output_tokens` — 토큰 수
-- `cost.total_cost_usd` — 비용
-- `model.display_name` — 모델명
-- ANSI 색상 지원 (초록→노란→빨강)
-
-구현 방향:
-- `sunco-statusline.cjs` 업그레이드 — stdin JSON 파싱 추가 (현재는 STATE.md만 읽음)
-- 컨텍스트 게이지: `[████████░░] 65%` (초록<70%, 노란70-90%, 빨강>90%)
-- 토큰 게이지: `tokens: 45.2K` 또는 바 형태
-- install.cjs에서 settings.json에 statusLine 설정 자동 등록
-- 색상: /sunco:mode 활성화 시 prefix를 노란색으로 변경
-
-**참고:** Claude Code 대화 렌더러에서는 ANSI 색상 안 됨 (strip됨). 하지만 statusline은 별도 렌더링이라 ANSI 색상 지원됨. 즉 statusline에서만 색상 가능.
+**v0.4.2에서 구현 완료:**
+- `sunco-statusline.cjs` — stdin JSON 파싱으로 업그레이드
+- **Line 1**: `SUNCO | Phase N: Name | Model` (모드 활성화 시 `⚡ SUNCO` 노란색)
+- **Line 2**: `[████████░░] 65% | tokens 197.6K | $1.23` (ANSI 색상)
+- 컨텍스트 게이지: 초록(<70%) → 노란(70-90%) → 빨강(>90%)
+- `install.cjs` — settings.json에 statusLine 자동 등록 + uninstall 시 제거
+- 토큰 총량 (in+out), 비용, 모델명 표시
 
 ### 이후
 2. **SUN Terminal** — Swift/AppKit + libghostty R&D

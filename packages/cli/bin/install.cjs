@@ -141,6 +141,16 @@ function patchSettings(targetDir) {
     settings.hooks.SessionStart.push(hookEntry);
   }
 
+  // Register statusLine command
+  const statusLineCmd = 'node $HOME/.claude/hooks/sunco-statusline.cjs';
+  if (!settings.statusLine || settings.statusLine.command !== statusLineCmd) {
+    settings.statusLine = {
+      type: 'command',
+      command: statusLineCmd,
+      padding: 2
+    };
+  }
+
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf8');
 }
 
@@ -162,6 +172,15 @@ function unpatchSettings(targetDir) {
       h.command !== 'node $HOME/.claude/hooks/sunco-check-update.cjs' &&
       h.command !== 'node $HOME/.claude/hooks/sunco-check-update.js'
   );
+
+  // Remove statusLine if it's ours
+  if (
+    settings.statusLine &&
+    settings.statusLine.command &&
+    settings.statusLine.command.includes('sunco-statusline')
+  ) {
+    delete settings.statusLine;
+  }
 
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf8');
 }
