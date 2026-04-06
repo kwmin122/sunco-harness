@@ -36,6 +36,26 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
 - **Korean i18n** — 81 commands with Korean descriptions, interactive installer
 
+### New in v0.6 — Light Harness
+
+**Context Intelligence** — SUNCO now monitors context window usage in real-time and adapts automatically:
+
+- **4-tier context zones** (Green → Yellow → Orange → Red) with auto-pause at Orange and graceful degradation at Red
+- **Smart artifact loading** — completed phase artifacts are summarized in Orange zone, skipped in Red zone, reducing context consumption by up to 60%
+- **Context-aware status line** — live zone indicator and usage percentage in the Claude Code status bar
+
+**Smart Routing** — every skill declares its complexity, and the pipeline selects the optimal model tier:
+
+- **Skill complexity hints** (`simple` / `standard` / `complex`) on all 19 agent-powered skills
+- **Budget-aware model selection** — automatically downgrades model tier when budget reaches 75%+
+- **Routing tracker** — records success/failure per skill×model for accuracy improvement over time
+
+**Operational Resilience** — crash recovery, stuck detection, and session continuity:
+
+- **Auto-pause on context pressure** — Orange zone triggers automatic handoff creation
+- **Session recording** — every skill invocation is tracked with model tier, duration, and outcome
+- **Infinite execution** — context rotation with adaptive timeouts prevents mid-phase context exhaustion
+
 ## Quick Start
 
 ```bash
