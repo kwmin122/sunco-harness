@@ -21,7 +21,8 @@
 import type { SkillContext, PermissionSet, FileStoreApi } from '@sunco/core';
 import type { VerifyFinding, LayerResult } from './verify-types.js';
 import type { ParsedPlan } from './plan-parser.js';
-import { readPhaseArtifact } from './phase-reader.js';
+import { readPhaseArtifactSmart } from './phase-reader.js';
+import { readContextZone } from './context-zones.js';
 import { buildVerifySecurityPrompt } from '../prompts/verify-security.js';
 import { buildVerifyPerformancePrompt } from '../prompts/verify-performance.js';
 import { buildVerifyArchitecturePrompt } from '../prompts/verify-architecture.js';
@@ -723,7 +724,13 @@ export async function runLayer5Adversarial(
     const phaseMatch = phaseDirName.match(/^(\d+)/);
     const phaseNumber = phaseMatch ? parseInt(phaseMatch[1]!, 10) : 0;
 
-    const contextContent = await readPhaseArtifact(ctx.cwd, phaseNumber, `${phaseDirName.split('-').slice(0, 1).join('-')}-CONTEXT.md`);
+    const zoneData = await readContextZone(ctx.cwd);
+    const smartResult = await readPhaseArtifactSmart(
+      ctx.cwd, phaseNumber,
+      `${phaseDirName.split('-').slice(0, 1).join('-')}-CONTEXT.md`,
+      { currentPhase: phaseNumber, contextZone: zoneData?.zone ?? 'green' },
+    );
+    const contextContent = smartResult.content;
 
     if (!contextContent) {
       // Try alternative naming: just search for CONTEXT.md in the directory

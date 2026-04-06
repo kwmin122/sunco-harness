@@ -107,6 +107,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'routable',
+  complexity: 'standard',
   description: 'Reconstruct workflow timeline and perform post-mortem analysis',
   options: [
     { flags: '-p, --phase <number>', description: 'Which phase to analyze (required)' },

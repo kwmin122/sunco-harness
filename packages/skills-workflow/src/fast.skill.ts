@@ -22,6 +22,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'simple',
   description: 'Immediate task execution -- zero planning overhead',
   options: [],
 

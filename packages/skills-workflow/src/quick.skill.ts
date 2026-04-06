@@ -47,6 +47,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'simple',
   description: 'Lightweight task execution with optional planning steps',
 
   options: [

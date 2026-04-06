@@ -20,6 +20,12 @@ export const HandoffSchema = z.object({
   uncommittedFiles: z.array(z.string()),
   lastSkillId: z.string().nullable(),
   lastSkillResult: z.enum(['success', 'failure']).nullable(),
+  // Phase 17: Context Intelligence extensions (all optional for backward compat)
+  resumeCommand: z.string().nullable().optional(),
+  contextSummary: z.string().nullable().optional(),
+  contextZone: z.enum(['green', 'yellow', 'orange', 'red']).optional(),
+  lastDecisions: z.array(z.string()).optional(),
+  modifiedFiles: z.array(z.string()).optional(),
 });
 
 export type Handoff = z.infer<typeof HandoffSchema>;

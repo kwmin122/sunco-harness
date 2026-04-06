@@ -204,6 +204,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'routable',
+  complexity: 'standard',
   description: 'Generate project documents — HWPX, markdown, or from template',
   options: [
     { flags: '--hwpx', description: 'Generate HWPX document (Korean standard)' },

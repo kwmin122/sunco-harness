@@ -18,6 +18,7 @@ import { writeHandoff } from './shared/handoff.js';
 import { captureGitState } from './shared/git-state.js';
 import { parseStateMd } from './shared/state-reader.js';
 import type { Handoff } from './shared/handoff.js';
+import type { ContextZoneFile } from './shared/context-zones.js';
 
 export default defineSkill({
   id: 'workflow.pause',
@@ -39,7 +40,20 @@ export default defineSkill({
     // Capture git state
     const gitState = await captureGitState(ctx.cwd);
 
-    // Build flat handoff object per D-17/D-21
+    // Read context zone from .sun/context-zone.json (written by context-monitor hook)
+    let contextZone: 'green' | 'yellow' | 'orange' | 'red' = 'green';
+    try {
+      const zoneRaw = await readFile(join(ctx.cwd, '.sun', 'context-zone.json'), 'utf-8');
+      const zoneData = JSON.parse(zoneRaw) as ContextZoneFile;
+      contextZone = zoneData.zone;
+    } catch {
+      // No zone file — default to green
+    }
+
+    // Build resume command (resume reads from HANDOFF.json, no --phase flag needed)
+    const resumeCommand = 'sunco resume';
+
+    // Build flat handoff object per D-17/D-21 + Phase 17 extensions
     const handoff: Handoff = {
       version: 1,
       timestamp: new Date().toISOString(),
@@ -55,6 +69,10 @@ export default defineSkill({
       uncommittedFiles: gitState.uncommittedFiles,
       lastSkillId: null,
       lastSkillResult: null,
+      // Phase 17: Context Intelligence
+      resumeCommand,
+      contextZone,
+      modifiedFiles: gitState.uncommittedFiles,
     };
 
     // Write HANDOFF.json
@@ -65,7 +83,10 @@ export default defineSkill({
       `Phase: ${state.phase ?? 'unknown'}`,
       `Plan: ${state.plan ?? 'unknown'}`,
       `Branch: ${gitState.branch}`,
+      `Context zone: ${contextZone}`,
       `Uncommitted: ${gitState.uncommittedChanges ? `${gitState.uncommittedFiles.length} file(s)` : 'none'}`,
+      '',
+      `Resume with: ${resumeCommand}`,
     ];
 
     await ctx.ui.result({
@@ -77,7 +98,7 @@ export default defineSkill({
 
     return {
       success: true,
-      summary: 'Session paused. Run sunco resume to continue.',
+      summary: `Session paused. Resume with: ${resumeCommand}`,
     };
   },
 });

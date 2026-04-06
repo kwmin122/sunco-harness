@@ -46,6 +46,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'standard',
   description: 'Manage milestone lifecycle: new, audit, complete, summary, gaps',
   options: [
     { flags: '--force', description: 'Force complete even with low audit score' },

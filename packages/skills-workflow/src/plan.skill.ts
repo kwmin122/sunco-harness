@@ -22,6 +22,8 @@ import { buildPlanCreatePrompt, buildPlanRevisePrompt } from './prompts/plan-cre
 import { buildPlanCheckerPrompt } from './prompts/plan-checker.js';
 import { parseRoadmap } from './shared/roadmap-parser.js';
 import { planGate } from './shared/gates.js';
+import { resolvePhaseDir, readPhaseArtifactSmart } from './shared/phase-reader.js';
+import { readContextZone } from './shared/context-zones.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -70,32 +72,7 @@ function parseCheckerIssues(output: string): CheckerIssue[] {
     .filter((issue) => issue.description);
 }
 
-// ---------------------------------------------------------------------------
-// Helper: Resolve phase directory
-// ---------------------------------------------------------------------------
-
-/**
- * Find the phase directory for a given phase number.
- */
-async function findPhaseDir(
-  cwd: string,
-  phaseNumber: number,
-): Promise<string | null> {
-  const phasesDir = join(cwd, '.planning', 'phases');
-  const padded = String(phaseNumber).padStart(2, '0');
-
-  try {
-    const entries = await readdir(phasesDir);
-    const match = entries.find((e: string) => e.startsWith(`${padded}-`));
-    if (match) {
-      return join(phasesDir, match);
-    }
-  } catch {
-    // phases directory doesn't exist
-  }
-
-  return null;
-}
+// (Phase directory resolution imported from shared/phase-reader.ts)
 
 /**
  * Extract the phase slug from the directory name (e.g., "05-context-planning" -> "context-planning").
@@ -165,6 +142,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'routable',
+  complexity: 'complex',
   description: 'Create execution plans with BDD completion criteria',
 
   options: [
@@ -227,8 +205,8 @@ export default defineSkill({
 
     const paddedPhase = String(phaseNumber).padStart(2, '0');
 
-    // ----- Step 2: Read input documents -----
-    const phaseDir = await findPhaseDir(ctx.cwd, phaseNumber);
+    // ----- Step 2: Read input documents (context-zone-aware) -----
+    const phaseDir = await resolvePhaseDir(ctx.cwd, phaseNumber);
     let phaseDirName = '';
 
     if (phaseDir) {
@@ -238,15 +216,16 @@ export default defineSkill({
 
     const phaseSlug = phaseDirName ? extractSlug(phaseDirName) : `phase-${phaseNumber}`;
 
+    // Context zone for smart artifact loading
+    const zoneData = await readContextZone(ctx.cwd);
+    const contextZone = zoneData?.zone ?? 'green';
+
     // CONTEXT.md (required)
-    let contextMd: string | null = null;
-    if (phaseDir) {
-      try {
-        contextMd = await readFile(join(phaseDir, `${paddedPhase}-CONTEXT.md`), 'utf-8');
-      } catch {
-        // not found
-      }
-    }
+    const contextResult = await readPhaseArtifactSmart(ctx.cwd, phaseNumber, `${paddedPhase}-CONTEXT.md`, {
+      currentPhase: phaseNumber,
+      contextZone,
+    });
+    const contextMd = contextResult.content;
 
     if (!contextMd) {
       const msg =
@@ -259,14 +238,14 @@ export default defineSkill({
       return { success: false, summary: msg };
     }
 
-    // RESEARCH.md (optional)
-    let researchMd: string | null = null;
-    if (phaseDir) {
-      try {
-        researchMd = await readFile(join(phaseDir, `${paddedPhase}-RESEARCH.md`), 'utf-8');
-      } catch {
-        ctx.log.warn('RESEARCH.md not found for this phase. Proceeding without it.');
-      }
+    // RESEARCH.md (optional, context-zone-aware)
+    const researchResult = await readPhaseArtifactSmart(ctx.cwd, phaseNumber, `${paddedPhase}-RESEARCH.md`, {
+      currentPhase: phaseNumber,
+      contextZone,
+    });
+    let researchMd = researchResult.content;
+    if (!researchMd) {
+      ctx.log.warn('RESEARCH.md not found for this phase. Proceeding without it.');
     }
 
     // Auto-research: if no RESEARCH.md and not --skip-research

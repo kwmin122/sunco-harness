@@ -26,8 +26,13 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 12: Operational Resilience** - crash recovery, stuck detection, cost dashboard, budget ceiling, 3-tier timeout (v1.1) (completed 2026-03-29)
 - [x] **Phase 13: Headless + CI/CD** - headless mode, JSON query, exit codes, HTML reports (v1.1) (completed 2026-03-29)
 - [x] **Phase 14: Context Optimization** - context pre-injection, adaptive replanning, complexity routing, token profiles (v1.1) (completed 2026-03-29)
-- [ ] **Phase 15: Document Generation** - HWPX, markdown docs, template system (v1.1)
-- [ ] **Phase 16: Skill Marketplace** - install, publish, community registry (v1.1)
+- [ ] **Phase 15: Document Generation** - HWPX, markdown docs, template system (v1.1, deferred to after v1.2)
+- [ ] **Phase 16: Skill Marketplace** - install, publish, community registry (v1.1, deferred to after v1.2)
+- [x] **Phase 17: Context Intelligence** - context utilization zones, selective artifact loading, enhanced handoff, artifact summarizer (v1.2, completed 2026-04-06)
+- [x] **Phase 18: Smart Routing** - intent gate classification, tier-based model profiles, cost-aware routing, complexity metadata (v1.2, completed 2026-04-06)
+- [x] **Phase 19: Hook System v2** - lifecycle hooks, output size limits, declarative catch rules (v1.2, completed 2026-04-06)
+- [x] **Phase 20: Infinite Execution** - context rotation, adaptive timeouts, session progress records (v1.2, completed 2026-04-06)
+- [x] **Phase 21: Cross-Session Intelligence** - feature-session tracking, skill profiles, harness 5% budget (v1.2, completed 2026-04-06)
 
 ## Phase Details
 
@@ -278,11 +283,67 @@ Plans:
   3. Community skills discoverable via `sunco search:skills <keyword>`
 **Plans:** 0 plans (not yet planned)
 
+### Phase 17: Context Intelligence
+**Goal**: 컨텍스트 윈도우를 지능적으로 관리하여 토큰 낭비 최소화 — 유틸리제이션 존 모니터링, 선택적 아티팩트 로딩(78% 절감), 자동 핸드오프
+**Depends on**: Phase 14 (context optimization), Phase 3 (pause/resume)
+**Requirements**: LH-01, LH-02, LH-03, LH-04, LH-05
+**Success Criteria** (what must be TRUE):
+  1. 컨텍스트 사용량이 70%를 넘으면 Yellow→Orange 경고가 표시되고, `/sunco:pause` 자동 추천이 나타남
+  2. 완료된 페이즈 아티팩트는 3줄 요약으로 로드되어 토큰 사용량이 full 로드 대비 78% 이상 절감됨
+  3. HANDOFF.json에 `resumeCommand`가 포함되어 새 세션에서 즉시 이어서 실행 가능한 프롬프트가 생성됨
+  4. `sunco-context-monitor.cjs` 훅이 4단계 존(Green/Yellow/Orange/Red)을 실시간 모니터링하고 statusline에 표시
+**Plans:** 0 plans (not yet planned)
+
+### Phase 18: Smart Routing
+**Goal**: 작업 복잡도와 의도에 따라 최적 모델을 자동 선택 — 30-50% 토큰 절감, 라우팅 정확도 시간 경과에 따라 향상
+**Depends on**: Phase 17 (context intelligence), Phase 14 (complexity routing)
+**Requirements**: LH-06, LH-07, LH-08, LH-09, LH-10
+**Success Criteria** (what must be TRUE):
+  1. 사용자 입력이 5가지 인텐트(lookup/implement/investigate/plan/review)로 분류되어 최적 모델이 자동 선택됨
+  2. `defineSkill()`에 complexity 필드가 추가되고 라우터가 이를 참조하여 모델 선택
+  3. BudgetGuard 임계치 75% 이상일 때 자동으로 cheaper 모델로 다운그레이드됨
+  4. 스킬×모델 성공률이 SQLite에 기록되고 라우팅 결정에 반영됨
+**Plans:** 0 plans (not yet planned)
+
+### Phase 19: Hook System v2
+**Goal**: 확장 가능한 훅 시스템으로 에이전트 행동을 사전/사후에 제어 — 라이프사이클 훅, 해시 앵커 검증, 선언적 규칙
+**Depends on**: Phase 17 (context monitor hooks), Phase 2 (guard)
+**Requirements**: LH-11, LH-12, LH-13, LH-14, LH-15
+**Success Criteria** (what must be TRUE):
+  1. PreSkill/PostSkill 훅이 스킬 실행 전후에 발동되어 상태 저장/로깅 가능
+  2. PreCompact 훅이 auto-compact 전에 현재 phase/task 상태를 HANDOFF.json에 저장
+  3. 훅 출력이 10K자로 제한되고 초과 시 자동 트렁케이션 + 경고
+  4. 파일 에딧 전 라인 해시 검증으로 스테일 에딧이 차단됨
+**Plans:** 0 plans (not yet planned)
+
+### Phase 20: Infinite Execution
+**Goal**: 컨텍스트 한계를 넘어 무한히 작업 — 자동 로테이션, 적응형 타임아웃, 세션 기록
+**Depends on**: Phase 17 (context zones), Phase 9 (auto skill), Phase 12 (crash recovery)
+**Requirements**: LH-16, LH-17, LH-18, LH-19
+**Success Criteria** (what must be TRUE):
+  1. `sunco auto` 실행 중 컨텍스트 70%에서 자동 핸드오프 → 새 세션 → resume로 끊김 없이 이어서 실행
+  2. 스킬 복잡도에 따라 타임아웃이 동적 조정됨 (simple 5min, standard 30min, complex 60min)
+  3. `.sun/sessions/`에 세션별 진행 기록이 MD로 저장되고 최근 3개만 로드됨
+  4. 서브에이전트가 전체 이력 대신 관련 이력만 검색하여 메인 컨텍스트 오염 방지
+**Plans:** 0 plans (not yet planned)
+
+### Phase 21: Cross-Session Intelligence
+**Goal**: 세션을 넘어 학습하고 개인화 — 피처 추적, 성공률 학습, 하네스 5% 예산
+**Depends on**: Phase 20 (session records), Phase 18 (routing success tracking)
+**Requirements**: LH-20, LH-21, LH-22, LH-23, LH-24
+**Success Criteria** (what must be TRUE):
+  1. `.sun/features.json`에서 피처→세션 양방향 매핑으로 관련 컨텍스트만 선택 로딩
+  2. 스킬×모델 성공률 데이터가 recommender에 반영되어 추천 개인화
+  3. 하네스 로딩(CLAUDE.md + 훅 + 상태)이 전체 컨텍스트의 5% 이하로 유지됨
+  4. 사용자 스킬 사용 패턴 분석으로 자동 추천이 개인화됨
+**Plans:** 0 plans (not yet planned)
+
 ## Progress
 
 **Execution Order:**
 v1 Phases: 1 -> 2 -> 3 -> ... -> 10 (COMPLETE)
-v1.1 Phases: 11 -> 12 -> 13 -> 14 -> 15
+v1.1 Phases: 11 -> 12 -> 13 -> 14 (COMPLETE), 15-16 (deferred)
+v1.2 Phases: 17 -> 18 -> 19 -> 20 -> 21 (Light Harness)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -300,5 +361,10 @@ v1.1 Phases: 11 -> 12 -> 13 -> 14 -> 15
 | 12. Operational Resilience | 2/2 | Complete   | 2026-03-29 |
 | 13. Headless + CI/CD | 1/1 | Complete   | 2026-03-29 |
 | 14. Context Optimization | 2/2 | Complete   | 2026-03-30 |
-| 15. Document Generation | 0/? | Not started | - |
-| 16. Skill Marketplace | 0/? | Not started | - |
+| 15. Document Generation | 0/? | Deferred | - |
+| 16. Skill Marketplace | 0/? | Deferred | - |
+| 17. Context Intelligence | 3/3 | Complete | 2026-04-06 |
+| 18. Smart Routing | 2/2 | Complete | 2026-04-06 |
+| 19. Hook System v2 | 1/1 | Complete | 2026-04-06 |
+| 20. Infinite Execution | 1/1 | Complete | 2026-04-06 |
+| 21. Cross-Session Intelligence | 1/1 | Complete | 2026-04-06 |

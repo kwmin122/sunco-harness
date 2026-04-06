@@ -122,9 +122,35 @@ function formatCost(usd) {
 }
 
 function barColor(pct) {
-  if (pct >= 90) return RED;
+  if (pct >= 85) return RED;
   if (pct >= 70) return YELLOW;
   return GREEN;
+}
+
+/**
+ * Read context zone from .sun/context-zone.json (written by context-monitor hook).
+ */
+function readContextZone() {
+  try {
+    const zonePath = path.join(process.cwd(), '.sun', 'context-zone.json');
+    const raw = fs.readFileSync(zonePath, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get zone emoji indicator.
+ */
+function zoneEmoji(zone) {
+  switch (zone) {
+    case 'red':    return '\uD83D\uDD34'; // 🔴
+    case 'orange': return '\uD83D\uDFE0'; // 🟠
+    case 'yellow': return '\uD83D\uDFE1'; // 🟡
+    case 'green':  return '\uD83D\uDFE2'; // 🟢
+    default:       return '';
+  }
 }
 
 function buildBar(pct) {
@@ -180,7 +206,10 @@ function buildOutput(state, stdinData) {
     if (pct != null && !isNaN(pct)) {
       const color = barColor(pct);
       const bar = buildBar(pct);
-      line2Parts.push(`${color}${bar}${RESET} ${pct}%`);
+      // Always derive zone from live pct data (not cached file — avoids stale indicators)
+      const zone = pct >= 85 ? 'red' : pct >= 70 ? 'orange' : pct >= 50 ? 'yellow' : 'green';
+      const emoji = zoneEmoji(zone);
+      line2Parts.push(`${color}${bar}${RESET} ${pct}% ${emoji}`);
     }
 
     // Total tokens (input + output)

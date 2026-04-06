@@ -79,6 +79,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'simple',
   description: 'Route natural language to the right skill',
 
   options: [],

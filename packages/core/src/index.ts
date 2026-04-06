@@ -46,6 +46,7 @@ export type {
   SkillStage,
   SkillRouting,
   SkillCategory,
+  SkillComplexity,
   SkillOption,
   SkillLogger,
 } from './skill/types.js';

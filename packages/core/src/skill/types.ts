@@ -49,6 +49,14 @@ export type SkillRouting = 'routable' | 'directExec';
  */
 export type SkillCategory = 'core' | 'harness' | 'workflow' | 'extension' | string;
 
+/**
+ * Skill complexity hint for model routing (Phase 18: LH-09).
+ * - simple: fast model sufficient (lint, format, lookup)
+ * - standard: balanced model (implementation, debugging)
+ * - complex: quality model needed (architecture, deep reasoning)
+ */
+export type SkillComplexity = 'simple' | 'standard' | 'complex';
+
 // ---------------------------------------------------------------------------
 // Skill Option
 // ---------------------------------------------------------------------------
@@ -176,6 +184,9 @@ export interface SkillDefinition {
   /** CLI options */
   readonly options?: readonly SkillOption[];
 
+  /** Complexity hint for model routing (Phase 18: LH-09) */
+  readonly complexity?: SkillComplexity;
+
   /** Skill execution function */
   readonly execute: (ctx: SkillContext) => Promise<SkillResult>;
 }
@@ -193,5 +204,6 @@ export type SkillDefinitionInput = {
   category: SkillCategory;
   routing: SkillRouting;
   options?: SkillOption[];
+  complexity?: SkillComplexity;
   execute: (ctx: SkillContext) => Promise<SkillResult>;
 };

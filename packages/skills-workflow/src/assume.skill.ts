@@ -14,9 +14,11 @@
 import { defineSkill } from '@sunco/core';
 import type { SkillContext, SkillResult } from '@sunco/core';
 import type { PermissionSet } from '@sunco/core';
-import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
-import { join, resolve, relative } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { buildAssumePrompt } from './prompts/assume.js';
+import { resolvePhaseDir, readPhaseArtifactSmart } from './shared/phase-reader.js';
+import { readContextZone } from './shared/context-zones.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -52,70 +54,7 @@ interface Correction {
   text: string;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers: Phase directory resolution (inline, per plan note about 05-01)
-// ---------------------------------------------------------------------------
-
-/**
- * Find the phase directory matching a phase number.
- * Scans .planning/phases/ for a directory starting with the zero-padded number.
- */
-async function resolvePhaseDir(cwd: string, phaseNumber: number): Promise<string | null> {
-  const phasesDir = join(cwd, '.planning', 'phases');
-  try {
-    const entries = await readdir(phasesDir);
-    const padded = String(phaseNumber).padStart(2, '0');
-    const match = entries.find((e) => e.startsWith(`${padded}-`));
-    if (match) {
-      return join(phasesDir, match);
-    }
-  } catch {
-    // phases directory doesn't exist
-  }
-  return null;
-}
-
-/**
- * Read an artifact file from a phase directory.
- */
-async function readPhaseArtifact(
-  cwd: string,
-  phaseNumber: number,
-  filename: string,
-): Promise<string | null> {
-  const dir = await resolvePhaseDir(cwd, phaseNumber);
-  if (!dir) return null;
-  try {
-    return await readFile(join(dir, filename), 'utf-8');
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Write an artifact file to a phase directory.
- * Creates the directory if needed.
- */
-async function writePhaseArtifact(
-  cwd: string,
-  phaseNumber: number,
-  filename: string,
-  content: string,
-): Promise<string> {
-  const dir = await resolvePhaseDir(cwd, phaseNumber);
-  if (!dir) {
-    throw new Error(`Phase directory not found for phase ${phaseNumber}`);
-  }
-  await mkdir(dir, { recursive: true });
-  const targetPath = join(dir, filename);
-  // Path traversal guard
-  const rel = relative(dir, resolve(dir, filename));
-  if (rel.startsWith('..') || rel.includes('..')) {
-    throw new Error(`Path traversal detected: ${filename}`);
-  }
-  await writeFile(targetPath, content, 'utf-8');
-  return targetPath;
-}
+// (Phase directory helpers imported from shared/phase-reader.ts)
 
 // ---------------------------------------------------------------------------
 // Helpers: STATE.md phase extraction
@@ -246,6 +185,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'routable',
+  complexity: 'complex',
   description: 'Preview what the agent would do before execution',
   options: [
     { flags: '-p, --phase <number>', description: 'Phase number (default: current from STATE.md)' },
@@ -292,10 +232,17 @@ export default defineSkill({
     }
 
     // -----------------------------------------------------------------------
-    // Step 2: Read CONTEXT.md + ROADMAP.md
+    // Step 2: Read CONTEXT.md + ROADMAP.md (context-zone-aware)
     // -----------------------------------------------------------------------
     const padded = String(phaseNumber).padStart(2, '0');
-    const contextMd = await readPhaseArtifact(ctx.cwd, phaseNumber, `${padded}-CONTEXT.md`);
+    const zoneData = await readContextZone(ctx.cwd);
+    const contextZone = zoneData?.zone ?? 'green';
+
+    const smartResult = await readPhaseArtifactSmart(ctx.cwd, phaseNumber, `${padded}-CONTEXT.md`, {
+      currentPhase: phaseNumber,
+      contextZone,
+    });
+    const contextMd = smartResult.content;
 
     if (!contextMd) {
       const msg = 'No CONTEXT.md found. Run sunco discuss first.';
@@ -376,10 +323,18 @@ export default defineSkill({
     // -----------------------------------------------------------------------
     if (corrections.length > 0) {
       // Re-read CONTEXT.md for read-modify-write safety (Pitfall 6)
-      const freshContextMd = await readPhaseArtifact(ctx.cwd, phaseNumber, `${padded}-CONTEXT.md`);
+      const freshRead = await readPhaseArtifactSmart(ctx.cwd, phaseNumber, `${padded}-CONTEXT.md`, {
+        currentPhase: phaseNumber,
+        contextZone,
+      });
+      const freshContextMd = freshRead.content;
       if (freshContextMd) {
         const updated = appendCorrections(freshContextMd, corrections);
-        await writePhaseArtifact(ctx.cwd, phaseNumber, `${padded}-CONTEXT.md`, updated);
+        const phaseDir = await resolvePhaseDir(ctx.cwd, phaseNumber);
+        if (phaseDir) {
+          const { writeFile: wf } = await import('node:fs/promises');
+          await wf(join(phaseDir, `${padded}-CONTEXT.md`), updated, 'utf-8');
+        }
       }
     }
 

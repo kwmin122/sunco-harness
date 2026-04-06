@@ -79,6 +79,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'routable',
+  complexity: 'standard',
   description: 'Classify build/test failures and suggest actionable fixes',
   options: [
     { flags: '-p, --phase <number>', description: 'Scope analysis to a specific phase' },

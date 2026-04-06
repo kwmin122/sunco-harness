@@ -117,6 +117,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'standard',
   description:
     'Execute plans in parallel with Git worktree isolation -- wave-based orchestration',
 

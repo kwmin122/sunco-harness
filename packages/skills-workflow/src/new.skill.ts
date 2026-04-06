@@ -172,6 +172,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'complex',
   description: 'Bootstrap a new project from an idea',
 
   async execute(ctx: SkillContext): Promise<SkillResult> {

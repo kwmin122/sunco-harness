@@ -11,6 +11,9 @@
 
 import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve, relative } from 'node:path';
+import type { ContextZone } from './context-zones.js';
+import { summarizeArtifact } from './artifact-summarizer.js';
+import type { ArtifactSummary } from './artifact-summarizer.js';
 
 /**
  * Resolve the full path to a phase directory by phase number.
@@ -64,16 +67,56 @@ export async function readPhaseArtifact(
 }
 
 /**
+ * Smart artifact reader with context-zone-aware loading.
+ *
+ * Rules:
+ *   - Current phase: always full (regardless of zone)
+ *   - Completed phase + Green/Yellow: full
+ *   - Completed phase + Orange: summary only
+ *   - Completed phase + Red: skip (null)
+ *
+ * @returns Object with content, mode, and optional summary
+ */
+export async function readPhaseArtifactSmart(
+  cwd: string,
+  phaseNumber: number,
+  filename: string,
+  opts: {
+    currentPhase: number;
+    contextZone: ContextZone;
+  },
+): Promise<{ content: string | null; mode: 'full' | 'summary' | 'skip'; summary?: ArtifactSummary }> {
+  const isCurrent = phaseNumber === opts.currentPhase;
+
+  // Current phase always gets full load
+  if (isCurrent) {
+    const content = await readPhaseArtifact(cwd, phaseNumber, filename);
+    return { content, mode: 'full' };
+  }
+
+  // Red zone: skip completed phase artifacts
+  if (opts.contextZone === 'red') {
+    return { content: null, mode: 'skip' };
+  }
+
+  // Orange zone: summary only for completed phases
+  if (opts.contextZone === 'orange') {
+    const content = await readPhaseArtifact(cwd, phaseNumber, filename);
+    if (!content) return { content: null, mode: 'skip' };
+
+    const summary = summarizeArtifact(content, phaseNumber, filename);
+    return { content: summary.summary, mode: 'summary', summary };
+  }
+
+  // Green/Yellow: full load
+  const content = await readPhaseArtifact(cwd, phaseNumber, filename);
+  return { content, mode: 'full' };
+}
+
+/**
  * Write an artifact file to a phase directory.
  * Creates the phase directory if it doesn't exist.
  * Includes path traversal guard (same pattern as planning-writer.ts).
- *
- * @param cwd - Project root directory
- * @param phaseNumber - Phase number (e.g., 5)
- * @param slug - Phase slug (e.g., "context-planning")
- * @param filename - Filename to write (e.g., "05-CONTEXT.md")
- * @param content - File content
- * @returns Full path to written file
  */
 export async function writePhaseArtifact(
   cwd: string,

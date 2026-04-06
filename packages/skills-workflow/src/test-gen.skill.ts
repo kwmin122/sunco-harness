@@ -126,6 +126,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'standard',
   description: 'Generate unit/E2E tests and Digital Twin mock servers',
   options: [
     { flags: '-f, --files <paths...>', description: 'Specific files to generate tests for' },

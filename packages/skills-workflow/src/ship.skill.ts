@@ -40,6 +40,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'standard',
   description: 'Create PR with verification pre-check and auto-generated body',
 
   options: [

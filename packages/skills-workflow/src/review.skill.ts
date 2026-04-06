@@ -75,6 +75,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'standard',
   description: 'Multi-provider cross-review with synthesized REVIEWS.md',
   options: [
     { flags: '-p, --phase <number>', description: 'Review all plans in a phase' },

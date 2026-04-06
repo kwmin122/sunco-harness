@@ -59,6 +59,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'routable',
+  complexity: 'standard',
   description:
     'Analyze existing codebase -- produces 7 structured documents in .sun/codebase/',
 

@@ -103,6 +103,7 @@ vi.mock('../shared/plan-parser.js', () => ({
 vi.mock('../shared/phase-reader.js', () => ({
   resolvePhaseDir: vi.fn().mockResolvedValue('/test/project/.planning/phases/07-verification-pipeline'),
   readPhaseArtifact: vi.fn().mockResolvedValue(null),
+  readPhaseArtifactSmart: vi.fn().mockResolvedValue({ content: null, mode: 'full' }),
   writePhaseArtifact: vi.fn().mockResolvedValue('/test/project/.planning/phases/07-verification-pipeline/07-VERIFICATION.md'),
 }));
 

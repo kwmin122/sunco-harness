@@ -32,6 +32,10 @@ import { resolvePhaseDir } from './shared/phase-reader.js';
 import { AutoLock } from './shared/auto-lock.js';
 import { StuckDetector } from './shared/stuck-detector.js';
 import { BudgetGuard } from './shared/budget-guard.js';
+import { readContextZone } from './shared/context-zones.js';
+import { selectModelTier } from './shared/model-selector.js';
+import { recordRouting } from './shared/routing-tracker.js';
+import type { SkillComplexity } from '@sunco/core';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -122,6 +126,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'complex',
   description: 'Full autonomous pipeline -- loops discuss/plan/execute/verify per phase',
 
   options: [
@@ -264,6 +269,15 @@ export default defineSkill({
      * Pipeline steps in order: discuss -> plan -> execute -> verify.
      * Each step maps to a workflow skill via ctx.run().
      */
+    /** Complexity map for pipeline skills (mirrors defineSkill complexity field) */
+    const STEP_COMPLEXITY: Record<string, SkillComplexity> = {
+      'workflow.discuss': 'complex',
+      'workflow.plan': 'complex',
+      'workflow.execute': 'standard',
+      'harness.lint': 'simple',
+      'workflow.verify': 'complex',
+    };
+
     const PIPELINE_STEPS: ReadonlyArray<{
       name: string;
       skillId: string;
@@ -331,6 +345,26 @@ export default defineSkill({
           // Update lock to track current step
           await lock.updateStep(phaseNumber, step.name);
 
+          // Context zone check before dispatch (Phase 17: LH-02)
+          const zoneData = await readContextZone(ctx.cwd);
+          if (zoneData?.zone === 'red' || zoneData?.zone === 'orange') {
+            const isRed = zoneData.zone === 'red';
+            ctx.log.warn(`Context zone ${zoneData.zone.toUpperCase()} — saving live state`);
+            // Write live phase/step to state BEFORE pause captures it
+            // (pause reads STATE.md which may lag behind the auto loop)
+            try {
+              await ctx.state.set('auto.livePhase', phaseNumber);
+              await ctx.state.set('auto.liveStep', step.name);
+              await ctx.run('workflow.pause');
+            } catch {
+              if (isRed) ctx.log.warn('Auto-pause failed — continuing to abort');
+            }
+            if (isRed) {
+              aborted = true;
+              break;
+            }
+          }
+
           // Budget check before agent dispatch
           const currentCostUsd = (await ctx.state.get<number>('usage.totalCostUsd')) ?? 0;
           const budgetResult = budgetGuard.check(currentCostUsd);
@@ -347,7 +381,20 @@ export default defineSkill({
             ctx.log.warn(budgetResult.message);
           }
 
-          ctx.log.info(`Auto: running ${step.skillId} for phase ${phaseNumber}`);
+          // Model tier recommendation based on skill complexity + budget (Phase 18: LH-09)
+          const stepComplexity = STEP_COMPLEXITY[step.skillId] ?? 'standard';
+          const budgetPct = budgetCeiling
+            ? (currentCostUsd / budgetCeiling) * 100
+            : 0;
+          const tierResult = selectModelTier({
+            complexity: stepComplexity,
+            budgetPercent: budgetPct,
+          });
+          ctx.log.info(`Auto: running ${step.skillId} for phase ${phaseNumber}`, {
+            modelTier: tierResult.tier,
+            complexity: stepComplexity,
+            downgraded: tierResult.downgraded,
+          });
 
           // Run with hard timeout (resolves to failure result on timeout, never rejects)
           const result = await runWithTimeout(
@@ -359,6 +406,15 @@ export default defineSkill({
 
           // Record invocation for stuck detection
           await lock.recordInvocation(step.skillId, result.success);
+
+          // Record routing outcome for success rate tracking (Phase 18: LH-10)
+          await recordRouting(ctx.state, {
+            skillId: step.skillId,
+            providerId: tierResult.tier,
+            success: result.success,
+            timestamp: new Date().toISOString(),
+            durationMs: result.durationMs,
+          });
 
           // If the step timed out, treat as failure with phaseFailed=true
           if (!result.success && result.summary?.startsWith('Hard timeout:')) {
@@ -413,6 +469,14 @@ export default defineSkill({
               );
               // Record retry invocation for stuck detection
               await lock.recordInvocation(step.skillId, retryResult.success);
+              // Record retry routing outcome
+              await recordRouting(ctx.state, {
+                skillId: step.skillId,
+                providerId: tierResult.tier,
+                success: retryResult.success,
+                timestamp: new Date().toISOString(),
+                durationMs: retryResult.durationMs,
+              });
               if (!retryResult.success) {
                 ctx.log.warn(`Auto: retry of ${step.skillId} also failed for phase ${phaseNumber}`);
                 phaseFailed = true;

@@ -57,11 +57,34 @@ export default defineSkill({
       `Session from: ${handoff.timestamp}`,
       `Phase: ${handoff.currentPhase ?? 'unknown'}${handoff.currentPhaseName ? ` (${handoff.currentPhaseName})` : ''}`,
       `Plan: ${handoff.currentPlan ?? 'unknown'}`,
+    ];
+
+    // Phase 17: Context Intelligence info
+    if (handoff.contextZone) {
+      lines.push(`Context zone at pause: ${handoff.contextZone}`);
+    }
+
+    if (handoff.resumeCommand) {
+      lines.push(`Resume command: ${handoff.resumeCommand}`);
+    }
+
+    lines.push(
       '',
       '--- Git State ---',
       `Branch: ${handoff.branch}`,
       `Uncommitted: ${handoff.uncommittedChanges ? `${handoff.uncommittedFiles.length} file(s)` : 'none'}`,
-    ];
+    );
+
+    // Modified files from session
+    if (handoff.modifiedFiles && handoff.modifiedFiles.length > 0) {
+      lines.push('', '--- Modified Files ---');
+      for (const f of handoff.modifiedFiles.slice(0, 10)) {
+        lines.push(`  - ${f}`);
+      }
+      if (handoff.modifiedFiles.length > 10) {
+        lines.push(`  ... and ${handoff.modifiedFiles.length - 10} more`);
+      }
+    }
 
     // Add pending decisions/blockers if any
     if (handoff.pendingDecisions.length > 0) {
@@ -75,6 +98,14 @@ export default defineSkill({
       lines.push('', '--- Blockers ---');
       for (const b of handoff.blockers) {
         lines.push(`  - ${b}`);
+      }
+    }
+
+    // Last decisions from context
+    if (handoff.lastDecisions && handoff.lastDecisions.length > 0) {
+      lines.push('', '--- Recent Decisions ---');
+      for (const d of handoff.lastDecisions.slice(0, 5)) {
+        lines.push(`  - ${d}`);
       }
     }
 

@@ -169,6 +169,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'directExec',
+  complexity: 'complex',
   description: 'Run 7-layer Swiss cheese verification pipeline',
 
   options: [

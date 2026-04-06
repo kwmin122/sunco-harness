@@ -92,7 +92,7 @@ export { parseCoverageSummary } from './shared/coverage-parser.js';
 export { resolvePhaseDir, readPhaseArtifact, readPhaseArtifactSmart, writePhaseArtifact } from './shared/phase-reader.js';
 
 // Phase 17 context intelligence utilities
-export { classifyContextZone, CONTEXT_ZONE_FILENAME } from './shared/context-zones.js';
+export { classifyContextZone, readContextZone, CONTEXT_ZONE_FILENAME } from './shared/context-zones.js';
 export type { ContextZone, ContextZoneResult, ContextZoneFile } from './shared/context-zones.js';
 export { summarizeArtifact, planArtifactLoading } from './shared/artifact-summarizer.js';
 export type { ArtifactSummary, ArtifactLoadPlan } from './shared/artifact-summarizer.js';

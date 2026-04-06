@@ -215,6 +215,47 @@
 - **MKT-02**: `sunco publish` -- 스킬 npm 배포
 - **MKT-03**: Community skill registry
 
+## v1.2 Requirements — Light Harness
+
+### Context Intelligence (Phase 17)
+
+- **LH-01**: 컨텍스트 유틸리제이션 존 -- Green(0-50%)/Yellow(50-70%)/Orange(70-85%)/Red(85%+) 4단계 시각적 경고. `sunco-context-monitor.cjs` 훅이 실시간 모니터링
+- **LH-02**: Orange 존(70-85%)에서 `/sunco:pause` 자동 추천 + HANDOFF.json 자동 저장. Red 존(85%+)에서 auto-compact 전 상태 캡처
+- **LH-03**: 선택적 아티팩트 로딩 -- 현재 페이즈 full 로드, 완료 페이즈 요약만 로드. `.planning/` 토큰 예산 측정 → 초과 시 요약 전환. 목표: 78% 컨텍스트 절감 (LTH 패턴)
+- **LH-04**: 구조화된 핸드오프 강화 -- HANDOFF.json에 `resumeCommand`, `completedTasks[]`, `inProgressTask`, `lastDecisions[]` 추가. 새 세션에서 즉시 이어서 할 수 있는 프롬프트 자동 생성
+- **LH-05**: 아티팩트 요약 엔진 -- phase CONTEXT.md/PLAN.md를 3줄 요약으로 압축하는 결정적 함수. 로딩 시 full/summary 모드 선택
+
+### Smart Routing (Phase 18)
+
+- **LH-06**: 인텐트 게이트 분류 -- 사용자 입력을 5가지(`lookup`/`implement`/`investigate`/`plan`/`review`)로 분류. 분류 기반 최적 모델 자동 선택. `sunco-mode-router.cjs` 훅 확장
+- **LH-07**: 티어 기반 모델 프로필 -- Fast(Haiku: lint, format, 조회), Balanced(Sonnet: 구현, 디버깅), Quality(Opus: 아키텍처, 리뷰). `router.ts` role-based 라우팅에 complexity 차원 추가
+- **LH-08**: 비용 인식 라우팅 -- 실행 전 예상 토큰 비용 산출. BudgetGuard 임계치 가까우면 자동 cheaper 모델 다운그레이드. `UsageTracker`에 예측 기능 추가
+- **LH-09**: 스킬별 복잡도 메타데이터 -- `defineSkill()`에 `complexity: 'simple'|'standard'|'complex'` 필드 추가. 라우터가 자동 참조
+- **LH-10**: 라우팅 성공률 추적 -- 어떤 모델이 어떤 스킬에서 성공률 높은지 SQLite에 기록. 시간이 지날수록 라우팅 정확도 향상
+
+### Hook System v2 (Phase 19)
+
+- **LH-11**: 라이프사이클 훅 확장 -- `PreSkill`/`PostSkill`(스킬 실행 전후), `PreCompact`(auto-compact 전 상태 저장), `SessionStart`/`SessionEnd`(세션 라이프사이클). `.sun/config.toml`에서 훅 활성/비활성
+- **LH-12**: 훅 출력 크기 제한 -- 10K자 캡. 초과 시 자동 트렁케이션 + 경고 (Claude Code 공식 패턴)
+- **LH-13**: 해시 앵커 에딧 검증 -- 파일 에딧 전 라인 해시 검증 → 스테일 에딧 차단 (OMO 패턴). `sunco-prompt-guard.cjs` 강화
+- **LH-14**: 훅 미들웨어 체인 -- 여러 훅을 파이프라인으로 연결. 이전 훅 출력이 다음 훅 입력. `.sun/config.toml` [hooks] 섹션
+- **LH-15**: 선언적 캐치 룰 -- 마크다운 기반 pre-commit 검증 규칙 (OMC declarative catch rules 패턴)
+
+### Infinite Execution (Phase 20)
+
+- **LH-16**: 컨텍스트 로테이션 -- `/sunco:auto`에서 70% 도달 시: 상태 저장 → compact/새 세션 → `/sunco:resume` + 이어서 실행. 이론상 무한 작업 가능
+- **LH-17**: 적응형 타임아웃 -- 단순 스킬 5분, 복잡 스킬 30분, 연구 60분. 스킬 `kind`와 복잡도 기반 동적 조정
+- **LH-18**: 세션 진행 기록 -- `.sun/sessions/` 디렉토리에 세션별 진행 상태 MD 파일. 최근 3개 세션만 로드 (LTH 패턴, 78% 절감)
+- **LH-19**: 히스토리 리서치 프로토콜 -- 서브에이전트가 전체 이력 대신 관련 이력만 검색. 메인 컨텍스트 오염 방지
+
+### Cross-Session Intelligence (Phase 21)
+
+- **LH-20**: 피처-세션 양방향 추적 -- `.sun/features.json` 피처 → 세션 매핑. 특정 피처 관련 컨텍스트만 선택 로딩
+- **LH-21**: 학습 기반 스킬 최적화 -- 스킬×모델 성공률 SQLite 추적. `recommender.ts`에 성공률 피드백 추가
+- **LH-22**: 크로스 세션 메모리 MCP -- 세션 간 학습 내용 영구 저장. 패턴 인식, 선호도 추적
+- **LH-23**: 스킬 학습 프로필 -- 사용자별 스킬 사용 패턴 분석 → 자동 추천 개인화
+- **LH-24**: 하네스 자체 토큰 예산 5% 제한 -- 하네스 로딩(CLAUDE.md, 훅, 상태)이 전체 컨텍스트의 5% 이하 (HarnessOS 목표)
+
 ## v2 Requirements
 
 ### Extension Skills
