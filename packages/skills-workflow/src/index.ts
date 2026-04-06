@@ -89,7 +89,21 @@ export type { VerifyFinding, VerifyReport, LayerResult, VerifyVerdict, CoverageM
 export { parseCoverageSummary } from './shared/coverage-parser.js';
 
 // Phase 5 shared utilities
-export { resolvePhaseDir, readPhaseArtifact, writePhaseArtifact } from './shared/phase-reader.js';
+export { resolvePhaseDir, readPhaseArtifact, readPhaseArtifactSmart, writePhaseArtifact } from './shared/phase-reader.js';
+
+// Phase 17 context intelligence utilities
+export { classifyContextZone, CONTEXT_ZONE_FILENAME } from './shared/context-zones.js';
+export type { ContextZone, ContextZoneResult, ContextZoneFile } from './shared/context-zones.js';
+export { summarizeArtifact, planArtifactLoading } from './shared/artifact-summarizer.js';
+export type { ArtifactSummary, ArtifactLoadPlan } from './shared/artifact-summarizer.js';
+
+// Phase 18 smart routing utilities
+export { classifyIntent } from './shared/intent-classifier.js';
+export type { IntentType, IntentResult } from './shared/intent-classifier.js';
+export { selectModelTier } from './shared/model-selector.js';
+export type { ModelTier, ModelSelectionResult } from './shared/model-selector.js';
+export { recordRouting, getRoutingStats } from './shared/routing-tracker.js';
+export type { RoutingRecord, RoutingStats } from './shared/routing-tracker.js';
 
 // Phase 6 shared utilities
 export { parsePlanMd, groupPlansByWave } from './shared/plan-parser.js';
@@ -102,6 +116,29 @@ export { bumpVersion, updateAllVersions } from './shared/version-bumper.js';
 export { generateChangelog, parseGitLog, prependChangelog } from './shared/changelog-writer.js';
 export type { ChangelogEntry } from './shared/changelog-writer.js';
 export { archiveMilestone, resetStateForNewMilestone, parseMilestoneAudit, buildGapPhases } from './shared/milestone-helpers.js';
+
+// Phase 19 lifecycle hooks
+export { createHookRunner } from './shared/lifecycle-hooks.js';
+export type { HookEvent, HookDefinition, HookContext, HookRunner } from './shared/lifecycle-hooks.js';
+export { limitHookOutput, HOOK_OUTPUT_LIMIT } from './shared/hook-output-limiter.js';
+export { parseCatchRules, applyCatchRules } from './shared/catch-rules.js';
+export type { CatchRule } from './shared/catch-rules.js';
+
+// Phase 20 infinite execution utilities
+export { evaluateRotation } from './shared/context-rotator.js';
+export type { RotationConfig, RotationResult } from './shared/context-rotator.js';
+export { getAdaptiveTimeout, DEFAULT_TIMEOUTS } from './shared/adaptive-timeout.js';
+export type { TimeoutProfile, TimeoutConfig } from './shared/adaptive-timeout.js';
+export { startSession, endSession, getRecentSessions, recordSessionActivity } from './shared/session-recorder.js';
+export type { SessionRecord } from './shared/session-recorder.js';
+
+// Phase 21 cross-session intelligence utilities
+export { readFeatureStore, writeFeatureStore, trackFeature, getFeatureSessions, getSessionFeatures } from './shared/feature-tracker.js';
+export type { FeatureEntry, FeatureStore } from './shared/feature-tracker.js';
+export { recordSkillUsage, getSkillProfile } from './shared/skill-profile.js';
+export type { SkillUsageEntry, SkillProfile } from './shared/skill-profile.js';
+export { checkHarnessBudget, HARNESS_BUDGET_PERCENT } from './shared/harness-budget.js';
+export type { HarnessBudgetResult } from './shared/harness-budget.js';
 
 // Prompt builders (for extensibility)
 export { buildResearchPrompt, buildSynthesisPrompt } from './prompts/index.js';
