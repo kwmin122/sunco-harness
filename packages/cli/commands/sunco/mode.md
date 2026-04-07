@@ -50,23 +50,42 @@ mkdir -p ~/.sun && echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ~/.sun/mode-active
 2. Display the transformation sequence — **Super Saiyan style.** Pure ASCII only. No block characters (they render as ugly checkerboards). No rainbow. No cute emojis. Raw power.
 
 ```
-  _______________________________________________
+                        ,     .
+                   .  ,'|  ,' |
+                  /| /  | /   |
+                 / |/   |/    '
+               ,'        `.
+              /  ,' `. `.  \
+             / ,'     `  `. \       *  .  *    .  *
+            /,'    .    `. `.\        \|/    *
+           ,'   ,'   `.   `.         --**--
+          /   ,'  .--.  `.   \        /|\
+         /  ,'  /      \  `.  \
+        / ,'   |   __   |   `. \
+       /,'     |  /  \  |    `.\
+      ,'       | | () | |      `.
+     /    .--. | |    | | .--.   \
+    /    / /| \|  \__/  |/ |\ \   \
+   /    / / |  \        /  | \ \   \
+  '    / /  |   \  /\  /   |  \ \   '
+       |/   |    \/  \/    |   \|
+             \     /\     /
+              \   /  \   /
+               \ /    \ /
+                '      '
+           ___________________
 
-          *  .  *       *     .    *
-       .    \|/    *      \|/       .
-     *    --***--      --***--    *
-          /|\        /|\
-               S U N C O
-               M O D E
+            S  U  N  C  O
+              M  O  D  E
 
-         81 skills         armed
-         7-layer            online
-         harness          engaged
-         auto-routing      active
+          81 skills      armed
+          7-layer       online
+          harness     engaged
+          auto-routing active
 
-         >>> POWER: UNLIMITED <<<
+          >>> POWER: UNLIMITED <<<
 
-  _______________________________________________
+           ___________________
 ```
 
 After the banner, say: "그냥 말해. 알아서 라우팅한다."
