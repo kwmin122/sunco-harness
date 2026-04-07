@@ -613,6 +613,23 @@ function install(targetDir, runtimeDir) {
   const refCopied = copyDirWithReplacement(srcReferences, destReferences, runtimeDir);
   const tplCopied = copyDirWithReplacement(srcTemplates, destTemplates, runtimeDir);
 
+  // Register agents globally at ~/.claude/agents/ (Claude Code discovers agents here)
+  // This ensures sunco-* agents are available in ALL projects, not just the install target
+  if (runtimeDir === '.claude') {
+    const globalAgentsDir = path.join(os.homedir(), '.claude', 'agents');
+    ensureDir(globalAgentsDir);
+    if (fs.existsSync(srcAgents)) {
+      const agentFiles = fs.readdirSync(srcAgents).filter(f => f.startsWith('sunco-') && f.endsWith('.md'));
+      for (const af of agentFiles) {
+        copyFileWithReplacement(
+          path.join(srcAgents, af),
+          path.join(globalAgentsDir, af),
+          runtimeDir
+        );
+      }
+    }
+  }
+
   // Runtime-specific registration
   if (runtimeDir === '.claude') {
     // Claude Code: patch settings.json for hooks + statusLine

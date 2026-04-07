@@ -1,5 +1,10 @@
 {
   "hooks": {
     "SessionStart": []
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node packages/cli/hooks/sunco-statusline.cjs",
+    "padding": 2
   }
 }
