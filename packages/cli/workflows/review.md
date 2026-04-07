@@ -91,7 +91,7 @@ Return structured JSON:
   summary: '...'
 }
 ",
-  subagent_type="general-purpose",
+  subagent_type="sunco-reviewer",
   model="claude-opus-4-5",
   description="Review Phase XX — correctness"
 )
@@ -101,7 +101,7 @@ Return structured JSON:
 ```
 Task(
   prompt="[similar structure, focus: completeness, missing cases, boundary conditions]",
-  subagent_type="general-purpose",
+  subagent_type="sunco-reviewer",
   model="gemini-2.5-pro",
   description="Review Phase XX — completeness"
 )
@@ -111,7 +111,7 @@ Task(
 ```
 Task(
   prompt="[similar structure, focus: security vulnerabilities, performance anti-patterns, resource usage]",
-  subagent_type="general-purpose",
+  subagent_type="sunco-reviewer",
   model="claude-sonnet-4-5",
   description="Review Phase XX — security/performance"
 )

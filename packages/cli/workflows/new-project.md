@@ -774,7 +774,7 @@ Your STACK.md feeds into roadmap creation. Be prescriptive:
 Write to: .planning/research/STACK.md
 Format: markdown with sections for each stack layer
 </output>
-", subagent_type="general-purpose", model="{researcher_model}", description="Stack research")
+", subagent_type="sunco-project-researcher", model="{researcher_model}", description="Stack research")
 ```
 
 **Agent 2 — Features Research**
@@ -819,7 +819,7 @@ Your FEATURES.md feeds into requirements definition. Categorize clearly:
 Write to: .planning/research/FEATURES.md
 Format: markdown grouped by feature category
 </output>
-", subagent_type="general-purpose", model="{researcher_model}", description="Features research")
+", subagent_type="sunco-project-researcher", model="{researcher_model}", description="Features research")
 ```
 
 **Agent 3 — Architecture Research**
@@ -865,7 +865,7 @@ Your ARCHITECTURE.md informs phase structure in roadmap. Include:
 Write to: .planning/research/ARCHITECTURE.md
 Format: markdown with component diagram (text-based) and data flow section
 </output>
-", subagent_type="general-purpose", model="{researcher_model}", description="Architecture research")
+", subagent_type="sunco-project-researcher", model="{researcher_model}", description="Architecture research")
 ```
 
 **Agent 4 — Pitfalls Research**
@@ -911,7 +911,7 @@ Your PITFALLS.md prevents mistakes in roadmap and planning. For each pitfall:
 Write to: .planning/research/PITFALLS.md
 Format: markdown with risk table and detailed entries
 </output>
-", subagent_type="general-purpose", model="{researcher_model}", description="Pitfalls research")
+", subagent_type="sunco-project-researcher", model="{researcher_model}", description="Pitfalls research")
 ```
 
 ### 6.2. Graceful Degradation
@@ -965,7 +965,7 @@ Write to: .planning/research/SUMMARY.md
 Format: concise markdown with 4 sections matching synthesis_goal
 Commit after writing.
 </output>
-", subagent_type="general-purpose", model="{synthesizer_model}", description="Synthesize research")
+", subagent_type="sunco-research-synthesizer", model="{synthesizer_model}", description="Synthesize research")
 ```
 
 Display research complete banner and key findings from SUMMARY.md:
@@ -1261,7 +1261,7 @@ Create ROADMAP.md, STATE.md, and update REQUIREMENTS.md traceability:
 
 **Write files first, then return.** This ensures artifacts persist even if context is lost.
 </instructions>
-", subagent_type="general-purpose", model="{roadmapper_model}", description="Create roadmap")
+", subagent_type="sunco-roadmapper", model="{roadmapper_model}", description="Create roadmap")
 ```
 
 ### 8.1. Handle Roadmapper Return
@@ -1351,7 +1351,7 @@ Use AskUserQuestion:
   Update the roadmap based on feedback. Edit files in place. Maintain 100% requirement coverage.
   Return ## ROADMAP REVISED with list of changes made.
   </revision>
-  ", subagent_type="general-purpose", model="{roadmapper_model}", description="Revise roadmap")
+  ", subagent_type="sunco-roadmapper", model="{roadmapper_model}", description="Revise roadmap")
   ```
 
 - Present revised roadmap

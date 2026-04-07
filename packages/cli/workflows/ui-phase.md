@@ -122,7 +122,7 @@ Write back a structured component inventory:
   - States
   - Example render output (ASCII art or markdown)
 ",
-  subagent_type="general-purpose",
+  subagent_type="sunco-ui-researcher",
   description="UI research for Phase XX"
 )
 ```

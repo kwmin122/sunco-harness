@@ -116,7 +116,7 @@ Return JSON:
   strengths: ['...']
 }
 ",
-  subagent_type="general-purpose",
+  subagent_type="sunco-ui-auditor",
   description="UI audit Phase XX"
 )
 ```

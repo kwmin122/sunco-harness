@@ -101,7 +101,7 @@ Otherwise, spawn a subagent:
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-phase-researcher",
   prompt="
     <objective>
     Research implementation approaches for Phase {PHASE_ARG}: {phase_title}.

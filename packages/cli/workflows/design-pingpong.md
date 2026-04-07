@@ -246,7 +246,7 @@ Display:
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-pingpong-model-a",
   prompt="
     {SHARED_PROMPT}
 
@@ -280,7 +280,7 @@ codex exec --input-file "${CODEX_INPUT_FILE}" \
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-pingpong-model-b",
   model="{MODEL_B}",
   prompt="
     {SHARED_PROMPT}
@@ -450,7 +450,7 @@ Both models critique the other's position simultaneously.
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-pingpong-debate",
   prompt="
     You are Model A in a design debate.
 
@@ -479,7 +479,7 @@ Task(
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-pingpong-debate",
   model="{MODEL_B}",
   prompt="
     You are Model B in a design debate.
@@ -521,7 +521,7 @@ Each model reads the other's critique and revises or defends.
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-pingpong-debate",
   prompt="
     You are Model A in a design debate, Round 2.
 
@@ -549,7 +549,7 @@ Task(
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-pingpong-debate",
   model="{MODEL_B}",
   prompt="
     You are Model B in a design debate, Round 2.
@@ -590,7 +590,7 @@ Each model states its final position considering the full debate history.
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-pingpong-debate",
   prompt="
     You are Model A in a design debate, Final Round.
 
@@ -616,7 +616,7 @@ Task(
 
 ```
 Task(
-  subagent_type="general-purpose",
+  subagent_type="sunco-pingpong-debate",
   model="{MODEL_B}",
   prompt="
     You are Model B in a design debate, Final Round.
