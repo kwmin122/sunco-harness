@@ -47,33 +47,17 @@ If argument is "on" or empty (default):
 mkdir -p ~/.sun && echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ~/.sun/mode-active
 ```
 
-2. Display the transformation sequence — **Super Saiyan style.** Pure ASCII only. No block characters (they render as ugly checkerboards). No rainbow. No cute emojis. Raw power.
+2. Display the transformation sequence — **Super Saiyan style.** Show the truecolor ANSI art banner first, then the status block.
+
+**Step 2a: Show the Super Saiyan banner image**
+
+```bash
+node -e "try { const { BANNER } = require('$HOME/.claude/hooks/sunco-mode-banner.cjs'); console.log(BANNER); } catch { console.log('>>> SUNCO MODE <<<'); }"
+```
+
+**Step 2b: Show the status block**
 
 ```
-          *    . *          * .    *
-       .    \   |   /    \   |   /    .
-      *      \  |  /  *   \  |  /      *
-        .     \ | /         \ | /     .
-    *    \     \|/    . *    \|/     /    *
-     .    --==***==--    --==***==--    .
-    *     /   /|\   \    /   /|\   \     *
-         /   / | \   \  /   / | \   \
-    .   /   /  *  \       /  *  \   \   .
-       /       |     \.'/     |       \
-      *   /   \|/  _-' '-_  \|/   \   *
-     .   /  --*-- / -_ _- \ --*--  \   .
-        /   /|\  | o|   |o |  /|\   \
-   *   /         |  '---'  |         \   *
-      /    /     |   ___   |     \    \
-     /    /       \_/   \_/       \    \
-    '    /     /\   '---'   /\     \    '
-        /     /  \  _/ \_  /  \     \
-       /     / /  \/ | | \/  \ \     \
-      /     / /   |  | |  |   \ \     \
-           / /    |  | |  |    \ \
-          / /     |  | |  |     \ \
-         /_/______|__|_|__|______\_\
-
            S  U  N  C  O
              M  O  D  E
 
