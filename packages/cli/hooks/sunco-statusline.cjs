@@ -209,7 +209,11 @@ function buildOutput(state, stdinData) {
       // Always derive zone from live pct data (not cached file — avoids stale indicators)
       const zone = pct >= 85 ? 'red' : pct >= 70 ? 'orange' : pct >= 50 ? 'yellow' : 'green';
       const emoji = zoneEmoji(zone);
-      line2Parts.push(`${color}${bar}${RESET} ${pct}% ${emoji}`);
+      // Show context window size + usage
+      const cwSize = cw.max_tokens ? formatTokens(cw.max_tokens) : null;
+      const cwUsed = cw.used_tokens ? formatTokens(cw.used_tokens) : null;
+      const cwLabel = cwSize ? ` ${DIM}ctx${RESET} ${cwUsed || '?'}/${cwSize}` : '';
+      line2Parts.push(`${color}${bar}${RESET} ${pct}% ${emoji}${cwLabel}`);
     }
 
     // Total tokens (input + output)
