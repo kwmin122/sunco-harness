@@ -22,6 +22,8 @@ const os   = require('os');
 // ---------------------------------------------------------------------------
 const GREEN  = '\x1b[32m';
 const YELLOW = '\x1b[33m';
+const GOLD   = '\x1b[38;5;220m';  // Bright gold (Super Saiyan)
+const GOLD_BG = '\x1b[48;5;220m\x1b[30m'; // Gold background with black text
 const RED    = '\x1b[31m';
 const BOLD   = '\x1b[1m';
 const DIM    = '\x1b[2m';
@@ -167,35 +169,40 @@ function buildOutput(state, stdinData) {
   const mode   = isModeActive();
   const lines  = [];
 
-  // --- Line 1: SUNCO | Phase info ---
-  const prefixColor = mode ? YELLOW : '';
-  const prefixReset = mode ? RESET : '';
+  // Color scheme: Super Saiyan gold when mode active
+  const mc = mode ? GOLD : '';       // mode color
+  const mb = mode ? BOLD : '';       // mode bold
+  const mr = mode ? RESET : '';      // mode reset
+  const sep = mode ? `${GOLD}|${RESET}` : '|';
+
+  // --- Line 1: SUNCO MODE | Phase info ---
   const prefix = mode
-    ? `${prefixColor}${BOLD}\u26A1 SUNCO${RESET}`
+    ? `${GOLD}${BOLD}\u26A1 SUNCO MODE${RESET}`
     : `${BOLD}SUNCO${RESET}`;
 
   const line1Parts = [prefix];
 
   if (state) {
     if (state.phaseNum || state.phaseName) {
-      let phaseStr = 'Phase';
-      if (state.phaseNum) phaseStr += ` ${state.phaseNum}`;
-      if (state.phaseName) phaseStr += `: ${state.phaseName}`;
+      let phaseStr = `${mc}${mb}Phase${mr}`;
+      if (state.phaseNum) phaseStr += ` ${mc}${state.phaseNum}${mr}`;
+      if (state.phaseName) phaseStr += `${mc}: ${state.phaseName}${mr}`;
       line1Parts.push(phaseStr);
     }
     if (state.progress != null) {
-      line1Parts.push(`${state.progress}%`);
+      line1Parts.push(`${mc}${state.progress}%${mr}`);
     }
   } else {
-    line1Parts.push('Ready');
+    line1Parts.push(`${mc}Ready${mr}`);
   }
 
   // Add model name if available
   if (stdinData && stdinData.model && stdinData.model.display_name) {
-    line1Parts.push(`${DIM}${stdinData.model.display_name}${RESET}`);
+    const modelColor = mode ? GOLD : DIM;
+    line1Parts.push(`${modelColor}${stdinData.model.display_name}${RESET}`);
   }
 
-  lines.push(line1Parts.join(' | '));
+  lines.push(line1Parts.join(` ${sep} `));
 
   // --- Line 2: Context gauge + tokens + cost ---
   if (stdinData && stdinData.context_window) {
@@ -204,16 +211,17 @@ function buildOutput(state, stdinData) {
     const line2Parts = [];
 
     if (pct != null && !isNaN(pct)) {
-      const color = barColor(pct);
+      // In mode: gold bar. Otherwise: zone-based color
+      const color = mode ? GOLD : barColor(pct);
       const bar = buildBar(pct);
-      // Always derive zone from live pct data (not cached file — avoids stale indicators)
       const zone = pct >= 85 ? 'red' : pct >= 70 ? 'orange' : pct >= 50 ? 'yellow' : 'green';
       const emoji = zoneEmoji(zone);
       // Show context window size + usage
       const cwSize = cw.max_tokens ? formatTokens(cw.max_tokens) : null;
       const cwUsed = cw.used_tokens ? formatTokens(cw.used_tokens) : null;
-      const cwLabel = cwSize ? ` ${DIM}ctx${RESET} ${cwUsed || '?'}/${cwSize}` : '';
-      line2Parts.push(`${color}${bar}${RESET} ${pct}% ${emoji}${cwLabel}`);
+      const dimC = mode ? GOLD : DIM;
+      const cwLabel = cwSize ? ` ${dimC}ctx${RESET} ${mc}${cwUsed || '?'}/${cwSize}${mr}` : '';
+      line2Parts.push(`${color}${bar}${RESET} ${mc}${pct}%${mr} ${emoji}${cwLabel}`);
     }
 
     // Total tokens (input + output)
@@ -223,7 +231,8 @@ function buildOutput(state, stdinData) {
       const total = (totalIn || 0) + (totalOut || 0);
       const formatted = formatTokens(total);
       if (formatted) {
-        line2Parts.push(`${DIM}tokens${RESET} ${formatted}`);
+        const dimC = mode ? GOLD : DIM;
+        line2Parts.push(`${dimC}tokens${RESET} ${mc}${formatted}${mr}`);
       }
     }
 
@@ -231,12 +240,12 @@ function buildOutput(state, stdinData) {
     if (stdinData.cost && stdinData.cost.total_cost_usd != null) {
       const costStr = formatCost(stdinData.cost.total_cost_usd);
       if (costStr) {
-        line2Parts.push(`${DIM}${costStr}${RESET}`);
+        line2Parts.push(`${mc}${costStr}${mr}`);
       }
     }
 
     if (line2Parts.length > 0) {
-      lines.push(line2Parts.join(' | '));
+      lines.push(line2Parts.join(` ${sep} `));
     }
   }
 
