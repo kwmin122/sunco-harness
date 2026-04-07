@@ -236,7 +236,7 @@ Synthesize into SUMMARY.md:
   - Top 3 pitfalls to avoid
 Write to .planning/research/SUMMARY.md
 ",
-  subagent_type="sunco-synthesizer",
+  subagent_type="general-purpose",
   description="Synthesize research findings"
 )
 ```
@@ -374,7 +374,7 @@ Update REQUIREMENTS.md Traceability section.
 
 Return: ROADMAP CREATED or ROADMAP BLOCKED (with reason)
 ",
-  subagent_type="sunco-roadmapper",
+  subagent_type="general-purpose",
   description="Create roadmap for milestone v1.1"
 )
 ```

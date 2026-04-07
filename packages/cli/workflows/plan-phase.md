@@ -418,7 +418,7 @@ Structure:
 ```
 Task(
   prompt=research_prompt,
-  subagent_type="sunco-phase-researcher",
+  subagent_type="general-purpose",
   description="Research Phase {PHASE}: {phase_name}"
 )
 ```
@@ -766,7 +766,7 @@ If ANY check fails:
 ```
 Task(
   prompt=checker_prompt,
-  subagent_type="sunco-plan-checker",
+  subagent_type="general-purpose",
   description="Verify Phase {PHASE} plans (iteration {ITERATION}/3)"
 )
 ```

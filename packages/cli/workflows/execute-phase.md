@@ -361,7 +361,7 @@ Spawning {count} executor(s)...
 
 ```
 Task(
-  subagent_type="sunco-executor",
+  subagent_type="general-purpose",
   model="{executor_model}",
   prompt="
     <objective>

@@ -371,7 +371,7 @@ Return:
   explanation: [2-3 sentences]
   fix_complexity: [trivial | simple | moderate | complex]
 ",
-  subagent_type="sunco-debugger",
+  subagent_type="general-purpose",
   description="Diagnose UAT gap N: [Test Name]"
 )
 ```
