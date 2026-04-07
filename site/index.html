@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>SUNCO | Agent Workspace OS</title>
-<meta name="description" content="AI 코딩 에이전트가 실수를 덜 하게 판을 깔아주는 OS. 77 Skills. 7-Layer Verification. Zero Mistakes.">
+<meta name="description" content="AI 코딩 에이전트가 실수를 덜 하게 판을 깔아주는 OS. 81 Skills. 7-Layer Verification. Zero Mistakes.">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script>
@@ -83,7 +83,7 @@ tailwind.config = {
 
   <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="fade-up">
-      <span class="uppercase tracking-[0.2em] text-emerald-400 font-headline text-xs font-bold">v0.4.0 &mdash; Security Audits + Multi-Perspective Reviews + Operations</span>
+      <span class="uppercase tracking-[0.2em] text-emerald-400 font-headline text-xs font-bold">v0.6.0 &mdash; Light Harness — Context Intelligence + Smart Routing</span>
       <h1 class="text-[clamp(3rem,8vw,7rem)] font-black font-headline tracking-tighter leading-[0.85] mt-4">
         HARNESS YOUR <span class="text-emerald-400 italic">AGENTS</span>
       </h1>
@@ -107,7 +107,7 @@ tailwind.config = {
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝</span>
 
-  <span class="bold">SUNCO v0.4.0</span>
+  <span class="bold">SUNCO v0.6.0</span>
   <span class="dim">Agent Workspace OS — harness engineering for AI agents</span>
 
   <span class="bold">Select language / 언어를 선택하세요</span>
@@ -127,10 +127,10 @@ tailwind.config = {
 
   Choice <span class="dim">[1]</span>: <span class="yellow">5</span>
 
-  <span class="green">✓</span> Claude Code: <span class="bold">명령어</span> <span class="dim">(77 개 스킬)</span>
-  <span class="green">✓</span> Claude Code: <span class="bold">엔진</span>  <span class="dim">(23 개 파일)</span>
-  <span class="green">✓</span> Claude Code: <span class="bold">훅</span>   <span class="dim">(4 개 파일)</span>
-  <span class="green">✓</span> Claude Code: <span class="bold">문서</span>    <span class="dim">(22 개 파일)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">명령어</span> <span class="dim">(81 개 스킬)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">엔진</span>  <span class="dim">(25 개 파일)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">훅</span>   <span class="dim">(5 개 파일)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">문서</span>    <span class="dim">(162 개 파일)</span>
 
   <span class="green">완료!</span> <span class="green">/sunco:help</span> — /sunco:help를 실행하여 시작하세요.</div>
     </div>
@@ -247,7 +247,7 @@ tailwind.config = {
       </div>
       <div class="relative rounded-xl h-[220px] bg-[#1f1f1f] border border-emerald-500/10 hover:border-emerald-500/30 transition-all flex items-center justify-center p-6 pulse-glow">
         <div class="text-center">
-          <span class="font-headline font-black text-xl tracking-tighter text-emerald-400">6-LAYER VERIFY</span>
+          <span class="font-headline font-black text-xl tracking-tighter text-emerald-400">7-LAYER VERIFY</span>
           <div class="text-white/30 text-xs mt-1">Swiss cheese model</div>
         </div>
       </div>
@@ -283,9 +283,10 @@ tailwind.config = {
 <span class="green">●</span> <span class="cyan">sunco-adversarial</span><span class="dim">(Break Phase 3)</span>
   Layer 5 (Adversarial):        <span class="green">PASS</span>
   Layer 6 (Cross-model Codex):  <span class="green">PASS</span>
+  Layer 7 (Human Eval Gate):    <span class="green">PASS</span>
 
 <span class="dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
-<span class="green">Overall: ALL 6 LAYERS PASSED</span>
+<span class="green">Overall: ALL 7 LAYERS PASSED</span>
 Run <span class="green">/sunco:ship 3</span> to create the PR.</div>
         </div>
       </div>
@@ -304,6 +305,7 @@ Run <span class="green">/sunco:ship 3</span> to create the PR.</div>
           <div class="flex items-center gap-3"><span class="text-emerald-400">04</span> <span class="text-white/70">Permission audit</span></div>
           <div class="flex items-center gap-3"><span class="text-emerald-400">05</span> <span class="text-white/70">Adversarial test</span></div>
           <div class="flex items-center gap-3"><span class="text-emerald-400">06</span> <span class="text-white/70">Cross-model verification (Codex)</span></div>
+          <div class="flex items-center gap-3"><span class="text-emerald-400">07</span> <span class="text-white/70">Human eval gate</span></div>
         </div>
       </div>
     </div>
@@ -331,7 +333,7 @@ Run <span class="green">/sunco:ship 3</span> to create the PR.</div>
         <div class="terminal-body text-center py-12">
           <div class="text-emerald-400 text-6xl mb-4">&#9889;</div>
           <div class="font-headline font-black text-3xl tracking-tighter text-white">/sunco:mode</div>
-          <div class="font-mono text-xs uppercase tracking-[0.4em] text-emerald-400/60 mt-3">77 skills armed and ready</div>
+          <div class="font-mono text-xs uppercase tracking-[0.4em] text-emerald-400/60 mt-3">81 skills armed and ready</div>
           <div class="mt-8 flex flex-wrap justify-center gap-3 text-xs font-mono text-white/30">
             <span>DISCUSS</span>
             <span class="text-emerald-400">&#8594;</span>
@@ -353,6 +355,57 @@ Run <span class="green">/sunco:ship 3</span> to create the PR.</div>
         <span class="text-emerald-400 italic">하네스 엔지니어링</span>이 핵심 &mdash;
         린터가 가르치면서 막고, 코드가 아니라 의도를 검증합니다.
       </p>
+    </div>
+  </div>
+</section>
+
+<!-- Light Harness (v0.6) -->
+<section class="py-32 bg-[#131313] border-t border-white/5">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="mb-16">
+      <span class="uppercase tracking-[0.2em] text-emerald-400 font-headline text-xs font-bold">New in v0.6</span>
+      <h2 class="text-4xl md:text-6xl font-black font-headline tracking-tighter leading-none mt-4">
+        LIGHT <span class="text-emerald-400 italic">HARNESS</span>
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Context Intelligence -->
+      <div class="bg-[#1f1f1f] rounded-xl p-8 border border-white/5 hover:border-emerald-500/20 transition-all">
+        <div class="text-emerald-400 text-3xl mb-6">&#9673;</div>
+        <h3 class="font-headline font-black text-xl tracking-tighter mb-3">CONTEXT INTELLIGENCE</h3>
+        <p class="text-white/40 text-sm leading-relaxed mb-6">4-tier context zones that adapt loading strategy in real-time. Orange zone auto-summarizes, Red zone auto-pauses.</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono text-[10px]">GREEN 0-50%</span>
+          <span class="px-2 py-1 bg-yellow-500/10 text-yellow-400 rounded font-mono text-[10px]">YELLOW 50-70%</span>
+          <span class="px-2 py-1 bg-orange-500/10 text-orange-400 rounded font-mono text-[10px]">ORANGE 70-85%</span>
+          <span class="px-2 py-1 bg-red-500/10 text-red-400 rounded font-mono text-[10px]">RED 85%+</span>
+        </div>
+      </div>
+
+      <!-- Smart Routing -->
+      <div class="bg-[#1f1f1f] rounded-xl p-8 border border-white/5 hover:border-emerald-500/20 transition-all">
+        <div class="text-emerald-400 text-3xl mb-6">&#9881;</div>
+        <h3 class="font-headline font-black text-xl tracking-tighter mb-3">SMART ROUTING</h3>
+        <p class="text-white/40 text-sm leading-relaxed mb-6">Every skill declares complexity. The pipeline selects the optimal model tier and downgrades at 75%+ budget.</p>
+        <div class="space-y-2 text-xs font-mono">
+          <div class="flex justify-between text-white/30"><span>simple (lint, do)</span><span class="text-emerald-400">fast</span></div>
+          <div class="flex justify-between text-white/30"><span>standard (execute)</span><span class="text-emerald-400">balanced</span></div>
+          <div class="flex justify-between text-white/30"><span>complex (plan, verify)</span><span class="text-emerald-400">quality</span></div>
+        </div>
+      </div>
+
+      <!-- Operational Resilience -->
+      <div class="bg-[#1f1f1f] rounded-xl p-8 border border-white/5 hover:border-emerald-500/20 transition-all">
+        <div class="text-emerald-400 text-3xl mb-6">&#8635;</div>
+        <h3 class="font-headline font-black text-xl tracking-tighter mb-3">INFINITE EXECUTION</h3>
+        <p class="text-white/40 text-sm leading-relaxed mb-6">Context rotation with adaptive timeouts. Auto-pause creates handoffs before context exhaustion. Resume where you left off.</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono text-[10px]">AUTO-PAUSE</span>
+          <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono text-[10px]">HANDOFF</span>
+          <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono text-[10px]">RESUME</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
