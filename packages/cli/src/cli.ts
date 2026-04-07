@@ -44,6 +44,7 @@ import {
   assumeSkill,
   researchSkill,
   planSkill,
+  ultraplanSkill,
   executeSkill,
   reviewSkill,
   verifySkill,
@@ -101,6 +102,7 @@ const preloadedSkills = [
   assumeSkill,
   researchSkill,
   planSkill,
+  ultraplanSkill,
   // Phase 6 execution + review skills
   executeSkill,
   reviewSkill,

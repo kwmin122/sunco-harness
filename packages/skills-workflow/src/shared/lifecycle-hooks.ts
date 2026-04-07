@@ -25,6 +25,7 @@ export type HookEvent =
   | 'PreSkill'
   | 'PostSkill'
   | 'PreCompact'
+  | 'PreToolUse'
   | 'SessionStart'
   | 'SessionEnd';
 
@@ -33,12 +34,16 @@ export interface HookDefinition {
   name: string;
   handler: (context: HookContext) => Promise<void>;
   enabled: boolean;
+  /** When true, if handler throws HookAbortError the emit() re-throws instead of swallowing. */
+  canAbort?: boolean;
 }
 
 export interface HookContext {
   skillId?: string;
   phase?: number;
   zone?: string;
+  /** Tool name for PreToolUse events (e.g. 'Edit', 'Write', 'Read') */
+  toolName?: string;
   timestamp: string;
 }
 
@@ -72,9 +77,12 @@ export function createHookRunner(): HookRunner {
 
         try {
           await hook.handler(context);
-        } catch {
-          // Hooks never throw — swallow errors silently.
-          // In production, callers can wrap handlers with logging if needed.
+        } catch (err) {
+          // Hooks with canAbort=true can throw HookAbortError to block execution.
+          if (hook.canAbort && err instanceof Error && err.name === 'HookAbortError') {
+            throw err;
+          }
+          // All other hook errors are swallowed silently.
         }
       }
     },

@@ -33,6 +33,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 19: Hook System v2** - lifecycle hooks, output size limits, declarative catch rules (v1.2, completed 2026-04-06)
 - [x] **Phase 20: Infinite Execution** - context rotation, adaptive timeouts, session progress records (v1.2, completed 2026-04-06)
 - [x] **Phase 21: Cross-Session Intelligence** - feature-session tracking, skill profiles, harness 5% budget (v1.2, completed 2026-04-06)
+- [x] **Phase 22: Ultraplan Integration** - Bridge to Claude Code /ultraplan for browser-based visual plan review (v1.3, completed 2026-04-07)
+- [x] **Phase 23a: Debug Iron Law Engine** - Iron Law Gate, 3-Strike Rule, 9-pattern classification, error sanitizer, freeze scope, prior learnings (v1.3)
+- [x] **Phase 23b: Review Army** - 8 specialist army, adaptive gating, cross-review dedup, confidence gate, test stub suggestion, multi-provider matrix (v1.3)
+- [x] **Phase 24a: Learnings + Timeline** - 범용 learnings system (6 type, decay, dedup), skill timeline, context recovery, welcome briefing (v1.3, completed 2026-04-07)
+- [x] **Phase 24b: Smart Review** - scope drift detection, plan completion audit (v1.3, completed 2026-04-07)
+- [x] **Phase 24c: Routing + Proactive** - CLAUDE.md skill routing, natural language keyword matching, proactive suggestion (v1.3, completed 2026-04-07)
 
 ## Phase Details
 
@@ -338,6 +344,17 @@ Plans:
   4. 사용자 스킬 사용 패턴 분석으로 자동 추천이 개인화됨
 **Plans:** 0 plans (not yet planned)
 
+### Phase 22: Ultraplan Integration
+**Goal**: Users can export SUNCO phase plans to Claude Code's /ultraplan for browser-based visual review, and import reviewed plans back into SUNCO PLAN.md format
+**Depends on**: Phase 5 (planning pipeline)
+**Requirements**: ULP-01, ULP-02, ULP-03
+**Success Criteria** (what must be TRUE):
+  1. User runs `sunco ultraplan --phase 5` and gets a formatted review prompt written to NN-ULTRAPLAN-PROMPT.md
+  2. User runs `sunco ultraplan --import --file plan.md` and gets validated PLAN.md files written to the phase directory
+  3. After `sunco plan` completes, recommender suggests ultraplan as a browser review option (low priority)
+  4. Import mode rejects unstructured markdown to prevent accidental plan overwrite
+**Plans:** TBD
+
 ## Progress
 
 **Execution Order:**
@@ -368,3 +385,4 @@ v1.2 Phases: 17 -> 18 -> 19 -> 20 -> 21 (Light Harness)
 | 19. Hook System v2 | 1/1 | Complete | 2026-04-06 |
 | 20. Infinite Execution | 1/1 | Complete | 2026-04-06 |
 | 21. Cross-Session Intelligence | 1/1 | Complete | 2026-04-06 |
+| 22. Ultraplan Integration | 0/? | Not started | - |

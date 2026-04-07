@@ -607,6 +607,16 @@ const verificationPipelineRules: RecommendationRule[] = [
       rec('workflow.review', 'Review plan', 'Review the plan before executing', 'medium'),
     ],
   ),
+
+  // Rule 40: After plan success -> suggest ultraplan for browser-based visual review
+  rule(
+    'after-plan-suggest-ultraplan',
+    'After planning, optionally review via ultraplan in browser',
+    (s) => lastWas(s, 'workflow.plan') && lastSucceeded(s),
+    () => [
+      rec('workflow.ultraplan', 'Visual review via Ultraplan', 'Review plan in browser with inline comments before executing', 'low'),
+    ],
+  ),
 ];
 
 // ---------------------------------------------------------------------------
@@ -744,6 +754,48 @@ const debuggingRules: RecommendationRule[] = [
       rec('workflow.forensics', 'Run forensics', 'Debug failed -- try full post-mortem analysis', 'high'),
       rec('workflow.diagnose', 'Run diagnose', 'Get fresh diagnostic data', 'medium'),
       rec('workflow.research', 'Research the issue', 'Complex problem -- research before fixing', 'low'),
+    ],
+  ),
+
+  // Rule 41 (Phase 23a): After debug with environmental failure -> suggest dependency/type fix
+  rule(
+    'debug-environmental-failure',
+    'After debug identifies environmental issue, suggest targeted fix',
+    (s) => {
+      if (!lastWas(s, 'workflow.debug') || !lastSucceeded(s)) return false;
+      const data = s.lastResult?.data as Record<string, unknown> | undefined;
+      const ft = data?.failure_type as string | undefined;
+      return ft === 'type_mismatch' || ft === 'dependency_conflict';
+    },
+    (s) => {
+      const data = s.lastResult?.data as Record<string, unknown> | undefined;
+      const ft = data?.failure_type as string;
+      if (ft === 'dependency_conflict') {
+        return [
+          rec('workflow.execute', 'Fix dependencies', 'Dependency conflict identified -- execute fix', 'high'),
+          rec('harness.health', 'Check health', 'Verify project health after dependency fix', 'medium'),
+        ];
+      }
+      return [
+        rec('workflow.execute', 'Fix types', 'Type mismatch identified -- execute fix', 'high'),
+        rec('workflow.verify', 'Verify fix', 'Verify the type fix is correct', 'medium'),
+      ];
+    },
+  ),
+
+  // Rule 42 (Phase 23a): After debug with behavioral failure -> suggest deeper investigation
+  rule(
+    'debug-behavioral-failure',
+    'After debug identifies behavioral issue, suggest investigation',
+    (s) => {
+      if (!lastWas(s, 'workflow.debug') || !lastSucceeded(s)) return false;
+      const data = s.lastResult?.data as Record<string, unknown> | undefined;
+      const ft = data?.failure_type as string | undefined;
+      return ft === 'state_corruption' || ft === 'race_condition' || ft === 'silent_failure';
+    },
+    () => [
+      rec('workflow.forensics', 'Deep investigation', 'Behavioral bug detected -- run forensics for root cause', 'high'),
+      rec('workflow.verify', 'Verify state', 'Check state integrity after fix', 'medium'),
     ],
   ),
 ];

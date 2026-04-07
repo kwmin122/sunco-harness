@@ -27,6 +27,10 @@ import { buildVerifySecurityPrompt } from '../prompts/verify-security.js';
 import { buildVerifyPerformancePrompt } from '../prompts/verify-performance.js';
 import { buildVerifyArchitecturePrompt } from '../prompts/verify-architecture.js';
 import { buildVerifyCorrectnessPrompt } from '../prompts/verify-correctness.js';
+import { buildVerifyTestingPrompt } from '../prompts/verify-testing.js';
+import { buildVerifyApiPrompt } from '../prompts/verify-api.js';
+import { buildVerifyMigrationPrompt } from '../prompts/verify-migration.js';
+import { buildVerifyMaintainabilityPrompt } from '../prompts/verify-maintainability.js';
 import { buildVerifyCoordinatorPrompt } from '../prompts/verify-coordinator.js';
 import { buildVerifyAdversarialPrompt } from '../prompts/verify-adversarial.js';
 import { buildVerifyIntentPrompt } from '../prompts/verify-intent.js';
@@ -266,12 +270,18 @@ export async function runLayer1MultiAgent(
   const findings: VerifyFinding[] = [];
 
   try {
-    // Build prompts for each expert
+    // Build prompts for all 8 specialist experts (Phase 23b — Review Army)
     const experts = [
+      // Core 4 (Phase 7)
       { source: 'security' as const, prompt: buildVerifySecurityPrompt(diff) },
       { source: 'performance' as const, prompt: buildVerifyPerformancePrompt(diff) },
       { source: 'architecture' as const, prompt: buildVerifyArchitecturePrompt(diff) },
       { source: 'correctness' as const, prompt: buildVerifyCorrectnessPrompt(diff) },
+      // Extended 4 (Phase 23b)
+      { source: 'testing' as const, prompt: buildVerifyTestingPrompt(diff) },
+      { source: 'api-design' as const, prompt: buildVerifyApiPrompt(diff) },
+      { source: 'migration' as const, prompt: buildVerifyMigrationPrompt(diff) },
+      { source: 'maintainability' as const, prompt: buildVerifyMaintainabilityPrompt(diff) },
     ];
 
     // Dispatch all 4 experts in parallel

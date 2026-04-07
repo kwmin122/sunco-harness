@@ -6,6 +6,8 @@
  *   2. Oscillation — two distinct skills alternating failures 4+ times
  *      (e.g., A fail → B fail → A fail → B fail).
  *
+ * Also provides debug-session analysis (Phase 23a) for Iron Law escalation.
+ *
  * Pure function: no state, no side effects, no I/O.
  *
  * Requirements: OPS-02
@@ -14,6 +16,8 @@
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+import type { IronLawState, DebugStuckResult } from './debug-types.js';
 
 export interface InvocationRecord {
   skillId: string;
@@ -154,5 +158,67 @@ export class StuckDetector {
     }
 
     return { stuck: false, reason: null, failedSkillId: null, consecutiveFailures: 0 };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Debug session analysis (Phase 23a — Iron Law)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Analyze an Iron Law debug session for escalation.
+   *
+   * Escalation triggers:
+   * - All hypotheses tested and rejected → escalate
+   * - 3+ consecutive rejections → escalate (max_retries)
+   * - Same hypothesis tested twice → oscillation warning
+   */
+  analyzeDebugSession(state: IronLawState): DebugStuckResult {
+    const tested = state.hypotheses.filter((h) => h.tested);
+    const rejected = state.hypotheses.filter((h) => h.result === 'rejected');
+    const pending = state.hypotheses.filter((h) => !h.tested);
+
+    // Check for duplicate hypotheses (oscillation)
+    const descriptions = state.hypotheses.map((h) => h.description);
+    const hasDuplicates = descriptions.length !== new Set(descriptions).size;
+
+    if (hasDuplicates) {
+      return {
+        stuck: true,
+        reason: 'Same hypothesis tested multiple times — oscillation detected',
+        hypothesesTested: tested.length,
+        hypothesesRejected: rejected.length,
+        escalationReason: 'oscillation',
+      };
+    }
+
+    // All hypotheses rejected, none pending
+    if (tested.length > 0 && rejected.length === tested.length && pending.length === 0) {
+      return {
+        stuck: true,
+        reason: `All ${rejected.length} hypotheses rejected — no viable root cause identified`,
+        hypothesesTested: tested.length,
+        hypothesesRejected: rejected.length,
+        escalationReason: 'all_hypotheses_rejected',
+      };
+    }
+
+    // 3+ consecutive rejections
+    if (rejected.length >= this.maxConsecutiveFailures) {
+      return {
+        stuck: true,
+        reason: `${rejected.length} hypotheses rejected (threshold: ${this.maxConsecutiveFailures})`,
+        hypothesesTested: tested.length,
+        hypothesesRejected: rejected.length,
+        escalationReason: 'max_retries',
+      };
+    }
+
+    return {
+      stuck: false,
+      reason: null,
+      hypothesesTested: tested.length,
+      hypothesesRejected: rejected.length,
+      escalationReason: null,
+    };
   }
 }

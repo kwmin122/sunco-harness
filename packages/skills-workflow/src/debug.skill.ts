@@ -12,11 +12,15 @@
 import { defineSkill } from '@sunco/core';
 import type { SkillContext, SkillResult, PermissionSet } from '@sunco/core';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { simpleGit } from 'simple-git';
 import { buildDebugAnalyzePrompt } from './prompts/debug-analyze.js';
 import { resolvePhaseDir } from './shared/phase-reader.js';
-import type { DebugAnalysis, DiagnoseResult } from './shared/debug-types.js';
+import type { DebugAnalysis, DiagnoseResult, IronLawDebugAnalysis, FailureType } from './shared/debug-types.js';
+import { classifyBug, getBugPattern } from './shared/bug-patterns.js';
+import { sanitizeForSearch } from './shared/error-sanitizer.js';
+import { searchLearnings, saveLearning } from './shared/debug-learnings.js';
+import { createIronLawState } from './shared/iron-law-gate.js';
 
 // ---------------------------------------------------------------------------
 // Permissions (D-04: read + test only)
@@ -83,18 +87,22 @@ export default defineSkill({
   description: 'Classify build/test failures and suggest actionable fixes',
   options: [
     { flags: '-p, --phase <number>', description: 'Scope analysis to a specific phase' },
+    { flags: '-q, --quick', description: 'Quick mode: skip Iron Law for fast diagnosis' },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
+    const quickMode = ctx.args.quick === true;
+
     // --- Entry ---
     await ctx.ui.entry({
-      title: 'Debug',
-      description: 'Analyzing failure...',
+      title: quickMode ? 'Debug (quick)' : 'Debug (Iron Law)',
+      description: quickMode ? 'Quick failure analysis...' : 'Iron Law analysis — root cause first, then fix...',
     });
 
+    const totalSteps = quickMode ? 4 : 7;
     const progress = ctx.ui.progress({
       title: 'Gathering context',
-      total: 4,
+      total: totalSteps,
     });
 
     // --- Step 1: Gather git context (D-02) ---
@@ -119,22 +127,23 @@ export default defineSkill({
     let testOutput = '';
     let buildOutput = '';
     let recentErrors = '';
+    let diagnoseData: DiagnoseResult | null = null;
     try {
       const diagnoseResult = await ctx.run('workflow.diagnose');
       if (diagnoseResult.success !== undefined && diagnoseResult.data) {
-        const data = diagnoseResult.data as DiagnoseResult;
-        testOutput = data.raw_output.test ?? '';
-        buildOutput = data.raw_output.tsc ?? '';
+        diagnoseData = diagnoseResult.data as DiagnoseResult;
+        testOutput = diagnoseData.raw_output.test ?? '';
+        buildOutput = diagnoseData.raw_output.tsc ?? '';
 
         // Format recent errors for the prompt
         const errorLines: string[] = [];
-        for (const e of data.test_failures) {
+        for (const e of diagnoseData.test_failures) {
           errorLines.push(`[test] ${e.file}:${e.line ?? '?'} - ${e.message}`);
         }
-        for (const e of data.type_errors) {
+        for (const e of diagnoseData.type_errors) {
           errorLines.push(`[tsc] ${e.file}:${e.line ?? '?'} - ${e.code}: ${e.message}`);
         }
-        for (const e of data.lint_errors) {
+        for (const e of diagnoseData.lint_errors) {
           errorLines.push(`[lint] ${e.file}:${e.line ?? '?'} - ${e.code}: ${e.message}`);
         }
         recentErrors = errorLines.join('\n');
@@ -174,23 +183,94 @@ export default defineSkill({
     }
     progress.update({ completed: 3, message: 'State snapshot gathered' });
 
-    // --- Step 4: Build prompt and dispatch agent ---
-    const prompt = buildDebugAnalyzePrompt({
-      gitLog,
-      testOutput,
-      buildOutput,
-      stateSnapshot,
-      recentErrors,
-    });
+    // --- Iron Law steps (skipped in quick mode) ---
+    let bugClassification: FailureType = 'context_shortage';
+    let priorLearningsContext = '';
+    let sanitizedErrors = recentErrors;
+    let freezeScopeDirs: string[] = [];
+
+    if (!quickMode) {
+      // --- Step 4: Classify bug pattern (9-type) ---
+      const allErrors = diagnoseData
+        ? [...diagnoseData.test_failures, ...diagnoseData.type_errors, ...diagnoseData.lint_errors]
+        : [];
+      bugClassification = classifyBug(allErrors, `${testOutput}\n${buildOutput}`);
+      const pattern = getBugPattern(bugClassification);
+      progress.update({ completed: 4, message: `Classified: ${bugClassification} (${pattern?.category ?? 'unknown'})` });
+
+      // --- Step 5: Search prior learnings ---
+      const errorFiles = allErrors.map((e) => e.file).filter(Boolean);
+      const learnings = await searchLearnings(ctx.cwd, {
+        pattern: bugClassification,
+        files: errorFiles.slice(0, 5),
+      });
+      if (learnings.length > 0) {
+        priorLearningsContext = '\n\n## Prior Learnings (from previous debug sessions)\n\n' +
+          learnings.slice(0, 3).map((l) =>
+            `- **${l.pattern}**: ${l.symptom}\n  Root cause: ${l.rootCause}\n  Fix: ${l.fix}\n  Hit count: ${l.hitCount}`,
+          ).join('\n');
+      }
+      progress.update({ completed: 5, message: `Prior learnings: ${learnings.length} found` });
+
+      // --- Step 6: Sanitize errors for safe context ---
+      const sanitized = sanitizeForSearch(recentErrors);
+      sanitizedErrors = sanitized.text;
+      if (sanitized.totalRedacted > 0) {
+        ctx.log.info(`Sanitized ${sanitized.totalRedacted} PII items from error output`);
+      }
+      progress.update({ completed: 6, message: 'Errors sanitized' });
+
+      // --- Compute freeze scope (narrow writePaths) ---
+      const uniqueDirs = new Set<string>();
+      for (const e of allErrors) {
+        if (e.file) {
+          uniqueDirs.add(dirname(e.file));
+        }
+      }
+      freezeScopeDirs = [...uniqueDirs];
+    }
+
+    // --- Permissions stay read-only (verification role cannot have writePaths) ---
+    // Freeze scope is communicated via prompt, not permissions.
+    const permissions: PermissionSet = DEBUG_PERMISSIONS;
+
+    // --- Build prompt and dispatch agent ---
+    let prompt: string;
+    if (quickMode) {
+      prompt = buildDebugAnalyzePrompt({
+        gitLog,
+        testOutput,
+        buildOutput,
+        stateSnapshot,
+        recentErrors,
+      });
+    } else {
+      // Iron Law enhanced prompt
+      const pattern = getBugPattern(bugClassification);
+      const ironLawState = createIronLawState(phaseArg ?? 0);
+      const { buildDebugIronLawPrompt } = await import('./prompts/debug-ironlaw.js');
+      prompt = buildDebugIronLawPrompt({
+        gitLog,
+        testOutput,
+        buildOutput,
+        stateSnapshot,
+        recentErrors: sanitizedErrors,
+        bugClassification,
+        bugPattern: pattern ?? { type: bugClassification, category: 'structural', description: '', indicators: [], commonFixes: [] },
+        priorLearnings: priorLearningsContext,
+        ironLawState,
+        freezeScope: freezeScopeDirs,
+      });
+    }
 
     const result = await ctx.agent.run({
       role: 'verification',
       prompt,
-      permissions: DEBUG_PERMISSIONS,
+      permissions,
       timeout: 120_000,
     });
 
-    progress.update({ completed: 4, message: 'Agent analysis complete' });
+    progress.update({ completed: totalSteps, message: 'Agent analysis complete' });
     progress.done({ summary: 'Analysis complete' });
 
     // --- Parse result ---
@@ -216,6 +296,25 @@ export default defineSkill({
       };
     }
 
+    // --- Save learning (Iron Law mode only) ---
+    if (!quickMode && analysis.root_cause) {
+      try {
+        const id = `learn-${Date.now().toString(36)}`;
+        await saveLearning(ctx.cwd, {
+          id,
+          pattern: analysis.failure_type as FailureType,
+          symptom: recentErrors.slice(0, 200),
+          rootCause: analysis.root_cause,
+          fix: analysis.fix_suggestions[0]?.action ?? '',
+          files: analysis.affected_files.map((f) => f.file),
+          createdAt: new Date().toISOString(),
+          hitCount: 0,
+        });
+      } catch {
+        // Learning save is best-effort
+      }
+    }
+
     // --- Store in state ---
     await ctx.state.set('debug.lastResult', analysis);
 
@@ -226,19 +325,27 @@ export default defineSkill({
 
     const summary = `${analysis.failure_type}: ${analysis.root_cause} (confidence: ${analysis.confidence}%)`;
 
+    const details = [
+      `Failure type: ${analysis.failure_type}`,
+      `Root cause: ${analysis.root_cause}`,
+      `Affected files: ${analysis.affected_files.length}`,
+      `Confidence: ${analysis.confidence}%`,
+    ];
+
+    if (!quickMode) {
+      details.push(
+        `Bug classification: ${bugClassification}`,
+        `Freeze scope: ${freezeScopeDirs.length > 0 ? freezeScopeDirs.join(', ') : 'none'}`,
+      );
+    }
+
+    details.push('', 'Top fix suggestions:', ...topSuggestions);
+
     await ctx.ui.result({
       success: true,
       title: 'Debug',
       summary,
-      details: [
-        `Failure type: ${analysis.failure_type}`,
-        `Root cause: ${analysis.root_cause}`,
-        `Affected files: ${analysis.affected_files.length}`,
-        `Confidence: ${analysis.confidence}%`,
-        '',
-        'Top fix suggestions:',
-        ...topSuggestions,
-      ],
+      details,
     });
 
     return {

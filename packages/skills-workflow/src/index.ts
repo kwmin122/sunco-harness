@@ -45,6 +45,9 @@ export { default as assumeSkill } from './assume.skill.js';
 export { default as researchSkill } from './research.skill.js';
 export { default as planSkill } from './plan.skill.js';
 
+// Phase 5.5 ultraplan (browser-based visual plan review)
+export { default as ultraplanSkill } from './ultraplan.skill.js';
+
 // Phase 6 execution + review skills
 export { default as executeSkill } from './execute.skill.js';
 export { default as reviewSkill } from './review.skill.js';
@@ -83,6 +86,49 @@ export { default as docSkill } from './doc.skill.js';
 // Phase 10 shared types
 export type { FailureType, DiagnoseError, DiagnoseResult, DebugAnalysis, ForensicsReport } from './shared/debug-types.js';
 export { parseTestOutput, parseTypeErrors, parseLintErrors } from './diagnose.skill.js';
+
+// Phase 23a Iron Law Engine utilities
+export type { IronLawState, BugPattern, BugCategory, DebugLearning, SanitizeResult, IronLawDebugAnalysis, DebugStuckResult } from './shared/debug-types.js';
+export { classifyBug, getBugPattern, getPatternsByCategory } from './shared/bug-patterns.js';
+export { sanitizeForSearch } from './shared/error-sanitizer.js';
+export { saveLearning, searchLearnings, readAllLearnings, incrementHitCount } from './shared/debug-learnings.js';
+export { createIronLawGate, createIronLawState, confirmRootCause, rejectHypothesis, addHypothesis, isEditBlocked, HookAbortError } from './shared/iron-law-gate.js';
+export { buildDebugIronLawPrompt } from './prompts/debug-ironlaw.js';
+export type { IronLawPromptParams } from './prompts/debug-ironlaw.js';
+
+// Phase 23b Review Army utilities
+export { evaluateSpecialistGate, updateSpecialistRecord, createSpecialistRecord, ALL_SPECIALISTS } from './shared/specialist-gate.js';
+export type { SpecialistId, SpecialistGateResult, SpecialistRecord } from './shared/specialist-gate.js';
+export { applyConfidenceGate, formatConfidenceGateSummary } from './shared/confidence-gate.js';
+export type { ConfidenceGateResult } from './shared/confidence-gate.js';
+export { generateTestStubs, formatTestStubSummary } from './shared/test-stub-generator.js';
+export type { TestStub } from './shared/test-stub-generator.js';
+
+// Phase 23b specialist prompts
+export { buildVerifyTestingPrompt } from './prompts/verify-testing.js';
+export { buildVerifyApiPrompt } from './prompts/verify-api.js';
+export { buildVerifyMigrationPrompt } from './prompts/verify-migration.js';
+export { buildVerifyMaintainabilityPrompt } from './prompts/verify-maintainability.js';
+
+// Phase 24a universal learnings + timeline
+export { logLearning, readAllLearnings as readAllUniversalLearnings, searchLearnings as searchUniversalLearnings, getLearningsCount } from './shared/learnings.js';
+export type { Learning, LearningType, LearningSource } from './shared/learnings.js';
+export { logTimelineEvent, getRecentTimeline, getBranchTimeline, getLastSession, detectSkillPattern } from './shared/skill-timeline.js';
+export type { TimelineEntry, SkillPattern } from './shared/skill-timeline.js';
+export { recoverContext, formatWelcomeBriefing } from './shared/context-recovery.js';
+export type { RecoveryContext } from './shared/context-recovery.js';
+
+// Phase 24c routing + proactive
+export { loadRoutingRules, matchRoute, parseRoutingSection, generateRoutingSection, DEFAULT_ROUTING_RULES } from './shared/skill-router.js';
+export type { RoutingRule, RouteMatch } from './shared/skill-router.js';
+export { detectProactiveSuggestion, formatProactiveSuggestion } from './shared/keyword-matcher.js';
+export type { ProactiveSuggestion } from './shared/keyword-matcher.js';
+
+// Phase 24b smart review
+export { extractIntent, detectDrift } from './shared/scope-drift-detector.js';
+export type { DriftVerdict, DriftResult } from './shared/scope-drift-detector.js';
+export { extractPlanTasks, auditPlanCompletion } from './shared/plan-completion-auditor.js';
+export type { PlanTask as CompletionPlanTask, TaskStatus, CompletionAudit } from './shared/plan-completion-auditor.js';
 
 // Phase 7 shared utilities
 export type { VerifyFinding, VerifyReport, LayerResult, VerifyVerdict, CoverageMetric, FileCoverage, CoverageReport } from './shared/verify-types.js';
@@ -139,6 +185,10 @@ export { recordSkillUsage, getSkillProfile } from './shared/skill-profile.js';
 export type { SkillUsageEntry, SkillProfile } from './shared/skill-profile.js';
 export { checkHarnessBudget, HARNESS_BUDGET_PERCENT } from './shared/harness-budget.js';
 export type { HarnessBudgetResult } from './shared/harness-budget.js';
+
+// Ultraplan prompt builders
+export { buildUltraplanReviewPrompt, buildUltraplanDraftPrompt, parseUltraplanOutput } from './prompts/ultraplan.js';
+export type { UltraplanReviewParams, UltraplanDraftParams } from './prompts/ultraplan.js';
 
 // Prompt builders (for extensibility)
 export { buildResearchPrompt, buildSynthesisPrompt } from './prompts/index.js';
