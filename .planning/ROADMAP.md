@@ -39,6 +39,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 24a: Learnings + Timeline** - 범용 learnings system (6 type, decay, dedup), skill timeline, context recovery, welcome briefing (v1.3, completed 2026-04-07)
 - [x] **Phase 24b: Smart Review** - scope drift detection, plan completion audit (v1.3, completed 2026-04-07)
 - [x] **Phase 24c: Routing + Proactive** - CLAUDE.md skill routing, natural language keyword matching, proactive suggestion (v1.3, completed 2026-04-07)
+- [x] **Phase 24d: Harness Evolution** - Product-level planning pivot (PRODUCT-SPEC.md, delivery slices, slice-contracts), review arsenal (ceo/eng/design-review), compound learning loop (v1.3, completed 2026-04-08)
+- [ ] **Phase 25: Workflow Surface Simplification** - User layer 5개(new/next/do/status/help)만 기본 노출, workflow/expert 명령 hidden 처리, help를 작업 목록으로 재설계, review auto-routing (CEO/ENG/DESIGN 상황 기반 선택)
 
 ## Phase Details
 
@@ -386,3 +388,5 @@ v1.2 Phases: 17 -> 18 -> 19 -> 20 -> 21 (Light Harness)
 | 20. Infinite Execution | 1/1 | Complete | 2026-04-06 |
 | 21. Cross-Session Intelligence | 1/1 | Complete | 2026-04-06 |
 | 22. Ultraplan Integration | 0/? | Not started | - |
+| 24d. Harness Evolution | - | Complete | 2026-04-08 |
+| 25. Workflow Surface Simplification | 0/? | Not started | - |
