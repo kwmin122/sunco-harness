@@ -146,8 +146,9 @@ describe('buildUltraplanReviewPrompt', () => {
     });
 
     expect(result).toContain('PLAN_SEPARATOR');
-    expect(result).toContain('YAML frontmatter');
-    expect(result).toContain('XML sections');
+    // Format spec now describes both delivery-slice and execution-packet formats
+    expect(result).toContain('Delivery Slice');
+    expect(result).toContain('Execution Packet');
   });
 
   it('handles missing research gracefully', () => {

@@ -477,13 +477,55 @@ export async function runLayer3Acceptance(
 
   // Check acceptance criteria from plans
   for (const plan of plans) {
+    const planId = `${plan.frontmatter.phase}-${plan.frontmatter.plan}`;
+
     // Step A: Check <acceptance_criteria> blocks (Task 2: acceptance_criteria auto-link)
     // Extract from raw plan text — deterministic grep-verifiable checks
     const acceptanceCriteria = extractAcceptanceCriteria(plan.raw);
     if (acceptanceCriteria.length > 0) {
-      const planId = `${plan.frontmatter.phase}-${plan.frontmatter.plan}`;
       const acFindings = await checkAcceptanceCriteria(ctx.cwd, acceptanceCriteria, planId);
       findings.push(...acFindings);
+    }
+
+    // Step A2: Delivery-slice plans — extract verification intent
+    // These are human-testable criteria, not grep-verifiable. Check for
+    // file-path references and command patterns that CAN be checked deterministically.
+    if (plan.frontmatter.isDeliverySlice && plan.verificationIntent) {
+      const intentLines = plan.verificationIntent
+        .split('\n')
+        .map((l) => l.replace(/^[-*]\s*/, '').trim())
+        .filter(Boolean);
+
+      // Extract any "contains" or "exports" patterns from verification intent
+      const greppableIntents = intentLines.filter(
+        (l) => GREPPABLE.test(l) || EXPORTABLE.test(l),
+      );
+      if (greppableIntents.length > 0) {
+        const intentFindings = await checkAcceptanceCriteria(ctx.cwd, greppableIntents, planId);
+        findings.push(...intentFindings);
+      }
+
+      // Check command-like patterns (e.g., "sunco X --flag" or "npm test")
+      const commandIntents = intentLines.filter((l) => /^`[^`]+`/.test(l) || /`[^`]+`\s+(exits|returns|outputs|shows)/.test(l));
+      if (commandIntents.length > 0) {
+        findings.push({
+          layer: 3,
+          source: 'acceptance',
+          severity: 'low',
+          description: `Delivery-slice plan ${planId} has ${commandIntents.length} command-based verification(s) requiring manual check`,
+          suggestion: 'Run the commands listed in Verification intent to validate',
+        });
+      }
+
+      if (intentLines.length > 0 && greppableIntents.length === 0 && commandIntents.length === 0) {
+        findings.push({
+          layer: 3,
+          source: 'acceptance',
+          severity: 'low',
+          description: `Delivery-slice plan ${planId} has ${intentLines.length} human-testable verification(s) — cannot auto-verify`,
+          suggestion: 'Review Verification intent section manually or via UAT',
+        });
+      }
     }
 
     // Step B: Check task done criteria (file existence checks)
@@ -647,13 +689,13 @@ export async function runLayer4PermissionScope(
     // Collect declared scope from all plans
     const declaredPaths = new Set<string>();
     for (const plan of plans) {
-      for (const filePath of plan.frontmatter.files_modified) {
+      for (const filePath of (plan.frontmatter.files_modified ?? [])) {
         declaredPaths.add(filePath);
       }
     }
 
     if (declaredPaths.size === 0) {
-      // No declared scope -- nothing to check
+      // No declared scope (e.g., delivery-slice plans) -- skip permission check
       return {
         layer: 4,
         name: 'Permission Scoping',
@@ -803,13 +845,15 @@ async function runAdversarialChecks(
   const findings = [...existingFindings];
 
   // Collect must_haves from PLAN.md files in phaseDir
+  // Supports both legacy (frontmatter truths) and delivery-slice (## Verification intent)
   const mustHaves: string[] = [];
   try {
     const entries = await readdir(phaseDir);
     const planFiles = entries.filter((e) => e.match(/-PLAN\.md$/));
     for (const file of planFiles) {
       const content = await readFile(join(phaseDir, file), 'utf-8');
-      // Extract must_haves from frontmatter
+
+      // Try legacy format: extract must_haves.truths from frontmatter
       const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
       if (fmMatch) {
         const fm = fmMatch[1]!;
@@ -821,6 +865,16 @@ async function runAdversarialChecks(
             .filter(Boolean);
           mustHaves.push(...truths);
         }
+      }
+
+      // Try delivery-slice format: extract ## Verification intent lines
+      const verifyMatch = content.match(/^## Verification intent\s*\n([\s\S]*?)(?=^## |$)/m);
+      if (verifyMatch) {
+        const lines = verifyMatch[1]!
+          .split('\n')
+          .map((l) => l.replace(/^[-*]\s*/, '').trim())
+          .filter(Boolean);
+        mustHaves.push(...lines);
       }
     }
   } catch {

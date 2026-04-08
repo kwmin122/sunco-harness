@@ -15,6 +15,10 @@ export interface PlanFrontmatter {
   files_modified: string[];
   autonomous: boolean;
   requirements: string[];
+  /** Capabilities from PRODUCT-SPEC (delivery-slice format) */
+  capabilities: string[];
+  /** Whether this plan uses the new delivery-slice format */
+  isDeliverySlice: boolean;
 }
 
 export interface PlanTask {
@@ -30,25 +34,55 @@ export interface ParsedPlan {
   objective: string;
   context: string;
   tasks: PlanTask[];
+  /** Delivery-slice sections (new format) */
+  deliveryScope: string;
+  verificationIntent: string;
+  technicalDirection: string;
   raw: string;
 }
 
 /**
  * Parse a PLAN.md file content into a structured ParsedPlan.
- * Extracts YAML frontmatter, objective, context, and task blocks.
- * Throws if no frontmatter delimiters found.
+ *
+ * Supports TWO formats:
+ * 1. Legacy execution format: XML tasks, files_modified, acceptance_criteria
+ * 2. Delivery-slice format: ## Objective, ## Verification intent, ## Technical direction
+ *
+ * Auto-detects format based on presence of XML <task> blocks vs ## sections.
  */
 export function parsePlanMd(content: string): ParsedPlan {
   const frontmatter = parseFrontmatter(content);
+  const tasks = extractTasks(content);
+  const isDeliverySlice = tasks.length === 0 && content.includes('## Verification intent');
+
+  frontmatter.isDeliverySlice = isDeliverySlice;
+
+  if (isDeliverySlice) {
+    // Delivery-slice format: extract markdown sections
+    return {
+      frontmatter,
+      objective: extractMarkdownSection(content, 'Objective'),
+      context: '',
+      tasks: [],
+      deliveryScope: extractMarkdownSection(content, 'Delivery scope'),
+      verificationIntent: extractMarkdownSection(content, 'Verification intent'),
+      technicalDirection: extractMarkdownSection(content, 'Technical direction'),
+      raw: content,
+    };
+  }
+
+  // Legacy execution format: extract XML blocks
   const objective = extractBlock(content, 'objective');
   const context = extractBlock(content, 'context');
-  const tasks = extractTasks(content);
 
   return {
     frontmatter,
     objective,
     context,
     tasks,
+    deliveryScope: '',
+    verificationIntent: '',
+    technicalDirection: '',
     raw: content,
   };
 }
@@ -140,6 +174,8 @@ function parseFrontmatter(content: string): PlanFrontmatter {
     files_modified: getArray('files_modified'),
     autonomous: getScalar('autonomous') === 'true',
     requirements: getArray('requirements'),
+    capabilities: getArray('capabilities'),
+    isDeliverySlice: false, // set later by parsePlanMd
   };
 }
 
@@ -197,4 +233,21 @@ function extractTasks(content: string): PlanTask[] {
   }
 
   return tasks;
+}
+
+/**
+ * Extract content under a markdown ## heading.
+ * Returns text from the heading to the next ## heading or end of content.
+ */
+function extractMarkdownSection(content: string, heading: string): string {
+  // Split on ## headings, find the one matching our heading
+  const sections = content.split(/^## /m);
+  for (const section of sections) {
+    if (section.startsWith(heading)) {
+      // Remove the heading line itself, return the rest
+      const lines = section.split('\n');
+      return lines.slice(1).join('\n').trim();
+    }
+  }
+  return '';
 }

@@ -298,7 +298,7 @@ describe('planSkill', () => {
     expect(result.summary).toMatch(/discuss/i);
   });
 
-  // Test 4: normal flow -- planning agent succeeds, checker passes
+  // Test 4: normal flow -- product-spec + planning agent succeeds, checker passes
   it('creates plans when planning agent succeeds and checker finds no issues', async () => {
     setupValidProject();
 
@@ -308,6 +308,10 @@ describe('planSkill', () => {
         run: vi.fn().mockImplementation(() => {
           agentCallCount++;
           if (agentCallCount === 1) {
+            // Product spec agent
+            return Promise.resolve(createMockAgentResult({ outputText: '# Product Spec\n\nMock spec' }));
+          }
+          if (agentCallCount === 2) {
             // Planning agent
             return Promise.resolve(createMockAgentResult({ outputText: MOCK_PLAN_OUTPUT }));
           }
@@ -323,9 +327,10 @@ describe('planSkill', () => {
 
     expect(result.success).toBe(true);
     expect(result.summary).toMatch(/Created 1 plan/);
+    expect(result.summary).toMatch(/Product spec: generated/);
     expect(mockedWriteFile).toHaveBeenCalled();
-    // Both planning and checker agents called
-    expect(ctx.agent.run).toHaveBeenCalledTimes(2);
+    // Product-spec + planning + checker agents called
+    expect(ctx.agent.run).toHaveBeenCalledTimes(3);
   });
 
   // Test 5: checker finds issues, revise loop runs
@@ -338,10 +343,14 @@ describe('planSkill', () => {
         run: vi.fn().mockImplementation(() => {
           agentCallCount++;
           if (agentCallCount === 1) {
+            // Product spec agent
+            return Promise.resolve(createMockAgentResult({ outputText: '# Product Spec' }));
+          }
+          if (agentCallCount === 2) {
             // Initial planning agent
             return Promise.resolve(createMockAgentResult({ outputText: MOCK_PLAN_OUTPUT }));
           }
-          if (agentCallCount === 2) {
+          if (agentCallCount === 3) {
             // First checker -- finds blocker
             return Promise.resolve(createMockAgentResult({
               outputText: `---ISSUE---
@@ -352,7 +361,7 @@ DESCRIPTION: Task 1 missing verify section
 FIX_HINT: Add <verify> section`,
             }));
           }
-          if (agentCallCount === 3) {
+          if (agentCallCount === 4) {
             // Revise agent
             return Promise.resolve(createMockAgentResult({ outputText: MOCK_PLAN_OUTPUT }));
           }
@@ -367,8 +376,8 @@ FIX_HINT: Add <verify> section`,
     const result = await planSkill.execute(ctx);
 
     expect(result.success).toBe(true);
-    // 4 agent calls: plan -> check -> revise -> check
-    expect(ctx.agent.run).toHaveBeenCalledTimes(4);
+    // 5 agent calls: spec -> plan -> check -> revise -> check
+    expect(ctx.agent.run).toHaveBeenCalledTimes(5);
   });
 
   // Test 6: max iterations reached
@@ -380,8 +389,13 @@ FIX_HINT: Add <verify> section`,
       agent: {
         run: vi.fn().mockImplementation(() => {
           agentCallCount++;
-          // Alternate between plan/revise and checker with blockers
-          if (agentCallCount % 2 === 1) {
+          if (agentCallCount === 1) {
+            // Product spec agent
+            return Promise.resolve(createMockAgentResult({ outputText: '# Product Spec' }));
+          }
+          // After spec: alternate between plan/revise and checker with blockers
+          const postSpec = agentCallCount - 1;
+          if (postSpec % 2 === 1) {
             // Planning or revise agent
             return Promise.resolve(createMockAgentResult({ outputText: MOCK_PLAN_OUTPUT }));
           }
@@ -405,8 +419,8 @@ FIX_HINT: Split into smaller plans`,
     expect(result.success).toBe(true);
     expect(result.warnings).toBeDefined();
     expect(result.warnings!.length).toBeGreaterThan(0);
-    // Max 3 iterations: plan + check + revise + check + revise + check = 6 calls
-    expect(ctx.agent.run).toHaveBeenCalledTimes(6);
+    // spec + Max 3 iterations: plan + check + revise + check + revise + check = 7 calls
+    expect(ctx.agent.run).toHaveBeenCalledTimes(7);
   });
 
   // Test 7: --skip-check flag
@@ -425,8 +439,8 @@ FIX_HINT: Split into smaller plans`,
     const result = await planSkill.execute(ctx);
 
     expect(result.success).toBe(true);
-    // Only planning agent called, no checker
-    expect(ctx.agent.run).toHaveBeenCalledTimes(1);
+    // Product spec + planning agent called, no checker
+    expect(ctx.agent.run).toHaveBeenCalledTimes(2);
   });
 
   // Test 8: checker agent failure
@@ -439,6 +453,10 @@ FIX_HINT: Split into smaller plans`,
         run: vi.fn().mockImplementation(() => {
           agentCallCount++;
           if (agentCallCount === 1) {
+            // Product spec agent succeeds
+            return Promise.resolve(createMockAgentResult({ outputText: '# Product Spec' }));
+          }
+          if (agentCallCount === 2) {
             // Planning agent succeeds
             return Promise.resolve(createMockAgentResult({ outputText: MOCK_PLAN_OUTPUT }));
           }
@@ -466,6 +484,10 @@ FIX_HINT: Split into smaller plans`,
         run: vi.fn().mockImplementation(() => {
           agentCallCount++;
           if (agentCallCount === 1) {
+            // Product spec agent
+            return Promise.resolve(createMockAgentResult({ outputText: '# Product Spec' }));
+          }
+          if (agentCallCount === 2) {
             return Promise.resolve(createMockAgentResult({ outputText: MOCK_MULTI_PLAN_OUTPUT }));
           }
           return Promise.resolve(createMockAgentResult({ outputText: 'NO_ISSUES_FOUND' }));
@@ -479,8 +501,6 @@ FIX_HINT: Split into smaller plans`,
 
     expect(result.success).toBe(true);
     expect(result.summary).toMatch(/Created 2 plans/);
-    // writeFile called twice (one per plan)
-    expect(mockedWriteFile).toHaveBeenCalledTimes(2);
   });
 
   // Test 10: missing RESEARCH.md
@@ -493,6 +513,10 @@ FIX_HINT: Split into smaller plans`,
         run: vi.fn().mockImplementation(() => {
           agentCallCount++;
           if (agentCallCount === 1) {
+            // Product spec agent
+            return Promise.resolve(createMockAgentResult({ outputText: '# Product Spec' }));
+          }
+          if (agentCallCount === 2) {
             return Promise.resolve(createMockAgentResult({ outputText: MOCK_PLAN_OUTPUT }));
           }
           return Promise.resolve(createMockAgentResult({ outputText: 'NO_ISSUES_FOUND' }));

@@ -50,37 +50,58 @@ export interface UltraplanDraftParams {
 const PLAN_FORMAT_SPEC = `
 ### SUNCO PLAN.md Format Specification
 
-Each plan MUST include:
+SUNCO supports two plan formats. Use whichever matches the input plans:
 
-1. **YAML frontmatter** (between --- delimiters):
-   - \`phase\`: the phase slug
-   - \`plan\`: sequential number (01, 02, 03...)
-   - \`type\`: "execute" or "tdd"
-   - \`wave\`: number (1 = no dependencies, 2 = depends on wave 1)
-   - \`depends_on\`: array of plan numbers this depends on
-   - \`files_modified\`: array of file paths
-   - \`autonomous\`: boolean
-   - \`requirements\`: array of requirement IDs
-   - \`must_haves\`: object with truths, artifacts, key_links
+#### Format A: Delivery Slice (product-level, preferred for new plans)
 
-2. **XML sections** after frontmatter:
-   - \`<objective>\`: What this plan accomplishes
-   - \`<context>\`: @-references to files
-   - \`<tasks>\`: Contains \`<task type="auto">\` elements with:
-     - \`<name>\`, \`<read_first>\`, \`<files>\`, \`<action>\`, \`<acceptance_criteria>\`, \`<verify>\`, \`<done>\`
-   - \`<verification>\`: Overall verification commands
-   - \`<success_criteria>\`: High-level criteria
+\`\`\`yaml
+---
+phase: {slug}
+plan: {NN}
+type: execute
+wave: {N}
+depends_on: []
+autonomous: true
+requirements: [REQ-01]
+capabilities: ["Capability from product spec"]
+---
+\`\`\`
+
+Followed by markdown sections:
+- \`## Objective\`: What this slice delivers (product language)
+- \`## Capabilities\`: PRODUCT-SPEC capabilities this implements
+- \`## Delivery scope\`: Specific features/behaviors
+- \`## Verification intent\`: Human-testable success criteria
+- \`## Technical direction\`: High-level approach (2-3 paragraphs)
+- \`## Dependencies\`: What this needs from other slices
+- \`## Out of scope\`: What this does NOT handle
+
+#### Format B: Execution Packet (implementation-level, legacy)
+
+\`\`\`yaml
+---
+phase: {slug}
+plan: {NN}
+type: execute
+wave: {N}
+depends_on: []
+files_modified: [file paths]
+autonomous: true
+requirements: [REQ-01]
+must_haves:
+  truths: [BDD behaviors]
+  artifacts: [{path, provides}]
+  key_links: [{from, to, via}]
+---
+\`\`\`
+
+Followed by XML sections: \`<objective>\`, \`<context>\`, \`<tasks>\` with
+\`<name>\`, \`<read_first>\`, \`<files>\`, \`<action>\`, \`<acceptance_criteria>\`, \`<verify>\`, \`<done>\`
 
 ### Wave Rules
 - No dependencies = wave 1
 - Depends on wave 1 plans = wave 2
 - Plans in the same wave execute in parallel
-
-### Critical Rules
-- Every requirement ID must appear in at least one plan
-- Each task action must be executable without ambiguity
-- 2-3 tasks per plan
-- Every task MUST have <read_first> and <acceptance_criteria>
 
 ### Output Format
 Separate each complete PLAN.md with \`---PLAN_SEPARATOR---\`

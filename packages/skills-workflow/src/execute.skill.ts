@@ -22,9 +22,10 @@ import { join } from 'node:path';
 import { parsePlanMd, groupPlansByWave } from './shared/plan-parser.js';
 import type { ParsedPlan } from './shared/plan-parser.js';
 import { WorktreeManager } from './shared/worktree-manager.js';
-import { resolvePhaseDir, writePhaseArtifact } from './shared/phase-reader.js';
+import { resolvePhaseDir, writePhaseArtifact, readPhaseArtifact } from './shared/phase-reader.js';
 import { captureGitState } from './shared/git-state.js';
 import { buildExecutePrompt } from './prompts/execute.js';
+import { buildSliceContractPrompt } from './prompts/slice-contract.js';
 import type { ExecuteAgentSummary } from './prompts/execute.js';
 
 // ---------------------------------------------------------------------------
@@ -77,11 +78,57 @@ function planIdFromPlan(plan: ParsedPlan): string {
 }
 
 /**
+ * Build a raw execution prompt for plans without structured tasks.
+ * Used when slice-contract output doesn't parse into legacy task format.
+ * The agent reads the full contract/plan and implements it end-to-end.
+ */
+function buildRawExecutePrompt(rawContent: string, planId: string, worktreePath: string): string {
+  return `You are an executor agent for the SUNCO workspace OS. Your job is to implement code changes described below, working inside an isolated Git worktree.
+
+## Working Directory
+
+All file operations MUST happen inside this directory:
+\`${worktreePath}\`
+
+Do NOT modify files outside this directory.
+
+## Plan / Contract
+
+<plan>
+${rawContent}
+</plan>
+
+## Execution Instructions
+
+1. Read the plan/contract above carefully
+2. Identify all files that need to be created or modified
+3. Implement each change, reading existing files first to understand patterns
+4. After each logical unit of work, commit with: \`git commit --no-verify -m "feat(${planId}): <description>"\`
+5. Run any verification commands mentioned in the plan
+6. If verification fails, fix and retry ONCE
+
+## Output Format
+
+After completing all work (or stopping on failure), output EXACTLY this JSON block at the end:
+
+\`\`\`json
+{
+  "success": true_or_false,
+  "tasksCompleted": number_of_logical_units_completed,
+  "totalTasks": estimated_total,
+  "commits": ["hash1", "hash2"]
+}
+\`\`\``;
+}
+
+/**
  * Build scoped permissions for a plan.
  * If plan modifies .planning/** paths, use planning role instead of execution (D-04 / Pitfall 7).
  */
 function buildPlanPermissions(plan: ParsedPlan): PermissionSet {
-  const hasPlanningFiles = plan.frontmatter.files_modified.some(
+  const filesModified = plan.frontmatter.files_modified ?? [];
+
+  const hasPlanningFiles = filesModified.some(
     (f) => f.startsWith('.planning/') || f.startsWith('.planning\\'),
   );
 
@@ -99,8 +146,8 @@ function buildPlanPermissions(plan: ParsedPlan): PermissionSet {
 
   // Scope write paths to plan's files_modified if available
   const writePaths =
-    plan.frontmatter.files_modified.length > 0
-      ? plan.frontmatter.files_modified
+    filesModified.length > 0
+      ? filesModified
       : EXECUTION_PERMISSIONS.writePaths;
 
   return { ...EXECUTION_PERMISSIONS, writePaths };
@@ -188,6 +235,86 @@ export default defineSkill({
       plans.push(parsePlanMd(content));
     }
 
+    // --- Step 3.5: Expand delivery-slice plans via slice-contract ---
+    const deliverySlices = plans.filter((p) => p.frontmatter.isDeliverySlice);
+    if (deliverySlices.length > 0) {
+      const sliceProgress = ctx.ui.progress({
+        title: 'Generating slice contracts from delivery plans',
+        total: deliverySlices.length,
+      });
+
+      // Read context artifacts for slice-contract generation
+      const padded = String(phaseArg).padStart(2, '0');
+      const productSpecMd = await readPhaseArtifact(ctx.cwd, phaseArg, `${padded}-PRODUCT-SPEC.md`) ?? '';
+      const contextMd = await readPhaseArtifact(ctx.cwd, phaseArg, `${padded}-CONTEXT.md`) ?? '';
+
+      const phaseDirName = phaseDir.split('/').pop() ?? '';
+      const phaseSlug = phaseDirName.replace(/^\d+-/, '');
+
+      for (let i = 0; i < deliverySlices.length; i++) {
+        const slice = deliverySlices[i];
+        const planNum = String(slice.frontmatter.plan).padStart(2, '0');
+
+        sliceProgress.update({ completed: i, message: `Expanding plan ${planNum}...` });
+
+        const contractResult = await ctx.agent.run({
+          role: 'execution',
+          prompt: buildSliceContractPrompt({
+            planContent: slice.raw,
+            productSpecMd,
+            contextMd,
+            phaseSlug,
+            paddedPhase: padded,
+            planNumber: planNum,
+          }),
+          permissions: {
+            role: 'execution',
+            readPaths: ['**'],
+            writePaths: [],
+            allowTests: false,
+            allowNetwork: false,
+            allowGitWrite: false,
+            allowCommands: [],
+          },
+          timeout: AGENT_TIMEOUT,
+        });
+
+        if (contractResult.success && contractResult.outputText) {
+          // Re-parse the contract as a legacy-format plan with tasks
+          try {
+            const expanded = parsePlanMd(contractResult.outputText);
+            // Merge: keep delivery-slice metadata, use expanded tasks
+            const idx = plans.indexOf(slice);
+            if (idx >= 0) {
+              plans[idx] = {
+                ...expanded,
+                frontmatter: {
+                  ...slice.frontmatter,
+                  files_modified: expanded.frontmatter.files_modified,
+                  isDeliverySlice: false, // now expanded
+                },
+              };
+            }
+          } catch {
+            // If contract output isn't parseable as plan format, use raw as execution prompt
+            ctx.log.warn(`Slice contract for plan ${planNum} not in standard format, using raw`);
+            const idx = plans.indexOf(slice);
+            if (idx >= 0) {
+              plans[idx] = {
+                ...slice,
+                frontmatter: { ...slice.frontmatter, isDeliverySlice: false },
+                raw: contractResult.outputText, // pass raw contract to executor
+              };
+            }
+          }
+        } else {
+          ctx.log.warn(`Slice contract generation failed for plan ${planNum}`);
+        }
+      }
+
+      sliceProgress.done({ summary: `${deliverySlices.length} slice contract(s) generated` });
+    }
+
     // --- Step 4: Group by wave ---
     const waves = groupPlansByWave(plans);
     const totalWaves = waves.size;
@@ -263,16 +390,21 @@ export default defineSkill({
 
         // --- Dispatch agents in parallel (D-01, D-07) ---
         const agentPromises = [...worktreeMap.entries()].map(
-          ([planId, { plan, worktreePath }]) =>
-            ctx.agent
-              .run({
-                role: 'execution',
-                prompt: buildExecutePrompt({
+          ([planId, { plan, worktreePath }]) => {
+            // Choose prompt strategy based on whether tasks were parsed
+            const prompt = plan.tasks.length > 0
+              ? buildExecutePrompt({
                   planContent: plan.raw,
                   planId,
                   worktreePath,
                   taskList: plan.tasks,
-                }),
+                })
+              : buildRawExecutePrompt(plan.raw, planId, worktreePath);
+
+            return ctx.agent
+              .run({
+                role: 'execution',
+                prompt,
                 permissions: buildPlanPermissions(plan),
                 timeout: AGENT_TIMEOUT,
               })
@@ -287,7 +419,8 @@ export default defineSkill({
                 result: null as null,
                 plan,
                 error: err instanceof Error ? err.message : String(err),
-              })),
+              }));
+          },
         );
 
         const results = await Promise.all(agentPromises);

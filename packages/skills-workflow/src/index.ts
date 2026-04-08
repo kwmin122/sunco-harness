@@ -52,6 +52,14 @@ export { default as ultraplanSkill } from './ultraplan.skill.js';
 export { default as executeSkill } from './execute.skill.js';
 export { default as reviewSkill } from './review.skill.js';
 
+// Phase 24d compound learning skill
+export { default as compoundSkill } from './compound.skill.js';
+
+// Phase 24d review arsenal skills
+export { default as ceoReviewSkill } from './ceo-review.skill.js';
+export { default as engReviewSkill } from './eng-review.skill.js';
+export { default as designReviewSkill } from './design-review.skill.js';
+
 // Phase 7 verification pipeline skills
 export { default as verifySkill } from './verify.skill.js';
 export { default as validateSkill } from './validate.skill.js';
@@ -189,6 +197,12 @@ export type { HarnessBudgetResult } from './shared/harness-budget.js';
 // Ultraplan prompt builders
 export { buildUltraplanReviewPrompt, buildUltraplanDraftPrompt, parseUltraplanOutput } from './prompts/ultraplan.js';
 export type { UltraplanReviewParams, UltraplanDraftParams } from './prompts/ultraplan.js';
+
+// Product-level planning prompt builders (Phase 24d)
+export { buildProductSpecPrompt } from './prompts/product-spec.js';
+export type { ProductSpecParams } from './prompts/product-spec.js';
+export { buildSliceContractPrompt } from './prompts/slice-contract.js';
+export type { SliceContractParams } from './prompts/slice-contract.js';
 
 // Prompt builders (for extensibility)
 export { buildResearchPrompt, buildSynthesisPrompt } from './prompts/index.js';

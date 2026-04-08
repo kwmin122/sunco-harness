@@ -2,7 +2,12 @@
  * Plan creation and revision prompt builders for sunco plan.
  *
  * buildPlanCreatePrompt: Instructs a planning agent to decompose a phase
- * into 2-5 execution plans with frontmatter, XML tasks, and BDD must_haves.
+ * into 2-5 DELIVERY SLICE plans. Each plan describes WHAT to deliver
+ * and HOW to verify it — but NOT implementation details like file paths,
+ * function signatures, or import patterns.
+ *
+ * Implementation details are generated just before execution by the
+ * slice-contract prompt (see slice-contract.ts).
  *
  * buildPlanRevisePrompt: Instructs a planning agent to fix issues found
  * by the plan-checker while preserving working parts.
@@ -20,6 +25,7 @@ export interface PlanCreateParams {
   researchMd: string;
   requirementsMd: string;
   roadmapMd: string;
+  productSpecMd: string;
   phaseGoal: string;
   requirements: string[];
   phaseSlug: string;
@@ -31,6 +37,7 @@ export interface PlanReviseParams {
   issues: string[];
   contextMd: string;
   requirementsMd: string;
+  productSpecMd: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -38,11 +45,11 @@ export interface PlanReviseParams {
 // ---------------------------------------------------------------------------
 
 /**
- * Build the prompt for the planning agent that generates PLAN.md files.
+ * Build the prompt for the planning agent that generates delivery-slice plans.
  *
- * The agent reads 4 input documents and produces 2-5 plans separated
- * by ---PLAN_SEPARATOR--- markers. Each plan includes YAML frontmatter
- * with BDD-style must_haves and XML task sections.
+ * The agent reads input documents including the PRODUCT-SPEC and produces
+ * 2-5 plans. Each plan defines a coherent delivery slice with product-level
+ * verification intent — not implementation-level task packets.
  */
 export function buildPlanCreatePrompt(params: PlanCreateParams): string {
   const {
@@ -50,20 +57,24 @@ export function buildPlanCreatePrompt(params: PlanCreateParams): string {
     researchMd,
     requirementsMd,
     roadmapMd,
+    productSpecMd,
     phaseGoal,
     requirements,
     phaseSlug,
     paddedPhase,
   } = params;
 
-  return `You are a planning agent for the SUNCO workspace OS. Your task is to decompose a phase into detailed execution plans.
+  return `You are a planning agent for the SUNCO workspace OS. Your task is to decompose a phase into delivery slices.
 
 ## Input Documents
 
-### CONTEXT.md (Phase decisions and domain knowledge)
+### PRODUCT-SPEC.md (What this phase delivers — the primary source of truth)
+${productSpecMd || '(No product spec available — derive capabilities from context and requirements)'}
+
+### CONTEXT.md (Product decisions and domain knowledge)
 ${contextMd}
 
-### RESEARCH.md (Technical research and patterns)
+### RESEARCH.md (Technical landscape)
 ${researchMd || '(No research document available)'}
 
 ### REQUIREMENTS.md (Full requirements list)
@@ -81,7 +92,9 @@ ${roadmapMd}
 
 ## Instructions
 
-Read ALL 4 input documents thoroughly. Then decompose this phase into **2-5 plans**, each with **2-3 tasks**.
+Read ALL input documents thoroughly. Then decompose this phase into **2-5 delivery slice plans**.
+
+Each plan represents a COHERENT SLICE of product functionality — something that delivers value on its own and can be verified by using the product.
 
 ### Plan Structure
 
@@ -93,29 +106,34 @@ Each plan MUST include:
    - \`type\`: "execute" or "tdd"
    - \`wave\`: number (1 = no dependencies, 2 = depends on wave 1, etc.)
    - \`depends_on\`: array of plan numbers this plan depends on (empty for wave 1)
-   - \`files_modified\`: array of file paths this plan will create/modify
    - \`autonomous\`: boolean (true if no human checkpoints needed)
    - \`requirements\`: array of requirement IDs from this phase
-   - \`must_haves\`: object with truths, artifacts, key_links
+   - \`capabilities\`: array of capability names from PRODUCT-SPEC.md
 
-2. **must_haves** structure:
-   - \`truths\`: array of BDD-style observable behaviors (user perspective, testable)
-   - \`artifacts\`: array of { path, provides, exports/contains }
-   - \`key_links\`: array of { from, to, via, pattern } describing critical connections
+2. **Sections** after frontmatter:
+   - \`## Objective\`: What this slice delivers and why, in product language
+   - \`## Capabilities\`: Which PRODUCT-SPEC capabilities this plan implements
+   - \`## Delivery scope\`: Specific features/behaviors included in this slice
+   - \`## Verification intent\`: How a HUMAN would verify this slice works
+     - User-level success criteria (not grep conditions)
+     - Example commands the user would run
+     - Expected observable behaviors
+   - \`## Technical direction\`: High-level approach (2-3 paragraphs max)
+     - Which major components are involved
+     - What the data/control flow looks like
+     - Key constraints or patterns to follow
+   - \`## Dependencies\`: What this slice needs from other slices or existing code
+   - \`## Out of scope\`: What this slice explicitly does NOT handle
 
-3. **XML sections** after frontmatter:
-   - \`<objective>\`: What this plan accomplishes and why
-   - \`<context>\`: @-references to files the executor should read
-   - \`<tasks>\`: Contains \`<task type="auto">\` elements, each with:
-     - \`<name>\`: Task name
-     - \`<read_first>\`: Files the executor MUST read before modifying anything (MANDATORY -- at least the file being modified + any source of truth)
-     - \`<files>\`: Files created/modified
-     - \`<action>\`: Detailed step-by-step instructions with CONCRETE values (NOT "align X with Y" -- specify exact values, signatures, config keys)
-     - \`<acceptance_criteria>\`: Grep-verifiable completion conditions (e.g., "file.ts contains export function foo")
-     - \`<verify>\`: \`<automated>\` commands to verify completion
-     - \`<done>\`: Bullet list of completion criteria
-   - \`<verification>\`: Overall plan verification commands
-   - \`<success_criteria>\`: High-level success criteria
+### What NOT to include in plans
+
+These are generated at execution time by the slice-contract:
+- ❌ Exact file paths or \`files_modified\` lists
+- ❌ Function signatures or type definitions
+- ❌ Import/export patterns or \`key_links\`
+- ❌ \`<read_first>\` file lists
+- ❌ \`<acceptance_criteria>\` with grep conditions
+- ❌ \`<action>\` with step-by-step code instructions
 
 ### Wave Assignment Rules
 
@@ -127,14 +145,11 @@ Each plan MUST include:
 ### Critical Rules
 
 1. Every requirement ID in [${requirements.join(', ')}] MUST appear in at least one plan's requirements field
-2. Each task action must be specific enough that a different Claude instance can execute without asking questions
-3. Must_haves truths should be BDD-style testable behaviors (e.g., "skill returns { success: false } when no provider available")
-4. 2-3 tasks per plan (not more)
-5. No plan should exceed ~50% of context budget
-6. Key links must cover critical import/dependency connections that could break
-7. Every task MUST have <read_first> listing at minimum the file being modified
-8. Every <action> must contain concrete values -- never say "align with" or "match to" without specifying the exact target
-9. Every task MUST have <acceptance_criteria> with grep-verifiable conditions
+2. Each plan must deliver a COHERENT SLICE — a user-facing capability or a meaningful chunk of one
+3. Verification intent should be human-testable (not "run grep on file X")
+4. 2-5 plans total, balanced in scope
+5. No plan should exceed ~40% of the phase scope
+6. Technical direction is a COMPASS, not a map — enough to guide, not prescribe
 
 ## Output Format
 
@@ -148,19 +163,31 @@ plan: 01
 type: execute
 wave: 1
 depends_on: []
-...
+autonomous: true
+requirements: [REQ-01, REQ-02]
+capabilities: ["Capability 1 from product spec"]
 ---
 
-<objective>...</objective>
-<context>...</context>
-<tasks>
-<task type="auto">
-  <name>Task 1: ...</name>
-  ...
-</task>
-</tasks>
-<verification>...</verification>
-<success_criteria>...</success_criteria>
+## Objective
+{What this slice delivers, in product language}
+
+## Capabilities
+{Which PRODUCT-SPEC capabilities}
+
+## Delivery scope
+{Specific features/behaviors}
+
+## Verification intent
+{How a human verifies this works}
+
+## Technical direction
+{High-level approach, 2-3 paragraphs}
+
+## Dependencies
+{What this needs}
+
+## Out of scope
+{What this does NOT handle}
 
 ---PLAN_SEPARATOR---
 
@@ -173,7 +200,7 @@ plan: 02
 ...
 \`\`\`
 
-Now decompose the phase into plans. Be thorough and specific.`;
+Now decompose the phase into delivery slices. Think product-first.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -187,13 +214,13 @@ Now decompose the phase into plans. Be thorough and specific.`;
  * then produces a corrected version preserving working parts.
  */
 export function buildPlanRevisePrompt(params: PlanReviseParams): string {
-  const { currentPlan, issues, contextMd, requirementsMd } = params;
+  const { currentPlan, issues, contextMd, requirementsMd, productSpecMd } = params;
 
   const issueList = issues
     .map((issue, i) => `${i + 1}. ${issue}`)
     .join('\n');
 
-  return `You are a planning agent for the SUNCO workspace OS. Your task is to revise execution plans based on quality checker feedback.
+  return `You are a planning agent for the SUNCO workspace OS. Your task is to revise delivery-slice plans based on quality checker feedback.
 
 ## Current Plans
 
@@ -204,6 +231,9 @@ ${currentPlan}
 ${issueList}
 
 ## Reference Documents
+
+### PRODUCT-SPEC.md
+${productSpecMd || '(No product spec available)'}
 
 ### CONTEXT.md
 ${contextMd}
@@ -223,8 +253,9 @@ ${requirementsMd}
 - Fix all listed issues
 - Do NOT introduce new issues while fixing
 - Preserve plan numbers and wave assignments unless an issue specifically requires changing them
-- Keep must_haves BDD-style and testable
+- Verification intent should be human-testable, not grep-verifiable
 - Every requirement ID must still be covered
+- Stay at the product/delivery level — do NOT add implementation details
 
 ## Output
 

@@ -1,11 +1,12 @@
 /**
  * Plan checker prompt builder for sunco plan.
  *
- * Instructs a verification agent to check generated plans against
- * 7 quality dimensions: requirement_coverage, task_completeness,
- * dependency_correctness, key_links_planned, scope_sanity, must_haves_derivation.
+ * Verifies delivery-slice plans at the PRODUCT level:
+ * requirement coverage, coherent slicing, verification intent quality,
+ * dependency correctness, scope sanity, and product contract compliance.
  *
- * Outputs structured ---ISSUE--- blocks or NO_ISSUES_FOUND.
+ * Does NOT check implementation details (file paths, grep criteria,
+ * read_first lists) — those are in slice-contracts, not plans.
  *
  * Requirements: WF-12
  * Decisions: D-13 (validation loop), D-16 (separate verification agent)
@@ -19,6 +20,7 @@ export interface PlanCheckerParams {
   plans: string[];
   contextMd: string;
   requirementsMd: string;
+  productSpecMd: string;
   phaseRequirements: string[];
 }
 
@@ -29,17 +31,19 @@ export interface PlanCheckerParams {
 /**
  * Build the prompt for the verification agent that checks plan quality.
  *
- * The agent evaluates plans against 6 dimensions and outputs structured
- * issue blocks. If no issues are found, outputs NO_ISSUES_FOUND.
+ * The agent evaluates delivery-slice plans against product-level
+ * dimensions and outputs structured issue blocks or NO_ISSUES_FOUND.
  */
 export function buildPlanCheckerPrompt(params: PlanCheckerParams): string {
-  const { plans, contextMd, requirementsMd, phaseRequirements } = params;
+  const { plans, contextMd, requirementsMd, productSpecMd, phaseRequirements } = params;
 
   const plansText = plans
     .map((plan, i) => `### Plan ${i + 1}\n\n${plan}`)
     .join('\n\n---\n\n');
 
-  return `You are a verification agent for the SUNCO workspace OS. Your task is to check the quality of execution plans before they are written to disk.
+  return `You are a verification agent for the SUNCO workspace OS. Your task is to check the quality of delivery-slice plans before they are written to disk.
+
+These are PRODUCT-LEVEL plans — they define what to deliver and how to verify it, NOT implementation details. Do not flag the absence of file paths, grep criteria, or read_first lists — those belong in slice-contracts generated at execution time.
 
 ## Plans to Check
 
@@ -47,7 +51,10 @@ ${plansText}
 
 ## Reference Documents
 
-### CONTEXT.md (Phase decisions)
+### PRODUCT-SPEC.md (Primary source of truth for what this phase delivers)
+${productSpecMd || '(No product spec available)'}
+
+### CONTEXT.md (Product decisions)
 ${contextMd}
 
 ### REQUIREMENTS.md
@@ -58,53 +65,51 @@ These requirement IDs must ALL be covered: ${phaseRequirements.join(', ')}
 
 ## Verification Dimensions
 
-Check each plan against ALL 7 dimensions:
+Check each plan against ALL 6 dimensions:
 
 ### 1. requirement_coverage
 Every phase requirement ID [${phaseRequirements.join(', ')}] MUST appear in at least one plan's \`requirements\` frontmatter field.
 - Missing coverage is a **blocker**
 
-### 2. task_completeness
-Every \`<task>\` element must have: \`<name>\`, \`<files>\`, \`<action>\`, \`<verify>\`, \`<done>\`.
-- Missing verify or done is a **blocker**
-- Missing files is a **warning** (might be intentional for pure config tasks)
+### 2. capability_alignment
+Each plan's capabilities must map to PRODUCT-SPEC capabilities.
+- Plan claims a capability not in PRODUCT-SPEC: **warning**
+- PRODUCT-SPEC capability not covered by any plan: **blocker**
+- Capability description contradicts PRODUCT-SPEC: **blocker**
 
-### 3. dependency_correctness
+### 3. verification_intent_quality
+Each plan must have a "Verification intent" section with:
+- Human-testable success criteria (not grep conditions or code assertions)
+- Example commands or user actions to verify
+- Expected observable behaviors
+- Missing verification intent: **blocker**
+- Verification is code-level instead of product-level (e.g., "file contains export"): **warning**
+
+### 4. dependency_correctness
 - \`depends_on\` must reference valid plan numbers that exist
 - Wave numbers must be consistent: wave 1 = no deps, wave 2 = depends on wave 1 only, etc.
 - Circular dependencies are a **blocker**
 
-### 4. key_links_planned
-- Critical import/dependency connections in \`must_haves.key_links\` should correspond to actual tasks
-- A key_link referencing a file not in any task's files is a **warning**
-
 ### 5. scope_sanity
-- Each plan should have 2-3 tasks (1 task is a **warning**, 4+ tasks is a **warning**)
-- No single plan should try to do more than ~50% of the phase work
-- Plans should be focused on a coherent subset of functionality
+- Each plan should represent a coherent delivery slice (not too small, not too large)
+- No single plan should deliver more than ~40% of the phase scope
+- Plans should have clear boundaries — overlapping delivery scope is a **warning**
+- A plan with no clear product value (purely internal/infra): **warning**
 
-### 6. must_haves_derivation
-- \`must_haves.truths\` should be BDD-style testable behaviors (not vague statements)
-- \`must_haves.artifacts\` should list concrete file paths with exports/contains
-- \`must_haves.key_links\` should cover critical connections between files
-- Missing truths or artifacts is a **blocker**
+### 6. product_contract_compliance
+If any plan touches user-facing commands, install/update paths, or release artifacts:
+- Runtime impact must be mentioned
+- How the user discovers/accesses the feature must be clear
+- Missing any of the above is a **warning**
 
-### 7. deep_work_rules
-- Every \`<task>\` MUST have a \`<read_first>\` element listing files to read (at minimum the file being modified)
-- Every \`<task>\` MUST have an \`<acceptance_criteria>\` element with grep-verifiable conditions
-- Every \`<action>\` must contain concrete values, not vague references like "align with", "match to", "update to be consistent"
-- Missing read_first is a **blocker**
-- Missing acceptance_criteria is a **blocker**
-- Vague action text is a **warning**
+## What NOT to check (deferred to slice-contract)
 
-### 8. product_contract_compliance
-If any plan touches installer, runtime, hooks, commands, or release artifacts:
-- Runtime impact must be declared (which runtimes affected)
-- Install/update/release impact must be stated
-- Docs to update must be listed
-- Product contract refs (from product-contract.md) must be cited
-- Smoke commands must be listed (how to verify after implementation)
-- Missing any of the above is a **warning** (not blocker, as not all plans touch product surface)
+- ❌ File paths or files_modified completeness
+- ❌ Function signatures or type definitions
+- ❌ Import/export patterns or key_links
+- ❌ read_first lists
+- ❌ Grep-verifiable acceptance_criteria
+- ❌ Step-by-step action instructions
 
 ## Output Format
 
@@ -127,10 +132,10 @@ NO_ISSUES_FOUND
 
 ## Strictness Guidelines
 
-- Be **strict** on blockers: missing verify/done, uncovered requirements, circular deps, missing truths/artifacts
-- Be **lenient** on warnings: minor formatting, 1-task plans that make logical sense, stylistic choices
-- Do NOT flag issues that are clearly intentional design choices documented in CONTEXT.md
-- Focus on correctness and completeness, not style
+- Be **strict** on blockers: uncovered requirements, missing capabilities, missing verification intent, circular deps
+- Be **lenient** on warnings: minor wording issues, plans with infrastructure focus that still serve product goals
+- Do NOT flag absence of implementation details — that's by design
+- Focus on: Does this plan clearly deliver product value? Can a human verify it works?
 
-Now check ALL plans against ALL 8 dimensions.`;
+Now check ALL plans against ALL 6 dimensions.`;
 }

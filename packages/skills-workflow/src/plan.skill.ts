@@ -20,6 +20,7 @@ import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve, relative } from 'node:path';
 import { buildPlanCreatePrompt, buildPlanRevisePrompt } from './prompts/plan-create.js';
 import { buildPlanCheckerPrompt } from './prompts/plan-checker.js';
+import { buildProductSpecPrompt } from './prompts/product-spec.js';
 import { parseRoadmap } from './shared/roadmap-parser.js';
 import { planGate } from './shared/gates.js';
 import { resolvePhaseDir, readPhaseArtifactSmart } from './shared/phase-reader.js';
@@ -301,7 +302,63 @@ export default defineSkill({
     // Extract phase goal and requirements from ROADMAP.md
     const phaseInfo = extractPhaseInfo(roadmapMd, phaseNumber);
 
-    // ----- Step 2.5: Generate VALIDATION.md from research (PQP-04) -----
+    // ----- Step 2.5: Generate PRODUCT-SPEC.md -----
+    let productSpecMd = '';
+
+    // Check if PRODUCT-SPEC already exists
+    try {
+      const existingSpec = await readFile(join(phaseDir ?? '', `${paddedPhase}-PRODUCT-SPEC.md`), 'utf-8');
+      if (existingSpec) {
+        productSpecMd = existingSpec;
+        ctx.log.info('Existing PRODUCT-SPEC.md found, reusing');
+      }
+    } catch {
+      // No existing spec — generate one
+    }
+
+    if (!productSpecMd) {
+      const specProgress = ctx.ui.progress({ title: 'Generating product specification' });
+
+      const specResult = await ctx.agent.run({
+        role: 'planning',
+        prompt: buildProductSpecPrompt({
+          contextMd,
+          researchMd: researchMd ?? '',
+          requirementsMd,
+          roadmapMd,
+          phaseGoal: phaseInfo.goal,
+          requirements: phaseInfo.requirements,
+          phaseSlug: phaseDirName || `${paddedPhase}-${phaseSlug}`,
+          paddedPhase,
+        }),
+        permissions: {
+          role: 'planning',
+          readPaths: ['**'],
+          writePaths: ['.planning/**'],
+          allowTests: false,
+          allowNetwork: false,
+          allowGitWrite: false,
+          allowCommands: [],
+        },
+        timeout: 180_000,
+      });
+
+      if (specResult.success && specResult.outputText) {
+        productSpecMd = specResult.outputText;
+
+        // Write PRODUCT-SPEC.md
+        const specDir = phaseDir ?? join(ctx.cwd, '.planning', 'phases', phaseDirName || `${paddedPhase}-${phaseSlug}`);
+        await mkdir(specDir, { recursive: true });
+        await writeFile(join(specDir, `${paddedPhase}-PRODUCT-SPEC.md`), productSpecMd, 'utf-8');
+        ctx.log.info('PRODUCT-SPEC.md written');
+        specProgress.done({ summary: 'Product spec ready' });
+      } else {
+        specProgress.done({ summary: 'Product spec generation failed (continuing without)' });
+        ctx.log.warn('Product spec generation failed, proceeding without');
+      }
+    }
+
+    // ----- Step 2.6: Generate VALIDATION.md from research (PQP-04) -----
     if (researchMd && researchMd.includes('## Validation Architecture')) {
       try {
         const validationPath = join(phaseDir ?? join(ctx.cwd, '.planning', 'phases', phaseDirName || `${paddedPhase}-${phaseSlug}`), `${paddedPhase}-VALIDATION.md`);
@@ -357,6 +414,7 @@ export default defineSkill({
                 researchMd: researchMd ?? '',
                 requirementsMd,
                 roadmapMd,
+                productSpecMd,
                 phaseGoal: phaseInfo.goal,
                 requirements: phaseInfo.requirements,
                 phaseSlug: phaseDirName || `${paddedPhase}-${phaseSlug}`,
@@ -367,6 +425,7 @@ export default defineSkill({
                 issues: issues.map((i) => i.description),
                 contextMd,
                 requirementsMd,
+                productSpecMd,
               }),
         permissions: {
           role: 'planning',
@@ -412,6 +471,7 @@ export default defineSkill({
             plans,
             contextMd,
             requirementsMd,
+            productSpecMd,
             phaseRequirements: phaseInfo.requirements,
           }),
           permissions: {
@@ -519,7 +579,8 @@ export default defineSkill({
           ? 'skipped'
           : 'passed';
 
-    const summary = `Created ${writtenFiles.length} plan${writtenFiles.length !== 1 ? 's' : ''} for Phase ${phaseNumber}. Checker: ${checkerStatus}.`;
+    const specStatus = productSpecMd ? 'generated' : 'skipped';
+    const summary = `Created ${writtenFiles.length} plan${writtenFiles.length !== 1 ? 's' : ''} for Phase ${phaseNumber}. Product spec: ${specStatus}. Checker: ${checkerStatus}.`;
 
     await ctx.ui.result({
       success: true,
