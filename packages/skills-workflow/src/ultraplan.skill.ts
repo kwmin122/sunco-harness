@@ -105,6 +105,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'routable',
   complexity: 'simple',
+  tier: 'expert',
   description: 'Bridge to Claude Code /ultraplan — browser-based visual plan review',
   options: [
     { flags: '-p, --phase <number>', description: 'Target phase number' },

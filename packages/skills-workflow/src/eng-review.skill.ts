@@ -128,6 +128,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'routable',
   complexity: 'standard',
+  tier: 'expert',
   description: 'Engineering manager-mode plan review — architecture, tests, performance',
   options: [
     { flags: '-p, --phase <number>', description: 'Phase number' },

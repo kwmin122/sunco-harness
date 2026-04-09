@@ -135,6 +135,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'routable',
   complexity: 'standard',
+  tier: 'expert',
   description: 'CEO/founder-mode plan review — product vision and scope',
   options: [
     { flags: '-p, --phase <number>', description: 'Phase number' },

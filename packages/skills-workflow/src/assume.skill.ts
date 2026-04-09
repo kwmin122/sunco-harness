@@ -186,6 +186,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'routable',
   complexity: 'complex',
+  tier: 'expert',
   description: 'Preview what the agent would do before execution',
   options: [
     { flags: '-p, --phase <number>', description: 'Phase number (default: current from STATE.md)' },

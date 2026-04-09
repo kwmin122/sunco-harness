@@ -139,6 +139,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'routable',
   complexity: 'complex',
+  tier: 'expert',
   description: 'Parallel agent domain research for current phase',
   options: [
     { flags: '-p, --phase <number>', description: 'Phase number (default: current from STATE.md)' },

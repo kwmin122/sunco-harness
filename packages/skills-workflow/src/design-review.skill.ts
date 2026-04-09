@@ -225,6 +225,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'routable',
   complexity: 'standard',
+  tier: 'expert',
   description: 'Designer-mode review — dimensional scoring and gap analysis',
   options: [
     { flags: '-p, --phase <number>', description: 'Phase number' },

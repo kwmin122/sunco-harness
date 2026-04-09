@@ -179,6 +179,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'routable',
   complexity: 'standard',
+  tier: 'expert',
   description: 'Capture execution learnings and promote to durable improvements',
   options: [
     { flags: '-p, --phase <number>', description: 'Phase number (default: current from STATE.md)' },
