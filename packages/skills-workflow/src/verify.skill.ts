@@ -433,7 +433,7 @@ export default defineSkill({
 
     // --- Step 9: Write VERIFICATION.md ---
     const verificationContent = formatVerificationMd(report);
-    const verificationPath = join(phaseDir, 'VERIFICATION.md');
+    const verificationPath = join(phaseDir, `${phaseArg}-VERIFICATION.md`);
     await mkdir(phaseDir, { recursive: true });
     await writeFile(verificationPath, verificationContent, 'utf-8');
     ctx.log.info('VERIFICATION.md written', { path: verificationPath });

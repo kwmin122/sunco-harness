@@ -89,7 +89,7 @@ describe('ROLE_PERMISSIONS', () => {
     expect(perms.allowTests).toBe(true);
     expect(perms.allowNetwork).toBe(false);
     expect(perms.allowGitWrite).toBe(false);
-    expect(perms.allowCommands).toEqual(['npm test']);
+    expect(perms.allowCommands).toEqual(['npm test', 'npx vitest']);
   });
 });
 

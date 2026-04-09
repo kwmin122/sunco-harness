@@ -58,7 +58,7 @@ export const ROLE_PERMISSIONS: Record<AgentRole, Omit<PermissionSet, 'role'>> = 
     allowTests: true,
     allowNetwork: false,
     allowGitWrite: false,
-    allowCommands: ['npm test'],
+    allowCommands: ['npm test', 'npx vitest'],
   },
 };
 
