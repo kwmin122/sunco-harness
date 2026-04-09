@@ -222,14 +222,14 @@ describe('State-based context rules', () => {
     expect(hasNewOrScan).toBe(true);
   });
 
-  it('fresh session (no lastSkillId) -> recommend status (default)', () => {
+  it('fresh session (no lastSkillId) -> recommend next (default, D-11)', () => {
     const recs = getRecsForState({
       lastSkillId: undefined,
       lastResult: undefined,
     });
 
-    expect(hasSkill(recs, 'core.status')).toBe(true);
-    expect(getDefault(recs)!.skillId).toBe('core.status');
+    expect(hasSkill(recs, 'workflow.next')).toBe(true);
+    expect(getDefault(recs)!.skillId).toBe('workflow.next');
   });
 });
 

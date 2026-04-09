@@ -55,15 +55,11 @@ describe('E2E: deterministic skill chain', () => {
     await rm(tempDir, { recursive: true, force: true });
   });
 
-  it('sunco --help shows available commands', async () => {
+  it('sunco --help shows redirect to help command (D-06)', async () => {
     const { stdout } = await execFileAsync('node', [CLI_PATH, '--help'], {
       cwd: tempDir,
     });
-    expect(stdout).toContain('init');
-    expect(stdout).toContain('lint');
-    expect(stdout).toContain('health');
-    expect(stdout).toContain('status');
-    expect(stdout).toContain('graph');
+    expect(stdout).toContain('sunco help');
   }, 10_000);
 
   it('sunco --version outputs a valid semver string', async () => {

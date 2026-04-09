@@ -222,6 +222,6 @@ describe('registerSkills', () => {
     }).toThrow();
 
     expect(errorMessage).toContain('Unknown command');
-    expect(errorMessage).toContain('init'); // suggestion
+    expect(errorMessage).toContain('sunco help'); // redirect to help
   });
 });
