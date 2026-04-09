@@ -1,53 +1,1283 @@
-# Phase 25 Execution Report
+# Verification Report
 
-**Phase:** 25 — Workflow Surface Simplification
-**Executed:** 2026-04-09
-**Executor model:** claude-opus-4-5 (Wave 1), claude-sonnet-4-5 (Wave 2)
+**Verdict:** FAIL
+**Timestamp:** 2026-04-09T07:22:21.219Z
+**Total findings:** 582
+**Human gate required:** No
+
+## Layer 1: Multi-Agent Generation
+
+**Status:** FAIL
+**Duration:** 123345ms
+**Findings:** 41
+
+- **[MEDIUM]** (security): The review skill executes `simpleGit(ctx.cwd)` where `ctx.cwd` comes from user context. If `ctx.cwd` is manipulated to point outside the project directory (e.g., via symlink or path traversal), the `git.diff()` call could leak file names and diff content from arbitrary repositories on the filesystem.
+  - File: packages/skills-workflow/src/review.skill.ts
+  - Suggestion: Validate that `ctx.cwd` resolves to a path within the expected project root before passing it to `simpleGit()`. Use `path.resolve()` and verify it starts with the expected project directory prefix.
+- **[MEDIUM]** (security): The `formatHelp` override in program.ts uses a recursive call pattern: `helper.formatHelp(cmd, helper)` for non-root commands. If `configureHelp` is inherited by subcommands that also have `parent === null` in edge cases (e.g., standalone subcommand parsing), this could lead to unexpected behavior or infinite recursion. The current code was noted to have had an infinite recursion fix in commit 08f26a0.
+  - File: packages/core/src/cli/program.ts
+  - Suggestion: Store a reference to the original `formatHelp` before overriding and call that stored reference for non-root commands, rather than calling `helper.formatHelp` which may reference the overridden version. E.g., `const origFormatHelp = Command.prototype.formatHelp; ... return origFormatHelp.call(cmd, helper);`
+- **[LOW]** (security): The `executeHook('harness.help', {})` call in the no-arg routing path passes an empty object as arguments. If `executeHook` does not validate the hook name against registered skills, a typo or rename of 'harness.help' could silently fail or be exploited to invoke an unintended hook if skill IDs are user-controllable in extension packs.
+  - File: packages/cli/src/cli.ts
+  - Suggestion: Use a constant or reference to the skill's actual ID (e.g., `helpSkill.id`) instead of a hardcoded string literal to prevent ID mismatch and ensure the correct skill is always invoked.
+- **[LOW]** (security): The help skill uses `console.log(output)` to render task cards and tier listings. The output includes skill `command` and `description` fields from the registry. If a malicious skill pack registers a skill with a description containing terminal escape sequences (ANSI codes), it could manipulate terminal output or hide malicious instructions.
+  - File: packages/skills-harness/src/help.skill.ts
+  - Suggestion: Strip or escape ANSI control characters from skill `command` and `description` fields before rendering them to the terminal. Use a simple regex like `/[\x00-\x1f\x7f-\x9f]/g` to remove control characters.
+- **[HIGH]** (architecture): Circular dependency risk: types.ts imports from registry.ts via `import type { SkillRegistry } from './registry.js'`, while registry.ts already imports from types.ts. Even though it's a type-only import (erased at runtime), this creates a conceptual circular dependency in the module graph that makes the dependency direction unclear and complicates future refactoring if the import ever needs to become a value import.
+  - File: packages/core/src/skill/types.ts
+  - Suggestion: Extract a `SkillRegistryReader` interface (with `getAll` and `getByTier` signatures) directly in types.ts instead of importing the concrete SkillRegistry class. This keeps the dependency direction one-way: registry.ts → types.ts, never the reverse.
+- **[HIGH]** (architecture): SkillContext exposes the full SkillRegistry instance at runtime despite the TypeScript type being `Pick<SkillRegistry, 'getAll' | 'getByTier'>`. The plan wires `registry,` directly (the full object) into the context. Any skill can cast or access undocumented methods like `register()` at runtime, violating the read-only introspection contract. This is an abstraction leak — the type narrows but the runtime value does not.
+  - File: packages/core/src/skill/context.ts
+  - Suggestion: Create a thin wrapper or proxy object that only exposes `getAll` and `getByTier` methods, e.g. `registry: { getAll: () => registry.getAll(), getByTier: (t) => registry.getByTier(t) }` so the runtime contract matches the type contract.
+- **[MEDIUM]** (architecture): help.skill.ts uses `console.log` directly for output instead of the SkillUi abstraction (`ctx.ui`). This bypasses the UI adapter contract (Ink/console/silent renderers), meaning help output won't render correctly in the Ink terminal UI or be captured in silent/test mode. The comment acknowledges this explicitly but it contradicts the architecture's UI Contract pattern.
+  - File: packages/skills-harness/src/help.skill.ts
+  - Suggestion: Use `ctx.ui.result()` or a dedicated text output method on SkillUi to render help output. If SkillUi lacks a raw-text method, add one — that's better than bypassing the abstraction.
+- **[MEDIUM]** (architecture): review.skill.ts directly imports `simpleGit` from 'simple-git' for diff detection, coupling a workflow-layer skill to a specific git implementation. Other skills likely use git through a shared service or context injection. This creates an inconsistent access pattern for git operations across the skill layer.
+  - File: packages/skills-workflow/src/review.skill.ts
+  - Suggestion: Access git operations through the skill context or a shared service abstraction rather than importing simple-git directly. If no such abstraction exists yet, at minimum use the dynamic import pattern (`await import('simple-git')`) that the conventions specify for optional deps.
+- **[MEDIUM]** (architecture): The no-arg routing in cli.ts (`program.action(async () => { await executeHook('harness.help', {}) })`) invokes a skill by string ID at the CLI wiring layer. This creates a hidden runtime coupling between the CLI entry point and a specific skill ID. If `harness.help` is renamed or removed, no type-check will catch the breakage.
+  - File: packages/cli/src/cli.ts
+  - Suggestion: Reference the imported `helpSkill.id` constant instead of the string literal `'harness.help'`, e.g. `await executeHook(helpSkill.id, {})`. This makes the dependency explicit and type-safe.
+- **[MEDIUM]** (architecture): The `formatHelp` override in program.ts checks `cmd.parent === null` then calls `helper.formatHelp(cmd, helper)` for non-root commands. This recursive call back into the same `formatHelp` function will cause infinite recursion for subcommands since `helper.formatHelp` IS the overridden function in Commander.js 14.x. The override replaces the helper's method entirely.
+  - File: packages/core/src/cli/program.ts
+  - Suggestion: Capture a reference to the original `formatHelp` before overriding (e.g., `const originalFormatHelp = Command.prototype.helpInformation` or use Commander's `createHelp()` to get the default helper), and call that for non-root commands instead of recursing into the override.
+- **[LOW]** (architecture): Review type detection in review.skill.ts uses naive substring matching (`diff.includes(sig)`) on file paths. A file named `screenshots-cleanup.ts` or a comment containing 'ROADMAP' would trigger false positives. The detection operates on `--name-only` diff output but the signal arrays mix file extensions (`.tsx`) with content keywords (`figma`, `STRATEGY`).
+  - File: packages/skills-workflow/src/review.skill.ts
+  - Suggestion: Separate file-path signals (match against individual file paths with proper extension checking) from content signals (match against full diff content). Use dedicated matchers: `path.extname(file) === '.tsx'` for extensions, and content-grep only for semantic keywords.
+- **[LOW]** (architecture): STATE.md has inconsistent structure — the bottom appends raw key-value lines (`- **phase**: 25`, `- **status**: planned`) outside any YAML frontmatter or structured section, mixing two different state representation formats in the same file.
+  - File: .planning/STATE.md
+  - Suggestion: Update the state writer to maintain a single consistent format. Either update the YAML frontmatter fields or use the prose section format, not both appended together.
+- **[CRITICAL]** (correctness): formatHelp infinite recursion: when cmd.parent !== null (subcommand), the override calls `helper.formatHelp(cmd, helper)` which invokes the same overridden formatHelp function, causing a stack overflow. The `helper` object's `formatHelp` IS the overridden function, not the original.
+  - File: packages/core/src/cli/program.ts
+  - Suggestion: Capture the original formatHelp before overriding: `const originalFormatHelp = Command.prototype.formatHelp;` or use `import { Help } from 'commander'; const defaultFormat = new Help().formatHelp;` and call that in the non-root branch. Alternatively, store Commander's default Help class formatHelp reference before configureHelp is called.
+- **[HIGH]** (correctness): No-arg detection via `process.argv.length <= 2` is unreliable when invoked via npx. With npx, argv is typically ['node', '/path/to/npx', 'sunco'] (length 3 with no user args), so bare `npx sunco` would NOT trigger help. Conversely, direct `node cli.js` has argv length 2, which would trigger help correctly only in that case.
+  - File: packages/cli/src/cli.ts
+  - Suggestion: Use Commander's built-in mechanism: check `program.args.length === 0` inside program.action(), or use `program.action((_options, command) => { if (command.args.length === 0) ... })`. This is argv-shape-independent.
+- **[HIGH]** (correctness): review.skill.ts detectReviewType uses naive string `.includes()` on the full diff output. Any diff touching a file path or content containing 'design-system', '.css', '.tsx' etc. will trigger design-review even for non-UI changes. E.g., a README mentioning 'screenshot' or a comment mentioning '.css' in a backend file would misroute to design-review.
+  - File: packages/skills-workflow/src/review.skill.ts
+  - Suggestion: Run detection on `--name-only` output (file paths) rather than full diff content, and use path-specific matching (e.g., check file extensions with `path.extname()` or match against `diff --git a/...` header lines). The code already uses `--name-only` for `staged`/`unstaged` — good — but then concatenates them and uses substring matching. Match against individual file paths instead.
+- **[MEDIUM]** (correctness): help.skill.ts renderTaskCards computes `labelWidth` using `.length` on Korean strings ('시작하기', '이어서 작업', etc.). String.length counts UTF-16 code units, not display width. Korean characters are typically double-width in terminals, so columns will be misaligned — Korean labels will overflow their computed padding.
+  - File: packages/skills-harness/src/help.skill.ts
+  - Suggestion: Use a string-width library (e.g., `string-width`) to compute display width for CJK characters, or hardcode the column width. Each Korean character is typically 2 columns wide in a terminal.
+- **[MEDIUM]** (correctness): STATE.md has inconsistent/corrupted structure: the footer appends raw YAML-like fields (`- **phase**: 25`, `- **status**: planned`) outside the frontmatter block and after prose content, mixing markdown bullet formatting with YAML state. This will likely confuse any parser that reads STATE.md expecting either pure YAML frontmatter or structured markdown sections.
+  - File: .planning/STATE.md
+  - Suggestion: Update the STATE.md writer to place phase/status updates in the proper frontmatter section or in a well-defined markdown section, not appended as raw bullets at the end of the file.
+- **[MEDIUM]** (correctness): help.skill.ts uses `console.log(output)` directly instead of going through `ctx.ui`. This bypasses the UI adapter contract (Ink/console/silent renderers). In silent mode or when piped, this will still emit output, breaking the SkillUi contract described in the architecture.
+  - File: packages/skills-harness/src/help.skill.ts
+  - Suggestion: Use `ctx.ui.result({ summary: output })` or a dedicated text output method from the UI adapter instead of raw console.log.
+- **[MEDIUM]** (correctness): review.skill.ts catches simpleGit errors with a bare `catch` that sets `diff = ''`, which means if the user is not in a git repo or git is not installed, auto-detection silently defaults to 'eng' review with no warning. The user gets an eng-review with no diff context, which will likely fail or produce useless results.
+  - File: packages/skills-workflow/src/review.skill.ts
+  - Suggestion: When diff retrieval fails, emit a warning via ctx.ui and consider returning early with a helpful error message rather than silently falling through to eng-review with empty context.
+- **[LOW]** (correctness): ROADMAP.md Phase 25 is marked `0/?` plans in the tracking table but STATE.md says `status: planned` with `next_action: Execute Phase 25`. The ROADMAP still says milestone is v1.2 'Light Harness' but STATE.md has been updated to 'executing' for what appears to be v1.3 work (phases 24d, 25). Milestone mismatch may confuse automated tooling.
+  - File: .planning/ROADMAP.md
+  - Suggestion: Update the milestone field in STATE.md or ROADMAP.md to reflect the actual milestone for Phase 25 work.
+- **[LOW]** (correctness): SkillContext.registry is typed as `Pick<SkillRegistry, 'getAll' | 'getByTier'>` but the actual value passed is the full SkillRegistry instance. Skills could cast to access `register()` or other mutation methods, bypassing the read-only intent. This is a type-level concern, not a runtime bug.
+  - File: packages/core/src/skill/types.ts
+  - Suggestion: Consider creating a `ReadonlySkillRegistry` interface or wrapping the registry in a proxy that only exposes getAll/getByTier at runtime, not just at the type level.
+- **[CRITICAL]** (testing): New `getByTier()` method on SkillRegistry has zero test coverage in this diff. This method is the foundation for the entire help skill's tier-grouped rendering — if filtering logic breaks, all three output sections silently show wrong skills.
+  - File: packages/core/src/skill/registry.ts
+  - Suggestion: Add unit tests: getByTier('user') returns only user-tier skills, getByTier('workflow') returns skills with default tier, getByTier with no matching tier returns empty array, getByTier after skill removal reflects update.
+- **[CRITICAL]** (testing): New `help.skill.ts` (90+ lines of rendering logic) has no test file. The `renderTaskCards` and `renderAllTiers` functions are module-private and untestable externally. The skill's execute path — registry enumeration, conditional --all branching, output formatting — is entirely uncovered.
+  - File: packages/skills-harness/src/help.skill.ts
+  - Suggestion: Export `renderTaskCards` and `renderAllTiers` as named exports for unit testability (per project convention: 'Parser functions exported for unit testability'). Test: default mode renders 6 task cards, --all mode renders three sections sorted alphabetically, zero-skill edge case, Korean labels render correctly.
+- **[CRITICAL]** (testing): Rewritten `review.skill.ts` replaces the entire multi-provider cross-review with a new auto-routing front-door. The `detectReviewType()` function (priority-based signal matching) and `parseTypeArg()` validation have no tests. A misroute silently sends code to the wrong review specialist.
+  - File: packages/skills-workflow/src/review.skill.ts
+  - Suggestion: Export `detectReviewType` and test: diff containing '.tsx' → design, diff containing 'ROADMAP' → ceo, plain .ts diff → eng (default), diff with BOTH UI and strategy signals → design (priority order). Test parseTypeArg with valid values, invalid strings, undefined, and null.
+- **[HIGH]** (testing): The `tier` field in `SkillDefinitionSchema` uses `.default('workflow')` but no test verifies that omitting `tier` in `defineSkill()` produces `tier: 'workflow'` on the frozen output. If the Zod default breaks or the freeze block skips the field, all unannotated skills silently get `undefined` tier.
+  - File: packages/core/src/skill/define.ts
+  - Suggestion: Add test: `defineSkill({ ...minimalInput })` without `tier` field produces `result.tier === 'workflow'`. Add test: explicit `tier: 'expert'` is preserved. Add test: invalid tier value like `'admin'` throws Zod validation error.
+- **[HIGH]** (testing): The `formatHelp` override in program.ts uses `cmd.parent === null` to distinguish root from subcommand help. No test verifies that `sunco --help` prints the redirect message while `sunco status --help` still prints normal Commander help. A Commander.js upgrade could change parent chain semantics.
+  - File: packages/core/src/cli/program.ts
+  - Suggestion: Add integration test: program.parse(['--help']) outputs 'Run sunco help'; program.parse(['status', '--help']) does NOT contain 'Run sunco help' and contains normal usage text. Test the recursive guard — `helper.formatHelp(cmd, helper)` could infinitely recurse if Commander internally re-dispatches.
+- **[HIGH]** (testing): No-arg routing in cli.ts (`process.argv.length <= 2 → executeHook('harness.help')`) is untested. The `process.argv.length` guard is fragile — npx invocations, symlinks, and different Node launchers produce different argv shapes. No test covers npx vs direct invocation.
+  - File: packages/cli/src/cli.ts
+  - Suggestion: Add test: mock process.argv = ['node', 'sunco'] → executeHook called with 'harness.help'. Mock process.argv = ['node', 'sunco', 'status'] → executeHook NOT called. Test npx scenario: process.argv = ['/path/to/npx', 'sunco'] → still triggers help.
+- **[HIGH]** (testing): The `registry` field exposed on SkillContext is typed as `Pick<SkillRegistry, 'getAll' | 'getByTier'>` but the actual full registry object is passed. No test verifies that mutation methods (register/remove) are not accidentally accessible through the context, which would violate the read-only contract.
+  - File: packages/core/src/skill/context.ts
+  - Suggestion: Add test: `ctx.registry` has `getAll` and `getByTier` methods. TypeScript enforces the Pick at compile time, but add a runtime assertion that skills cannot call `ctx.registry.register()` — the type narrows it, but a cast could bypass it. Consider wrapping with a Proxy or frozen subset object.
+- **[MEDIUM]** (testing): The `detectReviewType` function uses simple `string.includes()` matching on diff content. A file path like `user-STRATEGY-handler.ts` would trigger ceo-review instead of eng-review. No negative-case tests verify that common false-positive patterns are handled.
+  - File: packages/skills-workflow/src/review.skill.ts
+  - Suggestion: Test false positive scenarios: file named 'designSystem.ts' (not .tsx) should route to eng not design; file path containing 'ROADMAP' in a code variable name; diff with strategy word in a comment but all .ts implementation files.
+- **[MEDIUM]** (testing): 11 skill files were annotated with tier values (4 user, 7 expert) but no test verifies the tier annotations are correct. A typo (`tier: 'usr'`) would be caught by Zod, but swapping user/expert would silently misclassify skills in help output.
+  - File: packages/skills-workflow/src/new.skill.ts
+  - Suggestion: Add a snapshot or enumeration test: import all skill definitions, assert `new.tier === 'user'`, `ceo-review.tier === 'expert'`, etc. This serves as a tier registry contract test that catches accidental reclassification.
+- **[MEDIUM]** (testing): The `renderTaskCards` function computes `moreCount = totalSkills - shownCount` where `shownCount = TASK_CARDS.length - 1`. If `totalSkills < shownCount`, `moreCount` goes negative. No edge case test for a fresh registry with fewer skills than task cards.
+  - File: packages/skills-harness/src/help.skill.ts
+  - Suggestion: Test: renderTaskCards(3) where totalSkills < card count — verify footer says '0 more' or is omitted, not '-2 more'. Test: renderTaskCards(0) edge case.
+- **[LOW]** (api-design): Expert agent api-design failed: ProviderExecutionError: Provider 'claude-code-cli' execution failed: Command failed with exit code 1: claude -p --output-format json --max-turns 1
+
+{"type":"result","subtype":"error_max_turns","duration_ms":13790,"duration_api_ms":13369,"is_error":true,"num_turns":2,"stop_reason":"tool_use","session_id":"e268e934-d49f-492b-b507-c6678f187da8","total_cost_usd":0.30896500000000005,"usage":{"input_tokens":3,"cache_creation_input_tokens":47072,"cache_read_input_tokens":0,"output_tokens":590,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":47072,"ephemeral_5m_input_tokens":0},"inference_geo":"","iterations":[],"speed":"standard"},"modelUsage":{"claude-opus-4-6[1m]":{"inputTokens":3,"outputTokens":590,"cacheReadInputTokens":0,"cacheCreationInputTokens":47072,"webSearchRequests":0,"costUSD":0.30896500000000005,"contextWindow":1000000,"maxOutputTokens":64000}},"permission_denials":[],"terminal_reason":"max_turns","fast_mode_state":"off","uuid":"1d05fa34-d214-4b0a-b825-05d2f6d0b35f","errors":["Reached maximum number of turns (1)"]}
+- **[MEDIUM]** (migration): STATE.md has conflicting 'status' values: YAML frontmatter says 'executing' while appended markdown bullets say 'planned'. Any parser reading this file will get inconsistent state depending on which section it reads. The appended fields also break the established YAML frontmatter format by using markdown bullet syntax.
+  - File: .planning/STATE.md:278
+  - Suggestion: Update the YAML frontmatter fields directly instead of appending markdown-formatted fields at the bottom. Remove the duplicate status/phase/last_updated entries and keep a single source of truth in the frontmatter block.
+- **[LOW]** (migration): SkillContext interface now requires a 'registry' field. Any external code or tests that construct SkillContext objects directly (not via createSkillContext) will break at compile time. This is not a runtime data migration issue but could break downstream consumers if @sunco/core is published as a semver-minor bump.
+  - File: packages/core/src/skill/types.ts
+  - Suggestion: Make the registry field optional on SkillContext (registry?: Pick<SkillRegistry, 'getAll' | 'getByTier'>) or treat this as a semver-major change for @sunco/core consumers. Verify no tests construct SkillContext manually without the registry field.
+- **[HIGH]** (maintainability): review.skill.ts detectReviewType uses naive string-includes matching on raw diff content. Patterns like 'screenshot', 'figma', 'design-system' will false-positive on commit messages, comments, or unrelated filenames containing those substrings. STRATEGY_SIGNALS like 'VISION' and 'STRATEGY' are common English words that will trigger on any diff containing them.
+  - File: packages/skills-workflow/src/review.skill.ts:52
+  - Suggestion: Match against file paths from --name-only diff output instead of raw diff content. Use path-based glob matching (e.g., endsWith for extensions, basename matching for document names) rather than substring search on the full diff.
+- **[MEDIUM]** (maintainability): help.skill.ts renderTaskCards hardcodes 6 task cards including 'sunco review' which is not discoverable from the registry — the cards are a static array disconnected from actual registered skills. If a user-tier skill is added or renamed, the cards silently go stale.
+  - File: packages/skills-harness/src/help.skill.ts:26
+  - Suggestion: Either derive task cards from ctx.registry.getByTier('user') at render time, or add a comment/test that validates TASK_CARDS entries match registered user-tier skill commands.
+- **[MEDIUM]** (maintainability): help.skill.ts uses console.log directly for output instead of the ctx.ui abstraction, bypassing the UiAdapter contract (silent/Ink/console renderers). This means help output won't render correctly in non-console contexts like headless mode or tests.
+  - File: packages/skills-harness/src/help.skill.ts:120
+  - Suggestion: Use ctx.ui.result() or an equivalent SkillUi method to emit the output so it respects the active UiAdapter.
+- **[MEDIUM]** (maintainability): program.ts formatHelp override uses a recursive call pattern — helper.formatHelp(cmd, helper) calls back into the same helper object. If Commander.js ever changes the helper structure or if another configureHelp layer wraps this, it risks infinite recursion or skipped formatting.
+  - File: packages/core/src/cli/program.ts
+  - Suggestion: Capture the original formatHelp before overriding: `const originalFormat = Command.prototype.formatHelp;` and call that for subcommands instead of re-entering through the same helper reference.
+- **[MEDIUM]** (maintainability): review.skill.ts has two separate git operations (diff --cached --name-only, then diff --name-only) that are not atomic — files could change between calls, leading to inconsistent detection. Also, the diff results are concatenated as strings with no delimiter, so a staged file 'a.tsx' and unstaged file 'b.ts' could merge into a false match.
+  - File: packages/skills-workflow/src/review.skill.ts:105
+  - Suggestion: Combine into a single git call or at minimum join results with newlines. Consider using git.diffSummary() which returns structured file lists.
+- **[LOW]** (maintainability): help.skill.ts padEnd reimplements String.prototype.padEnd which is available in ES2017+ (well within Node 24.x target).
+  - File: packages/skills-harness/src/help.skill.ts:42
+  - Suggestion: Replace custom padEnd with native str.padEnd(width).
+- **[LOW]** (maintainability): STATE.md has inconsistent structure — the bottom section appends phase/status/next_action as markdown bullets outside the YAML frontmatter block, creating a hybrid format that's harder to parse programmatically.
+  - File: .planning/STATE.md:278
+  - Suggestion: Keep the appended state in the YAML frontmatter section or use a clearly delimited section header for machine-readable fields.
+
+## Layer 2: Deterministic Guardrails
+
+**Status:** FAIL
+**Duration:** 5215ms
+**Findings:** 537
+
+- **[HIGH]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/cli/dist/chunk-JRMUDK67.js:2694
+  - Suggestion: Fix the error: Definition for rule 'unicorn/text-encoding-identifier-case' was not found.
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/cli/dist/cli.js:8322
+  - Suggestion: Resolve syntax error at line 8322:5
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/cli/dist/cli.js:13770
+  - Suggestion: Resolve syntax error at line 13770:11
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/cli/dist/cli.js:17973
+  - Suggestion: Resolve syntax error at line 17973:11
+- **[HIGH]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/cli/dist/execa-QO536OVM-3P5SAUCF.js:2594
+  - Suggestion: Fix the error: Definition for rule 'unicorn/text-encoding-identifier-case' was not found.
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/cli/src/cli.ts:263
+  - Suggestion: Resolve syntax error at line 263:7
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/dist/index.js:463
+  - Suggestion: Resolve syntax error at line 463:5
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/src/config/loader.ts:72
+  - Suggestion: Resolve syntax error at line 72:3
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/src/skill/context.ts:83
+  - Suggestion: Resolve syntax error at line 83:5
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/src/skill/registry.ts:36
+  - Suggestion: Resolve syntax error at line 36:7
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/src/skill/registry.ts:41
+  - Suggestion: Resolve syntax error at line 41:7
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/src/skill/resolver.ts:46
+  - Suggestion: Resolve syntax error at line 46:7
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/src/skill/resolver.ts:51
+  - Suggestion: Resolve syntax error at line 51:7
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/src/skill/scanner.ts:58
+  - Suggestion: Resolve syntax error at line 58:11
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/core/src/skill/scanner.ts:62
+  - Suggestion: Resolve syntax error at line 62:9
+- **[HIGH]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/skills-harness/src/guard/__tests__/watcher.test.ts:109
+  - Suggestion: Fix the error: Definition for rule '@typescript-eslint/no-explicit-any' was not found.
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/skills-harness/src/help.skill.ts:126
+  - Suggestion: Resolve syntax error at line 126:5
+- **[HIGH]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/skills-workflow/dist/execa-QO536OVM.js:2687
+  - Suggestion: Fix the error: Definition for rule 'unicorn/text-encoding-identifier-case' was not found.
+- **[MEDIUM]** (lint): Lint violation
+  - File: /Users/min-kyungwook/SUN/packages/skills-workflow/src/review.skill.ts:124
+  - Suggestion: Resolve syntax error at line 124:5
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/cli/src/cli.ts:179
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/cli/src/cli.ts:192
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/cli/src/cli.ts:236
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/cli/src/cli.ts:240
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/cli/src/cli.ts:250
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/cli/src/cli.ts:263
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/cli/src/cli.ts:264
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/cli/src/cli.ts:272
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/__tests__/permission.test.ts:258
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/__tests__/router.test.ts:153
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/__tests__/router.test.ts:159
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/__tests__/router.test.ts:160
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/__tests__/router.test.ts:225
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/__tests__/router.test.ts:235
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/__tests__/router.test.ts:236
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/__tests__/router.test.ts:280
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/providers/claude-cli.ts:95
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/agent/router.ts:189
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/cli/__tests__/lifecycle.test.ts:166
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/cli/__tests__/lifecycle.test.ts:189
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/cli/__tests__/lifecycle.test.ts:203
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/cli/__tests__/lifecycle.test.ts:211
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/cli/__tests__/lifecycle.test.ts:227
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/cli/skill-router.ts:4
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/cli/skill-router.ts:32
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/config/__tests__/loader.test.ts:119
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/config/__tests__/schema.test.ts:53
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/config/loader.ts:40
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/config/loader.ts:47
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/config/loader.ts:50
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/config/loader.ts:72
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/config/schema.ts:7
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/index.ts:210
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:466
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:472
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:473
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:474
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:481
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:482
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:483
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:595
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:769
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:774
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/recommend/rules.ts:795
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/__tests__/context.test.ts:39
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/__tests__/context.test.ts:49
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/__tests__/context.test.ts:80
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/__tests__/define.test.ts:43
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/__tests__/define.test.ts:112
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/__tests__/define.test.ts:118
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/context.ts:65
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/context.ts:83
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/context.ts:86
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/context.ts:87
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/define.ts:94
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/registry.ts:36
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/registry.ts:37
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/registry.ts:41
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/registry.ts:42
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/resolver.ts:46
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/resolver.ts:47
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/resolver.ts:51
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/resolver.ts:52
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/scanner.ts:58
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/scanner.ts:59
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/scanner.ts:62
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/scanner.ts:63
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/scanner.ts:82
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/skill/types.ts:214
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/state/database.ts:11
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/state/database.ts:94
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/state/database.ts:110
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/state/database.ts:112
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/InkUiAdapter.ts:84
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/InkUiAdapter.ts:147
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/InkUiAdapter.ts:168
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/InkUiAdapter.ts:281
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/InkUiAdapter.ts:284
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/InkUiAdapter.ts:312
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/InkUiAdapter.ts:356
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/InkUiAdapter.ts:380
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/SilentUiAdapter.ts:25
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/index.ts:71
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/index.ts:80
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/index.ts:84
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/index.ts:96
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/index.ts:99
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/index.ts:108
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/index.ts:116
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/adapters/index.ts:130
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/primitives/Box.tsx:9
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/primitives/Box.tsx:9
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/primitives/Text.tsx:9
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/primitives/Text.tsx:9
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/core/src/ui/primitives/Text.tsx:25
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/agents.skill.ts:50
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/analyzer.test.ts:17
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/analyzer.test.ts:68
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/analyzer.test.ts:69
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/analyzer.test.ts:70
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/promoter.test.ts:18
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/promoter.test.ts:47
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/promoter.test.ts:65
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/promoter.test.ts:79
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/promoter.test.ts:80
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/promoter.test.ts:81
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/promoter.test.ts:82
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/promoter.test.ts:103
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/watcher.test.ts:109
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/__tests__/watcher.test.ts:110
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/analyzer.ts:47
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/analyzer.ts:47
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/incremental-linter.ts:19
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard/promoter.ts:39
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/guard.skill.ts:41
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/__tests__/pattern-tracker.test.ts:18
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/__tests__/pattern-tracker.test.ts:54
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/__tests__/pattern-tracker.test.ts:54
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/__tests__/pattern-tracker.test.ts:58
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/__tests__/reporter.test.ts:23
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:5
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:41
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:45
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:45
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:117
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:120
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:121
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:121
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/pattern-tracker.ts:163
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/reporter.ts:30
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health/reporter.ts:205
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health.skill.ts:9
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health.skill.ts:49
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/health.skill.ts:315
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/help.skill.ts:126
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/help.skill.ts:127
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:13
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:118
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:121
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:131
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:134
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:137
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:149
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:157
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:162
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:165
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:167
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/__tests__/workspace-initializer.test.ts:175
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/convention-extractor.ts:148
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/init/presets.ts:90
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/__tests__/config-generator.test.ts:154
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/__tests__/config-generator.test.ts:158
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/__tests__/config-generator.test.ts:163
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/__tests__/config-generator.test.ts:169
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/__tests__/config-generator.test.ts:172
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/config-generator.ts:70
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/rule-store.ts:10
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/rule-store.ts:37
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/rule-store.ts:49
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/runner.ts:24
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/types.ts:8
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint/types.ts:16
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint.skill.ts:14
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-harness/src/lint.skill.ts:38
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:109
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:116
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:123
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:128
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:158
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:175
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:210
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:289
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:317
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:338
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/assume.test.ts:359
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/backlog.test.ts:18
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/backlog.test.ts:50
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/backlog.test.ts:53
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/backlog.test.ts:54
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/backlog.test.ts:60
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/backlog.test.ts:94
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/backlog.test.ts:111
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/backlog.test.ts:165
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/catch-rules.test.ts:144
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/catch-rules.test.ts:145
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/catch-rules.test.ts:164
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/catch-rules.test.ts:165
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/catch-rules.test.ts:166
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/catch-rules.test.ts:180
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/code-graph.test.ts:414
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:73
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:80
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:81
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:82
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:112
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:142
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:171
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:189
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:211
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/context.test.ts:228
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/diagnose.skill.test.ts:159
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/diagnose.skill.test.ts:166
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/diagnose.skill.test.ts:173
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/diagnose.skill.test.ts:178
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/diagnose.skill.test.ts:208
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/diagnose.skill.test.ts:361
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/diagnose.skill.test.ts:371
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/diagnose.skill.test.ts:381
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:138
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:145
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:152
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:157
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:187
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:205
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:273
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:287
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:325
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:380
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:412
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/discuss.test.ts:452
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:88
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:102
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:128
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:135
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:142
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:147
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:177
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:197
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:267
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:289
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:340
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/execute.test.ts:379
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/feature-tracker.test.ts:92
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:71
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:75
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:76
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:84
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:85
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:99
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:213
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:263
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/milestone.test.ts:440
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:78
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:85
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:86
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:93
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:132
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:156
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:173
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:192
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:193
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:212
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:225
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:240
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:255
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:295
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/new.test.ts:296
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/pause-resume.test.ts:45
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/pause-resume.test.ts:55
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/pause-resume.test.ts:62
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/pause-resume.test.ts:67
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/pause-resume.test.ts:70
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/pause-resume.test.ts:264
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/pause-resume.test.ts:265
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/phase.test.ts:64
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/phase.test.ts:65
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/phase.test.ts:66
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/phase.test.ts:67
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/phase.test.ts:68
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/phase.test.ts:74
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan-completion-auditor.test.ts:35
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan-completion-auditor.test.ts:42
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan-completion-auditor.test.ts:48
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:163
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:174
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:181
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:186
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:216
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:228
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:230
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:274
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:284
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:323
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:373
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:414
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:436
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:468
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:497
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/plan.test.ts:526
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:73
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:80
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:81
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:82
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:105
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:144
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:161
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:162
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:181
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:212
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:213
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:231
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:249
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:255
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:256
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:267
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:268
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/query.test.ts:289
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/release.test.ts:93
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/release.test.ts:100
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/release.test.ts:107
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/release.test.ts:112
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/release.test.ts:142
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:105
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:112
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:119
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:124
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:154
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:163
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:210
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:224
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:264
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:309
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:346
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:378
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:440
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/research-skill.test.ts:477
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:64
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:95
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:157
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:161
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:165
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:167
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:189
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:199
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:202
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:204
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review-arsenal.test.ts:224
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review.test.ts:36
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review.test.ts:43
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review.test.ts:50
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review.test.ts:55
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review.test.ts:78
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/review.test.ts:157
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/scan.test.ts:63
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/scan.test.ts:70
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/scan.test.ts:77
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/scan.test.ts:82
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/scan.test.ts:112
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/scan.test.ts:142
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/scan.test.ts:199
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/scan.test.ts:219
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/seed.test.ts:18
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/seed.test.ts:50
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/seed.test.ts:53
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/seed.test.ts:54
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/seed.test.ts:60
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/seed.test.ts:97
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/seed.test.ts:114
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/seed.test.ts:127
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:18
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:56
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:59
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:60
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:66
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:129
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:135
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:135
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:143
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:144
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/settings-writer.test.ts:181
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ship.test.ts:59
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ship.test.ts:66
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ship.test.ts:73
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ship.test.ts:78
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ship.test.ts:118
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/skill-profile.test.ts:16
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/status.test.ts:99
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/status.test.ts:106
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/status.test.ts:107
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/status.test.ts:108
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/status.test.ts:144
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/status.test.ts:207
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/test-gen.test.ts:102
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/test-gen.test.ts:109
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/test-gen.test.ts:116
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/test-gen.test.ts:121
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/test-gen.test.ts:151
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/test-gen.test.ts:242
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/test-gen.test.ts:267
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/todo.test.ts:18
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/todo.test.ts:50
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/todo.test.ts:53
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/todo.test.ts:54
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/todo.test.ts:60
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/todo.test.ts:94
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/todo.test.ts:112
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/todo.test.ts:163
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:100
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:107
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:114
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:119
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:137
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:147
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:148
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:149
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:196
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:198
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:233
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:234
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:247
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:248
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:293
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:315
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/ultraplan.test.ts:336
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/validate.test.ts:89
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/validate.test.ts:96
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/validate.test.ts:103
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/validate.test.ts:108
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/validate.test.ts:138
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/validate.test.ts:272
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:12
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:162
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:169
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:176
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:188
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:218
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:227
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:285
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:305
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:323
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:334
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:357
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:379
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:427
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:428
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/__tests__/verify.test.ts:449
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/compound.skill.ts:51
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/compound.skill.ts:52
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/debug.skill.ts:47
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/debug.skill.ts:61
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/debug.skill.ts:67
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/debug.skill.ts:69
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/debug.skill.ts:134
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/debug.skill.ts:295
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/debug.skill.ts:305
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/diagnose.skill.ts:141
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/discuss.skill.ts:89
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/do.skill.ts:61
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/doc.skill.ts:164
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/doc.skill.ts:174
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/doc.skill.ts:359
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/eng-review.skill.ts:109
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/execute.skill.ts:37
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/execute.skill.ts:65
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/execute.skill.ts:137
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/forensics.skill.ts:43
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/forensics.skill.ts:54
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/forensics.skill.ts:60
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/forensics.skill.ts:62
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/forensics.skill.ts:236
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/graph.skill.ts:233
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/index.ts:139
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/milestone.skill.ts:197
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/new.skill.ts:393
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/new.skill.ts:395
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/pause.skill.ts:47
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/prompts/assume.ts:103
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/prompts/debug-analyze.ts:54
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/prompts/debug-ironlaw.ts:80
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/prompts/review-synthesize.ts:90
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/prompts/ultraplan.ts:248
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/release.skill.ts:78
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/review.skill.ts:124
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/review.skill.ts:125
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/review.skill.ts:142
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/settings.skill.ts:65
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/settings.skill.ts:126
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/settings.skill.ts:155
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/auto-lock.ts:91
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/auto-lock.ts:166
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/code-graph.ts:218
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/code-graph.ts:277
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/completion-status.ts:115
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/context-zones.ts:118
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/coverage-parser.ts:68
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/debug-learnings.ts:65
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/debug-learnings.ts:119
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/feature-tracker.ts:56
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/iron-law-gate.ts:127
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/learnings.ts:136
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/plan-completion-auditor.ts:5
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/skill-timeline.ts:81
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/specialist-gate.ts:164
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/specialist-gate.ts:166
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/test-stub-generator.ts:60
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/test-stub-generator.ts:70
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/test-stub-generator.ts:73
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/test-stub-generator.ts:76
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/verify-layers.ts:202
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/verify-layers.ts:206
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/verify-layers.ts:385
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/verify-layers.ts:386
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/verify-layers.ts:407
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/verify-layers.ts:410
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/verify-layers.ts:425
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/verify-layers.ts:969
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/shared/version-bumper.ts:61
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/ship.skill.ts:88
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/ship.skill.ts:100
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/status.skill.ts:234
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/status.skill.ts:247
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/test-gen.skill.ts:288
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/test-gen.skill.ts:289
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/validate.skill.ts:166
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/verify.skill.ts:93
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/verify.skill.ts:296
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/verify.skill.ts:337
+- **[MEDIUM]** (guard): Guard anti-pattern
+  - File: packages/skills-workflow/src/verify.skill.ts:365
+
+## Layer 3: BDD Acceptance Criteria
+
+**Status:** PASS
+**Duration:** 1ms
+**Findings:** 0
+
+## Layer 4: Permission Scoping
+
+**Status:** PASS
+**Duration:** 37ms
+**Findings:** 3
+
+- **[MEDIUM]** (scope): File modified outside declared scope: .planning/phases/25-workflow-surface-simplification/25-VERIFICATION.md
+  - File: .planning/phases/25-workflow-surface-simplification/25-VERIFICATION.md
+  - Suggestion: Add ".planning/phases/25-workflow-surface-simplification/25-VERIFICATION.md" to plan's files_modified or verify this change was intentional
+- **[MEDIUM]** (scope): File modified outside declared scope: packages/core/src/agent/__tests__/claude-cli.test.ts
+  - File: packages/core/src/agent/__tests__/claude-cli.test.ts
+  - Suggestion: Add "packages/core/src/agent/__tests__/claude-cli.test.ts" to plan's files_modified or verify this change was intentional
+- **[MEDIUM]** (scope): File modified outside declared scope: packages/core/src/agent/providers/claude-cli.ts
+  - File: packages/core/src/agent/providers/claude-cli.ts
+  - Suggestion: Add "packages/core/src/agent/providers/claude-cli.ts" to plan's files_modified or verify this change was intentional
+
+## Layer 5: Adversarial Verification
+
+**Status:** PASS
+**Duration:** 81870ms
+**Findings:** 0
+
+## Layer 6: Cross-Model Verification
+
+**Status:** PASS
+**Duration:** 30333ms
+**Findings:** 1
+
+- **[LOW]** (cross-model): Skeptical reviewer failed: Provider 'claude-code-cli' execution failed: Command failed with exit code 1: claude -p --output-format json --max-turns 1 --system-prompt 'You are a skeptical code reviewer from a completely different engineering culture. You distrust the primary reviewer'\''s conclusions and actively look for:\n1. Assumptions that were accepted without evidence\n2. Edge cases that "optimistic" reviewers always miss\n3. Structural problems that are hard to see when you wrote the code yourself\n4. Security issues that get hand-waved as "we'\''ll fix it later"\n5. Performance cliffs that only appear at scale\n\nYou are NOT trying to be helpful. You are trying to find what others missed.'
+
+{"type":"result","subtype":"error_max_turns","duration_ms":24357,"duration_api_ms":24301,"is_error":true,"num_turns":2,"stop_reason":"tool_use","session_id":"077c0627-f063-48a9-ad24-4d0ea9a493f4","total_cost_usd":0.3076052,"usage":{"input_tokens":3,"cache_creation_input_tokens":42656,"cache_read_input_tokens":0,"output_tokens":295,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":42656,"ephemeral_5m_input_tokens":0},"inference_geo":"","iterations":[],"speed":"standard"},"modelUsage":{"claude-opus-4-6[1m]":{"inputTokens":3,"outputTokens":295,"cacheReadInputTokens":0,"cacheCreationInputTokens":42656,"webSearchRequests":0,"costUSD":0.27399,"contextWindow":1000000,"maxOutputTokens":64000},"claude-haiku-4-5-20251001":{"inputTokens":10,"outputTokens":1796,"cacheReadInputTokens":26227,"cacheCreationInputTokens":17602,"webSearchRequests":0,"costUSD":0.0336152,"contextWindow":200000,"maxOutputTokens":32000}},"permission_denials":[],"terminal_reason":"max_turns","fast_mode_state":"off","uuid":"42e6eb05-191f-4bcc-b007-d3a8d5e85ba4","errors":["Reached maximum number of turns (1)"]}
+
+## Layer 7: Human Eval Gate
+
+**Status:** PASS
+**Duration:** 0ms
+**Findings:** 0
 
 ---
-
-## Execution Summary
-
-| Plan | Title | Wave | Status | Lint |
-|------|-------|------|--------|------|
-| 25-01 | Core Tier Metadata | 1 | completed | PASS |
-| 25-02 | Help Skill + CLI No-Arg Wiring | 2 | completed | PASS |
-| 25-03 | Review Auto-Routing + Recommender | 2 | completed | PASS |
-
-**Plans completed:** 3/3
-**Lint gate:** all pass
-
----
-
-## Blast Radius
-
-- Risk level: MEDIUM (actual LOW — grep count inflated by common basename matches)
-- Files in scope (from plan frontmatter): 21
-- Files transitively affected: 295 (inflated)
-
----
-
-## Lint Gate Results
-
-- 25-01: PASS
-- 25-02: PASS
-- 25-03: PASS
-
----
-
-## Wave Checkpoints
-
-- Wave 1: completed — checkpoint: `checkpoint-wave-1.json`
-- Wave 2: completed — checkpoint: `checkpoint-wave-2.json`
-
----
-
-## Issues
-
-None.
-
----
-
-## Ready for Verify
-
-yes
+*Generated by sunco verify at 2026-04-09T07:22:21.219Z*
