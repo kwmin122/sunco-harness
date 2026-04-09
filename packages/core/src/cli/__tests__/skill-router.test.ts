@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { createProgram, levenshtein, findClosestCommand } from '../program.js';
+import { createProgram, levenshtein, findClosestCommand, isRootHelpRequest } from '../program.js';
 import { registerSkills } from '../skill-router.js';
 import { SkillRegistry } from '../../skill/registry.js';
 import { defineSkill } from '../../skill/define.js';
@@ -196,6 +196,34 @@ describe('registerSkills', () => {
     expect(executeHook).toHaveBeenCalledWith('core.init', expect.any(Object));
   });
 
+  it('subcommand --help renders normal Commander help (not root redirect)', () => {
+    const program = createProgram();
+    const registry = new SkillRegistry();
+
+    registry.register(mockSkill('core.init', 'init', 'Initialize project'));
+
+    const executeHook = vi.fn();
+    registerSkills(program, registry, executeHook);
+
+    // Capture help output for subcommand
+    program.exitOverride();
+    let helpOutput = '';
+    program.configureOutput({
+      writeOut: (str: string) => { helpOutput += str; },
+      writeErr: () => {},
+    });
+
+    // Invoke subcommand --help — should show init-specific help
+    try {
+      program.parse(['node', 'sunco', 'init', '--help'], { from: 'user' });
+    } catch {
+      // Commander throws on exitOverride after --help, expected
+    }
+
+    // Subcommand help should show the command description
+    expect(helpOutput).toContain('Initialize project');
+  });
+
   it('triggers unknown command handler for non-existent commands', () => {
     const program = createProgram();
     const registry = new SkillRegistry();
@@ -223,5 +251,40 @@ describe('registerSkills', () => {
 
     expect(errorMessage).toContain('Unknown command');
     expect(errorMessage).toContain('sunco help'); // redirect to help
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isRootHelpRequest (D-06)
+// ---------------------------------------------------------------------------
+
+describe('isRootHelpRequest', () => {
+  it('returns true for bare --help', () => {
+    expect(isRootHelpRequest(['node', 'sunco', '--help'])).toBe(true);
+  });
+
+  it('returns true for bare -h', () => {
+    expect(isRootHelpRequest(['node', 'sunco', '-h'])).toBe(true);
+  });
+
+  it('returns false for subcommand --help', () => {
+    expect(isRootHelpRequest(['node', 'sunco', 'init', '--help'])).toBe(false);
+  });
+
+  it('returns false for subcommand -h', () => {
+    expect(isRootHelpRequest(['node', 'sunco', 'status', '-h'])).toBe(false);
+  });
+
+  it('returns false for no args', () => {
+    expect(isRootHelpRequest(['node', 'sunco'])).toBe(false);
+  });
+
+  it('returns false when no --help flag present', () => {
+    expect(isRootHelpRequest(['node', 'sunco', 'init'])).toBe(false);
+  });
+
+  it('returns true for npx argv with --help', () => {
+    // npx adds extra entries but the pattern is the same after slice(2)
+    expect(isRootHelpRequest(['node', '/path/to/npx', '--help'])).toBe(true);
   });
 });

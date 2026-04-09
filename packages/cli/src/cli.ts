@@ -18,7 +18,7 @@
  */
 
 import { Command } from 'commander';
-import { createProgram, registerSkills, createLifecycle, SilentUiAdapter, createSkillUi, createSkillContext } from '@sunco/core';
+import { createProgram, registerSkills, createLifecycle, SilentUiAdapter, createSkillUi, createSkillContext, isRootHelpRequest, ROOT_HELP_MESSAGE } from '@sunco/core';
 import {
   initSkill,
   lintSkill,
@@ -255,6 +255,15 @@ async function main(): Promise<void> {
           process.exitCode = 1;
         }
       });
+
+    // D-06: Intercept root-level --help before Commander parses it.
+    // Commander 14.x configureHelp cannot distinguish root vs subcommand help,
+    // so we handle root --help here and let Commander handle subcommand --help normally.
+    if (isRootHelpRequest(process.argv)) {
+      // eslint-disable-next-line no-console
+      console.log(ROOT_HELP_MESSAGE);
+      return;
+    }
 
     await program.parseAsync(process.argv);
   } catch (error: unknown) {

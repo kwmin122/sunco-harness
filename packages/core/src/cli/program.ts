@@ -8,7 +8,7 @@
  * Requirements: CLI-01 (sunco binary), CLI-03 (--help), CLI-04 (error messages)
  */
 
-import { Command, Help } from 'commander';
+import { Command } from 'commander';
 import { VERSION } from '../index.js';
 
 // ---------------------------------------------------------------------------
@@ -90,18 +90,7 @@ export function createProgram(): Command {
     .name('sunco')
     .version(VERSION)
     .description('Agent Workspace OS -- \uC5D0\uC774\uC804\uD2B8\uAC00 \uC2E4\uC218\uB97C \uB35C \uD558\uAC8C \uD310\uC744 \uAE54\uC544\uC8FC\uB294 OS')
-    .configureHelp({
-      sortSubcommands: true,
-      formatHelp: (cmd, helper) => {
-        // Only override root-level --help (cmd.parent === null means root command)
-        if (cmd.parent === null) {
-          return `\n  Run 'sunco help' for available commands and tasks.\n  Run 'sunco help --all' for the full command list.\n\n`;
-        }
-        // All subcommand --help remains normal Commander output
-        // Use Help.prototype to avoid infinite recursion (configureHelp replaces formatHelp globally)
-        return Help.prototype.formatHelp.call(helper, cmd, helper);
-      },
-    })
+    .configureHelp({ sortSubcommands: true })
     .showHelpAfterError(true);
 
   // Unknown command handler (CLI-04)
@@ -114,7 +103,7 @@ export function createProgram(): Command {
     if (suggestion) {
       message += ` Did you mean 'sunco ${suggestion}'?`;
     }
-    message += `\n\nRun 'sunco --help' to see available commands.`;
+    message += `\n\nRun 'sunco help' for available commands and tasks.\nRun 'sunco help --all' for the full command list.`;
 
     // Use Commander's error output
     program.error(message);
@@ -122,3 +111,35 @@ export function createProgram(): Command {
 
   return program;
 }
+
+/**
+ * Check if argv represents a root-level --help request (D-06).
+ * Returns true for `sunco --help` / `sunco -h`, false for `sunco init --help`.
+ *
+ * Commander 14.x configureHelp cannot distinguish root vs subcommand help
+ * (formatHelp always receives the root program as cmd). So we intercept
+ * root-only --help BEFORE parseAsync, outputting a minimal redirect.
+ */
+export function isRootHelpRequest(argv: string[]): boolean {
+  // argv: ['node', 'sunco', ...args]
+  const args = argv.slice(2);
+  if (args.length === 0) return false;
+
+  // Check if --help or -h is present
+  const hasHelp = args.includes('--help') || args.includes('-h');
+  if (!hasHelp) return false;
+
+  // Check if there's a non-flag argument before --help (= subcommand)
+  const helpIdx = Math.min(
+    args.includes('--help') ? args.indexOf('--help') : Infinity,
+    args.includes('-h') ? args.indexOf('-h') : Infinity,
+  );
+  const hasSubcommandBefore = args.slice(0, helpIdx).some((a) => !a.startsWith('-'));
+  return !hasSubcommandBefore;
+}
+
+/** The minimal redirect message for root --help (D-06). */
+export const ROOT_HELP_MESSAGE = `
+  Run 'sunco help' for available commands and tasks.
+  Run 'sunco help --all' for the full command list.
+`;

@@ -62,6 +62,16 @@ describe('E2E: deterministic skill chain', () => {
     expect(stdout).toContain('sunco help');
   }, 10_000);
 
+  it('sunco with no args outputs help content (D-10, D-12)', async () => {
+    // No-arg routing: `sunco` (no subcommand) should invoke harness.help
+    // which outputs task cards or help text. Must work regardless of argv structure.
+    const { stdout } = await execFileAsync('node', [CLI_PATH], {
+      cwd: tempDir,
+    });
+    // harness.help renders task cards containing 'sunco' references
+    expect(stdout).toContain('sunco');
+  }, 10_000);
+
   it('sunco --version outputs a valid semver string', async () => {
     const { stdout } = await execFileAsync('node', [CLI_PATH, '--version'], {
       cwd: tempDir,
