@@ -38,6 +38,7 @@ export const SkillDefinitionSchema = z.object({
   routing: z.enum(['routable', 'directExec']),
   options: z.array(SkillOptionSchema).optional(),
   complexity: z.enum(['simple', 'standard', 'complex']).optional(),
+  tier: z.enum(['user', 'workflow', 'expert']).default('workflow'),
   execute: z.function().refine(
     (fn) => typeof fn === 'function',
     'execute must be a function',
@@ -89,6 +90,7 @@ export function defineSkill(input: SkillDefinitionInput): SkillDefinition {
     routing: validated.routing,
     options,
     complexity: validated.complexity,
+    tier: validated.tier,
     execute: validated.execute as SkillDefinition['execute'],
   });
 
