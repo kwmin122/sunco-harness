@@ -8,7 +8,7 @@
  * Decisions: D-14 (conflict policy: fail-fast on duplicates)
  */
 
-import type { SkillDefinition, SkillContext, SkillResult } from './types.js';
+import type { SkillDefinition, SkillContext, SkillResult, SkillTier } from './types.js';
 import { DuplicateSkillError, SkillNotFoundError } from '../errors/index.js';
 
 // ---------------------------------------------------------------------------
@@ -68,6 +68,14 @@ export class SkillRegistry {
    */
   getAll(): SkillDefinition[] {
     return Array.from(this.byId.values());
+  }
+
+  /**
+   * Get all skills with the specified visibility tier.
+   * Used by harness.help to render tier-grouped output (Phase 25: D-01).
+   */
+  getByTier(tier: SkillTier): SkillDefinition[] {
+    return Array.from(this.byId.values()).filter((s) => s.tier === tier);
   }
 
   /**
