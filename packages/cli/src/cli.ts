@@ -24,6 +24,7 @@ import {
   healthSkill,
   agentsSkill,
   guardSkill,
+  helpSkill,
 } from '@sunco/skills-harness';
 import {
   statusSkill,
@@ -81,6 +82,7 @@ const preloadedSkills = [
   healthSkill,
   agentsSkill,
   guardSkill,
+  helpSkill,
   // Phase 3 workflow skills
   workflowSettingsSkill,  // Enhanced settings replaces harness version
   statusSkill,
@@ -143,6 +145,15 @@ async function main(): Promise<void> {
     const executeHook = lifecycle.createExecuteHook(services);
 
     registerSkills(program, services.registry, executeHook);
+
+    // D-10 / D-12: `sunco` with no args → invoke harness.help
+    // Commander.js 14.x root program.action() fires when no subcommand is matched.
+    // Guard: process.argv.length <= 2 means only 'node' and 'sunco' in argv (truly no args).
+    program.action(async () => {
+      if (process.argv.length <= 2) {
+        await executeHook('harness.help', {});
+      }
+    });
 
     // ---------------------------------------------------------------------------
     // Headless subcommand (CI/CD mode)
