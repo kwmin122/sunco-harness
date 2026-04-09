@@ -142,7 +142,7 @@ describe('ClaudeCliProvider', () => {
       expect(result.usage.wallTimeMs).toBe(800);
     });
 
-    it('handles AbortSignal by passing to execa', async () => {
+    it('passes AbortSignal to execa as cancelSignal', async () => {
       const signal = AbortSignal.timeout(5000);
       const cliOutput = JSON.stringify({
         result: 'done',
@@ -157,7 +157,7 @@ describe('ClaudeCliProvider', () => {
       expect(mockExeca).toHaveBeenCalledWith(
         'claude',
         expect.any(Array),
-        expect.objectContaining({ signal }),
+        expect.objectContaining({ cancelSignal: signal }),
       );
     });
 

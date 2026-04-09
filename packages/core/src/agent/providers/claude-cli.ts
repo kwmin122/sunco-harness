@@ -77,7 +77,7 @@ export class ClaudeCliProvider implements AgentProvider {
         input: request.prompt,
         cwd: context.cwd,
         timeout: context.timeout,
-        signal: context.signal,
+        cancelSignal: context.signal,
       });
       stdout = result.stdout;
     } catch (err: unknown) {
