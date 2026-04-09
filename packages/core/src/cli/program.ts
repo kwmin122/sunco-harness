@@ -90,7 +90,17 @@ export function createProgram(): Command {
     .name('sunco')
     .version(VERSION)
     .description('Agent Workspace OS -- \uC5D0\uC774\uC804\uD2B8\uAC00 \uC2E4\uC218\uB97C \uB35C \uD558\uAC8C \uD310\uC744 \uAE54\uC544\uC8FC\uB294 OS')
-    .configureHelp({ sortSubcommands: true })
+    .configureHelp({
+      sortSubcommands: true,
+      formatHelp: (cmd, helper) => {
+        // Only override root-level --help (cmd.parent === null means root command)
+        if (cmd.parent === null) {
+          return `\n  Run 'sunco help' for available commands and tasks.\n  Run 'sunco help --all' for the full command list.\n\n`;
+        }
+        // All subcommand --help remains normal Commander output
+        return helper.formatHelp(cmd, helper);
+      },
+    })
     .showHelpAfterError(true);
 
   // Unknown command handler (CLI-04)
