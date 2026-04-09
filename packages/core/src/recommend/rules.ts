@@ -207,13 +207,15 @@ const harnessTransitionRules: RecommendationRule[] = [
 // ---------------------------------------------------------------------------
 
 const sessionStateRules: RecommendationRule[] = [
-  // Rule 13: Fresh session (no lastSkillId) -> status
+  // Rule 13: Fresh session (no lastSkillId) -> next (primary), do (secondary), status (tertiary)
   rule(
     'fresh-session',
-    'Start a fresh session by checking status',
+    'Start a fresh session — next recommended action, or describe a task',
     (s) => s.lastSkillId === undefined || s.lastSkillId === null,
     () => [
-      rec('core.status', 'Check status', 'Start by reviewing current project status', 'high'),
+      rec('workflow.next', 'Get next action', 'See the next recommended task for this project', 'high'),
+      rec('workflow.do', 'Describe what you need', 'Describe your task in natural language', 'medium'),
+      rec('core.status', 'Check status', 'Review current project status', 'low'),
     ],
   ),
 
@@ -635,20 +637,21 @@ const compositionRules: RecommendationRule[] = [
     ],
   ),
 
-  // Fresh session with no previous skill -> suggest quick task
+  // Fresh session with no previous skill -> suggest next (primary) then do (secondary)
   rule(
-    'suggest-quick-idle',
-    'Suggest quick task for fresh sessions',
+    'suggest-next-idle',
+    'Suggest next recommended action for fresh sessions (primary over do)',
     (s) => s.lastSkillId === undefined || s.lastSkillId === '',
     () => [
-      rec('workflow.quick', 'Quick Task', 'Run a lightweight task without full planning', 'low'),
+      rec('workflow.next', 'Get next action', 'See what to work on next', 'medium'),
+      rec('workflow.do', 'Describe what you need', 'Describe your task in natural language', 'low'),
     ],
   ),
 
-  // No context -> suggest do (natural language)
+  // No context -> suggest do as secondary option after next
   rule(
     'suggest-do-generic',
-    'Suggest describing task in natural language when no context',
+    'Suggest natural language task description as secondary option',
     (s) => !s.lastSkillId,
     () => [
       rec('workflow.do', 'Describe What You Need', 'Describe your task in natural language', 'low'),
