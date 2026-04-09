@@ -20,6 +20,7 @@ export { default as lintSkill } from './lint.skill.js';
 export { default as healthSkill } from './health.skill.js';
 export { default as agentsSkill } from './agents.skill.js';
 export { default as guardSkill } from './guard.skill.js';
+export { default as helpSkill } from './help.skill.js';
 
 // --- Value re-exports ---
 export { detectEcosystems } from './init/ecosystem-detector.js';
