@@ -163,6 +163,7 @@ export function createSkillContext(params: CreateSkillContextParams): SkillConte
     cwd,
     args,
     signal,
+    registry,
   };
 
   return context;
