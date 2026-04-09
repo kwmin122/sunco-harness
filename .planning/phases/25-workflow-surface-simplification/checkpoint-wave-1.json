@@ -1,0 +1,30 @@
+{
+  "schema": "sunco-checkpoint-v1",
+  "phase": "25",
+  "phase_name": "Workflow Surface Simplification",
+  "phase_slug": "25-workflow-surface-simplification",
+  "wave_completed": 1,
+  "timestamp": "2026-04-09T01:16:49Z",
+  "plans_completed": [
+    {
+      "id": "25-01",
+      "title": "Core Tier Metadata",
+      "status": "completed",
+      "lint_status": "PASS",
+      "summary_path": ".planning/phases/25-workflow-surface-simplification/25-01-SUMMARY.md",
+      "last_commit": "d178a55"
+    }
+  ],
+  "plans_pending": [
+    { "id": "25-02", "title": "Help Skill + CLI No-Arg Wiring", "wave": 2, "status": "pending" },
+    { "id": "25-03", "title": "Review Auto-Routing + Recommender", "wave": 2, "status": "pending" }
+  ],
+  "blast_radius": {
+    "risk": "MEDIUM",
+    "files_in_scope": 21,
+    "files_transitively_affected": 295
+  },
+  "lint_gate_overrides": [],
+  "interrupted": false,
+  "next_wave": 2
+}
