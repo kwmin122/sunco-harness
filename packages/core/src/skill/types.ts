@@ -15,6 +15,7 @@ import type { AgentRouterApi } from '../agent/types.js';
 import type { RecommenderApi } from '../recommend/types.js';
 import type { SkillUi } from '../ui/adapters/SkillUi.js';
 import type { SkillId, CommandName } from '../types.js';
+import type { SkillRegistry } from './registry.js';
 
 // ---------------------------------------------------------------------------
 // Skill Metadata Enums
@@ -56,6 +57,14 @@ export type SkillCategory = 'core' | 'harness' | 'workflow' | 'extension' | stri
  * - complex: quality model needed (architecture, deep reasoning)
  */
 export type SkillComplexity = 'simple' | 'standard' | 'complex';
+
+/**
+ * Skill visibility tier for CLI surface layering (Phase 25: D-01).
+ * - user: shown in default `sunco help` (5 user-facing commands)
+ * - workflow: shown only in `sunco help --all` (pipeline skills)
+ * - expert: shown only in `sunco help --all` (power/specialist skills)
+ */
+export type SkillTier = 'user' | 'workflow' | 'expert';
 
 // ---------------------------------------------------------------------------
 // Skill Option
@@ -127,6 +136,12 @@ export interface SkillContext {
 
   /** AbortSignal for cancellation support (D-26) */
   readonly signal: AbortSignal;
+
+  /**
+   * Read-only access to the skill registry (for introspection skills like harness.help).
+   * Exposes only listing methods — registration is not permitted through context.
+   */
+  readonly registry: Pick<SkillRegistry, 'getAll' | 'getByTier'>;
 }
 
 // ---------------------------------------------------------------------------
@@ -187,6 +202,9 @@ export interface SkillDefinition {
   /** Complexity hint for model routing (Phase 18: LH-09) */
   readonly complexity?: SkillComplexity;
 
+  /** Visibility tier for CLI surface layering (Phase 25: D-01, D-02) */
+  readonly tier: SkillTier;
+
   /** Skill execution function */
   readonly execute: (ctx: SkillContext) => Promise<SkillResult>;
 }
@@ -205,5 +223,7 @@ export type SkillDefinitionInput = {
   routing: SkillRouting;
   options?: SkillOption[];
   complexity?: SkillComplexity;
+  /** Visibility tier. Defaults to 'workflow' when omitted (D-02). */
+  tier?: SkillTier;
   execute: (ctx: SkillContext) => Promise<SkillResult>;
 };
