@@ -80,6 +80,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'directExec',
   complexity: 'simple',
+  tier: 'user',
   description: 'Route natural language to the right skill',
 
   options: [],

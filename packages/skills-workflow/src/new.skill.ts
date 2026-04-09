@@ -173,6 +173,7 @@ export default defineSkill({
   category: 'workflow',
   routing: 'directExec',
   complexity: 'complex',
+  tier: 'user',
   description: 'Bootstrap a new project from an idea',
 
   async execute(ctx: SkillContext): Promise<SkillResult> {

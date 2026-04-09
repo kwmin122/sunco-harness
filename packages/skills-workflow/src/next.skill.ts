@@ -24,6 +24,7 @@ export default defineSkill({
   stage: 'stable',
   category: 'workflow',
   routing: 'routable',
+  tier: 'user',
   description: 'Route to the next recommended skill based on current state',
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
