@@ -8,7 +8,7 @@
  * Requirements: CLI-01 (sunco binary), CLI-03 (--help), CLI-04 (error messages)
  */
 
-import { Command } from 'commander';
+import { Command, Help } from 'commander';
 import { VERSION } from '../index.js';
 
 // ---------------------------------------------------------------------------
@@ -98,7 +98,8 @@ export function createProgram(): Command {
           return `\n  Run 'sunco help' for available commands and tasks.\n  Run 'sunco help --all' for the full command list.\n\n`;
         }
         // All subcommand --help remains normal Commander output
-        return helper.formatHelp(cmd, helper);
+        // Use Help.prototype to avoid infinite recursion (configureHelp replaces formatHelp globally)
+        return Help.prototype.formatHelp.call(helper, cmd, helper);
       },
     })
     .showHelpAfterError(true);

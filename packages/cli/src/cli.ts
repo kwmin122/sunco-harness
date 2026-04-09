@@ -17,6 +17,7 @@
  * Requirements: CLI-01 (sunco binary), D-03 (entry point)
  */
 
+import { Command } from 'commander';
 import { createProgram, registerSkills, createLifecycle, SilentUiAdapter, createSkillUi, createSkillContext } from '@sunco/core';
 import {
   initSkill,
@@ -148,9 +149,10 @@ async function main(): Promise<void> {
 
     // D-10 / D-12: `sunco` with no args → invoke harness.help
     // Commander.js 14.x root program.action() fires when no subcommand is matched.
-    // Guard: process.argv.length <= 2 means only 'node' and 'sunco' in argv (truly no args).
-    program.action(async () => {
-      if (process.argv.length <= 2) {
+    // Use Commander's parsed args (not process.argv) for reliable no-arg detection
+    // across all invocation methods (direct, npx, ts-node, etc.)
+    program.action(async (_options: Record<string, unknown>, command: Command) => {
+      if (command.args.length === 0) {
         await executeHook('harness.help', {});
       }
     });
