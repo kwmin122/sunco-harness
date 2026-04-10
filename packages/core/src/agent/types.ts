@@ -166,6 +166,9 @@ export interface AgentRequest {
 
   /** AbortSignal for cancellation (D-26) */
   signal?: AbortSignal;
+
+  /** Maximum agent turns (tool-use cycles). Default: 1 for simple queries. */
+  maxTurns?: number;
 }
 
 // ---------------------------------------------------------------------------

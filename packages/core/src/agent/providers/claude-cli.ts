@@ -121,7 +121,8 @@ export class ClaudeCliProvider implements AgentProvider {
    * Build CLI arguments from request.
    */
   private buildArgs(request: AgentRequest): string[] {
-    const args: string[] = ['-p', '--output-format', 'json', '--max-turns', '1'];
+    const turns = String(request.maxTurns ?? 1);
+    const args: string[] = ['-p', '--output-format', 'json', '--max-turns', turns];
 
     // Add system prompt if present
     if (request.systemPrompt) {

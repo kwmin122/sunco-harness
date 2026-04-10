@@ -121,6 +121,57 @@ describe('ClaudeCliProvider', () => {
       );
     });
 
+    it('uses default --max-turns 1 when maxTurns is not set', async () => {
+      const cliOutput = JSON.stringify({
+        result: 'done',
+        cost_usd: 0.01,
+        duration_ms: 200,
+        is_error: false,
+      });
+      mockExeca.mockResolvedValueOnce({ stdout: cliOutput, exitCode: 0 });
+
+      await provider.execute(makeRequest(), makeContext());
+
+      const [, args] = mockExeca.mock.calls[0] as [string, string[], unknown];
+      const idx = args.indexOf('--max-turns');
+      expect(idx).toBeGreaterThan(-1);
+      expect(args[idx + 1]).toBe('1');
+    });
+
+    it('passes --max-turns 5 when maxTurns: 5 is set', async () => {
+      const cliOutput = JSON.stringify({
+        result: 'done',
+        cost_usd: 0.01,
+        duration_ms: 200,
+        is_error: false,
+      });
+      mockExeca.mockResolvedValueOnce({ stdout: cliOutput, exitCode: 0 });
+
+      await provider.execute(makeRequest({ maxTurns: 5 }), makeContext());
+
+      const [, args] = mockExeca.mock.calls[0] as [string, string[], unknown];
+      const idx = args.indexOf('--max-turns');
+      expect(idx).toBeGreaterThan(-1);
+      expect(args[idx + 1]).toBe('5');
+    });
+
+    it('passes --max-turns 0 when maxTurns: 0 is set (edge case)', async () => {
+      const cliOutput = JSON.stringify({
+        result: 'done',
+        cost_usd: 0.01,
+        duration_ms: 200,
+        is_error: false,
+      });
+      mockExeca.mockResolvedValueOnce({ stdout: cliOutput, exitCode: 0 });
+
+      await provider.execute(makeRequest({ maxTurns: 0 }), makeContext());
+
+      const [, args] = mockExeca.mock.calls[0] as [string, string[], unknown];
+      const idx = args.indexOf('--max-turns');
+      expect(idx).toBeGreaterThan(-1);
+      expect(args[idx + 1]).toBe('0');
+    });
+
     it('returns normalized AgentResult on success', async () => {
       const cliOutput = JSON.stringify({
         result: 'function hello() { return "world"; }',
