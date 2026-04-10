@@ -393,8 +393,7 @@ export default defineSkill({
 
     // ----- Step 2.7: Pre-draft advisor call (Phase 28) -----
     const advisorNotes: string[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic import type, AdvisorRunner not statically available from core
-    let sharedAdvisorRunner: any = null;
+    let sharedAdvisorRunner: import('@sunco/core/advisor').AdvisorRunner | null = null;
     let sharedBuildPrompt: ((req: import('@sunco/core').AdvisorRequest) => string) | null = null;
 
     if (ctx.config.agent?.advisor?.enabled) {
