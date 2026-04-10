@@ -25,6 +25,13 @@ import { runLintWithFix } from './lint/fixer.js';
 import { formatViolations, formatForTerminal, formatForJson } from './lint/formatter.js';
 import type { InitResult } from './init/types.js';
 
+function normalizeFilesOption(files: string | string[] | undefined): string[] | undefined {
+  if (!files) return undefined;
+  const values = Array.isArray(files) ? files : files.split(',');
+  const normalized = values.map((file) => file.trim()).filter(Boolean);
+  return normalized.length > 0 ? normalized : undefined;
+}
+
 export default defineSkill({
   id: 'harness.lint',
   command: 'lint',
@@ -42,7 +49,7 @@ export default defineSkill({
   async execute(ctx) {
     const fix = (ctx.args.fix as boolean) ?? false;
     const json = (ctx.args.json as boolean) ?? false;
-    const filesGlob = ctx.args.files as string | undefined;
+    const filesGlob = ctx.args.files as string | string[] | undefined;
 
     await ctx.ui.entry({ title: 'Lint', description: 'Checking architecture boundaries...' });
 
@@ -70,7 +77,7 @@ export default defineSkill({
 
     // Step 4: Determine files to lint
     const sourceRoot = initResult.layers.sourceRoot ?? 'src';
-    const files = filesGlob ? [filesGlob] : [`${sourceRoot}/**/*.{ts,tsx,js,jsx}`];
+    const files = normalizeFilesOption(filesGlob) ?? [`${sourceRoot}/**/*.{ts,tsx,js,jsx}`];
 
     // Step 5: Run lint (with or without fix)
     const result = fix

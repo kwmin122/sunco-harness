@@ -12,7 +12,7 @@
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, extname } from 'node:path';
+import { join, extname, isAbsolute } from 'node:path';
 import type { StateApi, FileStoreApi } from '@sunco/core';
 import type { BoundariesConfig, SunLintViolation } from '../lint/types.js';
 import type {
@@ -158,6 +158,26 @@ async function collectSourceFiles(dir: string, files: string[]): Promise<void> {
   }
 }
 
+async function collectSpecifiedSourceFiles(cwd: string, files: readonly string[]): Promise<string[]> {
+  const sourceFiles: string[] = [];
+
+  for (const file of files) {
+    if (!SOURCE_EXTENSIONS.has(extname(file))) continue;
+
+    const fullPath = isAbsolute(file) ? file : join(cwd, file);
+    try {
+      const s = await stat(fullPath);
+      if (s.isFile()) {
+        sourceFiles.push(fullPath);
+      }
+    } catch {
+      // Ignore deleted or non-existent files from a git diff.
+    }
+  }
+
+  return sourceFiles;
+}
+
 // ---------------------------------------------------------------------------
 // Main Exports
 // ---------------------------------------------------------------------------
@@ -213,15 +233,20 @@ export async function analyzeProject(opts: {
   fileStore: FileStoreApi;
   state: StateApi;
   boundariesConfig: BoundariesConfig;
+  files?: readonly string[];
 }): Promise<GuardResult> {
-  const { cwd, fileStore, state, boundariesConfig } = opts;
+  const { cwd, fileStore, state, boundariesConfig, files } = opts;
 
   // Load tribal patterns from .sun/tribal/
   const tribalPatterns = await loadTribalPatterns(fileStore);
 
   // Collect source files
-  const filePaths: string[] = [];
-  await collectSourceFiles(cwd, filePaths);
+  const filePaths: string[] = files && files.length > 0
+    ? await collectSpecifiedSourceFiles(cwd, files)
+    : [];
+  if (!files || files.length === 0) {
+    await collectSourceFiles(cwd, filePaths);
+  }
 
   // Analyze each file
   const allViolations: SunLintViolation[] = [];

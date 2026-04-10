@@ -388,7 +388,7 @@ export async function runLayer2Deterministic(
 
   // Build file filter for phase-local scope
   const hasFilter = changedFiles !== undefined && changedFiles.length > 0;
-  const filesArg = hasFilter ? changedFiles!.join(',') : undefined;
+  const filesArg = hasFilter ? changedFiles : undefined;
 
   // Call lint skill
   try {

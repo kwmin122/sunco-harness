@@ -2,7 +2,10 @@
  * Tests for guard analyzer.
  * Validates combined lint + anti-pattern + tribal knowledge analysis.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import type { StateApi, FileStoreApi } from '@sunco/core';
 import type { BoundariesConfig } from '../../lint/types.js';
 import { analyzeFile, analyzeProject } from '../analyzer.js';
@@ -120,10 +123,18 @@ export {};
 describe('analyzeProject', () => {
   let state: ReturnType<typeof createMockState>;
   let fileStore: FileStoreApi;
+  let tempDir: string | undefined;
 
   beforeEach(() => {
     state = createMockState();
     fileStore = createMockFileStore();
+    tempDir = undefined;
+  });
+
+  afterEach(async () => {
+    if (tempDir) {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 
   it('returns a GuardResult with all expected fields', async () => {
@@ -142,5 +153,24 @@ describe('analyzeProject', () => {
     expect(result).toHaveProperty('promotionSuggestions');
     expect(result).toHaveProperty('tribalWarnings');
     expect(typeof result.filesAnalyzed).toBe('number');
+  });
+
+  it('scopes analysis to explicitly provided source files', async () => {
+    tempDir = await mkdtemp(join(tmpdir(), 'sunco-guard-scope-'));
+    await mkdir(join(tempDir, 'src'), { recursive: true });
+    await writeFile(join(tempDir, 'src', 'changed.ts'), 'const changed: any = 1;\nexport {};\n');
+    await writeFile(join(tempDir, 'src', 'unchanged.ts'), 'console.log("noise");\nexport {};\n');
+
+    const result = await analyzeProject({
+      cwd: tempDir,
+      fileStore,
+      state,
+      boundariesConfig: emptyBoundariesConfig,
+      files: ['src/changed.ts'],
+    });
+
+    expect(result.filesAnalyzed).toBe(1);
+    expect(result.antiPatterns.some((pattern) => pattern.file === 'src/changed.ts')).toBe(true);
+    expect(result.antiPatterns.some((pattern) => pattern.file === 'src/unchanged.ts')).toBe(false);
   });
 });

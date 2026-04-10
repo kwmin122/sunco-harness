@@ -28,6 +28,18 @@ import { createWatcher, stopWatcher } from './guard/watcher.js';
 import type { InitResult } from './init/types.js';
 import type { PromotionSuggestion } from './guard/types.js';
 
+function normalizeFilesOption(files: string | string[] | undefined): string[] | undefined {
+  if (!files) return undefined;
+  const values = Array.isArray(files) ? files : files.split(',');
+  const normalized = values.map((file) => file.trim()).filter(Boolean);
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+function matchesAnyFileFilter(file: string, filters: readonly string[] | undefined): boolean {
+  if (!filters || filters.length === 0) return true;
+  return filters.some((filter) => file.includes(filter));
+}
+
 export default defineSkill({
   id: 'harness.guard',
   command: 'guard',
@@ -46,7 +58,7 @@ export default defineSkill({
   async execute(ctx) {
     const watchMode = (ctx.args.watch as boolean) ?? false;
     const draftRules = (ctx.args['draft-claude-rules'] as boolean) ?? false;
-    const filesFilter = ctx.args.files as string | undefined;
+    const filesFilter = normalizeFilesOption(ctx.args.files as string | string[] | undefined);
 
     await ctx.ui.entry({
       title: 'Guard',
@@ -120,15 +132,16 @@ export default defineSkill({
         fileStore: ctx.fileStore,
         state: ctx.state,
         boundariesConfig,
+        files: filesFilter,
       });
 
       // If --files filter provided, narrow results to matching paths
       const filteredResult = filesFilter
         ? {
             ...result,
-            lintViolations: result.lintViolations.filter((v) => v.file.includes(filesFilter)),
-            antiPatterns: result.antiPatterns.filter((a) => a.file.includes(filesFilter)),
-            tribalWarnings: result.tribalWarnings.filter((w) => w.file.includes(filesFilter)),
+            lintViolations: result.lintViolations.filter((v) => matchesAnyFileFilter(v.file, filesFilter)),
+            antiPatterns: result.antiPatterns.filter((a) => matchesAnyFileFilter(a.file, filesFilter)),
+            tribalWarnings: result.tribalWarnings.filter((w) => matchesAnyFileFilter(w.file, filesFilter)),
           }
         : result;
 
