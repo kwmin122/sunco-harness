@@ -173,4 +173,22 @@ describe('analyzeProject', () => {
     expect(result.antiPatterns.some((pattern) => pattern.file === 'src/changed.ts')).toBe(true);
     expect(result.antiPatterns.some((pattern) => pattern.file === 'src/unchanged.ts')).toBe(false);
   });
+
+  it('rejects explicit files outside the project root', async () => {
+    tempDir = await mkdtemp(join(tmpdir(), 'sunco-guard-traversal-'));
+    const projectDir = join(tempDir, 'project');
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(join(tempDir, 'outside.ts'), 'const leaked: any = 1;\nexport {};\n');
+
+    const result = await analyzeProject({
+      cwd: projectDir,
+      fileStore,
+      state,
+      boundariesConfig: emptyBoundariesConfig,
+      files: ['../outside.ts', join(tempDir, 'outside.ts')],
+    });
+
+    expect(result.filesAnalyzed).toBe(0);
+    expect(result.antiPatterns).toEqual([]);
+  });
 });

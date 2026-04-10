@@ -465,4 +465,22 @@ describe('verifySkill', () => {
       }),
     );
   });
+
+  it('passes renamed file targets to Layer 2 changed-file scoping', async () => {
+    const { default: verifySkill } = await import('../verify.skill.js');
+    const renameDiff = `diff --git a/src/old.ts b/src/new.ts
+similarity index 87%
+rename from src/old.ts
+rename to src/new.ts`;
+    mockDiff.mockImplementation((args?: string[]) => {
+      if (args && args.includes('--cached')) return Promise.resolve(renameDiff);
+      if (args && args.includes('--name-only')) return Promise.resolve('src/new.ts');
+      return Promise.resolve('');
+    });
+
+    const ctx = createMockContext();
+    await verifySkill.execute(ctx);
+
+    expect(mockRunLayer2).toHaveBeenCalledWith(ctx, ['src/new.ts']);
+  });
 });

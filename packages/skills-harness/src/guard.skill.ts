@@ -35,11 +35,6 @@ function normalizeFilesOption(files: string | string[] | undefined): string[] | 
   return normalized.length > 0 ? normalized : undefined;
 }
 
-function matchesAnyFileFilter(file: string, filters: readonly string[] | undefined): boolean {
-  if (!filters || filters.length === 0) return true;
-  return filters.some((filter) => file.includes(filter));
-}
-
 export default defineSkill({
   id: 'harness.guard',
   command: 'guard',
@@ -52,7 +47,7 @@ export default defineSkill({
     { flags: '--watch', description: 'Continuous file watching mode (chokidar)' },
     { flags: '--json', description: 'Output results as JSON' },
     { flags: '--draft-claude-rules', description: 'Generate .claude/rules/ files from repeated anti-patterns' },
-    { flags: '--files <glob>', description: 'Analyze only files whose path contains this pattern (single-run mode only)' },
+    { flags: '--files <files>', description: 'Analyze only the specified comma-separated file paths (single-run mode only)' },
   ],
 
   async execute(ctx) {
@@ -80,6 +75,10 @@ export default defineSkill({
     const tribalPatterns = await loadTribalPatterns(ctx.fileStore);
 
     if (watchMode) {
+      if (filesFilter) {
+        ctx.log.warn('--files is ignored in watch mode; guard watches all source files');
+      }
+
       // ---------------------------------------------------------------
       // Continuous mode -- long-running process (D-23)
       // ---------------------------------------------------------------
@@ -135,28 +134,18 @@ export default defineSkill({
         files: filesFilter,
       });
 
-      // If --files filter provided, narrow results to matching paths
-      const filteredResult = filesFilter
-        ? {
-            ...result,
-            lintViolations: result.lintViolations.filter((v) => matchesAnyFileFilter(v.file, filesFilter)),
-            antiPatterns: result.antiPatterns.filter((a) => matchesAnyFileFilter(a.file, filesFilter)),
-            tribalWarnings: result.tribalWarnings.filter((w) => matchesAnyFileFilter(w.file, filesFilter)),
-          }
-        : result;
-
       // Check for promotion candidates
       const promotions = await detectPromotionCandidates({
-        antiPatterns: filteredResult.antiPatterns,
+        antiPatterns: result.antiPatterns,
         state: ctx.state,
       });
 
       // Build display details
       const details: string[] = [
-        ...filteredResult.lintViolations.map(
+        ...result.lintViolations.map(
           (v) => `${v.severity}: ${v.file}:${v.line} ${v.violation}`,
         ),
-        ...filteredResult.tribalWarnings.map(
+        ...result.tribalWarnings.map(
           (w) => `tribal: ${w.file}:${w.line} ${w.message}`,
         ),
         ...promotions.map((p) => `promotion: ${formatPromotionSuggestion(p)}`),
@@ -164,16 +153,16 @@ export default defineSkill({
 
       // Display results
       await ctx.ui.result({
-        success: filteredResult.lintViolations.length === 0,
+        success: result.lintViolations.length === 0,
         title: 'Guard',
-        summary: `${filteredResult.filesAnalyzed} files scanned, ${filteredResult.lintViolations.length} violations, ${filteredResult.antiPatterns.length} anti-patterns`,
+        summary: `${result.filesAnalyzed} files scanned, ${result.lintViolations.length} violations, ${result.antiPatterns.length} anti-patterns`,
         details,
       });
 
       // Persist guard result to state
       await ctx.state.set('guard.lastResult', {
-        violations: filteredResult.lintViolations.length,
-        antiPatterns: filteredResult.antiPatterns.length,
+        violations: result.lintViolations.length,
+        antiPatterns: result.antiPatterns.length,
         promotions: promotions.length,
         timestamp: new Date().toISOString(),
       });
@@ -227,9 +216,9 @@ export default defineSkill({
       }
 
       return {
-        success: filteredResult.lintViolations.length === 0,
-        summary: `${filteredResult.lintViolations.length} violations, ${promotions.length} promotion suggestions`,
-        data: { ...filteredResult, promotionSuggestions: promotions },
+        success: result.lintViolations.length === 0,
+        summary: `${result.lintViolations.length} violations, ${promotions.length} promotion suggestions`,
+        data: { ...result, promotionSuggestions: promotions },
       };
     }
   },

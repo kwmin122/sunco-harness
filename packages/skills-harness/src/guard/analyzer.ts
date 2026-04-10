@@ -12,7 +12,7 @@
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, extname, isAbsolute } from 'node:path';
+import { join, extname, isAbsolute, relative, resolve } from 'node:path';
 import type { StateApi, FileStoreApi } from '@sunco/core';
 import type { BoundariesConfig, SunLintViolation } from '../lint/types.js';
 import type {
@@ -160,11 +160,15 @@ async function collectSourceFiles(dir: string, files: string[]): Promise<void> {
 
 async function collectSpecifiedSourceFiles(cwd: string, files: readonly string[]): Promise<string[]> {
   const sourceFiles: string[] = [];
+  const cwdResolved = resolve(cwd);
 
   for (const file of files) {
     if (!SOURCE_EXTENSIONS.has(extname(file))) continue;
 
-    const fullPath = isAbsolute(file) ? file : join(cwd, file);
+    const fullPath = resolve(isAbsolute(file) ? file : join(cwdResolved, file));
+    const pathFromCwd = relative(cwdResolved, fullPath);
+    if (pathFromCwd.startsWith('..') || isAbsolute(pathFromCwd)) continue;
+
     try {
       const s = await stat(fullPath);
       if (s.isFile()) {
@@ -261,7 +265,7 @@ export async function analyzeProject(opts: {
       continue;
     }
 
-    const relativePath = fullPath.startsWith(cwd) ? fullPath.slice(cwd.length + 1) : fullPath;
+    const relativePath = relative(cwd, fullPath);
 
     const result = await analyzeFile({
       filePath: relativePath,

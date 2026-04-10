@@ -253,7 +253,7 @@ export default defineSkill({
     // --- Step 3b: Extract changed file paths from diff for Layer 2 scoping ---
     const changedFiles: string[] = [];
     {
-      const diffHeaderRegex = /^diff --git a\/(.*?) b\//gm;
+      const diffHeaderRegex = /^diff --git a\/.*? b\/(.+)$/gm;
       let match: RegExpExecArray | null;
       while ((match = diffHeaderRegex.exec(diff)) !== null) {
         changedFiles.push(match[1]!);
