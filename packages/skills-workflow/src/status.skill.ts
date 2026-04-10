@@ -61,7 +61,7 @@ async function executeStatus(ctx: SkillContext): Promise<SkillResult> {
   const { phases, progress } = parseRoadmap(roadmapContent ?? '');
   const state = parseStateMd(stateContent ?? '');
 
-  // --json flag: return raw data without formatting
+  // --json flag: return raw data without formatting (absorbs query skill)
   const isJson = ctx.args.json as boolean | undefined;
   if (isJson) {
     return {
@@ -69,6 +69,11 @@ async function executeStatus(ctx: SkillContext): Promise<SkillResult> {
       summary: `Phase ${state.phase ?? '?'} | ${state.progress.completedPlans}/${state.progress.totalPlans} plans`,
       data: { phases, progress, state },
     };
+  }
+
+  // --brief flag: decisions/blockers only (absorbs context skill)
+  if (ctx.args.brief === true) {
+    return ctx.run('workflow.context', {});
   }
 
   // Build formatted display
@@ -268,7 +273,10 @@ export const statusSkill = defineSkill({
   routing: 'routable',
   tier: 'user',
   description: 'Show current project status and progress',
-  options: [{ flags: '--json', description: 'Output as JSON' }],
+  options: [
+    { flags: '--json', description: 'Output as JSON (replaces query command)' },
+    { flags: '--brief', description: 'Show decisions/blockers only (replaces context command)' },
+  ],
   execute: executeStatus,
 });
 
