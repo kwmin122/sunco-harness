@@ -161,6 +161,9 @@ export const VERIFICATION_PERMISSIONS: PermissionSet = {
 /** Per-expert agent timeout */
 const EXPERT_TIMEOUT = 120_000;
 
+/** Layer 6 timeout — higher due to multi-turn agent execution */
+const CROSS_MODEL_TIMEOUT = 180_000;
+
 /** Coordinator agent timeout */
 const COORDINATOR_TIMEOUT = 60_000;
 
@@ -1034,7 +1037,8 @@ export async function runLayer6CrossModel(
             role: 'verification',
             prompt,
             permissions: VERIFICATION_PERMISSIONS,
-            timeout: EXPERT_TIMEOUT,
+            timeout: CROSS_MODEL_TIMEOUT,
+            maxTurns: 3,
           },
           providers.slice(0, 2), // Use first two different providers
         );
@@ -1089,7 +1093,8 @@ async function runSkepticalReviewer(
       prompt,
       systemPrompt: SKEPTICAL_REVIEWER_SYSTEM,
       permissions: VERIFICATION_PERMISSIONS,
-      timeout: EXPERT_TIMEOUT,
+      timeout: CROSS_MODEL_TIMEOUT,
+      maxTurns: 3,
     });
 
     const parsed = parseExpertFindings(result.outputText, 'cross-model', 6);
