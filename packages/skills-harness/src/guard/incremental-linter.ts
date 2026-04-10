@@ -4,20 +4,15 @@
  * Runs ESLint on a single file via lintText() for fast incremental linting.
  * This is the hot path for --watch mode -- must be fast (no full project scan).
  *
- * Uses the same ESLint configuration approach as lint/runner.ts but with
- * lintText() instead of lintFiles() for single-file operation.
+ * Uses the shared config factory (eslint-config.ts) for flat config construction,
+ * with lintText() instead of lintFiles() for single-file operation.
  *
  * Decision: D-22 (incremental single-file linting via ESLint lintText)
  */
 
-import { createRequire } from 'node:module';
 import { ESLint } from 'eslint';
 import type { BoundariesConfig, SunLintViolation } from '../lint/types.js';
-
-// Load CJS plugins via createRequire (ESM project, same pattern as lint/runner.ts)
-const require = createRequire(import.meta.url);
-const boundariesPlugin = require('eslint-plugin-boundaries') as Record<string, unknown>;
-const tseslint = require('typescript-eslint') as { parser: unknown };
+import { buildFlatConfig } from '../lint/eslint-config.js';
 
 /**
  * Lint a single file using ESLint's lintText() method.
@@ -37,41 +32,9 @@ export async function lintSingleFile(opts: {
   const { filePath, fileContent, boundariesConfig, cwd } = opts;
 
   try {
-    // Build ESLint config -- only include boundaries plugin if config has elements
-    const overrideConfig: object[] = [
-      {
-        files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-        languageOptions: {
-          parser: tseslint.parser,
-          parserOptions: {
-            ecmaVersion: 'latest',
-            sourceType: 'module',
-          },
-        },
-        ...(boundariesConfig.elements.length > 0
-          ? {
-              plugins: { boundaries: boundariesPlugin },
-              settings: {
-                'boundaries/elements': boundariesConfig.elements,
-                'boundaries/include': ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-              },
-              rules: {
-                'boundaries/dependencies': [
-                  2,
-                  {
-                    default: 'disallow',
-                    rules: boundariesConfig.dependencyRules,
-                  },
-                ],
-              },
-            }
-          : {}),
-      },
-    ];
-
     const eslint = new ESLint({
       overrideConfigFile: true,
-      overrideConfig,
+      overrideConfig: buildFlatConfig({ boundariesConfig }),
       cwd,
     });
 

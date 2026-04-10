@@ -2,29 +2,21 @@
  * @sunco/skills-harness - ESLint Programmatic Runner
  *
  * Executes ESLint programmatically with eslint-plugin-boundaries for
- * architecture boundary enforcement. Used by both `sunco lint` (full project)
- * and `sunco guard` (incremental, single-file).
+ * architecture boundary enforcement. Uses the shared config factory
+ * (eslint-config.ts) for flat config construction with standard ignores.
  *
  * Key design choices:
  * - Programmatic API only (no CLI spawn) per research anti-pattern guidance
  * - Flat config only (ESLint 10) per pitfall #2
  * - overrideConfigFile: true to bypass filesystem config search
- * - typescript-eslint parser for .ts/.tsx file support
+ * - Shared config factory pattern for DRY config across runner + guard
  *
  * Decisions: D-06 (hybrid approach), D-07 (boundaries config), D-09 (--fix support)
  */
 
-import { createRequire } from 'node:module';
 import { ESLint } from 'eslint';
-import type { BoundariesConfig } from './types.js';
-import type { LintResult, SunLintViolation } from './types.js';
-
-// Load CJS plugins via createRequire (ESM project, same pattern as picomatch in Phase 1)
-const require = createRequire(import.meta.url);
-const boundariesPlugin = require('eslint-plugin-boundaries') as Record<string, unknown>;
-
-// typescript-eslint parser for TypeScript file support
-const tseslint = require('typescript-eslint') as { parser: unknown };
+import type { BoundariesConfig, LintResult, SunLintViolation } from './types.js';
+import { buildFlatConfig } from './eslint-config.js';
 
 /** Options for runLint */
 export interface RunLintOptions {
@@ -64,32 +56,7 @@ export async function runLint(opts: RunLintOptions): Promise<LintResult> {
   try {
     const eslint = new ESLint({
       overrideConfigFile: true, // bypass filesystem config search (pitfall #2)
-      overrideConfig: [
-        {
-          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-          languageOptions: {
-            parser: tseslint.parser,
-            parserOptions: {
-              ecmaVersion: 'latest',
-              sourceType: 'module',
-            },
-          },
-          plugins: { boundaries: boundariesPlugin },
-          settings: {
-            'boundaries/elements': boundariesConfig.elements,
-            'boundaries/include': ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-          },
-          rules: {
-            'boundaries/dependencies': [
-              2,
-              {
-                default: 'disallow',
-                rules: boundariesConfig.dependencyRules,
-              },
-            ],
-          },
-        },
-      ],
+      overrideConfig: buildFlatConfig({ boundariesConfig }),
       fix,
       cwd,
     });
