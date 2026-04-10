@@ -25,6 +25,25 @@ export type SkillExecuteHook = (
 ) => Promise<void>;
 
 // ---------------------------------------------------------------------------
+// PostSkill Hook Runner (Phase 27)
+// ---------------------------------------------------------------------------
+
+/** Minimal duck type so core doesn't depend on skills-workflow's HookRunner */
+export interface HookRunnerLike {
+  emit(event: string, context: Record<string, unknown>): Promise<void>;
+}
+
+let _hookRunner: HookRunnerLike | null = null;
+
+/**
+ * Set the lifecycle hook runner. Called once during CLI boot from the
+ * entry point that has access to both `@sunco/core` and `@sunco/skills-workflow`.
+ */
+export function setHookRunner(runner: HookRunnerLike): void {
+  _hookRunner = runner;
+}
+
+// ---------------------------------------------------------------------------
 // Skill Registration
 // ---------------------------------------------------------------------------
 
@@ -37,8 +56,8 @@ export type SkillExecuteHook = (
  * - Adds each skill option (flags, description, default)
  * - Sets the action to call executeHook(skillId, options)
  *
- * This implements lazy execution: Commander parses args, but skill execute()
- * only runs when the command is actually invoked (startup latency optimization).
+ * PostSkill hooks fire after every skill execution (success or failure).
+ * Hook errors are caught and never break the skill's own reporting.
  *
  * @param program - Root Commander.js program
  * @param registry - Skill registry with all active skills
@@ -54,7 +73,6 @@ export function registerSkills(
       .command(skill.command)
       .description(skill.description);
 
-    // Add skill-specific options
     if (skill.options) {
       for (const opt of skill.options) {
         sub.option(
@@ -65,9 +83,27 @@ export function registerSkills(
       }
     }
 
-    // Wire the action to the execute hook
     sub.action(async (options: Record<string, unknown>) => {
-      await executeHook(skill.id, options);
+      const startedAt = Date.now();
+      let succeeded = true;
+      try {
+        await executeHook(skill.id, options);
+      } catch (err) {
+        succeeded = false;
+        throw err;
+      } finally {
+        // PostSkill hook — errors MUST NOT break the CLI
+        await _hookRunner?.emit('PostSkill', {
+          skillId: skill.id,
+          cwd: process.cwd(),
+          outcome: succeeded ? 'success' : 'failure',
+          timestamp: new Date().toISOString(),
+          durationMs: Date.now() - startedAt,
+        }).catch((err: unknown) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          process.stderr.write(`[sunco:hook] PostSkill handler failed: ${msg}\n`);
+        });
+      }
     });
   }
 }

@@ -248,8 +248,8 @@ export type { StatusBarProps } from './ui/session/StatusBar.js';
 // CLI Engine
 // ---------------------------------------------------------------------------
 export { createProgram, levenshtein, findClosestCommand, isRootHelpRequest, ROOT_HELP_MESSAGE } from './cli/program.js';
-export { registerSkills } from './cli/skill-router.js';
-export type { SkillExecuteHook } from './cli/skill-router.js';
+export { registerSkills, setHookRunner } from './cli/skill-router.js';
+export type { SkillExecuteHook, HookRunnerLike } from './cli/skill-router.js';
 export { createLifecycle, createNoopRecommender } from './cli/lifecycle.js';
 export type { LifecycleServices, Lifecycle } from './cli/lifecycle.js';
 

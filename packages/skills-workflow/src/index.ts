@@ -172,7 +172,7 @@ export type { ChangelogEntry } from './shared/changelog-writer.js';
 export { archiveMilestone, resetStateForNewMilestone, parseMilestoneAudit, buildGapPhases } from './shared/milestone-helpers.js';
 
 // Phase 19 lifecycle hooks
-export { createHookRunner } from './shared/lifecycle-hooks.js';
+export { createHookRunner, createDefaultHookRunner, registerActiveWorkHook } from './shared/lifecycle-hooks.js';
 export type { HookEvent, HookDefinition, HookContext, HookRunner } from './shared/lifecycle-hooks.js';
 export { limitHookOutput, HOOK_OUTPUT_LIMIT } from './shared/hook-output-limiter.js';
 export { parseCatchRules, applyCatchRules } from './shared/catch-rules.js';

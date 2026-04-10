@@ -18,7 +18,7 @@
  */
 
 import { Command } from 'commander';
-import { createProgram, registerSkills, createLifecycle, SilentUiAdapter, createSkillUi, createSkillContext, isRootHelpRequest, ROOT_HELP_MESSAGE } from '@sunco/core';
+import { createProgram, registerSkills, setHookRunner, createLifecycle, SilentUiAdapter, createSkillUi, createSkillContext, isRootHelpRequest, ROOT_HELP_MESSAGE } from '@sunco/core';
 import {
   initSkill,
   lintSkill,
@@ -66,6 +66,7 @@ import {
   exportSkill,
   graphSkill,
   docSkill,
+  createDefaultHookRunner,
 } from '@sunco/skills-workflow';
 
 /**
@@ -145,6 +146,7 @@ async function main(): Promise<void> {
     services = await lifecycle.boot(process.cwd(), { preloadedSkills });
     const executeHook = lifecycle.createExecuteHook(services);
 
+    setHookRunner(createDefaultHookRunner());
     registerSkills(program, services.registry, executeHook);
 
     // D-10 / D-12: `sunco` with no args → invoke harness.help
