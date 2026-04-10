@@ -19,3 +19,25 @@ export { FileStore } from './file-store.js';
 
 // Factory
 export { createStateEngine } from './api.js';
+
+// Active-work dashboard artifact (Phase 27)
+export {
+  readActiveWork,
+  writeActiveWork,
+  appendBackgroundWork,
+  appendRoutingMiss,
+  ACTIVE_WORK_PATH,
+  DEFAULT_ACTIVE_WORK,
+} from './active-work.js';
+export type {
+  Category,
+  ActivePhase,
+  BackgroundWorkItem,
+  BlockedOn,
+  NextRecommendedAction,
+  RecentSkillCall,
+  RoutingMiss,
+  ActiveWork,
+  ActiveWorkPatch,
+} from './active-work.types.js';
+export { ActiveWorkSchema, CATEGORIES, ACTIVE_WORK_VERSION } from './active-work.types.js';

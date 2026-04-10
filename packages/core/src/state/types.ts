@@ -92,6 +92,8 @@ export interface StateApi {
 /**
  * Flat file API for human-readable artifacts in .sun/.
  * Version-controlled content (rules, tribal knowledge, scenarios).
+ *
+ * `active-work.json` at `.sun/active-work.json` is not accessed via FileStore; it is managed by `active-work.ts`.
  */
 export interface FileStoreApi {
   /**
