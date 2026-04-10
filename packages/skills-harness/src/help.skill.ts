@@ -21,10 +21,10 @@ import { defineSkill } from '@sunco/core';
 
 const TASK_CARDS = [
   { label: '시작하기',     command: 'sunco new',        description: 'Bootstrap a new project' },
-  { label: '이어서 작업',  command: 'sunco next',       description: 'Get the next recommended action' },
-  { label: '뭐든 시키기',  command: 'sunco do "..."',   description: 'Describe your task in natural language' },
-  { label: '지금 상태',    command: 'sunco status',     description: 'Review current project status' },
-  { label: '리뷰 요청',    command: 'sunco review',     description: 'Request auto-routed code or plan review' },
+  { label: '이어서 작업',  command: 'sunco next',       description: 'Next recommended action + background work' },
+  { label: '뭐든 시키기',  command: 'sunco do "..."',   description: 'Auto-categorize and route to the right skill' },
+  { label: '지금 상태',    command: 'sunco status',     description: 'Status + active phase + background work' },
+  { label: '리뷰 요청',    command: 'sunco review',     description: 'Auto-routed review (ceo/eng/design by context)' },
   { label: '도움말',       command: 'sunco help --all', description: 'Show all commands by tier' },
 ] as const;
 
