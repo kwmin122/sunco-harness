@@ -11,35 +11,13 @@
  */
 
 import { defineSkill, readActiveWork, DEFAULT_ACTIVE_WORK } from '@sunco/core';
-import type { SkillContext, SkillResult, BackgroundWorkItem } from '@sunco/core';
+import type { SkillContext, SkillResult } from '@sunco/core';
 import type { RecommendationState } from '@sunco/core';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseStateMd } from './shared/state-reader.js';
 
-// ---------------------------------------------------------------------------
-// Background work helpers (D-14 visibility rules)
-// ---------------------------------------------------------------------------
-
-function relativeTimeNext(iso: string): string {
-  const delta = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(delta / 60_000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  return `${hrs}h ago`;
-}
-
-function filterBackgroundWorkForNext(items: BackgroundWorkItem[]): BackgroundWorkItem[] {
-  const thirtyMinsAgo = Date.now() - 30 * 60_000;
-  return items
-    .filter(item =>
-      item.state === 'running' ||
-      (item.state === 'completed' && item.completed_at && new Date(item.completed_at).getTime() > thirtyMinsAgo),
-    )
-    .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
-    .slice(0, 3);
-}
+import { relativeTime, filterVisibleBackgroundWork } from './shared/active-work-display.js';
 
 export default defineSkill({
   id: 'workflow.next',
@@ -115,12 +93,12 @@ export default defineSkill({
 
     // Section 2: Background work (D-14 rules: running + completed ≤30min, max 3)
     if (hasActiveWork) {
-      const visible = filterBackgroundWorkForNext(activeWork.background_work);
+      const visible = filterVisibleBackgroundWork(activeWork.background_work);
       if (visible.length > 0) {
         details.push('## Background work');
         for (const item of visible) {
           const shortId = item.agent_id.slice(0, 5);
-          const time = item.completed_at ? relativeTimeNext(item.completed_at) : relativeTimeNext(item.started_at);
+          const time = item.completed_at ? relativeTime(item.completed_at) : relativeTime(item.started_at);
           details.push(`- ${item.kind} (${shortId}\u2026) ${item.description} \u2014 ${item.state} ${time}`);
         }
         details.push('');
@@ -131,7 +109,7 @@ export default defineSkill({
     if (hasActiveWork) {
       details.push('## Blocked');
       if (activeWork.blocked_on) {
-        details.push(`\u26A0 ${activeWork.blocked_on.reason} (since ${relativeTimeNext(activeWork.blocked_on.since)})`);
+        details.push(`\u26A0 ${activeWork.blocked_on.reason} (since ${relativeTime(activeWork.blocked_on.since)})`);
       } else {
         details.push('(none)');
       }

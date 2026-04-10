@@ -14,7 +14,7 @@
  */
 
 import { defineSkill, readActiveWork, DEFAULT_ACTIVE_WORK } from '@sunco/core';
-import type { SkillContext, SkillResult, UsageEntry, ActiveWork, BackgroundWorkItem } from '@sunco/core';
+import type { SkillContext, SkillResult, UsageEntry, ActiveWork } from '@sunco/core';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import chalk from 'chalk';
@@ -228,25 +228,7 @@ function buildSummaryLine(
 // Active-work section rendering (Phase 27, D-14 visibility rules)
 // ---------------------------------------------------------------------------
 
-function relativeTime(iso: string): string {
-  const delta = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(delta / 60_000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  return `${hrs}h ago`;
-}
-
-function filterBackgroundWork(items: BackgroundWorkItem[]): BackgroundWorkItem[] {
-  const thirtyMinsAgo = Date.now() - 30 * 60_000;
-  return items
-    .filter(item =>
-      item.state === 'running' ||
-      (item.state === 'completed' && item.completed_at && new Date(item.completed_at).getTime() > thirtyMinsAgo),
-    )
-    .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
-    .slice(0, 3);
-}
+import { relativeTime, filterVisibleBackgroundWork } from './shared/active-work-display.js';
 
 function appendActiveWorkSections(lines: string[], work: ActiveWork): void {
   if (work.active_phase) {
@@ -256,7 +238,7 @@ function appendActiveWorkSections(lines: string[], work: ActiveWork): void {
     lines.push('');
   }
 
-  const visible = filterBackgroundWork(work.background_work);
+  const visible = filterVisibleBackgroundWork(work.background_work);
   if (visible.length > 0) {
     lines.push(chalk.bold('Background Work'));
     for (const item of visible) {
