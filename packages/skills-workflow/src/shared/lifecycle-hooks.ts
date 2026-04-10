@@ -45,6 +45,12 @@ export interface HookContext {
   /** Tool name for PreToolUse events (e.g. 'Edit', 'Write', 'Read') */
   toolName?: string;
   timestamp: string;
+  /** Project root directory (PostSkill) */
+  cwd?: string;
+  /** Skill execution outcome (PostSkill) */
+  outcome?: 'success' | 'failure';
+  /** Skill execution duration in milliseconds (PostSkill) */
+  durationMs?: number;
 }
 
 export interface HookRunner {
@@ -95,3 +101,47 @@ export function createHookRunner(): HookRunner {
 
 // Re-export limiter constant so consumers don't need a second import
 export { HOOK_OUTPUT_LIMIT };
+
+// ---------------------------------------------------------------------------
+// Active-work PostSkill hook (Phase 27)
+// ---------------------------------------------------------------------------
+
+/**
+ * Register the built-in active-work update hook on a runner.
+ * On every PostSkill event, appends a `RecentSkillCall` entry to `.sun/active-work.json`.
+ * Errors are caught and logged — the hook never breaks skill execution.
+ */
+export function registerActiveWorkHook(runner: HookRunner): void {
+  runner.register({
+    event: 'PostSkill',
+    name: 'sunco.active-work.update',
+    enabled: true,
+    canAbort: false,
+    handler: async (ctx: HookContext) => {
+      try {
+        if (!ctx.cwd) return;
+        const { readActiveWork, writeActiveWork } = await import('@sunco/core');
+        const current = await readActiveWork(ctx.cwd);
+        const entry = {
+          skill: ctx.skillId ?? 'unknown',
+          at: ctx.timestamp,
+          duration_ms: ctx.durationMs ?? 0,
+        };
+        await writeActiveWork(ctx.cwd, {
+          recent_skill_calls: [...current.recent_skill_calls, entry],
+        });
+      } catch (err) {
+        process.stderr.write(`[sunco:hook] active-work update failed: ${err instanceof Error ? err.message : String(err)}\n`);
+      }
+    },
+  });
+}
+
+/**
+ * Create a hook runner with the default active-work hook pre-registered.
+ */
+export function createDefaultHookRunner(): HookRunner {
+  const runner = createHookRunner();
+  registerActiveWorkHook(runner);
+  return runner;
+}

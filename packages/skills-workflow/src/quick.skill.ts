@@ -54,6 +54,7 @@ export default defineSkill({
     { flags: '--discuss', description: 'Add context gathering step' },
     { flags: '--research', description: 'Add domain research step' },
     { flags: '--full', description: 'Add both discuss and research steps' },
+    { flags: '--speed <mode>', description: 'Execution speed: fast (zero planning, atomic commit) | normal (default)' },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
@@ -79,6 +80,42 @@ export default defineSkill({
       const msg = 'No task description provided.';
       await ctx.ui.result({ success: false, title: 'Quick', summary: msg });
       return { success: false, summary: msg };
+    }
+
+    // --- Fast mode: zero planning, atomic commit, immediate dispatch ---
+    if (ctx.args.speed === 'fast') {
+      const FAST_PERMISSIONS: PermissionSet = {
+        role: 'execution',
+        readPaths: ['**'],
+        writePaths: ['**'],
+        allowTests: true,
+        allowNetwork: false,
+        allowGitWrite: true,
+        allowCommands: ['npm test', 'npm run build', 'git add', 'git commit'],
+      };
+
+      const fastPrompt = [
+        'Execute this task immediately in the current project.',
+        'Make an atomic commit when done.',
+        '',
+        `Task: ${taskDescription}`,
+        '',
+        'Commit with a descriptive message summarizing the change.',
+      ].join('\n');
+
+      const fastResult = await ctx.agent.run({
+        role: 'execution',
+        prompt: fastPrompt,
+        permissions: FAST_PERMISSIONS,
+        timeout: 180_000,
+      });
+
+      const fastSummary = fastResult.success
+        ? fastResult.outputText.slice(0, 200) || 'Task executed'
+        : `Task failed: ${fastResult.outputText.slice(0, 200)}`;
+
+      await ctx.ui.result({ success: fastResult.success, title: 'Quick (fast)', summary: fastSummary });
+      return { success: fastResult.success, summary: fastSummary, data: { task: taskDescription, speed: 'fast' } };
     }
 
     // --- Determine flags ---

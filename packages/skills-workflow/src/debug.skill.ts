@@ -88,9 +88,18 @@ export default defineSkill({
   options: [
     { flags: '-p, --phase <number>', description: 'Scope analysis to a specific phase' },
     { flags: '-q, --quick', description: 'Quick mode: skip Iron Law for fast diagnosis' },
+    { flags: '--parse', description: 'Deterministic error parsing (delegates to diagnose)' },
+    { flags: '--postmortem', description: 'Workflow post-mortem analysis (delegates to forensics)' },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
+    if (ctx.args.parse === true) {
+      return ctx.run('workflow.diagnose', ctx.args);
+    }
+    if (ctx.args.postmortem === true) {
+      return ctx.run('workflow.forensics', ctx.args);
+    }
+
     const quickMode = ctx.args.quick === true;
 
     // --- Entry ---

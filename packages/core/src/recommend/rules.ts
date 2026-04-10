@@ -831,6 +831,60 @@ const fallbackRules: RecommendationRule[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Category 11: Active-Work Rules (Phase 27 Plan B)
+// ---------------------------------------------------------------------------
+
+const activeWorkRules: RecommendationRule[] = [
+  rule(
+    'category_detected_quick',
+    'Category classifier detected quick -- suggest /sunco:quick',
+    (s) => {
+      const data = s.lastResult?.data as Record<string, unknown> | undefined;
+      return data?.category === 'quick' && lastWas(s, 'workflow.do');
+    },
+    () => [
+      rec('workflow.quick', 'Quick fix', 'Category classifier identified a quick task', 'high'),
+    ],
+  ),
+
+  rule(
+    'background_work_stale',
+    'Background agent stale for >5min -- suggest checking status',
+    (s) => {
+      const data = s.projectState['activeWork.backgroundStale'] as boolean | undefined;
+      return data === true;
+    },
+    () => [
+      rec('workflow.status', 'Check status', 'Background work running >5min -- check progress', 'medium'),
+    ],
+  ),
+
+  rule(
+    'blocked_but_no_advisor',
+    'Blocked >30min with no advisor available (stub for Phase 28)',
+    (s) => {
+      const data = s.projectState['activeWork.blockedMinutes'] as number | undefined;
+      return typeof data === 'number' && data >= 30;
+    },
+    () => [
+      rec('workflow.discuss', 'Discuss blocker', 'Blocked for >30min -- discuss to unblock', 'high'),
+    ],
+  ),
+
+  rule(
+    'next_action_ambiguous',
+    'STATE.md unclear on next action -- suggest /sunco:discuss',
+    (s) => {
+      const ambiguous = s.projectState['nextActionAmbiguous'] as boolean | undefined;
+      return ambiguous === true;
+    },
+    () => [
+      rec('workflow.discuss', 'Discuss next step', 'Next action unclear from STATE.md -- discuss to clarify', 'high'),
+    ],
+  ),
+];
+
+// ---------------------------------------------------------------------------
 // Export: all rules combined
 // ---------------------------------------------------------------------------
 
@@ -849,5 +903,6 @@ export const RECOMMENDATION_RULES: RecommendationRule[] = [
   ...verificationPipelineRules,
   ...compositionRules,
   ...debuggingRules,
+  ...activeWorkRules,
   ...fallbackRules,
 ];

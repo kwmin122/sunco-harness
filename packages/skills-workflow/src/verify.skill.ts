@@ -178,10 +178,15 @@ export default defineSkill({
     { flags: '--strict', description: 'Fail on humanRequired findings' },
     { flags: '--lenient', description: 'Allow up to 5 medium findings (development only, blocked for release)' },
     { flags: '--skip-cross-model', description: 'Skip Layer 6 (cross-model verification)' },
+    { flags: '--coverage', description: 'Run test coverage audit only (delegates to validate)' },
     { flags: '--skip-human-eval', description: 'Skip Layer 7 (human eval gate)' },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
+    if (ctx.args.coverage === true) {
+      return ctx.run('workflow.validate', ctx.args);
+    }
+
     // --- Entry ---
     await ctx.ui.entry({
       title: 'Verify',

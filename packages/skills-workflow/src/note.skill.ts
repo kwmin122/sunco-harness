@@ -23,9 +23,16 @@ export default defineSkill({
   description: 'Quick note capture -- timestamped markdown to .sun/notes/ or .sun/tribal/',
   options: [
     { flags: '--tribal', description: 'Save as tribal knowledge' },
+    { flags: '--todo', description: 'Manage tasks (delegates to todo)' },
+    { flags: '--seed', description: 'Plant an idea with trigger (delegates to seed)' },
+    { flags: '--backlog', description: 'Parking lot for ideas (delegates to backlog)' },
   ],
 
   async execute(ctx) {
+    if (ctx.args.todo === true) return ctx.run('workflow.todo', ctx.args);
+    if (ctx.args.seed === true) return ctx.run('workflow.seed', ctx.args);
+    if (ctx.args.backlog === true) return ctx.run('workflow.backlog', ctx.args);
+
     // Get text from positional args
     const positional = (ctx.args._ as string[] | undefined) ?? [];
     const text = positional.join(' ').trim();

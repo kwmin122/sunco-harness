@@ -80,6 +80,28 @@ export { initSunDirectory, ensureSunDir } from './state/directory.js';
 export { createDatabase, StateDatabase } from './state/database.js';
 export { FileStore } from './state/file-store.js';
 
+// Active-work dashboard artifact (Phase 27)
+export {
+  readActiveWork,
+  writeActiveWork,
+  appendBackgroundWork,
+  appendRoutingMiss,
+  ACTIVE_WORK_PATH,
+  DEFAULT_ACTIVE_WORK,
+} from './state/active-work.js';
+export type {
+  Category,
+  ActivePhase,
+  BackgroundWorkItem,
+  BlockedOn,
+  NextRecommendedAction,
+  RecentSkillCall,
+  RoutingMiss,
+  ActiveWork,
+  ActiveWorkPatch,
+} from './state/active-work.types.js';
+export { ActiveWorkSchema, CATEGORIES, ACTIVE_WORK_VERSION } from './state/active-work.types.js';
+
 // ---------------------------------------------------------------------------
 // Agent System Types
 // ---------------------------------------------------------------------------
@@ -226,8 +248,8 @@ export type { StatusBarProps } from './ui/session/StatusBar.js';
 // CLI Engine
 // ---------------------------------------------------------------------------
 export { createProgram, levenshtein, findClosestCommand, isRootHelpRequest, ROOT_HELP_MESSAGE } from './cli/program.js';
-export { registerSkills } from './cli/skill-router.js';
-export type { SkillExecuteHook } from './cli/skill-router.js';
+export { registerSkills, setHookRunner } from './cli/skill-router.js';
+export type { SkillExecuteHook, HookRunnerLike } from './cli/skill-router.js';
 export { createLifecycle, createNoopRecommender } from './cli/lifecycle.js';
 export type { LifecycleServices, Lifecycle } from './cli/lifecycle.js';
 
