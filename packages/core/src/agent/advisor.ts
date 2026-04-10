@@ -32,10 +32,12 @@ export class AdvisorRunner {
     }
     this.callCounts.set(req.skillId, count + 1);
 
-    const prompt = buildPrompt(req);
+    let prompt = buildPrompt(req);
+
     if (prompt.length > this.cfg.maxPromptChars) {
       warnings.push({ code: 'prompt_too_long', message: `Prompt ${prompt.length} > cap ${this.cfg.maxPromptChars}` });
       if (this.cfg.strict) return this.fail(warnings, started);
+      prompt = this.truncatePrompt(prompt, req);
     }
 
     try {
@@ -50,7 +52,7 @@ export class AdvisorRunner {
       return {
         success: true,
         signaturePresent,
-        advice,
+        advice: signaturePresent ? advice : undefined,
         rawResponse: response,
         warnings,
         durationMs: Date.now() - started,
@@ -58,53 +60,47 @@ export class AdvisorRunner {
       };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      const isTimeout = /timeout/i.test(msg);
+      const isTimeout = /timeout|abort/i.test(msg);
       warnings.push({ code: isTimeout ? 'timeout' : 'transport_error', message: msg });
       if (this.cfg.strict) throw new Error(`Advisor strict mode: ${msg}`);
       return this.fail(warnings, started);
     }
   }
 
+  private truncatePrompt(prompt: string, req: AdvisorRequest): string {
+    const evidenceStart = prompt.indexOf('## Evidence');
+    if (evidenceStart === -1) return prompt.slice(0, this.cfg.maxPromptChars);
+
+    const beforeEvidence = prompt.slice(0, evidenceStart);
+    const remaining = this.cfg.maxPromptChars - beforeEvidence.length - 100;
+    if (remaining <= 0) return prompt.slice(0, this.cfg.maxPromptChars);
+
+    const truncatedEvidence = `## Evidence\n(truncated to fit ${this.cfg.maxPromptChars} char cap — ${req.context.evidence.length} items)\n1. ${req.context.evidence[0] ?? 'none'}`;
+    const questionIdx = prompt.indexOf('## Question');
+    const questionBlock = questionIdx !== -1 ? prompt.slice(questionIdx) : '';
+
+    return beforeEvidence + truncatedEvidence + '\n\n' + questionBlock;
+  }
+
   private async invokeTransport(prompt: string): Promise<string> {
-    const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), this.cfg.timeoutMs);
-    try {
-      if (this.cfg.transport === 'subagent') {
-        const result = await execa('claude', [
-          '-p',
-          '--agent', this.cfg.subagentName,
-          '--output-format', 'text',
-          '--max-turns', String(this.cfg.maxTurns),
-          prompt,
-        ], {
-          cwd: this.cwd,
-          cancelSignal: ac.signal,
-          timeout: this.cfg.timeoutMs,
-        });
-        return result.stdout;
-      } else {
-        const result = await execa('claude', [
-          '-p',
-          '--model', this.cfg.modelHint,
-          '--output-format', 'text',
-          '--max-turns', String(this.cfg.maxTurns),
-          prompt,
-        ], {
-          cwd: this.cwd,
-          cancelSignal: ac.signal,
-          timeout: this.cfg.timeoutMs,
-        });
-        return result.stdout;
-      }
-    } finally {
-      clearTimeout(timer);
-    }
+    const args = this.cfg.transport === 'subagent'
+      ? ['-p', '--agent', this.cfg.subagentName, '--output-format', 'text', '--max-turns', String(this.cfg.maxTurns), prompt]
+      : ['-p', '--model', this.cfg.modelHint, '--output-format', 'text', '--max-turns', String(this.cfg.maxTurns), prompt];
+
+    const result = await execa('claude', args, {
+      cwd: this.cwd,
+      timeout: this.cfg.timeoutMs,
+    });
+    return result.stdout;
   }
 
   private verifySignature(response: string) {
     const pattern = this.cfg.signaturePattern;
-    const found = response.includes(pattern);
-    const advice = response.replace(pattern, '').trim();
+    const idx = response.lastIndexOf(pattern);
+    const found = idx !== -1;
+    const advice = found
+      ? (response.slice(0, idx) + response.slice(idx + pattern.length)).trim()
+      : '';
     const warning: AdvisorWarning | undefined = found
       ? undefined
       : { code: 'no_signature', message: `Missing signature: ${pattern}` };

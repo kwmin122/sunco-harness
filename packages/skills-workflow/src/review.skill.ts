@@ -34,17 +34,17 @@ const STRATEGY_SIGNALS = ['PRODUCT-SPEC', 'ROADMAP', 'REQUIREMENTS', 'VISION', '
  * Detect review type from git diff + active-work phase state.
  * Priority: explicit active-work category > UI signals > strategy signals > default eng
  */
-function detectReviewType(diff: string, activePhaseCategory?: string, activePhaseState?: string): { type: ReviewType; reason: string } {
+function detectReviewType(diff: string, activePhaseCategory?: string, activePhaseStep?: string): { type: ReviewType; reason: string } {
   if (activePhaseCategory === 'visual') {
     return { type: 'design', reason: 'active phase category is visual' };
   }
 
-  if (activePhaseState === 'plan' || activePhaseState === 'discuss') {
-    return { type: 'eng', reason: `active phase in ${activePhaseState} state` };
+  if (activePhaseStep === 'plan' || activePhaseStep === 'discuss' || activePhaseStep === 'execute') {
+    return { type: 'eng', reason: `active phase step is ${activePhaseStep}` };
   }
 
-  if (activePhaseState === 'ship' || activePhaseState === 'milestone') {
-    return { type: 'ceo', reason: `active phase in ${activePhaseState} state` };
+  if (activePhaseStep === 'ship' || activePhaseStep === 'verify' || activePhaseStep === 'milestone') {
+    return { type: 'ceo', reason: `active phase step is ${activePhaseStep}` };
   }
 
   if (UI_SIGNALS.some((sig) => diff.includes(sig))) {

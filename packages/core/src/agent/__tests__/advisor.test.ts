@@ -71,6 +71,7 @@ describe('AdvisorRunner', () => {
     const result = await runner.run(dummyReq(), dummyPrompt);
 
     expect(result.signaturePresent).toBe(false);
+    expect(result.advice).toBeUndefined();
     expect(result.warnings.some(w => w.code === 'no_signature')).toBe(true);
   });
 
