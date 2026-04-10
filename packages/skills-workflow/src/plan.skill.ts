@@ -391,6 +391,35 @@ export default defineSkill({
       }
     }
 
+    // ----- Step 2.7: Pre-draft advisor call (Phase 28) -----
+    const advisorNotes: string[] = [];
+    if (ctx.config.agent.advisor?.enabled) {
+      try {
+        const { AdvisorRunner } = await import('@sunco/core/advisor');
+        const { buildAdvisorPrompt } = await import('./shared/advisor-prompt.js');
+        const advisorCfg = ctx.config.agent.advisor;
+        const runner = new AdvisorRunner(advisorCfg, ctx.cwd);
+        const pre = await runner.run({
+          skillId: 'workflow.plan',
+          phaseId: String(phaseNumber),
+          question: 'Before I draft plans, is there a load-bearing assumption in CONTEXT.md that would invalidate the current scope?',
+          context: {
+            goal: phaseInfo?.goal ?? 'Unknown',
+            evidence: [
+              contextMd ? `CONTEXT.md present (${contextMd.length} chars)` : 'CONTEXT.md missing',
+              `ROADMAP position: Phase ${phaseNumber}`,
+            ],
+          },
+        }, buildAdvisorPrompt);
+        if (pre.advice) {
+          advisorNotes.push(`### Advisor (pre-draft)\n${pre.advice}`);
+          if (!pre.verified) ctx.log.warn('Advisor signature missing — Opus execution unverified');
+        }
+      } catch (err) {
+        ctx.log.warn('Advisor pre-draft call failed (non-fatal)', { error: String(err) });
+      }
+    }
+
     // ----- Step 3: Plan-checker validation loop (D-13) -----
     let planOutput = '';
     let issues: CheckerIssue[] = [];
@@ -529,6 +558,41 @@ export default defineSkill({
 
       await writeFile(targetPath, planTexts[i], 'utf-8');
       writtenFiles.push(targetPath);
+    }
+
+    // ----- Step 4.5a: Post-draft advisor call (Phase 28) -----
+    if (ctx.config.agent.advisor?.enabled) {
+      try {
+        const { AdvisorRunner } = await import('@sunco/core/advisor');
+        const { buildAdvisorPrompt } = await import('./shared/advisor-prompt.js');
+        const advisorCfg = ctx.config.agent.advisor;
+        const runner = new AdvisorRunner(advisorCfg, ctx.cwd);
+        const post = await runner.run({
+          skillId: 'workflow.plan',
+          phaseId: String(phaseNumber),
+          question: 'Given the plan draft, which task is most likely to fail its done_when criterion?',
+          context: {
+            goal: phaseInfo?.goal ?? 'Unknown',
+            decision: 'Plan draft created',
+            evidence: [
+              `Plans written: ${writtenFiles.length}`,
+              `Task count: ${planTexts.length}`,
+            ],
+          },
+        }, buildAdvisorPrompt);
+        if (post.advice) {
+          advisorNotes.push(`### Advisor (post-draft)\n${post.advice}`);
+          if (!post.verified) ctx.log.warn('Advisor signature missing — Opus execution unverified');
+        }
+      } catch (err) {
+        ctx.log.warn('Advisor post-draft call failed (non-fatal)', { error: String(err) });
+      }
+
+      if (advisorNotes.length > 0) {
+        const notesPath = join(phaseDir, 'ADVISOR-NOTES.md');
+        await writeFile(notesPath, `# Advisor Notes\n\n${advisorNotes.join('\n\n')}\n`, 'utf-8');
+        ctx.log.info('ADVISOR-NOTES.md written', { path: notesPath });
+      }
     }
 
     // ----- Step 4.5: Requirements coverage gate (PQP-03) -----
