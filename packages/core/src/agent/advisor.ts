@@ -79,7 +79,7 @@ export class AdvisorRunner {
     const questionIdx = prompt.indexOf('## Question');
     const questionBlock = questionIdx !== -1 ? prompt.slice(questionIdx) : '';
 
-    return beforeEvidence + truncatedEvidence + '\n\n' + questionBlock;
+    return (beforeEvidence + truncatedEvidence + '\n\n' + questionBlock).slice(0, this.cfg.maxPromptChars);
   }
 
   private async invokeTransport(prompt: string): Promise<string> {

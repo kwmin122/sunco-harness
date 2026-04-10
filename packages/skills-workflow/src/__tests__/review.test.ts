@@ -13,10 +13,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { SkillContext } from '@sunco/core';
+import type { SkillContext, ActiveWork } from '@sunco/core';
 
 // ---------------------------------------------------------------------------
-// Mock simple-git
+// Mock simple-git + readActiveWork
 // ---------------------------------------------------------------------------
 
 const mockDiff = vi.fn();
@@ -26,6 +26,15 @@ vi.mock('simple-git', () => ({
     diff: mockDiff,
   })),
 }));
+
+const mockReadActiveWork = vi.fn();
+vi.mock('@sunco/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@sunco/core')>();
+  return {
+    ...actual,
+    readActiveWork: (...args: unknown[]) => mockReadActiveWork(...args),
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Mock context factory
@@ -85,8 +94,16 @@ function createMockContext(overrides: Partial<SkillContext> = {}): SkillContext 
 describe('reviewSkill (auto-routing front-door)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: no diff (empty)
     mockDiff.mockResolvedValue('');
+    mockReadActiveWork.mockResolvedValue({
+      updated_at: '1970-01-01T00:00:00.000Z',
+      active_phase: null,
+      background_work: [],
+      blocked_on: null,
+      next_recommended_action: null,
+      recent_skill_calls: [],
+      routing_misses: [],
+    });
   });
 
   // Test 1: metadata
@@ -231,5 +248,47 @@ describe('reviewSkill (auto-routing front-door)', () => {
 
     expect(result.data).toHaveProperty('routedTo', 'workflow.eng-review');
     expect(result.data).toHaveProperty('selectionReason');
+  });
+
+  // Test 11: active_phase.current_step=execute routes to eng-review
+  it('routes to eng-review when active phase step is execute', async () => {
+    const { default: reviewSkill } = await import('../review.skill.js');
+
+    mockDiff.mockResolvedValue('');
+    mockReadActiveWork.mockResolvedValue({
+      updated_at: new Date().toISOString(),
+      active_phase: { id: '27', slug: 'test', state: 'in_progress', current_step: 'execute', category: 'deep' },
+      background_work: [],
+      blocked_on: null,
+      next_recommended_action: null,
+      recent_skill_calls: [],
+      routing_misses: [],
+    });
+
+    const ctx = createMockContext();
+    await reviewSkill.execute(ctx);
+
+    expect(ctx.run).toHaveBeenCalledWith('workflow.eng-review', expect.any(Object));
+  });
+
+  // Test 12: active_phase.current_step=verify routes to ceo-review
+  it('routes to ceo-review when active phase step is verify', async () => {
+    const { default: reviewSkill } = await import('../review.skill.js');
+
+    mockDiff.mockResolvedValue('');
+    mockReadActiveWork.mockResolvedValue({
+      updated_at: new Date().toISOString(),
+      active_phase: { id: '27', slug: 'test', state: 'in_progress', current_step: 'verify', category: 'review' },
+      background_work: [],
+      blocked_on: null,
+      next_recommended_action: null,
+      recent_skill_calls: [],
+      routing_misses: [],
+    });
+
+    const ctx = createMockContext();
+    await reviewSkill.execute(ctx);
+
+    expect(ctx.run).toHaveBeenCalledWith('workflow.ceo-review', expect.any(Object));
   });
 });
