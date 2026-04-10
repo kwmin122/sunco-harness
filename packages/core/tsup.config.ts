@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/agent/advisor.ts'],
+  entry: ['src/index.ts'],
   format: ['esm'],
   target: 'node22',
   dts: true,

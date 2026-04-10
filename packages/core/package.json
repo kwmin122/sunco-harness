@@ -8,10 +8,6 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./advisor": {
-      "types": "./dist/agent/advisor.d.ts",
-      "import": "./dist/agent/advisor.js"
     }
   },
   "scripts": {

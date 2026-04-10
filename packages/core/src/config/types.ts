@@ -28,25 +28,13 @@ export type SkillPolicyConfig = z.infer<typeof SkillPolicySchema>;
 // Agent Config (D-15~D-25: agent router settings)
 // ---------------------------------------------------------------------------
 
-export const AdvisorConfigSchema = z.object({
-  enabled: z.boolean().default(false),
-  transport: z.enum(['subagent', 'cli-flag']).default('subagent'),
-  subagentName: z.string().default('sunco-advisor'),
-  modelHint: z.string().default('opus'),
-  maxCallsPerSkill: z.number().default(2),
-  timeoutMs: z.number().default(120_000),
-  maxTurns: z.number().default(1),
-  maxPromptChars: z.number().default(20_000),
-  strict: z.boolean().default(false),
-  requireSignature: z.boolean().default(true),
-  signaturePattern: z.string().default('[sunco-advisor v1 model=opus]'),
-});
-
 export const AgentConfigSchema = z.object({
+  /** Default provider ID (e.g., 'claude-code-cli', 'claude-sdk') */
   defaultProvider: z.string().default('claude-code-cli'),
+  /** Default timeout in milliseconds for agent execution */
   timeout: z.number().default(120_000),
+  /** Max retries on transient failure */
   maxRetries: z.number().default(1),
-  advisor: AdvisorConfigSchema.default({}),
 });
 
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
