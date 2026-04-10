@@ -225,20 +225,58 @@ export interface AgentProvider {
  * Skills don't interact with providers directly.
  */
 export interface AgentRouterApi {
-  /**
-   * Run an agent task through the router.
-   * Router selects provider, enforces permissions, normalizes result.
-   */
   run(request: AgentRequest): Promise<AgentResult>;
-
-  /**
-   * Run the same request against multiple providers for cross-verification (D-22).
-   * Returns results from all providers.
-   */
   crossVerify(request: AgentRequest, providerIds?: string[]): Promise<AgentResult[]>;
-
-  /**
-   * List available provider IDs.
-   */
   listProviders(): Promise<string[]>;
 }
+
+// ---------------------------------------------------------------------------
+// Advisor Types (Phase 28)
+// ---------------------------------------------------------------------------
+
+export interface AdvisorConfig {
+  enabled: boolean;
+  transport: 'subagent' | 'cli-flag';
+  subagentName: string;
+  modelHint: string;
+  maxCallsPerSkill: number;
+  timeoutMs: number;
+  maxTurns: number;
+  maxPromptChars: number;
+  strict: boolean;
+  requireSignature: boolean;
+  signaturePattern: string;
+}
+
+export interface AdvisorRequest {
+  skillId: string;
+  phaseId?: string;
+  question: string;
+  context: {
+    goal: string;
+    evidence: string[];
+    decision?: string;
+    alternatives?: string[];
+  };
+}
+
+export interface AdvisorResult {
+  success: boolean;
+  /** Whether the expected signature string was found in the response. Does NOT prove the model was actually Opus. */
+  signaturePresent: boolean;
+  advice?: string;
+  rawResponse?: string;
+  warnings: AdvisorWarning[];
+  durationMs: number;
+  transport: 'subagent' | 'cli-flag';
+}
+
+export type AdvisorWarning =
+  | { code: 'disabled';         message: string }
+  | { code: 'cap_exceeded';     message: string }
+  | { code: 'timeout';          message: string }
+  | { code: 'prompt_too_long';  message: string }
+  | { code: 'no_signature';     message: string }
+  | { code: 'unverified_model'; message: string }
+  | { code: 'transport_error';  message: string }
+  | { code: 'parse_error';      message: string };
