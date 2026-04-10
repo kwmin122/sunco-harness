@@ -14,7 +14,7 @@
  * Decisions: D-07 (auto-routing), D-08 (user tier), D-09 (selection message)
  */
 
-import { defineSkill } from '@sunco/core';
+import { defineSkill, readActiveWork, DEFAULT_ACTIVE_WORK } from '@sunco/core';
 import { simpleGit } from 'simple-git';
 
 // ---------------------------------------------------------------------------
@@ -31,21 +31,30 @@ const UI_SIGNALS = ['.tsx', '.jsx', '.css', '.scss', '.sass', '.ink.ts', 'screen
 const STRATEGY_SIGNALS = ['PRODUCT-SPEC', 'ROADMAP', 'REQUIREMENTS', 'VISION', 'STRATEGY', 'OKR'];
 
 /**
- * Detect review type from git diff content.
- * Priority order (D-07): UI signals > strategy/scope signals > default eng
+ * Detect review type from git diff + active-work phase state.
+ * Priority: explicit active-work category > UI signals > strategy signals > default eng
  */
-function detectReviewType(diff: string): { type: ReviewType; reason: string } {
-  // 1. UI signals take highest priority
+function detectReviewType(diff: string, activePhaseCategory?: string, activePhaseState?: string): { type: ReviewType; reason: string } {
+  if (activePhaseCategory === 'visual') {
+    return { type: 'design', reason: 'active phase category is visual' };
+  }
+
+  if (activePhaseState === 'plan' || activePhaseState === 'discuss') {
+    return { type: 'eng', reason: `active phase in ${activePhaseState} state` };
+  }
+
+  if (activePhaseState === 'ship' || activePhaseState === 'milestone') {
+    return { type: 'ceo', reason: `active phase in ${activePhaseState} state` };
+  }
+
   if (UI_SIGNALS.some((sig) => diff.includes(sig))) {
     return { type: 'design', reason: 'UI/frontend changes detected' };
   }
 
-  // 2. Strategy/scope signals
   if (STRATEGY_SIGNALS.some((sig) => diff.includes(sig))) {
     return { type: 'ceo', reason: 'strategic document changes detected' };
   }
 
-  // 3. Default: implementation diff → eng-review
   return { type: 'eng', reason: 'implementation diff detected' };
 }
 
@@ -112,7 +121,13 @@ export default defineSkill({
         ctx.log.warn('Git diff failed — defaulting to eng-review');
       }
 
-      const detection = detectReviewType(diff);
+      const activeWork = await readActiveWork(ctx.cwd);
+      const hasActiveWork = activeWork.updated_at !== DEFAULT_ACTIVE_WORK.updated_at;
+      const detection = detectReviewType(
+        diff,
+        hasActiveWork ? activeWork.active_phase?.category : undefined,
+        hasActiveWork ? activeWork.active_phase?.current_step : undefined,
+      );
       selectedType  = detection.type;
       selectionReason = detection.reason;
     }
