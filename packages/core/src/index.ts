@@ -118,6 +118,10 @@ export type {
   Artifact,
   AgentUsage,
   UsageEntry,
+  AdvisorConfig,
+  AdvisorRequest,
+  AdvisorResult,
+  AdvisorWarning,
 } from './agent/types.js';
 
 // ---------------------------------------------------------------------------

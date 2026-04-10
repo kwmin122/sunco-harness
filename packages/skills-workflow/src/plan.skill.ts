@@ -393,7 +393,7 @@ export default defineSkill({
 
     // ----- Step 2.7: Pre-draft advisor call (Phase 28) -----
     const advisorNotes: string[] = [];
-    if (ctx.config.agent.advisor?.enabled) {
+    if (ctx.config.agent?.advisor?.enabled) {
       try {
         const { AdvisorRunner } = await import('@sunco/core/advisor');
         const { buildAdvisorPrompt } = await import('./shared/advisor-prompt.js');
@@ -561,7 +561,7 @@ export default defineSkill({
     }
 
     // ----- Step 4.5a: Post-draft advisor call (Phase 28) -----
-    if (ctx.config.agent.advisor?.enabled) {
+    if (ctx.config.agent?.advisor?.enabled) {
       try {
         const { AdvisorRunner } = await import('@sunco/core/advisor');
         const { buildAdvisorPrompt } = await import('./shared/advisor-prompt.js');
