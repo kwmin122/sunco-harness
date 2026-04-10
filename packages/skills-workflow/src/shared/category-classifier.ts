@@ -36,12 +36,12 @@ interface CategoryPatterns {
 const CATEGORY_PATTERNS: Record<Category, CategoryPatterns> = {
   quick: {
     verbs: [
-      /\b(?:fix|rename|typo|tweak|adjust|change|update|remove|delete|add)\b/i,
-      /(?:고치|수정|바꿔|변경|제거|삭제|추가|고쳐)/i,
+      /\b(?:fix|rename|typo|tweak|adjust|change|update|remove|delete|add|move|swap)\b/i,
+      /(?:고치|수정|바꿔|변경|제거|삭제|추가|고쳐|이름\s*바꿔)/i,
     ],
     nouns: [
-      /\b(?:typo|bug|indent|whitespace|comment|import|lint)\b/i,
-      /(?:오타|들여쓰기|주석|임포트)/i,
+      /\b(?:typo|bug|indent|whitespace|comment|import|lint|variable|name|spelling)\b/i,
+      /(?:오타|들여쓰기|주석|임포트|변수|이름|철자)/i,
     ],
     phrases: [
       /\b(?:quick fix|small change|one-liner|minor|trivial)\b/i,
@@ -92,15 +92,15 @@ const CATEGORY_PATTERNS: Record<Category, CategoryPatterns> = {
   },
   debug: {
     verbs: [
-      /\b(?:debug|diagnose|investigate|troubleshoot|trace)\b/i,
+      /\b(?:debug|diagnose|investigate|troubleshoot|trace|failing|failed)\b/i,
       /(?:디버그|진단|조사|추적)/i,
     ],
     nouns: [
-      /\b(?:bug|error|failure|crash|exception|stack.?trace|test.?fail)\b/i,
+      /\b(?:bug|error|failure|crash|exception|stack.?trace|test.?fail|tests?\s+fail)/i,
       /(?:버그|에러|오류|크래시|실패|스택트레이스)/i,
     ],
     phrases: [
-      /\b(?:why (?:is|does|did)|tests? fail|not working|broken|what went wrong)\b/i,
+      /\b(?:why (?:is|does|did)|tests? fail(?:ing|ed)?|not working|broken|what went wrong)\b/i,
       /(?:왜 안|왜 실패|작동 안|고장|뭐가 잘못)/i,
     ],
   },
