@@ -3,8 +3,11 @@
  * Requirements: LH-11, LH-12, LH-13
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { createHookRunner } from '../shared/lifecycle-hooks.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { createHookRunner, registerActiveWorkHook, createDefaultHookRunner } from '../shared/lifecycle-hooks.js';
 import { limitHookOutput, HOOK_OUTPUT_LIMIT } from '../shared/hook-output-limiter.js';
 import type { HookDefinition, HookContext } from '../shared/lifecycle-hooks.js';
 
@@ -209,5 +212,73 @@ describe('limitHookOutput', () => {
 
   it('HOOK_OUTPUT_LIMIT is 10000', () => {
     expect(HOOK_OUTPUT_LIMIT).toBe(10_000);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Active-work hook (Phase 27)
+// ---------------------------------------------------------------------------
+
+describe('registerActiveWorkHook', () => {
+  it('adds exactly one PostSkill hook named sunco.active-work.update', () => {
+    const runner = createHookRunner();
+    registerActiveWorkHook(runner);
+    const hooks = runner.list();
+    const awHooks = hooks.filter(h => h.name === 'sunco.active-work.update');
+    expect(awHooks).toHaveLength(1);
+    expect(awHooks[0].event).toBe('PostSkill');
+    expect(awHooks[0].canAbort).toBe(false);
+  });
+
+  it('writes a recent_skill_calls entry to .sun/active-work.json', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'sunco-aw-hook-'));
+    try {
+      const runner = createHookRunner();
+      registerActiveWorkHook(runner);
+
+      const ctx: HookContext = {
+        skillId: 'workflow.status',
+        timestamp: '2026-04-10T12:00:00.000Z',
+        cwd: tempDir,
+        outcome: 'success',
+        durationMs: 500,
+      };
+
+      await runner.emit('PostSkill', ctx);
+
+      const raw = await readFile(join(tempDir, '.sun', 'active-work.json'), 'utf-8');
+      const doc = JSON.parse(raw);
+      expect(doc.recent_skill_calls).toHaveLength(1);
+      expect(doc.recent_skill_calls[0].skill).toBe('workflow.status');
+      expect(doc.recent_skill_calls[0].duration_ms).toBe(500);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('handler error does not bubble up', async () => {
+    const runner = createHookRunner();
+    registerActiveWorkHook(runner);
+
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    const ctx: HookContext = {
+      skillId: 'workflow.test',
+      timestamp: '2026-04-10T12:00:00.000Z',
+      cwd: '/nonexistent/path/that/should/fail',
+      outcome: 'success',
+      durationMs: 100,
+    };
+
+    await expect(runner.emit('PostSkill', ctx)).resolves.toBeUndefined();
+    stderrSpy.mockRestore();
+  });
+});
+
+describe('createDefaultHookRunner', () => {
+  it('returns a runner with the active-work hook pre-registered', () => {
+    const runner = createDefaultHookRunner();
+    const hooks = runner.list();
+    expect(hooks.some(h => h.name === 'sunco.active-work.update')).toBe(true);
   });
 });
