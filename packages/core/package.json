@@ -10,8 +10,8 @@
       "types": "./dist/index.d.ts"
     },
     "./advisor": {
-      "import": "./dist/agent/advisor.js",
-      "types": "./dist/agent/advisor.d.ts"
+      "types": "./dist/agent/advisor.d.ts",
+      "import": "./dist/agent/advisor.js"
     }
   },
   "scripts": {

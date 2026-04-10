@@ -77,7 +77,11 @@ export default defineSkill({
     // eslint-disable-next-line no-console
     console.log(`\n  ${label}\n`);
 
-    const skillResult = await ctx.run(targetSkill, { _: [userInput] });
+    const delegateArgs: Record<string, unknown> = { _: [userInput] };
+    if (classification.category === 'deep') {
+      delegateArgs['full'] = true;
+    }
+    const skillResult = await ctx.run(targetSkill, delegateArgs);
 
     await ctx.ui.result({
       success: skillResult.success,

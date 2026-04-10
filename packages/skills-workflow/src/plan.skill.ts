@@ -393,13 +393,18 @@ export default defineSkill({
 
     // ----- Step 2.7: Pre-draft advisor call (Phase 28) -----
     const advisorNotes: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic import type, AdvisorRunner not statically available from core
+    let sharedAdvisorRunner: any = null;
+    let sharedBuildPrompt: ((req: import('@sunco/core').AdvisorRequest) => string) | null = null;
+
     if (ctx.config.agent?.advisor?.enabled) {
       try {
         const { AdvisorRunner } = await import('@sunco/core/advisor');
         const { buildAdvisorPrompt } = await import('./shared/advisor-prompt.js');
-        const advisorCfg = ctx.config.agent.advisor;
-        const runner = new AdvisorRunner(advisorCfg, ctx.cwd);
-        const pre = await runner.run({
+        sharedAdvisorRunner = new AdvisorRunner(ctx.config.agent.advisor, ctx.cwd);
+        sharedBuildPrompt = buildAdvisorPrompt;
+
+        const pre = await sharedAdvisorRunner.run({
           skillId: 'workflow.plan',
           phaseId: String(phaseNumber),
           question: 'Before I draft plans, is there a load-bearing assumption in CONTEXT.md that would invalidate the current scope?',
@@ -410,10 +415,10 @@ export default defineSkill({
               `ROADMAP position: Phase ${phaseNumber}`,
             ],
           },
-        }, buildAdvisorPrompt);
+        }, sharedBuildPrompt);
         if (pre.advice) {
           advisorNotes.push(`### Advisor (pre-draft)\n${pre.advice}`);
-          if (!pre.verified) ctx.log.warn('Advisor signature missing — Opus execution unverified');
+          if (!pre.signaturePresent) ctx.log.warn('Advisor response lacks signature — model unverified');
         }
       } catch (err) {
         ctx.log.warn('Advisor pre-draft call failed (non-fatal)', { error: String(err) });
@@ -561,13 +566,9 @@ export default defineSkill({
     }
 
     // ----- Step 4.5a: Post-draft advisor call (Phase 28) -----
-    if (ctx.config.agent?.advisor?.enabled) {
+    if (sharedAdvisorRunner && sharedBuildPrompt) {
       try {
-        const { AdvisorRunner } = await import('@sunco/core/advisor');
-        const { buildAdvisorPrompt } = await import('./shared/advisor-prompt.js');
-        const advisorCfg = ctx.config.agent.advisor;
-        const runner = new AdvisorRunner(advisorCfg, ctx.cwd);
-        const post = await runner.run({
+        const post = await sharedAdvisorRunner.run({
           skillId: 'workflow.plan',
           phaseId: String(phaseNumber),
           question: 'Given the plan draft, which task is most likely to fail its done_when criterion?',
@@ -579,16 +580,16 @@ export default defineSkill({
               `Task count: ${planTexts.length}`,
             ],
           },
-        }, buildAdvisorPrompt);
+        }, sharedBuildPrompt);
         if (post.advice) {
           advisorNotes.push(`### Advisor (post-draft)\n${post.advice}`);
-          if (!post.verified) ctx.log.warn('Advisor signature missing — Opus execution unverified');
+          if (!post.signaturePresent) ctx.log.warn('Advisor response lacks signature — model unverified');
         }
       } catch (err) {
         ctx.log.warn('Advisor post-draft call failed (non-fatal)', { error: String(err) });
       }
 
-      if (advisorNotes.length > 0) {
+      if (advisorNotes.length > 0 && phaseDir) {
         const notesPath = join(phaseDir, 'ADVISOR-NOTES.md');
         await writeFile(notesPath, `# Advisor Notes\n\n${advisorNotes.join('\n\n')}\n`, 'utf-8');
         ctx.log.info('ADVISOR-NOTES.md written', { path: notesPath });

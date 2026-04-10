@@ -59,7 +59,7 @@ describe('AdvisorRunner', () => {
     const result = await runner.run(dummyReq(), dummyPrompt);
 
     expect(result.success).toBe(true);
-    expect(result.verified).toBe(true);
+    expect(result.signaturePresent).toBe(true);
     expect(result.advice).toBe('1. Check scope');
   });
 
@@ -70,7 +70,7 @@ describe('AdvisorRunner', () => {
     const runner = new AdvisorRunner(baseCfg, '/tmp');
     const result = await runner.run(dummyReq(), dummyPrompt);
 
-    expect(result.verified).toBe(false);
+    expect(result.signaturePresent).toBe(false);
     expect(result.warnings.some(w => w.code === 'no_signature')).toBe(true);
   });
 

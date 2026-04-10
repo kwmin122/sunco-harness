@@ -120,10 +120,14 @@ const CATEGORY_PATTERNS: Record<Category, CategoryPatterns> = {
   },
 };
 
-/** Category -> primary skill mapping */
+/**
+ * Category -> primary skill mapping.
+ * `deep` routes to `workflow.quick --full` instead of `workflow.execute`
+ * because execute requires `--phase` which NL input doesn't provide.
+ */
 const CATEGORY_SKILL_MAP: Record<Category, string> = {
   quick: 'workflow.quick',
-  deep: 'workflow.execute',
+  deep: 'workflow.quick',
   planning: 'workflow.discuss',
   review: 'workflow.review',
   debug: 'workflow.debug',
@@ -132,7 +136,7 @@ const CATEGORY_SKILL_MAP: Record<Category, string> = {
 
 /** Category -> secondary skill mapping (for fallback display) */
 const CATEGORY_SKILL_ALT: Record<Category, string | undefined> = {
-  quick: 'workflow.fast',
+  quick: undefined,
   deep: 'workflow.auto',
   planning: 'workflow.plan',
   review: undefined,

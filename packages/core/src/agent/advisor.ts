@@ -40,16 +40,16 @@ export class AdvisorRunner {
 
     try {
       const response = await this.invokeTransport(prompt);
-      const { verified, advice, warning } = this.verifySignature(response);
+      const { signaturePresent, advice, warning } = this.verifySignature(response);
       if (warning) warnings.push(warning);
 
-      if (!verified && this.cfg.requireSignature && this.cfg.strict) {
+      if (!signaturePresent && this.cfg.requireSignature && this.cfg.strict) {
         return this.fail(warnings, started);
       }
 
       return {
         success: true,
-        verified,
+        signaturePresent,
         advice,
         rawResponse: response,
         warnings,
@@ -108,13 +108,13 @@ export class AdvisorRunner {
     const warning: AdvisorWarning | undefined = found
       ? undefined
       : { code: 'no_signature', message: `Missing signature: ${pattern}` };
-    return { verified: found, advice, warning };
+    return { signaturePresent: found, advice, warning };
   }
 
   private disabled(started: number): AdvisorResult {
     return {
       success: false,
-      verified: false,
+      signaturePresent: false,
       warnings: [{ code: 'disabled', message: 'Advisor disabled by config' }],
       durationMs: Date.now() - started,
       transport: this.cfg.transport,
@@ -124,7 +124,7 @@ export class AdvisorRunner {
   private fail(warnings: AdvisorWarning[], started: number): AdvisorResult {
     return {
       success: false,
-      verified: false,
+      signaturePresent: false,
       warnings,
       durationMs: Date.now() - started,
       transport: this.cfg.transport,

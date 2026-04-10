@@ -262,7 +262,8 @@ export interface AdvisorRequest {
 
 export interface AdvisorResult {
   success: boolean;
-  verified: boolean;
+  /** Whether the expected signature string was found in the response. Does NOT prove the model was actually Opus. */
+  signaturePresent: boolean;
   advice?: string;
   rawResponse?: string;
   warnings: AdvisorWarning[];
