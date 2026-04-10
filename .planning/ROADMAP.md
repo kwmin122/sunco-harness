@@ -41,7 +41,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 24c: Routing + Proactive** - CLAUDE.md skill routing, natural language keyword matching, proactive suggestion (v1.3, completed 2026-04-07)
 - [x] **Phase 24d: Harness Evolution** - Product-level planning pivot (PRODUCT-SPEC.md, delivery slices, slice-contracts), review arsenal (ceo/eng/design-review), compound learning loop (v1.3, completed 2026-04-08)
 - [x] **Phase 25: Workflow Surface Simplification** - User layer 5개(new/next/do/status/help)만 기본 노출, workflow/expert 명령 hidden 처리, help를 작업 목록으로 재설계, review auto-routing (CEO/ENG/DESIGN 상황 기반 선택) (completed 2026-04-09)
-- [ ] **Phase 26: Verification Signal Cleanup** - Exclude dist/ from Layer 2, narrow deterministic verify to phase-local scope, normalize ESLint config contract, revisit cross-model --max-turns constraint
+- [x] **Phase 26: Verification Signal Cleanup** - Exclude dist/ from Layer 2, narrow deterministic verify to phase-local scope, normalize ESLint config contract, revisit cross-model --max-turns constraint (completed 2026-04-09)
+- [ ] **Phase 27: OMO-Inspired Agent Harness UX** - Natural-language routing + active-work dashboard source + background work visibility inside existing front door (`do`/`next`/`review`/`status`). 0 new commands, 0 new expert skills. OMO/Oh-My-OpenAgent UX 패턴 차용, agent zoo 이름 복제 금지.
 
 ## Phase Details
 

@@ -146,7 +146,8 @@ async function main(): Promise<void> {
     services = await lifecycle.boot(process.cwd(), { preloadedSkills });
     const executeHook = lifecycle.createExecuteHook(services);
 
-    setHookRunner(createDefaultHookRunner());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- duck type bridge between @sunco/core and @sunco/skills-workflow
+    setHookRunner(createDefaultHookRunner() as any);
     registerSkills(program, services.registry, executeHook);
 
     // D-10 / D-12: `sunco` with no args → invoke harness.help
