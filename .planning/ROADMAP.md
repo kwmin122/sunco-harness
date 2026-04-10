@@ -43,7 +43,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - **Phase 24d: Harness Evolution** - Product-level planning pivot (PRODUCT-SPEC.md, delivery slices, slice-contracts), review arsenal (ceo/eng/design-review), compound learning loop (v1.3, completed 2026-04-08)
 - **Phase 25: Workflow Surface Simplification** - User layer 5개(new/next/do/status/help)만 기본 노출, workflow/expert 명령 hidden 처리, help를 작업 목록으로 재설계, review auto-routing (CEO/ENG/DESIGN 상황 기반 선택) (completed 2026-04-09)
 - **Phase 26: Verification Signal Cleanup** - Exclude dist/ from Layer 2, narrow deterministic verify to phase-local scope, normalize ESLint config contract, revisit cross-model --max-turns constraint (completed 2026-04-09)
-- **Phase 27: OMO-Inspired Agent Harness UX** - Natural-language routing + active-work dashboard source + background work visibility inside existing front door (`do`/`next`/`review`/`status`). 0 new commands, 0 new expert skills. OMO/Oh-My-OpenAgent UX 패턴 차용, agent zoo 이름 복제 금지.
+- [x] **Phase 27: OMO-Inspired Agent Harness UX** - active-work.json dashboard artifact, deterministic 6-category classifier in do, active-work-aware review routing, skill consolidation (fast→quick, debug absorbs diagnose/forensics, status --brief, verify --coverage, note absorbs todo/seed/backlog). 0 new commands, 0 new skill files. (completed 2026-04-10)
+- [x] **Phase 28: Claude Code Advisor Harness** - Opus advisor subagent for workflow.plan (pre/post draft calls), AdvisorRunner with call cap + timeout + signature verification, .claude/agents/sunco-advisor.md, default disabled. (completed 2026-04-10)
+- [ ] **Phase 29: AST-Grep Deterministic Tools** - AST pattern matching wrapper, graph/scan skill enhancement, 25-language code navigation (candidate)
+- [ ] **Phase 30: CLI Dashboard TUI** - Read-only Ink TUI consuming .sun/active-work.json, real-time phase/background/blocked display (candidate)
+- [ ] **Phase 31: Hashline Stale-Edit Guard** - Content-hash injection at file read, hash verification at edit, stale-edit prevention (experimental candidate)
 
 ## Phase Details
 
