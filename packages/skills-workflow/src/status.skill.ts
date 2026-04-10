@@ -13,8 +13,8 @@
  * D-03 (progress = alias), D-04 (colored indicators)
  */
 
-import { defineSkill } from '@sunco/core';
-import type { SkillContext, SkillResult, UsageEntry } from '@sunco/core';
+import { defineSkill, readActiveWork, DEFAULT_ACTIVE_WORK } from '@sunco/core';
+import type { SkillContext, SkillResult, UsageEntry, ActiveWork, BackgroundWorkItem } from '@sunco/core';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import chalk from 'chalk';
@@ -73,6 +73,12 @@ async function executeStatus(ctx: SkillContext): Promise<SkillResult> {
 
   // Build formatted display
   const lines = buildDisplayLines(phases, progress, state);
+
+  // Active-work dashboard sections (Phase 27)
+  const activeWork = await readActiveWork(ctx.cwd);
+  if (activeWork.updated_at !== DEFAULT_ACTIVE_WORK.updated_at) {
+    appendActiveWorkSections(lines, activeWork);
+  }
 
   // Cost tracking from usage history in state
   const usageHistory = (await ctx.state.get<UsageEntry[]>('usage.history')) ?? null;
@@ -216,6 +222,55 @@ function buildSummaryLine(
   const currentPhase = phases.find((p) => String(p.number) === String(state.phase));
   const phaseName = currentPhase?.name ?? `Phase ${state.phase ?? '?'}`;
   return `${phaseName} (in progress) | ${state.progress.completedPlans}/${state.progress.totalPlans} plans complete`;
+}
+
+// ---------------------------------------------------------------------------
+// Active-work section rendering (Phase 27, D-14 visibility rules)
+// ---------------------------------------------------------------------------
+
+function relativeTime(iso: string): string {
+  const delta = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(delta / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ago`;
+}
+
+function filterBackgroundWork(items: BackgroundWorkItem[]): BackgroundWorkItem[] {
+  const thirtyMinsAgo = Date.now() - 30 * 60_000;
+  return items
+    .filter(item =>
+      item.state === 'running' ||
+      (item.state === 'completed' && item.completed_at && new Date(item.completed_at).getTime() > thirtyMinsAgo),
+    )
+    .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
+    .slice(0, 3);
+}
+
+function appendActiveWorkSections(lines: string[], work: ActiveWork): void {
+  if (work.active_phase) {
+    const p = work.active_phase;
+    lines.push(chalk.bold('Active Phase'));
+    lines.push(`  \u25B6 Phase ${p.id} (${p.slug}) \u2014 ${p.current_step} [${p.category}]`);
+    lines.push('');
+  }
+
+  const visible = filterBackgroundWork(work.background_work);
+  if (visible.length > 0) {
+    lines.push(chalk.bold('Background Work'));
+    for (const item of visible) {
+      const shortId = item.agent_id.slice(0, 5);
+      const time = item.completed_at ? relativeTime(item.completed_at) : relativeTime(item.started_at);
+      lines.push(`  - ${item.kind} (${shortId}\u2026) ${item.description} \u2014 ${item.state} ${time}`);
+    }
+    lines.push('');
+  }
+
+  if (work.blocked_on) {
+    lines.push(`  \u26A0 Blocked: ${work.blocked_on.reason} (since ${relativeTime(work.blocked_on.since)})`);
+    lines.push('');
+  }
 }
 
 // ---------------------------------------------------------------------------
