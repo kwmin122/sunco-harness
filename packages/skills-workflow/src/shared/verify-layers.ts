@@ -369,18 +369,27 @@ export async function runLayer1MultiAgent(
  * Guard tribal matches map to source: 'tribal', humanRequired: true.
  * Guard anti-pattern findings map to source: 'guard'.
  *
+ * When changedFiles is provided and non-empty, passes a files filter to lint and
+ * guard so only phase-changed files are scanned (eliminates dist/ false positives).
+ * When changedFiles is undefined or empty, falls back to full project scan.
+ *
  * Handles ctx.run() failures gracefully -- if skills are not available,
  * logs warning and returns empty findings.
  */
 export async function runLayer2Deterministic(
   ctx: SkillContext,
+  changedFiles?: string[],
 ): Promise<LayerResult> {
   const start = Date.now();
   const findings: VerifyFinding[] = [];
 
+  // Build file filter for phase-local scope
+  const hasFilter = changedFiles !== undefined && changedFiles.length > 0;
+  const filesArg = hasFilter ? changedFiles!.join(',') : undefined;
+
   // Call lint skill
   try {
-    const lintResult = await ctx.run('harness.lint', { json: true });
+    const lintResult = await ctx.run('harness.lint', { json: true, ...(filesArg ? { files: filesArg } : {}) });
     if (lintResult.data && typeof lintResult.data === 'object') {
       const data = lintResult.data as Record<string, unknown>;
       const violations = (data.violations ?? data.findings ?? []) as Array<Record<string, unknown>>;
@@ -402,7 +411,7 @@ export async function runLayer2Deterministic(
 
   // Call guard skill
   try {
-    const guardResult = await ctx.run('harness.guard', { json: true });
+    const guardResult = await ctx.run('harness.guard', { json: true, ...(filesArg ? { files: filesArg } : {}) });
     if (guardResult.data && typeof guardResult.data === 'object') {
       const data = guardResult.data as Record<string, unknown>;
 

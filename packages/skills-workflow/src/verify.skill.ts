@@ -250,6 +250,16 @@ export default defineSkill({
       ctx.log.warn('Git diff failed -- using empty diff');
     }
 
+    // --- Step 3b: Extract changed file paths from diff for Layer 2 scoping ---
+    const changedFiles: string[] = [];
+    {
+      const diffHeaderRegex = /^diff --git a\/(.*?) b\//gm;
+      let match: RegExpExecArray | null;
+      while ((match = diffHeaderRegex.exec(diff)) !== null) {
+        changedFiles.push(match[1]!);
+      }
+    }
+
     // --- Step 4: Execute all 7 layers sequentially (D-01) ---
     const isAuto = ctx.args.auto === true;
     const isStrict = ctx.args.strict === true;
@@ -264,7 +274,7 @@ export default defineSkill({
     // Execute Layers 1-5 (core automated layers)
     const layerFunctions = [
       () => runLayer1MultiAgent(ctx, diff, phaseDir),
-      () => runLayer2Deterministic(ctx),
+      () => runLayer2Deterministic(ctx, changedFiles),
       () => runLayer3Acceptance(ctx, plans, phaseDir),
       () => runLayer4PermissionScope(ctx, plans),
       () => runLayer5Adversarial(ctx, diff, phaseDir),

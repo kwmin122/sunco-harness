@@ -40,11 +40,13 @@ export default defineSkill({
     { flags: '--watch', description: 'Continuous file watching mode (chokidar)' },
     { flags: '--json', description: 'Output results as JSON' },
     { flags: '--draft-claude-rules', description: 'Generate .claude/rules/ files from repeated anti-patterns' },
+    { flags: '--files <glob>', description: 'Analyze only files whose path contains this pattern (single-run mode only)' },
   ],
 
   async execute(ctx) {
     const watchMode = (ctx.args.watch as boolean) ?? false;
     const draftRules = (ctx.args['draft-claude-rules'] as boolean) ?? false;
+    const filesFilter = ctx.args.files as string | undefined;
 
     await ctx.ui.entry({
       title: 'Guard',
@@ -120,18 +122,28 @@ export default defineSkill({
         boundariesConfig,
       });
 
+      // If --files filter provided, narrow results to matching paths
+      const filteredResult = filesFilter
+        ? {
+            ...result,
+            lintViolations: result.lintViolations.filter((v) => v.file.includes(filesFilter)),
+            antiPatterns: result.antiPatterns.filter((a) => a.file.includes(filesFilter)),
+            tribalWarnings: result.tribalWarnings.filter((w) => w.file.includes(filesFilter)),
+          }
+        : result;
+
       // Check for promotion candidates
       const promotions = await detectPromotionCandidates({
-        antiPatterns: result.antiPatterns,
+        antiPatterns: filteredResult.antiPatterns,
         state: ctx.state,
       });
 
       // Build display details
       const details: string[] = [
-        ...result.lintViolations.map(
+        ...filteredResult.lintViolations.map(
           (v) => `${v.severity}: ${v.file}:${v.line} ${v.violation}`,
         ),
-        ...result.tribalWarnings.map(
+        ...filteredResult.tribalWarnings.map(
           (w) => `tribal: ${w.file}:${w.line} ${w.message}`,
         ),
         ...promotions.map((p) => `promotion: ${formatPromotionSuggestion(p)}`),
@@ -139,16 +151,16 @@ export default defineSkill({
 
       // Display results
       await ctx.ui.result({
-        success: result.lintViolations.length === 0,
+        success: filteredResult.lintViolations.length === 0,
         title: 'Guard',
-        summary: `${result.filesAnalyzed} files scanned, ${result.lintViolations.length} violations, ${result.antiPatterns.length} anti-patterns`,
+        summary: `${filteredResult.filesAnalyzed} files scanned, ${filteredResult.lintViolations.length} violations, ${filteredResult.antiPatterns.length} anti-patterns`,
         details,
       });
 
       // Persist guard result to state
       await ctx.state.set('guard.lastResult', {
-        violations: result.lintViolations.length,
-        antiPatterns: result.antiPatterns.length,
+        violations: filteredResult.lintViolations.length,
+        antiPatterns: filteredResult.antiPatterns.length,
         promotions: promotions.length,
         timestamp: new Date().toISOString(),
       });
@@ -202,9 +214,9 @@ export default defineSkill({
       }
 
       return {
-        success: result.lintViolations.length === 0,
-        summary: `${result.lintViolations.length} violations, ${promotions.length} promotion suggestions`,
-        data: { ...result, promotionSuggestions: promotions },
+        success: filteredResult.lintViolations.length === 0,
+        summary: `${filteredResult.lintViolations.length} violations, ${promotions.length} promotion suggestions`,
+        data: { ...filteredResult, promotionSuggestions: promotions },
       };
     }
   },
