@@ -105,6 +105,9 @@ export default defineSkill({
     const showAll = Boolean(ctx.args.all);
 
     // Enumerate skills from registry (available via ctx.registry after Plan 25-01)
+    // Phase 32: aliases are intentionally excluded from default help output
+    // (they live on the absorbing skill via skill.aliases[]; see CONTEXT.md D-05/D-06)
+    // getAll() / getByTier() only return main skills — aliases never appear here.
     const allSkills = ctx.registry.getAll();
     const userSkills     = ctx.registry.getByTier('user');
     const workflowSkills = ctx.registry.getByTier('workflow');
