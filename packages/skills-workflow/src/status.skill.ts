@@ -285,18 +285,17 @@ export const statusSkill = defineSkill({
     { flags: '--brief', description: 'Show decisions/blockers only (replaces context command)' },
     { flags: '--live', description: "Open the read-only dashboard TUI (polls .sun/active-work.json at 1Hz)" },
   ],
-  execute: executeStatus,
-});
 
-export const progressSkill = defineSkill({
-  id: 'workflow.progress',
-  command: 'progress',
-  kind: 'deterministic',
-  stage: 'stable',
-  category: 'workflow',
-  routing: 'routable',
-  tier: 'user',
-  description: 'Show overall progress and next actions',
-  options: [{ flags: '--json', description: 'Output as JSON' }],
+  // Phase 32: 'progress' is now an alias for 'status'
+  // progressSkill export removed; alias infra handles CLI dispatch and ctx.run() compat
+  aliases: [
+    {
+      command: 'progress',
+      id: 'workflow.progress',
+      hidden: true,
+      replacedBy: 'status',
+    },
+  ],
+
   execute: executeStatus,
 });

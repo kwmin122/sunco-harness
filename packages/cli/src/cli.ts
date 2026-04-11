@@ -29,7 +29,7 @@ import {
 } from '@sunco/skills-harness';
 import {
   statusSkill,
-  progressSkill,
+  // Phase 32: progressSkill import removed — 'progress' is now an alias on statusSkill
   nextSkill,
   contextSkill,
   noteSkill,
@@ -88,7 +88,7 @@ const preloadedSkills = [
   // Phase 3 workflow skills
   workflowSettingsSkill,  // Enhanced settings replaces harness version
   statusSkill,
-  progressSkill,
+  // Phase 32: progressSkill removed from preloaded — 'progress' is now an alias on statusSkill
   nextSkill,
   contextSkill,
   noteSkill,

@@ -25,7 +25,8 @@ export type { Handoff } from './shared/handoff.js';
 export { captureGitState } from './shared/git-state.js';
 
 // Skills
-export { statusSkill, progressSkill } from './status.skill.js';
+// Phase 32: progressSkill export removed — 'progress' is now an alias declared on statusSkill
+export { statusSkill } from './status.skill.js';
 export { default as nextSkill } from './next.skill.js';
 export { default as contextSkill } from './context.skill.js';
 export { default as pauseSkill } from './pause.skill.js';

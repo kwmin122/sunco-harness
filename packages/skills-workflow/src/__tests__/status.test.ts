@@ -1,11 +1,11 @@
 /**
- * Tests for status.skill.ts - statusSkill and progressSkill
+ * Tests for status.skill.ts - statusSkill (and progress alias)
  *
  * Verifies:
  * - Reads ROADMAP.md + STATE.md and displays formatted phase table
  * - --json flag returns raw data
  * - Missing .planning/ returns failure
- * - progressSkill shares the same execute function as statusSkill
+ * - Phase 32: 'progress' alias resolves to statusSkill via registry
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -16,7 +16,8 @@ vi.mock('node:fs/promises', () => ({
 }));
 
 import { readFile } from 'node:fs/promises';
-import { statusSkill, progressSkill } from '../status.skill.js';
+import { statusSkill } from '../status.skill.js';
+import { SkillRegistry } from '@sunco/core';
 import type { SkillContext, SkillResult } from '@sunco/core';
 
 // ---------------------------------------------------------------------------
@@ -239,17 +240,41 @@ describe('statusSkill', () => {
   });
 });
 
-describe('progressSkill', () => {
-  it('has correct skill metadata', () => {
-    expect(progressSkill.id).toBe('workflow.progress');
-    expect(progressSkill.command).toBe('progress');
-    expect(progressSkill.kind).toBe('deterministic');
-    expect(progressSkill.category).toBe('workflow');
+// Phase 32: progressSkill export removed — 'progress' is now an alias on statusSkill
+// These tests verify that the alias resolution works correctly via the registry
+describe('progress alias (Phase 32)', () => {
+  it('statusSkill declares a progress alias', () => {
+    expect(statusSkill.aliases).toBeDefined();
+    const progressAlias = statusSkill.aliases?.find((a) => a.command === 'progress');
+    expect(progressAlias).toBeDefined();
+    expect(progressAlias?.id).toBe('workflow.progress');
+    expect(progressAlias?.hidden).toBe(true);
+    expect(progressAlias?.replacedBy).toBe('status');
   });
 
-  it('shares the same execute behavior as statusSkill', async () => {
-    // Both skills use the same underlying execute function
-    // defineSkill may wrap functions, so verify they produce the same output
+  it('registry.resolveCommand("progress") returns statusSkill with isAlias: true', () => {
+    const registry = new SkillRegistry();
+    registry.register(statusSkill);
+
+    const result = registry.resolveCommand('progress');
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill.id).toBe('workflow.status');
+    expect(result?.defaultArgs).toEqual({});
+  });
+
+  it('registry.resolveId("workflow.progress") returns statusSkill with isAlias: true', () => {
+    const registry = new SkillRegistry();
+    registry.register(statusSkill);
+
+    const result = registry.resolveId('workflow.progress');
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill.id).toBe('workflow.status');
+  });
+
+  it('progress alias produces identical output to status (equivalence)', async () => {
+    // Both 'progress' and 'status' dispatch to the same executeStatus() function
     const mockedReadFile = vi.mocked(readFile);
     mockedReadFile.mockRejectedValue(new Error('ENOENT'));
 
@@ -257,7 +282,11 @@ describe('progressSkill', () => {
     const ctx2 = createMockContext();
 
     const result1 = await statusSkill.execute(ctx1);
-    const result2 = await progressSkill.execute(ctx2);
+
+    // Via registry.execute('workflow.progress') — identical behavior guaranteed
+    const registry = new SkillRegistry();
+    registry.register(statusSkill);
+    const result2 = await registry.execute('workflow.progress', ctx2);
 
     expect(result1.success).toBe(result2.success);
     expect(result1.summary).toBe(result2.summary);
