@@ -68,14 +68,32 @@ async function executeStatus(ctx: SkillContext): Promise<SkillResult> {
   const { phases, progress } = parseRoadmap(roadmapContent ?? '');
   const state = parseStateMd(stateContent ?? '');
 
-  // --json flag: return raw data without formatting (absorbs query skill)
+  // --json flag: return raw data (absorbs query skill, Phase 33 Wave 1)
+  // D-09: snapshot === 'query' → emit query-native shape (backcompat for alias path)
+  //        json === true (no snapshot) → emit superset { status: {...}, query: {...} }
   const isJson = ctx.args.json as boolean | undefined;
-  if (isJson) {
-    return {
-      success: true,
-      summary: `Phase ${state.phase ?? '?'} | ${state.progress.completedPlans}/${state.progress.totalPlans} plans`,
-      data: { phases, progress, state },
-    };
+  const snapshot = ctx.args.snapshot as string | undefined;
+  if (isJson === true || snapshot === 'query') {
+    const { buildQuerySnapshot } = await import('./shared/query-snapshot.js');
+    const querySummary = `Phase ${state.phase ?? '?'}, ${state.progress.completedPlans}/${state.progress.totalPlans} plans`;
+    if (snapshot === 'query') {
+      // Alias path: emit query-native shape only (backcompat for `sunco query` parsers)
+      const querySnapshot = await buildQuerySnapshot(ctx.cwd, ctx.state);
+      return {
+        success: true,
+        summary: querySummary,
+        data: querySnapshot,
+      };
+    } else {
+      // New --json path: emit superset containing both status and query views
+      const querySnapshot = await buildQuerySnapshot(ctx.cwd, ctx.state);
+      const statusView = { phases, progress, state };
+      return {
+        success: true,
+        summary: `Phase ${state.phase ?? '?'} | ${state.progress.completedPlans}/${state.progress.totalPlans} plans`,
+        data: { status: statusView, query: querySnapshot },
+      };
+    }
   }
 
   // --brief flag: decisions/blockers only (absorbs context skill, Phase 33 Wave 1)
@@ -314,6 +332,13 @@ export const statusSkill = defineSkill({
       defaultArgs: { brief: true },
       hidden: true,
       replacedBy: 'status --brief',
+    },
+    {
+      command: 'query',
+      id: 'workflow.query',
+      defaultArgs: { json: true, snapshot: 'query' },
+      hidden: true,
+      replacedBy: 'status --json',
     },
   ],
 

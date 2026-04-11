@@ -62,7 +62,7 @@ import {
   debugSkill,
   diagnoseSkill,
   forensicsSkill,
-  querySkill,
+  // Phase 33 Wave 1: querySkill import removed — 'query' is now an alias on statusSkill
   exportSkill,
   graphSkill,
   docSkill,
@@ -128,7 +128,7 @@ const preloadedSkills = [
   diagnoseSkill,
   forensicsSkill,
   // Phase 13 headless CI/CD skills
-  querySkill,
+  // Phase 33 Wave 1: querySkill removed from preloaded — 'query' is now an alias on statusSkill
   exportSkill,
   // Phase 14 context optimization skills
   graphSkill,

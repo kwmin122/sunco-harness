@@ -83,7 +83,7 @@ export { default as diagnoseSkill } from './diagnose.skill.js';
 export { default as forensicsSkill } from './forensics.skill.js';
 
 // Phase 13 headless CI/CD skills
-export { default as querySkill } from './query.skill.js';
+// Phase 33 Wave 1: querySkill export removed — 'query' is now an alias declared on statusSkill
 export { default as exportSkill } from './export.skill.js';
 
 // Phase 14 context optimization skills
