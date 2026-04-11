@@ -1,10 +1,10 @@
 /**
- * Alias Backwards-Compat Tests (Phase 32)
+ * Alias Backwards-Compat Tests (Phase 32 + Phase 33 Wave 1)
  *
  * End-to-end verification that alias infrastructure doesn't break existing usage.
  * Drives through the SkillRegistry API directly (no CLI spawn needed).
  *
- * Cases guaranteed by D-09 (zero regression) and D-10 (ctx.run() compat):
+ * Phase 32 cases (D-09 / D-10):
  * 1. 'fast' command resolves to quickSkill
  * 2. 'progress' command resolves to statusSkill
  * 3. ctx.run('workflow.fast') invokes quick with speed: 'fast'
@@ -13,6 +13,15 @@
  * 6. 'fast' is NOT in getByTier('user')
  * 7. 'fast' is NOT in getAll()
  * 8. Equivalence: execute('workflow.fast') ≡ execute('workflow.quick' + speed:fast)
+ *
+ * Phase 33 Wave 1 cases (D-14 / D-17):
+ * 9.  'context' resolves to statusSkill with brief: true
+ * 10. 'query' resolves to statusSkill with json: true, snapshot: 'query'
+ * 11. 'validate' resolves to verifySkill with coverage: true
+ * 12. 'todo' resolves to noteSkill with todo: true
+ * 13. 'seed' resolves to noteSkill with seed: true
+ * 14. 'backlog' resolves to noteSkill with backlog: true
+ * 15. All 6 legacy ids resolve via resolveId (ctx.run() backcompat)
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -20,6 +29,8 @@ import { SkillRegistry } from '@sunco/core';
 import type { SkillContext } from '@sunco/core';
 import quickSkill from '../quick.skill.js';
 import { statusSkill } from '../status.skill.js';
+import verifySkill from '../verify.skill.js';
+import noteSkill from '../note.skill.js';
 
 // ---------------------------------------------------------------------------
 // Mock context factory (no real filesystem or SQLite needed)
@@ -72,6 +83,8 @@ function buildRegistry() {
   const registry = new SkillRegistry();
   registry.register(quickSkill);
   registry.register(statusSkill);
+  registry.register(verifySkill);
+  registry.register(noteSkill);
   return registry;
 }
 
@@ -175,6 +188,95 @@ describe('alias backwards-compat (Phase 32)', () => {
     const allCommands = registry.getAll().map((s) => s.command);
     expect(allCommands).not.toContain('fast');
     expect(allCommands).not.toContain('progress');
+  });
+
+  // ---------------------------------------------------------------------------
+  // Phase 33 Wave 1 cases (cases 9-15)
+  // ---------------------------------------------------------------------------
+
+  // Case 9: 'context' resolves to statusSkill with brief: true
+  it('registry.resolveCommand("context") returns statusSkill with brief: true', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('context');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(statusSkill);
+    expect(result?.defaultArgs).toEqual({ brief: true });
+  });
+
+  // Case 10: 'query' resolves to statusSkill with json: true, snapshot: 'query'
+  it('registry.resolveCommand("query") returns statusSkill with json: true, snapshot: "query"', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('query');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(statusSkill);
+    expect(result?.defaultArgs).toEqual({ json: true, snapshot: 'query' });
+  });
+
+  // Case 11: 'validate' resolves to verifySkill with coverage: true
+  it('registry.resolveCommand("validate") returns verifySkill with coverage: true', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('validate');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(verifySkill);
+    expect(result?.defaultArgs).toEqual({ coverage: true });
+  });
+
+  // Case 12: 'todo' resolves to noteSkill with todo: true
+  it('registry.resolveCommand("todo") returns noteSkill with todo: true', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('todo');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(noteSkill);
+    expect(result?.defaultArgs).toEqual({ todo: true });
+  });
+
+  // Case 13: 'seed' resolves to noteSkill with seed: true
+  it('registry.resolveCommand("seed") returns noteSkill with seed: true', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('seed');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(noteSkill);
+    expect(result?.defaultArgs).toEqual({ seed: true });
+  });
+
+  // Case 14: 'backlog' resolves to noteSkill with backlog: true
+  it('registry.resolveCommand("backlog") returns noteSkill with backlog: true', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('backlog');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(noteSkill);
+    expect(result?.defaultArgs).toEqual({ backlog: true });
+  });
+
+  // Case 15: All 6 legacy ids resolve via resolveId (ctx.run() backcompat, D-17)
+  it('all 6 legacy ids resolve via registry.resolveId (ctx.run() backcompat)', () => {
+    const registry = buildRegistry();
+    const legacyIds = [
+      'workflow.query',
+      'workflow.context',
+      'workflow.validate',
+      'workflow.todo',
+      'workflow.seed',
+      'workflow.backlog',
+    ];
+
+    for (const id of legacyIds) {
+      const result = registry.resolveId(id);
+      expect(result, `resolveId('${id}') should be defined`).toBeDefined();
+      expect(result?.isAlias, `resolveId('${id}') should be an alias`).toBe(true);
+    }
   });
 
   // Case 8: Equivalence — execute('workflow.fast') ≡ execute('workflow.quick' with speed:fast)
