@@ -26,13 +26,8 @@ export const SKILL_CATALOG = `| ID | Command | Description | Kind |
 | harness.agents | agents | Agent doc analysis | deterministic |
 | harness.guard | guard | Watch mode lint | deterministic |
 | workflow.status | status | Current project status | deterministic |
-| workflow.progress | progress | Progress overview | deterministic |
 | workflow.next | next | Next recommended action | deterministic |
-| workflow.context | context | Current context summary | deterministic |
 | workflow.note | note | Capture a note | deterministic |
-| workflow.todo | todo | Task management | deterministic |
-| workflow.seed | seed | Future idea capture | deterministic |
-| workflow.backlog | backlog | Backlog parking | deterministic |
 | workflow.pause | pause | Pause session | deterministic |
 | workflow.resume | resume | Resume session | deterministic |
 | workflow.phase | phase | Phase management | deterministic |
@@ -46,14 +41,12 @@ export const SKILL_CATALOG = `| ID | Command | Description | Kind |
 | workflow.execute | execute | Execute plans in worktrees | prompt |
 | workflow.review | review | Cross-provider code review | prompt |
 | workflow.verify | verify | 5-layer verification | prompt |
-| workflow.validate | validate | Test coverage audit | deterministic |
 | workflow.test-gen | test-gen | Generate tests | prompt |
 | workflow.ship | ship | Create PR with verification | prompt |
 | workflow.release | release | Version + publish | deterministic |
 | workflow.milestone | milestone | Milestone lifecycle | prompt |
 | workflow.auto | auto | Full autonomous pipeline | prompt |
-| workflow.quick | quick | Lightweight task execution | prompt |
-| workflow.fast | fast | Immediate execution | prompt |`;
+| workflow.quick | quick | Lightweight task execution | prompt |`;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -112,7 +105,7 @@ Return ONLY the JSON block wrapped in \`\`\`json...\`\`\`. No other text.
 \`\`\`
 
 Examples:
-- "run my tests" -> { "skills": ["workflow.validate"], "reasoning": "Test coverage audit matches test execution request" }
+- "run my tests" -> { "skills": ["workflow.verify"], "reasoning": "Verification pipeline matches test execution request" }
 - "what should I do next" -> { "skills": ["workflow.next"], "reasoning": "Next recommended action matches the request" }
 - "check the health of my project" -> { "skills": ["harness.health"], "reasoning": "Codebase health check directly matches" }
 - "write me a haiku about TypeScript" -> { "skills": [], "reasoning": "No matching skill, will use quick execution" }`;
