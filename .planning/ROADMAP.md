@@ -46,7 +46,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 27: OMO-Inspired Agent Harness UX** - active-work.json dashboard artifact, deterministic 6-category classifier in do, active-work-aware review routing, skill consolidation (fast→quick, debug absorbs diagnose/forensics, status --brief, verify --coverage, note absorbs todo/seed/backlog). 0 new commands, 0 new skill files. (completed 2026-04-10)
 - [x] **Phase 28: Claude Code Advisor Harness** - Opus advisor subagent for workflow.plan (pre/post draft calls), AdvisorRunner with call cap + timeout + signature verification, .claude/agents/sunco-advisor.md, default disabled. (completed 2026-04-10)
 - [ ] **Phase 29: AST-Grep Deterministic Tools** - AST pattern matching wrapper, graph/scan skill enhancement, 25-language code navigation (candidate)
-- [ ] **Phase 30: CLI Dashboard TUI** - Read-only Ink TUI consuming .sun/active-work.json, real-time phase/background/blocked display (candidate)
+- [x] **Phase 30: CLI Dashboard TUI** - Read-only Ink TUI behind `sunco status --live`, polls .sun/active-work.json at 1Hz, 5-section layout (Active Phase / Background / Blocked / Next / Recent), TTY guard with graceful non-TTY refusal, compact fallback < 80 cols. 0 new commands, 1 new .tsx file. (completed 2026-04-11)
 - [ ] **Phase 31: Hashline Stale-Edit Guard** - Content-hash injection at file read, hash verification at edit, stale-edit prevention (experimental candidate)
 
 ## Phase Details
