@@ -192,7 +192,7 @@ describe('statusSkill', () => {
     expect(result.summary).toMatch(/\.planning/);
   });
 
-  it('returns raw JSON with --json flag', async () => {
+  it('returns raw JSON superset with --json flag (Phase 33 Wave 1)', async () => {
     mockedReadFile.mockImplementation((path: unknown) => {
       const p = String(path);
       if (p.includes('ROADMAP.md')) return Promise.resolve(SAMPLE_ROADMAP);
@@ -205,9 +205,43 @@ describe('statusSkill', () => {
 
     expect(result.success).toBe(true);
     expect(result.data).toBeDefined();
+    // Phase 33 Wave 1 D-09: --json emits superset { status, query }
+    // status half: parseRoadmap shape ({ phases: [...], progress: {...}, state: {...} })
+    // query half: QuerySnapshot shape ({ phase, status, progress, nextAction, costs, timestamp, stoppedAt })
     const data = result.data as Record<string, unknown>;
-    expect(data).toHaveProperty('phases');
-    expect(data).toHaveProperty('state');
+    expect(data).toHaveProperty('status');
+    expect(data).toHaveProperty('query');
+    const statusHalf = data.status as Record<string, unknown>;
+    const queryHalf = data.query as Record<string, unknown>;
+    // Status half uses plural `phases` (array from parseRoadmap) + nested `state`
+    expect(statusHalf).toHaveProperty('phases');
+    expect(statusHalf).toHaveProperty('state');
+    // Query half uses singular `phase` (number from parseStateMd) + flat fields
+    expect(queryHalf).toHaveProperty('phase');
+    expect(queryHalf).toHaveProperty('timestamp');
+  });
+
+  it('returns query-native shape when snapshot=query (backcompat for `query` alias path)', async () => {
+    mockedReadFile.mockImplementation((path: unknown) => {
+      const p = String(path);
+      if (p.includes('ROADMAP.md')) return Promise.resolve(SAMPLE_ROADMAP);
+      if (p.includes('STATE.md')) return Promise.resolve(SAMPLE_STATE);
+      return Promise.reject(new Error('File not found'));
+    });
+
+    const ctx = createMockContext({ args: { json: true, snapshot: 'query' } });
+    const result = await statusSkill.execute(ctx);
+
+    expect(result.success).toBe(true);
+    expect(result.data).toBeDefined();
+    const data = result.data as Record<string, unknown>;
+    // Query-native flat shape (matches old sunco query output): phase (singular), status, timestamp, etc.
+    expect(data).toHaveProperty('phase');
+    expect(data).toHaveProperty('timestamp');
+    expect(data).toHaveProperty('nextAction');
+    // Must NOT have the superset nesting (would break parsers of old `sunco query` output)
+    expect(data).not.toHaveProperty('phases');
+    expect(data).not.toHaveProperty('query');
   });
 
   it('handles ROADMAP.md missing but STATE.md present', async () => {
