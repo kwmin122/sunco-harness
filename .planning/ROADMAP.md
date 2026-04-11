@@ -48,6 +48,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 29: AST-Grep Deterministic Tools** - AST pattern matching wrapper, graph/scan skill enhancement, 25-language code navigation (candidate)
 - [x] **Phase 30: CLI Dashboard TUI** - Read-only Ink TUI behind `sunco status --live`, polls .sun/active-work.json at 1Hz, 5-section layout (Active Phase / Background / Blocked / Next / Recent), TTY guard with graceful non-TTY refusal, compact fallback < 80 cols. 0 new commands, 1 new .tsx file. (completed 2026-04-11)
 - [ ] **Phase 31: Hashline Stale-Edit Guard** - Content-hash injection at file read, hash verification at edit, stale-edit prevention (experimental candidate)
+- [x] **Phase 32: Alias Infra + P0 Consolidation** - `SkillDefinition.aliases[]` + Zod schema, `SkillRegistry` `resolveCommand`/`resolveId` + alias maps, `skill-router` second-pass alias dispatch with default args injection and deprecation warning (env-suppressible), migrated `fast`→`quick --speed fast` (file deleted) and `progress`→`status` (inline export removed). Zero regressions, ctx.run() backward compat preserved. Unblocks Phase 33 (P1 absorption) and Phase 34 (P2 structure). (completed 2026-04-11)
+- [ ] **Phase 33: P1 Absorption** - context/query/validate/todo/seed/backlog file migrations, compound→hook, test-gen→verify --generate-tests, export→doc --report, assume→plan --assume (candidate, depends on Phase 32 stability)
+- [ ] **Phase 34: P2 Structure Cleanup** - diagnose/forensics → debug/ subdir, ceo/eng/design-review → review/ subdir (candidate, depends on Phase 32 stability)
 
 ## Phase Details
 
