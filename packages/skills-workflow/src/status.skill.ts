@@ -78,9 +78,21 @@ async function executeStatus(ctx: SkillContext): Promise<SkillResult> {
     };
   }
 
-  // --brief flag: decisions/blockers only (absorbs context skill)
+  // --brief flag: decisions/blockers only (absorbs context skill, Phase 33 Wave 1)
   if (ctx.args.brief === true) {
-    return ctx.run('workflow.context', {});
+    const { renderContextView } = await import('./shared/context-view.js');
+    const view = await renderContextView({ cwd: ctx.cwd, state: ctx.state, recommend: ctx.recommend });
+    await ctx.ui.result({
+      success: view.success,
+      title: 'Project Context',
+      summary: view.summary,
+      details: view.details,
+      recommendations: view.recommendations,
+    });
+    return {
+      success: view.success,
+      summary: view.summary,
+    };
   }
 
   // Build formatted display
@@ -288,12 +300,20 @@ export const statusSkill = defineSkill({
 
   // Phase 32: 'progress' is now an alias for 'status'
   // progressSkill export removed; alias infra handles CLI dispatch and ctx.run() compat
+  // Phase 33 Wave 1: 'context' and 'query' absorbed into status
   aliases: [
     {
       command: 'progress',
       id: 'workflow.progress',
       hidden: true,
       replacedBy: 'status',
+    },
+    {
+      command: 'context',
+      id: 'workflow.context',
+      defaultArgs: { brief: true },
+      hidden: true,
+      replacedBy: 'status --brief',
     },
   ],
 

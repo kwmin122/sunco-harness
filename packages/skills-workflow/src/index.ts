@@ -26,9 +26,9 @@ export { captureGitState } from './shared/git-state.js';
 
 // Skills
 // Phase 32: progressSkill export removed — 'progress' is now an alias declared on statusSkill
+// Phase 33 Wave 1: context export removed — 'context' is now an alias declared on statusSkill
 export { statusSkill } from './status.skill.js';
 export { default as nextSkill } from './next.skill.js';
-export { default as contextSkill } from './context.skill.js';
 export { default as pauseSkill } from './pause.skill.js';
 export { default as resumeSkill } from './resume.skill.js';
 export { default as noteSkill } from './note.skill.js';

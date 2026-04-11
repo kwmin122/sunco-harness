@@ -30,8 +30,8 @@ import {
 import {
   statusSkill,
   // Phase 32: progressSkill import removed — 'progress' is now an alias on statusSkill
+  // Phase 33 Wave 1: contextSkill import removed — 'context' is now an alias on statusSkill
   nextSkill,
-  contextSkill,
   noteSkill,
   todoSkill,
   seedSkill,
@@ -89,8 +89,8 @@ const preloadedSkills = [
   workflowSettingsSkill,  // Enhanced settings replaces harness version
   statusSkill,
   // Phase 32: progressSkill removed from preloaded — 'progress' is now an alias on statusSkill
+  // Phase 33 Wave 1: contextSkill removed from preloaded — 'context' is now an alias on statusSkill
   nextSkill,
-  contextSkill,
   noteSkill,
   todoSkill,
   seedSkill,
