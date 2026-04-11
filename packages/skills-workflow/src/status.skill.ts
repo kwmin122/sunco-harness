@@ -35,7 +35,7 @@ const INDICATOR_NOT_STARTED = chalk.gray('\u2500'); // gray dash
 // ---------------------------------------------------------------------------
 
 /**
- * Execute function shared between statusSkill and progressSkill.
+ * Execute function for statusSkill (and the progress alias).
  * Reads .planning/ROADMAP.md and .planning/STATE.md, then displays
  * a formatted overview or JSON output.
  */
