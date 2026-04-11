@@ -63,7 +63,7 @@ export { default as designReviewSkill } from './design-review.skill.js';
 
 // Phase 7 verification pipeline skills
 export { default as verifySkill } from './verify.skill.js';
-export { default as validateSkill } from './validate.skill.js';
+// Phase 33 Wave 1: validateSkill export removed — 'validate' is now an alias declared on verifySkill
 export { default as testGenSkill } from './test-gen.skill.js';
 
 // Phase 8 shipping + milestones skills

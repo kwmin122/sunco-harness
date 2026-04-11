@@ -178,13 +178,43 @@ export default defineSkill({
     { flags: '--strict', description: 'Fail on humanRequired findings' },
     { flags: '--lenient', description: 'Allow up to 5 medium findings (development only, blocked for release)' },
     { flags: '--skip-cross-model', description: 'Skip Layer 6 (cross-model verification)' },
-    { flags: '--coverage', description: 'Run test coverage audit only (delegates to validate)' },
+    { flags: '--coverage', description: 'Run test coverage audit only (absorbs validate skill, Phase 33 Wave 1)' },
     { flags: '--skip-human-eval', description: 'Skip Layer 7 (human eval gate)' },
+  ],
+
+  // Phase 33 Wave 1: 'validate' absorbed into verify
+  aliases: [
+    {
+      command: 'validate',
+      id: 'workflow.validate',
+      defaultArgs: { coverage: true },
+      hidden: true,
+      replacedBy: 'verify --coverage',
+    },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
     if (ctx.args.coverage === true) {
-      return ctx.run('workflow.validate', ctx.args);
+      // Phase 33 Wave 1: direct call to coverage-audit (replaced ctx.run delegate)
+      const { runCoverageAudit } = await import('./shared/coverage-audit.js');
+      const threshold = typeof ctx.args.threshold === 'number' ? ctx.args.threshold : undefined;
+
+      await ctx.ui.entry({ title: 'Validate', description: 'Running test coverage audit...' });
+
+      const audit = await runCoverageAudit({ cwd: ctx.cwd, state: ctx.state, threshold });
+
+      await ctx.ui.result({
+        success: audit.ok,
+        title: 'Validate',
+        summary: audit.meta.summary,
+        details: [audit.output],
+      });
+
+      return {
+        success: audit.ok,
+        summary: audit.meta.summary,
+        data: audit.meta.report,
+      };
     }
 
     // --- Entry ---
