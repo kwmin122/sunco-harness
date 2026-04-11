@@ -40,6 +40,13 @@ const INDICATOR_NOT_STARTED = chalk.gray('\u2500'); // gray dash
  * a formatted overview or JSON output.
  */
 async function executeStatus(ctx: SkillContext): Promise<SkillResult> {
+  // --live flag: open the read-only dashboard TUI (DASH-01)
+  if (ctx.args.live === true) {
+    const { renderDashboardTui } = await import('./dashboard-tui.js');
+    await renderDashboardTui(ctx.cwd);
+    return { success: true, summary: 'Dashboard TUI exited' };
+  }
+
   await ctx.ui.entry({ title: 'Status', description: 'Project overview' });
 
   // Read planning files from project root
@@ -276,6 +283,7 @@ export const statusSkill = defineSkill({
   options: [
     { flags: '--json', description: 'Output as JSON (replaces query command)' },
     { flags: '--brief', description: 'Show decisions/blockers only (replaces context command)' },
+    { flags: '--live', description: "Open the read-only dashboard TUI (polls .sun/active-work.json at 1Hz)" },
   ],
   execute: executeStatus,
 });
