@@ -57,6 +57,18 @@ export default defineSkill({
     { flags: '--speed <mode>', description: 'Execution speed: fast (zero planning, atomic commit) | normal (default)' },
   ],
 
+  // Phase 32: 'fast' is now an alias for 'quick --speed fast'
+  // fast.skill.ts deleted; alias infra handles the CLI dispatch and ctx.run() compat
+  aliases: [
+    {
+      command: 'fast',
+      id: 'workflow.fast',
+      defaultArgs: { speed: 'fast' },
+      hidden: true,
+      replacedBy: 'quick --speed fast',
+    },
+  ],
+
   async execute(ctx: SkillContext): Promise<SkillResult> {
     // --- Entry ---
     await ctx.ui.entry({

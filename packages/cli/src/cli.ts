@@ -57,7 +57,7 @@ import {
   milestoneSkill,
   autoSkill,
   quickSkill,
-  fastSkill,
+  // Phase 32: fastSkill import removed — 'fast' is now an alias declared on quickSkill
   doSkill,
   debugSkill,
   diagnoseSkill,
@@ -121,7 +121,7 @@ const preloadedSkills = [
   // Phase 9 composition skills
   autoSkill,
   quickSkill,
-  fastSkill,
+  // Phase 32: fastSkill removed — 'fast' is now an alias declared on quickSkill
   doSkill,
   // Phase 10 debugging skills
   debugSkill,

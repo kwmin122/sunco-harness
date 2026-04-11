@@ -73,7 +73,7 @@ export { default as milestoneSkill } from './milestone.skill.js';
 // Phase 9 composition skills
 export { default as autoSkill } from './auto.skill.js';
 export { default as quickSkill } from './quick.skill.js';
-export { default as fastSkill } from './fast.skill.js';
+// Phase 32: fastSkill removed — 'fast' is now an alias on quickSkill (see quick.skill.ts aliases[])
 export { default as doSkill } from './do.skill.js';
 
 // Phase 10 debugging skills
