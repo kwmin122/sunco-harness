@@ -49,6 +49,7 @@ export type {
   SkillComplexity,
   SkillOption,
   SkillLogger,
+  AliasDefinition,
 } from './skill/types.js';
 
 // ---------------------------------------------------------------------------

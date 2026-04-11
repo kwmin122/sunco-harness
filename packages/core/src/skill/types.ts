@@ -67,6 +67,30 @@ export type SkillComplexity = 'simple' | 'standard' | 'complex';
 export type SkillTier = 'user' | 'workflow' | 'expert';
 
 // ---------------------------------------------------------------------------
+// AliasDefinition (Phase 32)
+// ---------------------------------------------------------------------------
+
+/**
+ * Alias declaration attached to an absorbing skill.
+ * When an alias command is invoked, the main skill executes with
+ * `defaultArgs` merged under user-provided args (user wins on conflict).
+ *
+ * Phase 32: alias infra for consolidation.
+ */
+export interface AliasDefinition {
+  /** CLI command name for the alias (e.g. 'fast') */
+  readonly command: CommandName;
+  /** Optional legacy skill id for ctx.run() backcompat (e.g. 'workflow.fast') */
+  readonly id?: SkillId;
+  /** Default args auto-injected when invoked via this alias */
+  readonly defaultArgs?: Readonly<Record<string, unknown>>;
+  /** Omit from default help output */
+  readonly hidden?: boolean;
+  /** Human-readable replacement hint shown in --help and deprecation warnings */
+  readonly replacedBy?: string;
+}
+
+// ---------------------------------------------------------------------------
 // Skill Option
 // ---------------------------------------------------------------------------
 
@@ -207,6 +231,9 @@ export interface SkillDefinition {
 
   /** Skill execution function */
   readonly execute: (ctx: SkillContext) => Promise<SkillResult>;
+
+  /** Alias declarations — alternate commands/ids that dispatch to this skill (Phase 32) */
+  readonly aliases?: readonly AliasDefinition[];
 }
 
 /**
@@ -226,4 +253,6 @@ export type SkillDefinitionInput = {
   /** Visibility tier. Defaults to 'workflow' when omitted (D-02). */
   tier?: SkillTier;
   execute: (ctx: SkillContext) => Promise<SkillResult>;
+  /** Alias declarations — alternate commands/ids that dispatch to this skill (Phase 32) */
+  aliases?: AliasDefinition[];
 };

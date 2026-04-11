@@ -25,6 +25,17 @@ const SkillOptionSchema = z.object({
 });
 
 /**
+ * Zod schema for AliasDefinition (Phase 32).
+ */
+const AliasDefinitionSchema = z.object({
+  command: z.string().min(1),
+  id: z.string().min(1).optional(),
+  defaultArgs: z.record(z.string(), z.unknown()).optional(),
+  hidden: z.boolean().optional(),
+  replacedBy: z.string().optional(),
+});
+
+/**
  * Zod schema for SkillDefinition metadata.
  * Validates all required fields with precise error messages.
  */
@@ -43,6 +54,7 @@ export const SkillDefinitionSchema = z.object({
     (fn) => typeof fn === 'function',
     'execute must be a function',
   ),
+  aliases: z.array(AliasDefinitionSchema).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -79,6 +91,11 @@ export function defineSkill(input: SkillDefinitionInput): SkillDefinition {
     ? Object.freeze(validated.options.map((opt) => Object.freeze(opt)))
     : undefined;
 
+  // Freeze aliases array if present (Phase 32)
+  const aliases = validated.aliases
+    ? Object.freeze(validated.aliases.map((alias) => Object.freeze(alias)))
+    : undefined;
+
   // Return frozen skill definition
   const definition: SkillDefinition = Object.freeze({
     id: validated.id,
@@ -92,6 +109,7 @@ export function defineSkill(input: SkillDefinitionInput): SkillDefinition {
     complexity: validated.complexity,
     tier: validated.tier,
     execute: validated.execute as SkillDefinition['execute'],
+    aliases,
   });
 
   return definition;
