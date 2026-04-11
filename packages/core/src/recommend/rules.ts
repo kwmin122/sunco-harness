@@ -77,21 +77,23 @@ const workflowTransitionRules: RecommendationRule[] = [
     ],
   ),
 
-  // Rule 2: After verify success -> ship
+  // Rule 2: After verify success (full 7-layer) -> ship
+  // Phase 33 Wave 1: excludes coverage-only runs (verify --coverage → handled by Rule 30/31)
   rule(
     'after-verify-success',
-    'After successful verification, ship the changes',
-    (s) => lastWas(s, 'workflow.verify') && lastSucceeded(s),
+    'After successful full verification, ship the changes',
+    (s) => lastWas(s, 'workflow.verify') && lastSucceeded(s) && !lastWasVerifyCoverage(s),
     () => [
       rec('workflow.ship', 'Ship changes', 'Verification passed -- ready to ship', 'high'),
     ],
   ),
 
-  // Rule 3: After verify failure -> debug (recommended), execute
+  // Rule 3: After verify failure (full 7-layer) -> debug (recommended), execute
+  // Phase 33 Wave 1: excludes coverage-only runs (verify --coverage → handled by Rule 32)
   rule(
     'after-verify-failure',
-    'After failed verification, debug or re-execute',
-    (s) => lastWas(s, 'workflow.verify') && lastFailed(s),
+    'After failed full verification, debug or re-execute',
+    (s) => lastWas(s, 'workflow.verify') && lastFailed(s) && !lastWasVerifyCoverage(s),
     () => [
       rec('workflow.debug', 'Debug issues', 'Verification failed -- investigate the issues', 'high'),
       rec('workflow.execute', 'Re-execute', 'Re-execute with fixes applied', 'medium'),
@@ -485,6 +487,19 @@ function coverageAtOrAbove(state: RecommendationState, threshold: number): boole
   return typeof pct === 'number' && pct >= threshold;
 }
 
+/**
+ * Phase 33 Wave 1: Helper to detect "verify --coverage" (absorbed from validate skill).
+ * Distinguishes coverage runs from full 7-layer verify runs by checking
+ * if the result data has a CoverageReport shape (data.overall.lines.pct)
+ * vs a VerifyReport shape (data.verdict).
+ */
+function lastWasVerifyCoverage(state: RecommendationState): boolean {
+  if (!lastWas(state, 'workflow.verify')) return false;
+  const data = state.lastResult?.data as Record<string, unknown> | undefined;
+  // CoverageReport has data.overall; VerifyReport has data.verdict
+  return typeof (data?.overall as Record<string, unknown> | undefined)?.lines !== 'undefined';
+}
+
 const verificationPipelineRules: RecommendationRule[] = [
   // Rule 29: After verify WARN -> suggest review for human analysis
   rule(
@@ -497,45 +512,49 @@ const verificationPipelineRules: RecommendationRule[] = [
     ],
   ),
 
-  // Rule 30: After validate with low coverage -> suggest test-gen
+  // Rule 30: After verify --coverage with low coverage -> suggest test-gen
+  // Phase 33 Wave 1: workflow.validate → workflow.verify (coverage mode)
   rule(
     'after-validate-low-coverage',
-    'After validate with low coverage, generate more tests',
-    (s) => lastWas(s, 'workflow.validate') && lastSucceeded(s) && coverageBelow(s, 80),
+    'After verify --coverage with low coverage, generate more tests',
+    (s) => lastWasVerifyCoverage(s) && lastSucceeded(s) && coverageBelow(s, 80),
     () => [
       rec('workflow.test-gen', 'Generate tests', 'Coverage is below 80% -- generate more tests', 'high'),
       rec('workflow.verify', 'Verify anyway', 'Run verification despite low coverage', 'low'),
     ],
   ),
 
-  // Rule 31: After validate with good coverage -> suggest verify
+  // Rule 31: After verify --coverage with good coverage -> suggest full verify
+  // Phase 33 Wave 1: workflow.validate → workflow.verify (coverage mode)
   rule(
     'after-validate-high-coverage',
-    'After validate with good coverage, proceed to verify',
-    (s) => lastWas(s, 'workflow.validate') && lastSucceeded(s) && coverageAtOrAbove(s, 80),
+    'After verify --coverage with good coverage, proceed to full verify',
+    (s) => lastWasVerifyCoverage(s) && lastSucceeded(s) && coverageAtOrAbove(s, 80),
     () => [
       rec('workflow.verify', 'Verify output', 'Good coverage -- proceed to full verification', 'medium'),
     ],
   ),
 
-  // Rule 32: After validate failure -> suggest debug
+  // Rule 32: After verify --coverage failure -> suggest debug
+  // Phase 33 Wave 1: workflow.validate → workflow.verify (coverage mode)
   rule(
     'after-validate-fail',
-    'After validate failure, debug the coverage issues',
-    (s) => lastWas(s, 'workflow.validate') && lastFailed(s),
+    'After verify --coverage failure, debug the coverage issues',
+    (s) => lastWasVerifyCoverage(s) && lastFailed(s),
     () => [
-      rec('workflow.debug', 'Debug validate', 'Validate failed -- investigate the issue', 'medium'),
-      rec('workflow.validate', 'Retry validate', 'Retry validation after fixing issues', 'low'),
+      rec('workflow.debug', 'Debug coverage', 'Verify --coverage failed -- investigate the issue', 'medium'),
+      rec('workflow.verify', 'Retry verify --coverage', 'Retry coverage audit after fixing issues', 'low'),
     ],
   ),
 
-  // Rule 33: After test-gen success -> suggest validate to re-check coverage
+  // Rule 33: After test-gen success -> suggest verify --coverage to re-check coverage
+  // Phase 33 Wave 1: workflow.validate → workflow.verify (coverage mode)
   rule(
     'after-test-gen-success',
-    'After successful test generation, re-validate coverage',
+    'After successful test generation, re-check coverage with verify --coverage',
     (s) => lastWas(s, 'workflow.test-gen') && lastSucceeded(s),
     () => [
-      rec('workflow.validate', 'Re-validate', 'Tests generated -- re-check coverage', 'high'),
+      rec('workflow.verify', 'Re-check coverage', 'Tests generated -- re-check coverage with verify --coverage', 'high'),
     ],
   ),
 
@@ -571,10 +590,11 @@ const verificationPipelineRules: RecommendationRule[] = [
     ],
   ),
 
-  // Rule 37: After verify PASS with warnings -> suggest validate for coverage
+  // Rule 37: After verify PASS with warnings -> suggest verify --coverage for coverage check
+  // Phase 33 Wave 1: workflow.validate → workflow.verify (coverage mode)
   rule(
     'after-verify-pass-with-warnings',
-    'After verify PASS with warnings, check coverage',
+    'After verify PASS with warnings, check coverage with verify --coverage',
     (s) =>
       lastWas(s, 'workflow.verify') &&
       lastSucceeded(s) &&
@@ -582,7 +602,7 @@ const verificationPipelineRules: RecommendationRule[] = [
       Array.isArray(s.lastResult?.warnings) &&
       s.lastResult!.warnings!.length > 0,
     () => [
-      rec('workflow.validate', 'Check coverage', 'Verify passed with warnings -- check test coverage', 'low'),
+      rec('workflow.verify', 'Check coverage', 'Verify passed with warnings -- check test coverage with --coverage', 'low'),
     ],
   ),
 
