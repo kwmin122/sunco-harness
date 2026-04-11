@@ -15,7 +15,24 @@ describe('validateConfig', () => {
     const config = validateConfig({});
     expect(config).toEqual({
       skills: { preset: 'none', add: [], remove: [] },
-      agent: { defaultProvider: 'claude-code-cli', timeout: 120_000, maxRetries: 1 },
+      agent: {
+        defaultProvider: 'claude-code-cli',
+        timeout: 120_000,
+        maxRetries: 1,
+        advisor: {
+          enabled: false,
+          transport: 'subagent',
+          subagentName: 'sunco-advisor',
+          modelHint: 'opus',
+          maxCallsPerSkill: 2,
+          timeoutMs: 120_000,
+          maxTurns: 1,
+          maxPromptChars: 20_000,
+          strict: false,
+          requireSignature: true,
+          signaturePattern: '[sunco-advisor v1 model=opus]',
+        },
+      },
       ui: { theme: 'default', silent: false, json: false },
       state: { dbPath: '.sun/state.db' },
     });
@@ -71,7 +88,24 @@ describe('validateConfig', () => {
   it('accepts complete valid config', () => {
     const full = {
       skills: { preset: 'harness', add: ['lint'], remove: ['debug'] },
-      agent: { defaultProvider: 'claude-sdk', timeout: 30_000, maxRetries: 3 },
+      agent: {
+        defaultProvider: 'claude-sdk',
+        timeout: 30_000,
+        maxRetries: 3,
+        advisor: {
+          enabled: false,
+          transport: 'subagent' as const,
+          subagentName: 'sunco-advisor',
+          modelHint: 'opus',
+          maxCallsPerSkill: 2,
+          timeoutMs: 120_000,
+          maxTurns: 1,
+          maxPromptChars: 20_000,
+          strict: false,
+          requireSignature: true,
+          signaturePattern: '[sunco-advisor v1 model=opus]',
+        },
+      },
       ui: { theme: 'minimal', silent: false, json: true },
       state: { dbPath: '.sun/custom.db' },
     };
