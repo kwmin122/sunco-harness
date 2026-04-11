@@ -255,6 +255,201 @@ describe('registerSkills', () => {
 });
 
 // ---------------------------------------------------------------------------
+// registerSkills alias registration (Phase 32)
+// ---------------------------------------------------------------------------
+
+describe('registerSkills alias dispatch (Phase 32)', () => {
+  function makeQuickWithAlias() {
+    return defineSkill({
+      id: 'workflow.quick',
+      command: 'quick',
+      description: 'Quick task execution',
+      kind: 'prompt',
+      stage: 'stable',
+      category: 'workflow',
+      routing: 'directExec',
+      options: [
+        { flags: '--speed <mode>', description: 'Execution speed' },
+      ],
+      aliases: [
+        {
+          command: 'fast',
+          id: 'workflow.fast',
+          defaultArgs: { speed: 'fast' },
+          hidden: true,
+          replacedBy: 'quick --speed fast',
+        },
+      ],
+      execute: async (_ctx: SkillContext): Promise<SkillResult> => ({
+        success: true,
+        summary: 'quick executed',
+      }),
+    });
+  }
+
+  // Case 1: fixture registry with alias dispatches to main skill's execute hook
+  it('invoking "fast" alias dispatches to the quick skill id', async () => {
+    const program = createProgram();
+    const registry = new SkillRegistry();
+    registry.register(makeQuickWithAlias());
+
+    const executeHook = vi.fn().mockResolvedValue(undefined);
+    registerSkills(program, registry, executeHook);
+
+    program.exitOverride();
+    program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
+
+    await program.parseAsync(['node', 'sunco', 'fast']);
+
+    expect(executeHook).toHaveBeenCalledWith('workflow.quick', expect.any(Object));
+  });
+
+  // Case 2: alias dispatch injects defaultArgs { speed: 'fast' }
+  it('alias dispatch receives ctx.args.speed === "fast" from defaultArgs', async () => {
+    const program = createProgram();
+    const registry = new SkillRegistry();
+    registry.register(makeQuickWithAlias());
+
+    const capturedArgs: Record<string, unknown>[] = [];
+    const executeHook = vi.fn().mockImplementation(async (_id: string, opts: Record<string, unknown>) => {
+      capturedArgs.push(opts);
+    });
+    registerSkills(program, registry, executeHook);
+
+    program.exitOverride();
+    program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
+
+    await program.parseAsync(['node', 'sunco', 'fast']);
+
+    expect(capturedArgs).toHaveLength(1);
+    expect(capturedArgs[0].speed).toBe('fast');
+  });
+
+  // Case 3: user --speed slow beats alias default
+  it('user --speed slow overrides alias defaultArgs (user wins)', async () => {
+    const program = createProgram();
+    const registry = new SkillRegistry();
+    registry.register(makeQuickWithAlias());
+
+    const capturedArgs: Record<string, unknown>[] = [];
+    const executeHook = vi.fn().mockImplementation(async (_id: string, opts: Record<string, unknown>) => {
+      capturedArgs.push(opts);
+    });
+    registerSkills(program, registry, executeHook);
+
+    program.exitOverride();
+    program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
+
+    await program.parseAsync(['node', 'sunco', 'fast', '--speed', 'slow']);
+
+    expect(capturedArgs).toHaveLength(1);
+    expect(capturedArgs[0].speed).toBe('slow');  // user wins
+  });
+
+  // Case 4: stderr captures [deprecated] line on alias invocation
+  it('alias invocation emits [deprecated] to stderr', async () => {
+    // Ensure env var is not set
+    delete process.env.SUNCO_SUPPRESS_DEPRECATION;
+
+    const program = createProgram();
+    const registry = new SkillRegistry();
+    registry.register(makeQuickWithAlias());
+
+    const executeHook = vi.fn().mockResolvedValue(undefined);
+    registerSkills(program, registry, executeHook);
+
+    const stderrWrites: string[] = [];
+    const origWrite = process.stderr.write.bind(process.stderr);
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: string | Uint8Array) => {
+      stderrWrites.push(typeof chunk === 'string' ? chunk : chunk.toString());
+      return true;
+    });
+
+    program.exitOverride();
+    program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
+
+    await program.parseAsync(['node', 'sunco', 'fast']);
+
+    stderrSpy.mockRestore();
+
+    const fullStderr = stderrWrites.join('');
+    expect(fullStderr).toContain('[deprecated]');
+    expect(fullStderr).toContain('fast');
+  });
+
+  // Case 5: SUNCO_SUPPRESS_DEPRECATION=1 silences the warning
+  it('SUNCO_SUPPRESS_DEPRECATION=1 suppresses deprecation warning', async () => {
+    process.env.SUNCO_SUPPRESS_DEPRECATION = '1';
+
+    const program = createProgram();
+    const registry = new SkillRegistry();
+    registry.register(makeQuickWithAlias());
+
+    const executeHook = vi.fn().mockResolvedValue(undefined);
+    registerSkills(program, registry, executeHook);
+
+    const stderrWrites: string[] = [];
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: string | Uint8Array) => {
+      stderrWrites.push(typeof chunk === 'string' ? chunk : chunk.toString());
+      return true;
+    });
+
+    program.exitOverride();
+    program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
+
+    await program.parseAsync(['node', 'sunco', 'fast']);
+
+    stderrSpy.mockRestore();
+    delete process.env.SUNCO_SUPPRESS_DEPRECATION;
+
+    const fullStderr = stderrWrites.join('');
+    expect(fullStderr).not.toContain('[deprecated]');
+  });
+
+  // Case 6: main 'quick' command does NOT emit deprecation
+  it('main "quick" command does NOT emit deprecation warning', async () => {
+    delete process.env.SUNCO_SUPPRESS_DEPRECATION;
+
+    const program = createProgram();
+    const registry = new SkillRegistry();
+    registry.register(makeQuickWithAlias());
+
+    const executeHook = vi.fn().mockResolvedValue(undefined);
+    registerSkills(program, registry, executeHook);
+
+    const stderrWrites: string[] = [];
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: string | Uint8Array) => {
+      stderrWrites.push(typeof chunk === 'string' ? chunk : chunk.toString());
+      return true;
+    });
+
+    program.exitOverride();
+    program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
+
+    await program.parseAsync(['node', 'sunco', 'quick']);
+
+    stderrSpy.mockRestore();
+
+    const fullStderr = stderrWrites.join('');
+    expect(fullStderr).not.toContain('[deprecated]');
+  });
+
+  // Case 7: both 'quick' and 'fast' are registered as Commander commands
+  it('both main command and alias command are registered', () => {
+    const program = createProgram();
+    const registry = new SkillRegistry();
+    registry.register(makeQuickWithAlias());
+
+    const executeHook = vi.fn();
+    registerSkills(program, registry, executeHook);
+
+    const commandNames = program.commands.map((cmd) => cmd.name());
+    expect(commandNames).toContain('quick');
+    expect(commandNames).toContain('fast');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // isRootHelpRequest (D-06)
 // ---------------------------------------------------------------------------
 

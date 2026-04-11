@@ -5,6 +5,10 @@
  * Each skill's command, description, and options are mapped to Commander.
  * The actual skill execution is deferred to an execute hook (lazy execution).
  *
+ * Phase 32: A second pass registers alias commands. Alias invocations emit
+ * a deprecation warning to stderr (suppressible via SUNCO_SUPPRESS_DEPRECATION=1)
+ * and inject alias defaultArgs (user-provided args win on conflict).
+ *
  * Requirements: CLI-02 (skill auto-discovery as subcommands), CLI-03 (--help)
  */
 
@@ -68,6 +72,7 @@ export function registerSkills(
   registry: SkillRegistry,
   executeHook: SkillExecuteHook,
 ): void {
+  // --- Pass 1: register main skill commands (existing logic) ---
   for (const skill of registry.getAll()) {
     const sub = program
       .command(skill.command)
@@ -105,5 +110,77 @@ export function registerSkills(
         });
       }
     });
+  }
+
+  // --- Pass 2: register alias commands (Phase 32) ---
+  // Aliases are hidden deprecated commands that dispatch to the absorbing skill
+  // with defaultArgs injected. User args always win on conflict (D-04).
+  for (const skill of registry.getAll()) {
+    if (!skill.aliases) continue;
+
+    for (const alias of skill.aliases) {
+      // Confirm registry has this alias registered (guards against collision)
+      const resolution = registry.resolveCommand(alias.command);
+      if (!resolution || !resolution.isAlias) continue;
+
+      const aliasDescription = alias.replacedBy
+        ? `${skill.description} (alias for ${alias.replacedBy})`
+        : skill.description;
+
+      const aliasSub = program
+        .command(alias.command)
+        .description(aliasDescription);
+
+      // Inherit all options from the main skill so flags like --json still parse
+      if (skill.options) {
+        for (const opt of skill.options) {
+          aliasSub.option(
+            opt.flags,
+            opt.description,
+            opt.defaultValue as string | boolean | string[] | undefined,
+          );
+        }
+      }
+
+      // Capture alias in closure for the action handler
+      const capturedAlias = alias;
+      const capturedSkill = skill;
+
+      aliasSub.action(async (options: Record<string, unknown>) => {
+        // Emit deprecation warning to stderr (D-05), suppressible via env var
+        if (!process.env.SUNCO_SUPPRESS_DEPRECATION) {
+          process.stderr.write(
+            `[deprecated] '${capturedAlias.command}' is an alias${capturedAlias.replacedBy ? ` for '${capturedAlias.replacedBy}'` : ''}\n`,
+          );
+        }
+
+        // Merge: defaultArgs first, user options override (user wins on conflict, D-04)
+        const mergedOptions: Record<string, unknown> = {
+          ...capturedAlias.defaultArgs,
+          ...options,
+        };
+
+        const startedAt = Date.now();
+        let succeeded = true;
+        try {
+          await executeHook(capturedSkill.id, mergedOptions);
+        } catch (err) {
+          succeeded = false;
+          throw err;
+        } finally {
+          // PostSkill hook — errors MUST NOT break the CLI
+          await _hookRunner?.emit('PostSkill', {
+            skillId: capturedSkill.id,
+            cwd: process.cwd(),
+            outcome: succeeded ? 'success' : 'failure',
+            timestamp: new Date().toISOString(),
+            durationMs: Date.now() - startedAt,
+          }).catch((err: unknown) => {
+            const msg = err instanceof Error ? err.message : String(err);
+            process.stderr.write(`[sunco:hook] PostSkill handler failed: ${msg}\n`);
+          });
+        }
+      });
+    }
   }
 }
