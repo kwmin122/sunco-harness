@@ -44,6 +44,7 @@ export default defineConfig({
     'src/export.skill.ts',
     'src/graph.skill.ts',
     'src/doc.skill.ts',
+    'src/dashboard-tui.tsx',
   ],
   format: ['esm'],
   target: 'node22',
@@ -52,5 +53,10 @@ export default defineConfig({
   external: [
     '@sunco/core',
     'simple-git',
+    'ink',
+    'react',
   ],
+  esbuildOptions(options) {
+    options.jsx = 'automatic';
+  },
 });
