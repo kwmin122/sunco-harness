@@ -28,10 +28,27 @@ export default defineSkill({
     { flags: '--backlog', description: 'Parking lot for ideas (delegates to backlog)' },
   ],
 
+  // Phase 33 Wave 1: 'todo', 'seed', 'backlog' absorbed into note
+  aliases: [
+    { command: 'todo',    id: 'workflow.todo',    defaultArgs: { todo: true },    hidden: true, replacedBy: 'note --todo' },
+    { command: 'seed',    id: 'workflow.seed',    defaultArgs: { seed: true },    hidden: true, replacedBy: 'note --seed' },
+    { command: 'backlog', id: 'workflow.backlog', defaultArgs: { backlog: true }, hidden: true, replacedBy: 'note --backlog' },
+  ],
+
   async execute(ctx) {
-    if (ctx.args.todo === true) return ctx.run('workflow.todo', ctx.args);
-    if (ctx.args.seed === true) return ctx.run('workflow.seed', ctx.args);
-    if (ctx.args.backlog === true) return ctx.run('workflow.backlog', ctx.args);
+    // Phase 33 Wave 1: direct calls to note-lists shared module (replaced ctx.run delegates)
+    if (ctx.args.todo === true) {
+      const { handleTodoListCmd } = await import('./shared/note-lists.js');
+      return handleTodoListCmd({ state: ctx.state, ui: ctx.ui, args: ctx.args });
+    }
+    if (ctx.args.seed === true) {
+      const { handleSeedListCmd } = await import('./shared/note-lists.js');
+      return handleSeedListCmd({ state: ctx.state, ui: ctx.ui, args: ctx.args });
+    }
+    if (ctx.args.backlog === true) {
+      const { handleBacklogListCmd } = await import('./shared/note-lists.js');
+      return handleBacklogListCmd({ state: ctx.state, ui: ctx.ui, args: ctx.args });
+    }
 
     // Get text from positional args
     const positional = (ctx.args._ as string[] | undefined) ?? [];

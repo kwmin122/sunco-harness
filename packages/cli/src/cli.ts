@@ -31,11 +31,9 @@ import {
   statusSkill,
   // Phase 32: progressSkill import removed — 'progress' is now an alias on statusSkill
   // Phase 33 Wave 1: contextSkill import removed — 'context' is now an alias on statusSkill
+  // Phase 33 Wave 1: todoSkill, seedSkill, backlogSkill imports removed — aliases on noteSkill
   nextSkill,
   noteSkill,
-  todoSkill,
-  seedSkill,
-  backlogSkill,
   pauseSkill,
   resumeSkill,
   phaseSkill,
@@ -90,11 +88,9 @@ const preloadedSkills = [
   statusSkill,
   // Phase 32: progressSkill removed from preloaded — 'progress' is now an alias on statusSkill
   // Phase 33 Wave 1: contextSkill removed from preloaded — 'context' is now an alias on statusSkill
+  // Phase 33 Wave 1: todoSkill, seedSkill, backlogSkill removed from preloaded — aliases on noteSkill
   nextSkill,
   noteSkill,
-  todoSkill,
-  seedSkill,
-  backlogSkill,
   pauseSkill,
   resumeSkill,
   phaseSkill,
