@@ -22,7 +22,7 @@ const ALL_SKILLS = new Set([
   'workflow.execute',
   'workflow.verify',
   // Phase 33 Wave 1: 'workflow.validate' removed — now an alias for 'workflow.verify --coverage'
-  'workflow.test-gen',
+  // Phase 33 Wave 2: 'workflow.test-gen' removed — now an alias for 'workflow.verify --generate-tests'
   'workflow.review',
   'workflow.ship',
   'workflow.debug',
@@ -291,8 +291,9 @@ describe('Verification pipeline rules', () => {
   });
 
   // Phase 33 Wave 1: 'workflow.validate' → 'workflow.verify' (coverage mode)
+  // Phase 33 Wave 2: 'workflow.test-gen' → 'workflow.verify --generate-tests'
   // Use lastSkillId: 'workflow.verify' + CoverageReport-shaped data to trigger coverage rules
-  it('after verify --coverage low coverage -> recommend test-gen (default)', () => {
+  it('after verify --coverage low coverage -> recommend verify --generate-tests (default)', () => {
     const recs = getRecsForState({
       lastSkillId: 'workflow.verify',
       lastResult: {
@@ -301,8 +302,8 @@ describe('Verification pipeline rules', () => {
       },
     });
 
-    expect(hasSkill(recs, 'workflow.test-gen')).toBe(true);
-    expect(getDefault(recs)!.skillId).toBe('workflow.test-gen');
+    expect(hasSkill(recs, 'workflow.verify')).toBe(true);
+    expect(getDefault(recs)!.skillId).toBe('workflow.verify');
   });
 
   it('after verify --coverage high coverage -> recommend verify (full)', () => {
@@ -329,20 +330,22 @@ describe('Verification pipeline rules', () => {
     expect(hasSkill(recs, 'workflow.debug')).toBe(true);
   });
 
-  it('after test-gen success -> recommend verify --coverage (default)', () => {
+  // Phase 33 Wave 2: test-gen absorbed into verify --generate-tests
+  // Simulate via workflow.verify lastSkillId with TestGenResult-shaped data
+  it('after verify --generate-tests success -> recommend verify --coverage (default)', () => {
     const recs = getRecsForState({
-      lastSkillId: 'workflow.test-gen',
-      lastResult: { success: true },
+      lastSkillId: 'workflow.verify',
+      lastResult: { success: true, data: { generatedFiles: ['__tests__/foo.test.ts'], summary: 'done' } },
     });
 
     expect(hasSkill(recs, 'workflow.verify')).toBe(true);
     expect(getDefault(recs)!.skillId).toBe('workflow.verify');
   });
 
-  it('after test-gen failure -> recommend debug', () => {
+  it('after verify --generate-tests failure -> recommend debug', () => {
     const recs = getRecsForState({
-      lastSkillId: 'workflow.test-gen',
-      lastResult: { success: false },
+      lastSkillId: 'workflow.verify',
+      lastResult: { success: false, data: { generatedFiles: [], summary: 'failed' } },
     });
 
     expect(hasSkill(recs, 'workflow.debug')).toBe(true);

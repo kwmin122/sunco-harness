@@ -40,8 +40,7 @@ export const SKILL_CATALOG = `| ID | Command | Description | Kind |
 | workflow.plan | plan | Create execution plan | prompt |
 | workflow.execute | execute | Execute plans in worktrees | prompt |
 | workflow.review | review | Cross-provider code review | prompt |
-| workflow.verify | verify | 5-layer verification | prompt |
-| workflow.test-gen | test-gen | Generate tests | prompt |
+| workflow.verify | verify | 5-layer verification + test generation (--generate-tests) | prompt |
 | workflow.ship | ship | Create PR with verification | prompt |
 | workflow.release | release | Version + publish | deterministic |
 | workflow.milestone | milestone | Milestone lifecycle | prompt |

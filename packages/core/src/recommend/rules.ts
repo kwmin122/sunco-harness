@@ -500,6 +500,18 @@ function lastWasVerifyCoverage(state: RecommendationState): boolean {
   return typeof (data?.overall as Record<string, unknown> | undefined)?.lines !== 'undefined';
 }
 
+/**
+ * Phase 33 Wave 2: Helper to detect "verify --generate-tests" (absorbed from test-gen skill).
+ * Distinguishes test-gen runs from full 7-layer verify runs by checking
+ * if the result data has a TestGenResult shape (data.generatedFiles array).
+ */
+function lastWasVerifyTestGen(state: RecommendationState): boolean {
+  if (!lastWas(state, 'workflow.verify')) return false;
+  const data = state.lastResult?.data as Record<string, unknown> | undefined;
+  // TestGenResult has data.generatedFiles array
+  return Array.isArray(data?.generatedFiles);
+}
+
 const verificationPipelineRules: RecommendationRule[] = [
   // Rule 29: After verify WARN -> suggest review for human analysis
   rule(
@@ -512,14 +524,15 @@ const verificationPipelineRules: RecommendationRule[] = [
     ],
   ),
 
-  // Rule 30: After verify --coverage with low coverage -> suggest test-gen
+  // Rule 30: After verify --coverage with low coverage -> suggest verify --generate-tests
   // Phase 33 Wave 1: workflow.validate → workflow.verify (coverage mode)
+  // Phase 33 Wave 2: workflow.test-gen → workflow.verify --generate-tests
   rule(
     'after-validate-low-coverage',
     'After verify --coverage with low coverage, generate more tests',
     (s) => lastWasVerifyCoverage(s) && lastSucceeded(s) && coverageBelow(s, 80),
     () => [
-      rec('workflow.test-gen', 'Generate tests', 'Coverage is below 80% -- generate more tests', 'high'),
+      rec('workflow.verify', 'Generate tests', 'Coverage is below 80% -- generate more tests with verify --generate-tests', 'high'),
       rec('workflow.verify', 'Verify anyway', 'Run verification despite low coverage', 'low'),
     ],
   ),
@@ -547,25 +560,27 @@ const verificationPipelineRules: RecommendationRule[] = [
     ],
   ),
 
-  // Rule 33: After test-gen success -> suggest verify --coverage to re-check coverage
+  // Rule 33: After verify --generate-tests success -> suggest verify --coverage to re-check coverage
   // Phase 33 Wave 1: workflow.validate → workflow.verify (coverage mode)
+  // Phase 33 Wave 2: workflow.test-gen → workflow.verify --generate-tests
   rule(
     'after-test-gen-success',
-    'After successful test generation, re-check coverage with verify --coverage',
-    (s) => lastWas(s, 'workflow.test-gen') && lastSucceeded(s),
+    'After successful test generation (verify --generate-tests), re-check coverage',
+    (s) => lastWas(s, 'workflow.verify') && lastSucceeded(s) && lastWasVerifyTestGen(s),
     () => [
       rec('workflow.verify', 'Re-check coverage', 'Tests generated -- re-check coverage with verify --coverage', 'high'),
     ],
   ),
 
-  // Rule 34: After test-gen failure -> suggest debug
+  // Rule 34: After verify --generate-tests failure -> suggest debug
+  // Phase 33 Wave 2: workflow.test-gen → workflow.verify --generate-tests
   rule(
     'after-test-gen-fail',
-    'After test generation failure, debug the issues',
-    (s) => lastWas(s, 'workflow.test-gen') && lastFailed(s),
+    'After test generation failure (verify --generate-tests), debug the issues',
+    (s) => lastWas(s, 'workflow.verify') && lastFailed(s) && lastWasVerifyTestGen(s),
     () => [
       rec('workflow.debug', 'Debug test-gen', 'Test generation failed -- investigate', 'medium'),
-      rec('workflow.test-gen', 'Retry test-gen', 'Retry test generation', 'low'),
+      rec('workflow.verify', 'Retry verify --generate-tests', 'Retry test generation with verify --generate-tests', 'low'),
     ],
   ),
 

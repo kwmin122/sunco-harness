@@ -181,9 +181,14 @@ export default defineSkill({
     { flags: '--require-codex', description: 'Fail Layer 6 if codex cross-model verification is unavailable (pre-ship strict mode)' },
     { flags: '--coverage', description: 'Run test coverage audit only (absorbs validate skill, Phase 33 Wave 1)' },
     { flags: '--skip-human-eval', description: 'Skip Layer 7 (human eval gate)' },
+    { flags: '--generate-tests', description: 'Generate unit/E2E tests (absorbs test-gen skill, Phase 33 Wave 2)' },
+    { flags: '-f, --files <paths...>', description: 'Specific files to generate tests for (used with --generate-tests)' },
+    { flags: '--mock-external', description: 'Generate Digital Twin mock servers (used with --generate-tests)' },
+    { flags: '--framework <name>', description: 'Test framework (default: vitest, used with --generate-tests)' },
   ],
 
   // Phase 33 Wave 1: 'validate' absorbed into verify
+  // Phase 33 Wave 2: 'test-gen' absorbed into verify
   aliases: [
     {
       command: 'validate',
@@ -191,6 +196,13 @@ export default defineSkill({
       defaultArgs: { coverage: true },
       hidden: true,
       replacedBy: 'verify --coverage',
+    },
+    {
+      command: 'test-gen',
+      id: 'workflow.test-gen',
+      defaultArgs: { 'generate-tests': true },
+      hidden: true,
+      replacedBy: 'verify --generate-tests',
     },
   ],
 
@@ -216,6 +228,52 @@ export default defineSkill({
         summary: audit.meta.summary,
         data: audit.meta.report,
       };
+    }
+
+    if (ctx.args['generate-tests'] === true || ctx.args.generateTests === true) {
+      // Phase 33 Wave 2: test generation (absorbed from test-gen skill)
+      const { runTestGeneration, resolveTargetFiles } = await import('./shared/test-generator.js');
+
+      await ctx.ui.entry({ title: 'Test Gen', description: 'Generating tests with AI agent...' });
+
+      const providers = await ctx.agent.listProviders();
+      if (providers.length === 0) {
+        await ctx.ui.result({
+          success: false,
+          title: 'Test Gen',
+          summary: 'No AI provider available',
+          details: [
+            'sunco verify --generate-tests requires an AI provider for test generation.',
+            'Install Claude Code CLI or set ANTHROPIC_API_KEY.',
+          ],
+        });
+        return { success: false, summary: 'No AI provider available' };
+      }
+
+      const targetFiles = ctx.args.files
+        ? (Array.isArray(ctx.args.files) ? ctx.args.files as string[] : [ctx.args.files as string])
+        : await resolveTargetFiles(ctx.cwd, ctx.args);
+
+      const result = await runTestGeneration({
+        cwd: ctx.cwd,
+        targetFiles,
+        framework: (ctx.args.framework as string) ?? 'vitest',
+        mockExternal: Boolean(ctx.args['mock-external'] || ctx.args.mockExternal),
+        agentRun: (req) => ctx.agent.run(req),
+        log: ctx.log,
+      });
+
+      await ctx.ui.result({
+        success: result.success,
+        title: 'Test Gen',
+        summary: result.summary,
+        details: [
+          ...result.generatedFiles.map((f) => `Test: ${f}`),
+          ...(result.mockFiles ?? []).map((f) => `Mock: ${f}`),
+        ],
+      });
+
+      return { success: result.success, summary: result.summary, data: result };
     }
 
     // --- Entry ---

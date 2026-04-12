@@ -49,7 +49,7 @@ import {
   reviewSkill,
   verifySkill,
   // Phase 33 Wave 1: validateSkill import removed — 'validate' is now an alias on verifySkill
-  testGenSkill,
+  // Phase 33 Wave 2: testGenSkill import removed — 'test-gen' is now an alias on verifySkill
   shipSkill,
   releaseSkill,
   milestoneSkill,
@@ -109,7 +109,7 @@ const preloadedSkills = [
   // Phase 7 verification pipeline skills
   verifySkill,
   // Phase 33 Wave 1: validateSkill removed from preloaded — 'validate' is now an alias on verifySkill
-  testGenSkill,
+  // Phase 33 Wave 2: testGenSkill removed from preloaded — 'test-gen' is now an alias on verifySkill
   // Phase 8 shipping + milestones skills
   shipSkill,
   releaseSkill,
