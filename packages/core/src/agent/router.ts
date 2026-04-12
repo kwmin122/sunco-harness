@@ -23,6 +23,7 @@ import type {
   AgentRouterApi,
   AgentRole,
   AgentTransport,
+  AgentFamily,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -166,6 +167,21 @@ class AgentRouter implements AgentRouterApi {
       })),
     );
     return checks.filter((c) => c.available).map((c) => c.id);
+  }
+
+  /**
+   * List available providers with their family metadata.
+   * Used by Layer 6 to select cross-family pairs (D-05, D-06).
+   */
+  async listProvidersWithFamily(): Promise<Array<{ id: string; family: AgentFamily }>> {
+    const checks = await Promise.all(
+      Array.from(this.providers.entries()).map(async ([id, provider]) => ({
+        id,
+        family: provider.family,
+        available: await provider.isAvailable(),
+      })),
+    );
+    return checks.filter((c) => c.available).map(({ id, family }) => ({ id, family }));
   }
 
   // -------------------------------------------------------------------------

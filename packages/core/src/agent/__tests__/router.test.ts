@@ -21,6 +21,8 @@ import type {
   AgentExecutionContext,
   PermissionSet,
   AgentRouterApi,
+  AgentFamily,
+  AgentTransport,
 } from '../types.js';
 
 // ---------------------------------------------------------------------------
@@ -28,7 +30,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 function createMockProvider(
-  overrides: Partial<AgentProvider> & { id: string },
+  overrides: Partial<AgentProvider> & { id: string; family?: AgentFamily; transport?: AgentTransport },
 ): AgentProvider {
   return {
     family: 'claude',
@@ -281,6 +283,33 @@ describe('AgentRouter', () => {
       const ids = await router.listProviders();
       expect(ids).toContain('claude-code-cli');
       expect(ids).not.toContain('claude-sdk');
+    });
+  });
+
+  describe('listProvidersWithFamily', () => {
+    it('returns id + family for available providers', async () => {
+      const list = await router.listProvidersWithFamily();
+      expect(list).toHaveLength(2);
+      expect(list.find((p) => p.family === 'claude')).toBeDefined();
+    });
+
+    it('excludes unavailable providers', async () => {
+      (sdkProvider.isAvailable as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+      const list = await router.listProvidersWithFamily();
+      expect(list).toHaveLength(1);
+      expect(list[0]!.id).toBe('claude-code-cli');
+    });
+
+    it('includes openai family when registered', async () => {
+      const codexProvider = createMockProvider({ id: 'codex-cli', family: 'openai', transport: 'cli' });
+      const routerWithCodex = createAgentRouter({
+        providers: [cliProvider, sdkProvider, codexProvider],
+        cwd: '/test/project',
+        tracker,
+      });
+      const list = await routerWithCodex.listProvidersWithFamily();
+      expect(list).toHaveLength(3);
+      expect(list.find((p) => p.family === 'openai')).toBeDefined();
     });
   });
 });

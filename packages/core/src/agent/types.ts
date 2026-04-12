@@ -231,6 +231,7 @@ export interface AgentRouterApi {
   run(request: AgentRequest): Promise<AgentResult>;
   crossVerify(request: AgentRequest, providerIds?: string[]): Promise<AgentResult[]>;
   listProviders(): Promise<string[]>;
+  listProvidersWithFamily(): Promise<Array<{ id: string; family: AgentFamily }>>;
 }
 
 // ---------------------------------------------------------------------------
