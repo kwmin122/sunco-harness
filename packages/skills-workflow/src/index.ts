@@ -41,7 +41,7 @@ export { default as scanSkill } from './scan.skill.js';
 
 // Phase 5 context + planning skills
 export { default as discussSkill } from './discuss.skill.js';
-export { default as assumeSkill } from './assume.skill.js';
+// Phase 33 Wave 2: assumeSkill export removed — 'assume' is now an alias declared on planSkill
 export { default as researchSkill } from './research.skill.js';
 export { default as planSkill } from './plan.skill.js';
 

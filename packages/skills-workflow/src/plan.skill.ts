@@ -163,9 +163,90 @@ export default defineSkill({
       flags: '--skip-research',
       description: 'Skip research even if RESEARCH.md missing',
     },
+    {
+      flags: '--assume',
+      description: 'Preview agent approach before planning (absorbs assume skill, Phase 33 Wave 2)',
+    },
+  ],
+
+  // Phase 33 Wave 2: 'assume' absorbed into plan
+  aliases: [
+    {
+      command: 'assume',
+      id: 'workflow.assume',
+      defaultArgs: { assume: true },
+      hidden: true,
+      replacedBy: 'plan --assume',
+    },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
+    if (ctx.args.assume === true) {
+      // Phase 33 Wave 2: assumption preview (absorbed from assume skill)
+      const { runAssumptionPreview } = await import('./shared/assumption-preview.js');
+
+      await ctx.ui.entry({
+        title: 'Assume',
+        description: 'Agent-powered approach preview',
+      });
+
+      const providers = await ctx.agent.listProviders();
+      if (providers.length === 0) {
+        const msg = 'No AI provider available. Install Claude Code CLI or set ANTHROPIC_API_KEY to use plan --assume.';
+        await ctx.ui.result({ success: false, title: 'Assume', summary: msg });
+        return { success: false, summary: msg };
+      }
+
+      // Determine phase number
+      let phaseNumber: number | null = null;
+      if (ctx.args.phase !== undefined) {
+        phaseNumber = Number(ctx.args.phase);
+      } else {
+        const stateMdPath = join(ctx.cwd, '.planning', 'STATE.md');
+        try {
+          const stateContent = await readFile(stateMdPath, 'utf-8');
+          const match = /^Phase:\s*(\d+)/m.exec(stateContent);
+          if (match) phaseNumber = parseInt(match[1]!, 10);
+        } catch {
+          // STATE.md not found
+        }
+      }
+
+      const result = await runAssumptionPreview({
+        cwd: ctx.cwd,
+        phaseNumber,
+        phaseArg: ctx.args.phase,
+        agentRun: (req) => ctx.agent.run(req),
+        uiAsk: (input) => ctx.ui.ask(input),
+        uiAskText: (input) => ctx.ui.askText(input),
+        log: ctx.log,
+      });
+
+      await ctx.ui.result({
+        success: result.success,
+        title: 'Assume',
+        summary: result.summary,
+        details: result.corrections.map(
+          (c) => `Corrected ${c.assumptionId} (${c.area}): ${c.text}`,
+        ),
+      });
+
+      return {
+        success: result.success,
+        summary: result.summary,
+        data: {
+          totalAssumptions: result.assumptions.length,
+          approved: result.assumptions.length - result.corrections.length,
+          corrected: result.corrections.length,
+          corrections: result.corrections.map((c) => ({
+            assumptionId: c.assumptionId,
+            area: c.area,
+            correction: c.text,
+          })),
+        },
+      };
+    }
+
     await ctx.ui.entry({
       title: 'Plan',
       description: 'Creating execution plans...',

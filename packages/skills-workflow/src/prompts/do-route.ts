@@ -35,9 +35,8 @@ export const SKILL_CATALOG = `| ID | Command | Description | Kind |
 | workflow.new | new | Bootstrap new project | prompt |
 | workflow.scan | scan | Analyze existing codebase | prompt |
 | workflow.discuss | discuss | Extract vision and decisions | prompt |
-| workflow.assume | assume | Preview agent approach | prompt |
 | workflow.research | research | Domain research | prompt |
-| workflow.plan | plan | Create execution plan | prompt |
+| workflow.plan | plan | Create execution plan + approach preview (--assume) | prompt |
 | workflow.execute | execute | Execute plans in worktrees | prompt |
 | workflow.review | review | Cross-provider code review | prompt |
 | workflow.verify | verify | 5-layer verification + test generation (--generate-tests) | prompt |

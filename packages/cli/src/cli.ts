@@ -41,7 +41,7 @@ import {
   newSkill,
   scanSkill,
   discussSkill,
-  assumeSkill,
+  // Phase 33 Wave 2: assumeSkill removed from preloaded — 'assume' is now an alias on planSkill
   researchSkill,
   planSkill,
   ultraplanSkill,
@@ -99,7 +99,7 @@ const preloadedSkills = [
   scanSkill,
   // Phase 5 context + planning skills
   discussSkill,
-  assumeSkill,
+  // Phase 33 Wave 2: assumeSkill import removed — 'assume' is now an alias on planSkill
   researchSkill,
   planSkill,
   ultraplanSkill,
