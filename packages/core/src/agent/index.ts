@@ -21,6 +21,7 @@ export { ROLE_PERMISSIONS, enforcePermissions } from './permission.js';
 // ---------------------------------------------------------------------------
 export { ClaudeCliProvider } from './providers/claude-cli.js';
 export { ClaudeSdkProvider } from './providers/claude-sdk.js';
+export { CodexCliProvider } from './providers/codex-cli.js';
 
 // ---------------------------------------------------------------------------
 // Result Normalizer
