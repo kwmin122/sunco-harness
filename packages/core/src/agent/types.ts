@@ -169,6 +169,9 @@ export interface AgentRequest {
 
   /** Maximum agent turns (tool-use cycles). Default: 1 for simple queries. */
   maxTurns?: number;
+
+  /** Optional provider-specific metadata (e.g., baseRef for codex review) */
+  meta?: Readonly<Record<string, unknown>>;
 }
 
 // ---------------------------------------------------------------------------
