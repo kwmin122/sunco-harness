@@ -178,6 +178,7 @@ export default defineSkill({
     { flags: '--strict', description: 'Fail on humanRequired findings' },
     { flags: '--lenient', description: 'Allow up to 5 medium findings (development only, blocked for release)' },
     { flags: '--skip-cross-model', description: 'Skip Layer 6 (cross-model verification)' },
+    { flags: '--require-codex', description: 'Fail Layer 6 if codex cross-model verification is unavailable (pre-ship strict mode)' },
     { flags: '--coverage', description: 'Run test coverage audit only (absorbs validate skill, Phase 33 Wave 1)' },
     { flags: '--skip-human-eval', description: 'Skip Layer 7 (human eval gate)' },
   ],
@@ -369,7 +370,9 @@ export default defineSkill({
           previousFindings.push(...lr.findings);
         }
 
-        const layer6Result = await runLayer6CrossModel(ctx, diff, previousFindings);
+        const layer6Result = await runLayer6CrossModel(ctx, diff, previousFindings, {
+          requireCodex: ctx.args['require-codex'] === true || ctx.args.requireCodex === true,
+        });
         layerResults.push(layer6Result);
       } catch (err) {
         ctx.log.warn('Layer 6 (Cross-Model) threw', { error: err });
