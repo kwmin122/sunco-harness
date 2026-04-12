@@ -61,6 +61,7 @@ function mockAgentRouter(): AgentRouterApi {
     }),
     crossVerify: vi.fn().mockResolvedValue([]),
     listProviders: vi.fn().mockResolvedValue(['mock']),
+    listProvidersWithFamily: vi.fn().mockResolvedValue([]),
   };
 }
 
