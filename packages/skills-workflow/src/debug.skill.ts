@@ -88,16 +88,99 @@ export default defineSkill({
   options: [
     { flags: '-p, --phase <number>', description: 'Scope analysis to a specific phase' },
     { flags: '-q, --quick', description: 'Quick mode: skip Iron Law for fast diagnosis' },
-    { flags: '--parse', description: 'Deterministic error parsing (delegates to diagnose)' },
-    { flags: '--postmortem', description: 'Workflow post-mortem analysis (delegates to forensics)' },
+    { flags: '--parse', description: 'Deterministic error parsing (absorbs diagnose skill, Phase 33 Wave 3)' },
+    { flags: '--postmortem', description: 'Workflow post-mortem analysis (absorbs forensics skill, Phase 33 Wave 3)' },
+    { flags: '--test-only', description: 'Only run test analysis (used with --parse)' },
+    { flags: '--type-only', description: 'Only run TypeScript type check analysis (used with --parse)' },
+    { flags: '--lint-only', description: 'Only run ESLint analysis (used with --parse)' },
+    { flags: '--session <id>', description: 'Specific session to analyze (used with --postmortem)' },
+  ],
+
+  aliases: [
+    {
+      command: 'diagnose',
+      id: 'workflow.diagnose',
+      defaultArgs: { parse: true },
+      hidden: true,
+      replacedBy: 'debug --parse',
+    },
+    {
+      command: 'forensics',
+      id: 'workflow.forensics',
+      defaultArgs: { postmortem: true },
+      hidden: true,
+      replacedBy: 'debug --postmortem',
+    },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
     if (ctx.args.parse === true) {
-      return ctx.run('workflow.diagnose', ctx.args);
+      const { runDiagnostics } = await import('./shared/diagnostics-runner.js');
+
+      await ctx.ui.entry({ title: 'Diagnose', description: 'Analyzing build/test output...' });
+
+      const result = await runDiagnostics({
+        cwd: ctx.cwd,
+        testOnly: Boolean(ctx.args['test-only'] ?? ctx.args.testOnly),
+        typeOnly: Boolean(ctx.args['type-only'] ?? ctx.args.typeOnly),
+        lintOnly: Boolean(ctx.args['lint-only'] ?? ctx.args.lintOnly),
+        log: ctx.log,
+      });
+
+      await ctx.state.set('diagnose.lastResult', result);
+
+      const details: string[] = [];
+      if (result.test_failures.length > 0) details.push(`Test failures: ${result.test_failures.length}`);
+      if (result.type_errors.length > 0) details.push(`Type errors: ${result.type_errors.length}`);
+      if (result.lint_errors.length > 0) details.push(`Lint errors: ${result.lint_errors.length}`);
+      if (details.length === 0) details.push('No errors found');
+
+      const summary = result.total_errors === 0
+        ? 'All checks passed -- no errors detected'
+        : `Found ${result.total_errors} error(s): ${details.join(', ')}`;
+
+      await ctx.ui.result({ success: result.total_errors === 0, title: 'Diagnose', summary, details });
+      return { success: result.total_errors === 0, summary, data: result };
     }
     if (ctx.args.postmortem === true) {
-      return ctx.run('workflow.forensics', ctx.args);
+      const { runForensicsAnalysis } = await import('./shared/forensics-analyzer.js');
+
+      await ctx.ui.entry({ title: 'Forensics', description: 'Reconstructing workflow timeline...' });
+
+      const phaseArg = ctx.args.phase as number | undefined;
+      if (phaseArg === undefined) {
+        const msg = 'Usage: sunco debug --postmortem --phase <number>';
+        await ctx.ui.result({ success: false, title: 'Forensics', summary: msg });
+        return { success: false, summary: msg };
+      }
+
+      const result = await runForensicsAnalysis({
+        cwd: ctx.cwd,
+        phaseNumber: phaseArg,
+        sessionId: ctx.args.session as string | undefined,
+        agentRun: (req) => ctx.agent.run(req),
+        log: ctx.log,
+      });
+
+      await ctx.state.set('forensics.lastResult', {
+        phase: phaseArg,
+        timestamp: new Date().toISOString(),
+        verdict: result.report?.root_cause_hypothesis ?? result.raw?.slice(0, 200),
+      });
+
+      await ctx.ui.result({
+        success: result.success,
+        title: 'Forensics',
+        summary: result.summary,
+        details: result.report ? [
+          `Timeline events: ${result.report.timeline.length}`,
+          `Divergence point: ${result.report.divergence_point}`,
+          `Root cause: ${result.report.root_cause_hypothesis}`,
+          ...(result.reportPath ? [`Report: ${result.reportPath}`] : []),
+        ] : ['Raw output stored in state'],
+      });
+
+      return { success: result.success, summary: result.summary, data: result.report ?? { raw: result.raw } };
     }
 
     const quickMode = ctx.args.quick === true;
@@ -138,27 +221,25 @@ export default defineSkill({
     let recentErrors = '';
     let diagnoseData: DiagnoseResult | null = null;
     try {
-      const diagnoseResult = await ctx.run('workflow.diagnose');
-      if (diagnoseResult.success !== undefined && diagnoseResult.data) {
-        diagnoseData = diagnoseResult.data as DiagnoseResult;
-        testOutput = diagnoseData.raw_output.test ?? '';
-        buildOutput = diagnoseData.raw_output.tsc ?? '';
+      const { runDiagnostics } = await import('./shared/diagnostics-runner.js');
+      diagnoseData = await runDiagnostics({ cwd: ctx.cwd, log: ctx.log });
+      testOutput = diagnoseData.raw_output.test ?? '';
+      buildOutput = diagnoseData.raw_output.tsc ?? '';
 
-        // Format recent errors for the prompt
-        const errorLines: string[] = [];
-        for (const e of diagnoseData.test_failures) {
-          errorLines.push(`[test] ${e.file}:${e.line ?? '?'} - ${e.message}`);
-        }
-        for (const e of diagnoseData.type_errors) {
-          errorLines.push(`[tsc] ${e.file}:${e.line ?? '?'} - ${e.code}: ${e.message}`);
-        }
-        for (const e of diagnoseData.lint_errors) {
-          errorLines.push(`[lint] ${e.file}:${e.line ?? '?'} - ${e.code}: ${e.message}`);
-        }
-        recentErrors = errorLines.join('\n');
+      // Format recent errors for the prompt
+      const errorLines: string[] = [];
+      for (const e of diagnoseData.test_failures) {
+        errorLines.push(`[test] ${e.file}:${e.line ?? '?'} - ${e.message}`);
       }
+      for (const e of diagnoseData.type_errors) {
+        errorLines.push(`[tsc] ${e.file}:${e.line ?? '?'} - ${e.code}: ${e.message}`);
+      }
+      for (const e of diagnoseData.lint_errors) {
+        errorLines.push(`[lint] ${e.file}:${e.line ?? '?'} - ${e.code}: ${e.message}`);
+      }
+      recentErrors = errorLines.join('\n');
     } catch (err) {
-      ctx.log.warn('Diagnose skill failed, using empty diagnostics', { error: String(err) });
+      ctx.log.warn('Diagnostics runner failed, using empty diagnostics', { error: String(err) });
     }
     progress.update({ completed: 2, message: 'Diagnostics gathered' });
 

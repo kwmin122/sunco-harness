@@ -58,8 +58,8 @@ import {
   // Phase 32: fastSkill import removed — 'fast' is now an alias declared on quickSkill
   doSkill,
   debugSkill,
-  diagnoseSkill,
-  forensicsSkill,
+  // Phase 33 Wave 3: diagnoseSkill import removed — absorbed into debug --parse
+  // Phase 33 Wave 3: forensicsSkill import removed — absorbed into debug --postmortem
   // Phase 33 Wave 1: querySkill import removed — 'query' is now an alias on statusSkill
   // Phase 33 Wave 2: exportSkill import removed — 'export' is now an alias on docSkill
   graphSkill,
@@ -120,9 +120,9 @@ const preloadedSkills = [
   // Phase 32: fastSkill removed — 'fast' is now an alias declared on quickSkill
   doSkill,
   // Phase 10 debugging skills
+  // Phase 33 Wave 3: diagnoseSkill removed — absorbed into debug --parse (alias declared on debugSkill)
+  // Phase 33 Wave 3: forensicsSkill removed — absorbed into debug --postmortem (alias declared on debugSkill)
   debugSkill,
-  diagnoseSkill,
-  forensicsSkill,
   // Phase 13 headless CI/CD skills
   // Phase 33 Wave 1: querySkill removed from preloaded — 'query' is now an alias on statusSkill
   // Phase 33 Wave 2: exportSkill removed from preloaded — 'export' is now an alias on docSkill

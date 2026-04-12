@@ -38,8 +38,8 @@ export default defineConfig({
     'src/fast.skill.ts',
     'src/do.skill.ts',
     'src/debug.skill.ts',
-    'src/diagnose.skill.ts',
-    'src/forensics.skill.ts',
+    // Phase 33 Wave 3: diagnose.skill.ts removed — absorbed into debug --parse
+    // Phase 33 Wave 3: forensics.skill.ts removed — absorbed into debug --postmortem
     'src/query.skill.ts',
     'src/export.skill.ts',
     'src/graph.skill.ts',

@@ -77,9 +77,9 @@ export { default as quickSkill } from './quick.skill.js';
 export { default as doSkill } from './do.skill.js';
 
 // Phase 10 debugging skills
+// Phase 33 Wave 3: diagnoseSkill removed — absorbed into debug --parse
+// Phase 33 Wave 3: forensicsSkill removed — absorbed into debug --postmortem
 export { default as debugSkill } from './debug.skill.js';
-export { default as diagnoseSkill } from './diagnose.skill.js';
-export { default as forensicsSkill } from './forensics.skill.js';
 
 // Phase 13 headless CI/CD skills
 // Phase 33 Wave 1: querySkill export removed — 'query' is now an alias declared on statusSkill
@@ -93,7 +93,8 @@ export { default as docSkill } from './doc.skill.js';
 
 // Phase 10 shared types
 export type { FailureType, DiagnoseError, DiagnoseResult, DebugAnalysis, ForensicsReport } from './shared/debug-types.js';
-export { parseTestOutput, parseTypeErrors, parseLintErrors } from './diagnose.skill.js';
+// Phase 33 Wave 3: parsers re-homed from diagnose.skill.ts to shared/diagnostics-runner.ts
+export { parseTestOutput, parseTypeErrors, parseLintErrors } from './shared/diagnostics-runner.js';
 
 // Phase 23a Iron Law Engine utilities
 export type { IronLawState, BugPattern, BugCategory, DebugLearning, SanitizeResult, IronLawDebugAnalysis, DebugStuckResult } from './shared/debug-types.js';
