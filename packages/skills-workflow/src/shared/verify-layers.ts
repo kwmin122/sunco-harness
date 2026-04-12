@@ -18,7 +18,7 @@
  * Decisions: D-01 through D-08, D-21, D-22
  */
 
-import type { SkillContext, PermissionSet, FileStoreApi } from '@sunco/core';
+import type { SkillContext, PermissionSet, FileStoreApi, AgentFamily } from '@sunco/core';
 import type { VerifyFinding, LayerResult } from './verify-types.js';
 import type { ParsedPlan } from './plan-parser.js';
 import { readPhaseArtifactSmart } from './phase-reader.js';
@@ -1002,34 +1002,63 @@ Only output the JSON. No explanation before or after.`;
 }
 
 /**
+ * Deterministic cross-family provider selection (D-06).
+ * Prefers claude + openai pair for true cross-model verification.
+ * Exported for unit testability.
+ */
+export function selectCrossFamilyProviders(
+  available: Array<{ id: string; family: AgentFamily }>,
+): { primary: string; secondary: string | null; isCrossFamily: boolean } | null {
+  const claude = available.find((p) => p.family === 'claude');
+  if (!claude) return null;
+
+  const openai = available.find((p) => p.family === 'openai');
+  if (openai) {
+    return { primary: claude.id, secondary: openai.id, isCrossFamily: true };
+  }
+
+  return { primary: claude.id, secondary: null, isCrossFamily: false };
+}
+
+/**
  * Layer 6: Cross-Model Verification.
  *
  * Runs the verification prompt through a different model/provider to detect
  * same-model blind spots. Strategy:
  *
- * 1. If multiple providers are available, use crossVerify() to run through
- *    a different provider than the primary one.
- * 2. If only one provider is available, use the same model with a skeptical
+ * 1. If claude + openai providers are both available, use crossVerify() for
+ *    true cross-family verification.
+ * 2. If only claude family is available, use the same model with a skeptical
  *    reviewer system prompt to shift perspective.
- *
- * Compares findings between the primary review (Layers 1-5) and this layer,
- * flagging any disagreements or new issues.
+ * 3. If --require-codex is set and codex is unavailable, fail with high severity.
  */
 export async function runLayer6CrossModel(
   ctx: SkillContext,
   diff: string,
   previousFindings: VerifyFinding[],
+  opts: { requireCodex?: boolean } = {},
 ): Promise<LayerResult> {
   const start = Date.now();
   const findings: VerifyFinding[] = [];
 
   try {
-    const providers = await ctx.agent.listProviders();
+    const available = await ctx.agent.listProvidersWithFamily();
+    const selection = selectCrossFamilyProviders(available);
     const prompt = buildCrossModelPrompt(diff, previousFindings);
 
-    if (providers.length >= 2) {
-      // Multiple providers available -- use crossVerify for true cross-model check
-      ctx.log.info('Cross-model verification: using crossVerify with multiple providers');
+    if (!selection) {
+      findings.push({
+        layer: 6,
+        source: 'cross-model',
+        severity: 'high',
+        description: 'Layer 6: no providers available',
+      });
+    } else if (selection.isCrossFamily && selection.secondary) {
+      // True cross-family pair (claude + openai/codex)
+      ctx.log.info('Cross-model verification: using cross-family pair', {
+        primary: selection.primary,
+        secondary: selection.secondary,
+      });
 
       try {
         const results = await ctx.agent.crossVerify(
@@ -1039,8 +1068,9 @@ export async function runLayer6CrossModel(
             permissions: VERIFICATION_PERMISSIONS,
             timeout: CROSS_MODEL_TIMEOUT,
             maxTurns: 3,
+            meta: { baseRef: 'HEAD~1' },
           },
-          providers.slice(0, 2), // Use first two different providers
+          [selection.primary, selection.secondary],
         );
 
         for (const result of results) {
@@ -1048,14 +1078,43 @@ export async function runLayer6CrossModel(
           findings.push(...parsed);
         }
       } catch (err) {
-        ctx.log.warn('crossVerify failed, falling back to skeptical reviewer', { error: err });
-        // Fall through to single-model fallback below
-        await runSkepticalReviewer(ctx, prompt, findings);
+        ctx.log.warn('Cross-family crossVerify failed', { error: err });
+        if (opts.requireCodex) {
+          findings.push({
+            layer: 6,
+            source: 'cross-model',
+            severity: 'high',
+            description: `--require-codex set but cross-model verify failed: ${String(err)}`,
+          });
+        } else {
+          await runSkepticalReviewer(ctx, prompt, findings);
+          findings.push({
+            layer: 6,
+            source: 'cross-model',
+            severity: 'low',
+            description: 'Layer 6 cross-family run failed; fell back to same-family skeptical reviewer',
+          });
+        }
       }
     } else {
-      // Single provider -- use skeptical reviewer system prompt
-      ctx.log.info('Cross-model verification: single provider, using skeptical reviewer persona');
-      await runSkepticalReviewer(ctx, prompt, findings);
+      // Only claude family available — no codex
+      if (opts.requireCodex) {
+        findings.push({
+          layer: 6,
+          source: 'cross-model',
+          severity: 'high',
+          description: '--require-codex set but codex CLI is unavailable. Install codex: https://github.com/openai/codex',
+        });
+      } else {
+        ctx.log.info('Layer 6: no cross-family provider, falling back to skeptical reviewer');
+        await runSkepticalReviewer(ctx, prompt, findings);
+        findings.push({
+          layer: 6,
+          source: 'cross-model',
+          severity: 'low',
+          description: 'Layer 6 ran same-family fallback — install codex CLI for true cross-model verification',
+        });
+      }
     }
   } catch (err) {
     findings.push({
