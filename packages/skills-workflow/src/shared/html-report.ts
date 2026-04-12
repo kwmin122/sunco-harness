@@ -1,34 +1,43 @@
 /**
- * @sunco/skills-workflow - Export Skill
+ * @sunco/skills-workflow - HTML Report Shared Module
  *
- * Generates a self-contained HTML report from .planning/ artifacts.
- * All CSS inlined — zero external dependencies.
- * Reads ROADMAP.md, STATE.md, VERIFICATION.md, SUMMARY.md files.
+ * Pure functions for HTML report generation, extracted from export.skill.ts
+ * as part of Phase 33 Wave 2 absorption into doc --report.
  *
- * Usage:
- *   sunco export --html
- *   sunco export --html --output ./report.html
- *
- * Requirements: HLS-05
+ * No SkillContext dependency — all dependencies injected explicitly.
+ * kind: 'deterministic' — zero LLM cost.
  */
 
-import { defineSkill } from '@sunco/core';
-import type { SkillContext, SkillResult, UsageEntry } from '@sunco/core';
-import { readFile, mkdir, readdir } from 'node:fs/promises';
-import { writeFile } from 'node:fs/promises';
+import { readFile, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { parseRoadmap } from './shared/roadmap-parser.js';
-import { parseStateMd } from './shared/state-reader.js';
-import type { ParsedPhase, ParsedProgress } from './shared/types.js';
+import { parseRoadmap } from './roadmap-parser.js';
+import { parseStateMd } from './state-reader.js';
+import type { ParsedPhase, ParsedProgress } from './types.js';
+import type { UsageEntry } from '@sunco/core';
 
 // ---------------------------------------------------------------------------
-// HTML Generation
+// Types
 // ---------------------------------------------------------------------------
 
-/**
- * Build the full self-contained HTML report string.
- */
-function buildHtml(opts: {
+export interface PhaseDetail {
+  phaseNumber: number | string;
+  phaseName: string;
+  verification: string | null;
+  summary: string | null;
+}
+
+export interface CostRow {
+  skillId: string;
+  costUsd: number;
+}
+
+export interface TimelineEntry {
+  hash: string;
+  date: string;
+  message: string;
+}
+
+export interface HtmlReportOptions {
   projectName: string;
   generatedAt: string;
   phases: ParsedPhase[];
@@ -37,7 +46,123 @@ function buildHtml(opts: {
   phaseDetails: PhaseDetail[];
   costRows: CostRow[];
   timeline: TimelineEntry[];
-}): string {
+}
+
+export interface ReportOptions {
+  cwd: string;
+  outputPath?: string;
+  stateGet: <T>(key: string) => Promise<T | null>;
+}
+
+export interface ReportResult {
+  success: boolean;
+  summary: string;
+  outputPath: string;
+  data: { phases: number; phaseDetails: number };
+}
+
+// ---------------------------------------------------------------------------
+// Pure helpers (exported for testability)
+// ---------------------------------------------------------------------------
+
+/**
+ * Escape HTML special characters.
+ */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Scan phase directories under .planning/ for VERIFICATION.md and SUMMARY.md.
+ */
+export async function scanPhaseArtifacts(
+  planningDir: string,
+  phases: ParsedPhase[],
+): Promise<PhaseDetail[]> {
+  const details: PhaseDetail[] = [];
+
+  let entries: string[] = [];
+  try {
+    entries = await readdir(planningDir);
+  } catch {
+    return details;
+  }
+
+  // Match directories like "01-core-platform", "13-headless-cicd", etc.
+  const phaseDirRe = /^(\d+(?:\.\d+)?)-/;
+
+  for (const entry of entries) {
+    const match = phaseDirRe.exec(entry);
+    if (!match) continue;
+
+    const phaseNum = match[1];
+    const phase = phases.find((p) => String(p.number) === phaseNum);
+    if (!phase) continue;
+
+    const phaseDir = join(planningDir, entry);
+
+    const verificationPath = join(phaseDir, 'VERIFICATION.md');
+    const summaryPath = join(phaseDir, 'SUMMARY.md');
+
+    const [verification, summary] = await Promise.all([
+      readFile(verificationPath, 'utf-8').catch(() => null),
+      readFile(summaryPath, 'utf-8').catch(() => null),
+    ]);
+
+    if (verification || summary) {
+      details.push({
+        phaseNumber: phase.number,
+        phaseName: phase.name,
+        verification: verification ? verification.trim().slice(0, 2000) : null,
+        summary: summary ? summary.trim().slice(0, 2000) : null,
+      });
+    }
+  }
+
+  return details;
+}
+
+/**
+ * Read git log (last 50 commits) via child_process.
+ */
+export async function readGitTimeline(cwd: string): Promise<TimelineEntry[]> {
+  try {
+    const { execFile } = await import('node:child_process');
+    const { promisify } = await import('node:util');
+    const execFileAsync = promisify(execFile);
+
+    const { stdout } = await execFileAsync(
+      'git',
+      ['log', '--oneline', '--format=%h|%ai|%s', '-50'],
+      { cwd },
+    );
+
+    return stdout
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        const [hash, date, ...rest] = line.split('|');
+        return {
+          hash: (hash ?? '').trim(),
+          date: (date ?? '').trim().slice(0, 19).replace('T', ' '),
+          message: rest.join('|').trim(),
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Build the full self-contained HTML report string.
+ */
+export function buildHtml(opts: HtmlReportOptions): string {
   const { projectName, generatedAt, phases, progress, state, phaseDetails, costRows, timeline } = opts;
 
   const overallPercent = state.progress.percent;
@@ -596,249 +721,95 @@ ${phaseRows}
 </html>`;
 }
 
-/**
- * Escape HTML special characters.
- */
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 // ---------------------------------------------------------------------------
-// Data Gathering
+// Main orchestrator
 // ---------------------------------------------------------------------------
-
-interface PhaseDetail {
-  phaseNumber: number | string;
-  phaseName: string;
-  verification: string | null;
-  summary: string | null;
-}
-
-interface CostRow {
-  skillId: string;
-  costUsd: number;
-}
-
-interface TimelineEntry {
-  hash: string;
-  date: string;
-  message: string;
-}
 
 /**
- * Scan phase directories under .planning/ for VERIFICATION.md and SUMMARY.md.
+ * Generate HTML report from .planning/ artifacts with explicit dependencies (no SkillContext).
  */
-async function scanPhaseArtifacts(
-  planningDir: string,
-  phases: ParsedPhase[],
-): Promise<PhaseDetail[]> {
-  const details: PhaseDetail[] = [];
+export async function generateHtmlReport(opts: ReportOptions): Promise<ReportResult> {
+  const { cwd, outputPath: explicitOutputPath, stateGet } = opts;
 
-  let entries: string[] = [];
-  try {
-    entries = await readdir(planningDir);
-  } catch {
-    return details;
-  }
+  const planningDir = join(cwd, '.planning');
+  const roadmapPath = join(planningDir, 'ROADMAP.md');
+  const statePath = join(planningDir, 'STATE.md');
 
-  // Match directories like "01-core-platform", "13-headless-cicd", etc.
-  const phaseDirRe = /^(\d+(?:\.\d+)?)-/;
+  const [roadmapContent, stateContent] = await Promise.all([
+    readFile(roadmapPath, 'utf-8').catch(() => null),
+    readFile(statePath, 'utf-8').catch(() => null),
+  ]);
 
-  for (const entry of entries) {
-    const match = phaseDirRe.exec(entry);
-    if (!match) continue;
-
-    const phaseNum = match[1];
-    const phase = phases.find((p) => String(p.number) === phaseNum);
-    if (!phase) continue;
-
-    const phaseDir = join(planningDir, entry);
-
-    const verificationPath = join(phaseDir, 'VERIFICATION.md');
-    const summaryPath = join(phaseDir, 'SUMMARY.md');
-
-    const [verification, summary] = await Promise.all([
-      readFile(verificationPath, 'utf-8').catch(() => null),
-      readFile(summaryPath, 'utf-8').catch(() => null),
-    ]);
-
-    if (verification || summary) {
-      details.push({
-        phaseNumber: phase.number,
-        phaseName: phase.name,
-        verification: verification ? verification.trim().slice(0, 2000) : null,
-        summary: summary ? summary.trim().slice(0, 2000) : null,
-      });
-    }
-  }
-
-  return details;
-}
-
-/**
- * Read git log (last 50 commits) via child_process.
- */
-async function readGitTimeline(cwd: string): Promise<TimelineEntry[]> {
-  try {
-    const { execFile } = await import('node:child_process');
-    const { promisify } = await import('node:util');
-    const execFileAsync = promisify(execFile);
-
-    const { stdout } = await execFileAsync(
-      'git',
-      ['log', '--oneline', '--format=%h|%ai|%s', '-50'],
-      { cwd },
-    );
-
-    return stdout
-      .trim()
-      .split('\n')
-      .filter(Boolean)
-      .map((line) => {
-        const [hash, date, ...rest] = line.split('|');
-        return {
-          hash: (hash ?? '').trim(),
-          date: (date ?? '').trim().slice(0, 19).replace('T', ' '),
-          message: rest.join('|').trim(),
-        };
-      });
-  } catch {
-    return [];
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Skill Definition
-// ---------------------------------------------------------------------------
-
-export default defineSkill({
-  id: 'workflow.export',
-  command: 'export',
-  kind: 'deterministic',
-  stage: 'stable',
-  category: 'workflow',
-  routing: 'routable',
-  description: 'Generate a self-contained HTML project report from .planning/ artifacts',
-  options: [
-    { flags: '--html', description: 'Generate HTML report (required)' },
-    { flags: '--output <path>', description: 'Override default output path' },
-  ],
-
-  async execute(ctx: SkillContext): Promise<SkillResult> {
-    await ctx.ui.entry({ title: 'Export', description: 'Generating project report' });
-
-    const isHtml = ctx.args.html as boolean | undefined;
-    if (!isHtml) {
-      return {
-        success: false,
-        summary: 'No format specified. Use --html to generate an HTML report.',
-      };
-    }
-
-    // -----------------------------------------------------------------------
-    // Read .planning/ artifacts
-    // -----------------------------------------------------------------------
-    const planningDir = join(ctx.cwd, '.planning');
-    const roadmapPath = join(planningDir, 'ROADMAP.md');
-    const statePath = join(planningDir, 'STATE.md');
-
-    const [roadmapContent, stateContent] = await Promise.all([
-      readFile(roadmapPath, 'utf-8').catch(() => null),
-      readFile(statePath, 'utf-8').catch(() => null),
-    ]);
-
-    if (!roadmapContent && !stateContent) {
-      return {
-        success: false,
-        summary: 'No .planning/ directory found. Run sunco new or sunco scan first.',
-      };
-    }
-
-    const { phases, progress } = parseRoadmap(roadmapContent ?? '');
-    const state = parseStateMd(stateContent ?? '');
-
-    // -----------------------------------------------------------------------
-    // Scan phase directories for VERIFICATION.md / SUMMARY.md
-    // -----------------------------------------------------------------------
-    const phaseDetails = await scanPhaseArtifacts(planningDir, phases);
-
-    // -----------------------------------------------------------------------
-    // Cost data from usage history in state
-    // -----------------------------------------------------------------------
-    const costRows: CostRow[] = [];
-    const usageHistory = (await ctx.state.get<UsageEntry[]>('usage.history')) ?? null;
-    if (usageHistory && usageHistory.length > 0) {
-      const bySkill = new Map<string, number>();
-      for (const entry of usageHistory) {
-        bySkill.set(entry.skillId, (bySkill.get(entry.skillId) ?? 0) + entry.costUsd);
-      }
-      for (const [skillId, costUsd] of [...bySkill.entries()].sort((a, b) => b[1] - a[1])) {
-        costRows.push({ skillId, costUsd });
-      }
-    }
-
-    // -----------------------------------------------------------------------
-    // Git timeline
-    // -----------------------------------------------------------------------
-    const timeline = await readGitTimeline(ctx.cwd);
-
-    // -----------------------------------------------------------------------
-    // Determine output path
-    // -----------------------------------------------------------------------
-    const now = new Date();
-    const datePart = now.toISOString().slice(0, 10); // YYYY-MM-DD
-    const defaultDir = join(ctx.cwd, '.sun', 'reports');
-    const defaultPath = join(defaultDir, `${datePart}-report.html`);
-    const outputPath = (ctx.args.output as string | undefined) ?? defaultPath;
-
-    // Ensure output directory exists
-    const outputDir = outputPath.includes('/')
-      ? outputPath.slice(0, outputPath.lastIndexOf('/'))
-      : '.';
-    await mkdir(outputDir, { recursive: true });
-
-    // -----------------------------------------------------------------------
-    // Derive project name from cwd (last segment)
-    // -----------------------------------------------------------------------
-    const cwdParts = ctx.cwd.replace(/\\/g, '/').split('/');
-    const projectName = cwdParts[cwdParts.length - 1] ?? 'Project';
-
-    const generatedAt = now.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
-
-    // -----------------------------------------------------------------------
-    // Generate HTML
-    // -----------------------------------------------------------------------
-    const html = buildHtml({
-      projectName,
-      generatedAt,
-      phases,
-      progress,
-      state,
-      phaseDetails,
-      costRows,
-      timeline,
-    });
-
-    await writeFile(outputPath, html, 'utf-8');
-
-    const summary = `Report written to ${outputPath}`;
-
-    await ctx.ui.result({
-      success: true,
-      title: 'Export',
-      summary,
-      details: [`File: ${outputPath}`, `Phases: ${phases.length}`, `Phase details: ${phaseDetails.length}`, `Timeline entries: ${timeline.length}`],
-    });
-
+  if (!roadmapContent && !stateContent) {
     return {
-      success: true,
-      summary,
-      data: { outputPath, phases: phases.length, phaseDetails: phaseDetails.length },
+      success: false,
+      summary: 'No .planning/ directory found. Run sunco new or sunco scan first.',
+      outputPath: '',
+      data: { phases: 0, phaseDetails: 0 },
     };
-  },
-});
+  }
+
+  const { phases, progress } = parseRoadmap(roadmapContent ?? '');
+  const state = parseStateMd(stateContent ?? '');
+
+  // Scan phase directories for VERIFICATION.md / SUMMARY.md
+  const phaseDetails = await scanPhaseArtifacts(planningDir, phases);
+
+  // Cost data from usage history in state
+  const costRows: CostRow[] = [];
+  const usageHistory = await stateGet<UsageEntry[]>('usage.history') ?? null;
+  if (usageHistory && usageHistory.length > 0) {
+    const bySkill = new Map<string, number>();
+    for (const entry of usageHistory) {
+      bySkill.set(entry.skillId, (bySkill.get(entry.skillId) ?? 0) + entry.costUsd);
+    }
+    for (const [skillId, costUsd] of [...bySkill.entries()].sort((a, b) => b[1] - a[1])) {
+      costRows.push({ skillId, costUsd });
+    }
+  }
+
+  // Git timeline
+  const timeline = await readGitTimeline(cwd);
+
+  // Determine output path
+  const now = new Date();
+  const datePart = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  const defaultDir = join(cwd, '.sun', 'reports');
+  const defaultPath = join(defaultDir, `${datePart}-report.html`);
+  const outputPath = explicitOutputPath ?? defaultPath;
+
+  // Ensure output directory exists
+  const outputDir = outputPath.includes('/')
+    ? outputPath.slice(0, outputPath.lastIndexOf('/'))
+    : '.';
+  await mkdir(outputDir, { recursive: true });
+
+  // Derive project name from cwd (last segment)
+  const cwdParts = cwd.replace(/\\/g, '/').split('/');
+  const projectName = cwdParts[cwdParts.length - 1] ?? 'Project';
+
+  const generatedAt = now.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+
+  // Generate HTML
+  const html = buildHtml({
+    projectName,
+    generatedAt,
+    phases,
+    progress,
+    state,
+    phaseDetails,
+    costRows,
+    timeline,
+  });
+
+  await writeFile(outputPath, html, 'utf-8');
+
+  const summary = `Report written to ${outputPath}`;
+
+  return {
+    success: true,
+    summary,
+    outputPath,
+    data: { phases: phases.length, phaseDetails: phaseDetails.length },
+  };
+}

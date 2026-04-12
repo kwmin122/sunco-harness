@@ -212,9 +212,53 @@ export default defineSkill({
     { flags: '--template <name>', description: 'Use template from .sun/templates/' },
     { flags: '--type <type>', description: 'Document type: readme, api, architecture, 제안서, 수행계획서, 보고서' },
     { flags: '--output <path>', description: 'Output file path' },
+    { flags: '--report', description: 'Generate self-contained HTML project report (absorbs export skill, Phase 33 Wave 2)' },
+    { flags: '--html', description: 'Generate HTML output (used with --report)' },
+  ],
+
+  // Phase 33 Wave 2: 'export' absorbed into doc
+  aliases: [
+    {
+      command: 'export',
+      id: 'workflow.export',
+      defaultArgs: { report: true, html: true },
+      hidden: true,
+      replacedBy: 'doc --report',
+    },
   ],
 
   async execute(ctx) {
+    if (ctx.args.report === true) {
+      // Phase 33 Wave 2: HTML report generation (absorbed from export skill)
+      const { generateHtmlReport } = await import('./shared/html-report.js');
+
+      await ctx.ui.entry({ title: 'Export', description: 'Generating project report' });
+
+      const outputArg = ctx.args.output as string | undefined;
+      const result = await generateHtmlReport({
+        cwd: ctx.cwd,
+        outputPath: outputArg,
+        stateGet: (key) => ctx.state.get(key),
+      });
+
+      await ctx.ui.result({
+        success: result.success,
+        title: 'Export',
+        summary: result.summary,
+        details: result.success ? [
+          `File: ${result.outputPath}`,
+          `Phases: ${result.data.phases}`,
+          `Phase details: ${result.data.phaseDetails}`,
+        ] : [],
+      });
+
+      return {
+        success: result.success,
+        summary: result.summary,
+        data: result.success ? { outputPath: result.outputPath, phases: result.data.phases, phaseDetails: result.data.phaseDetails } : undefined,
+      };
+    }
+
     const useHwpx = Boolean(ctx.args['hwpx']);
     const useMd = Boolean(ctx.args['md']);
     const templateName = ctx.args['template'] as string | undefined;

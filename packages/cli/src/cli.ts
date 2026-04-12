@@ -61,7 +61,7 @@ import {
   diagnoseSkill,
   forensicsSkill,
   // Phase 33 Wave 1: querySkill import removed — 'query' is now an alias on statusSkill
-  exportSkill,
+  // Phase 33 Wave 2: exportSkill import removed — 'export' is now an alias on docSkill
   graphSkill,
   docSkill,
   createDefaultHookRunner,
@@ -125,7 +125,7 @@ const preloadedSkills = [
   forensicsSkill,
   // Phase 13 headless CI/CD skills
   // Phase 33 Wave 1: querySkill removed from preloaded — 'query' is now an alias on statusSkill
-  exportSkill,
+  // Phase 33 Wave 2: exportSkill removed from preloaded — 'export' is now an alias on docSkill
   // Phase 14 context optimization skills
   graphSkill,
   // Phase 15 document generation skills
