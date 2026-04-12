@@ -123,6 +123,7 @@ describe('createLifecycle.createExecuteHook', () => {
       run: vi.fn().mockResolvedValue({ success: true, content: '' }),
       crossVerify: vi.fn().mockResolvedValue([]),
       listProviders: vi.fn().mockResolvedValue([]),
+      listProvidersWithFamily: vi.fn().mockResolvedValue([]),
     };
 
     const mockUiAdapter: UiAdapter = {

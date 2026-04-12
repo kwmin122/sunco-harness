@@ -154,19 +154,23 @@ export function createLifecycle(): Lifecycle {
       // D-15: dual path (CLI + SDK as parallel providers)
       // D-23: role-based defaults (router selects per role internally)
       // Dynamic imports to avoid pulling execa/cross-spawn into the ESM bundle eagerly
-      const [{ ClaudeCliProvider }, { ClaudeSdkProvider }] = await Promise.all([
+      const [{ ClaudeCliProvider }, { ClaudeSdkProvider }, { CodexCliProvider }] = await Promise.all([
         import('../agent/providers/claude-cli.js'),
         import('../agent/providers/claude-sdk.js'),
+        import('../agent/providers/codex-cli.js'),
       ]);
       const cliProvider = new ClaudeCliProvider();
       const sdkProvider = new ClaudeSdkProvider();
-      const [cliAvailable, sdkAvailable] = await Promise.all([
+      const codexProvider = new CodexCliProvider();
+      const [cliAvailable, sdkAvailable, codexAvailable] = await Promise.all([
         cliProvider.isAvailable(),
         sdkProvider.isAvailable(),
+        codexProvider.isAvailable(),
       ]);
       const providers: import('../agent/types.js').AgentProvider[] = [];
       if (cliAvailable) providers.push(cliProvider);
       if (sdkAvailable) providers.push(sdkProvider);
+      if (codexAvailable) providers.push(codexProvider);
 
       const agentRouter = createAgentRouter({
         providers,
