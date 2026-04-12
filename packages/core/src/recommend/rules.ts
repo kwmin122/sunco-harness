@@ -61,6 +61,22 @@ function hasProjectState(state: RecommendationState, key: string, value?: unknow
 }
 
 // ---------------------------------------------------------------------------
+// Verification mode helpers (forward-declared for use in all rule categories)
+// ---------------------------------------------------------------------------
+
+/**
+ * Phase 33 Wave 2: Helper to detect "verify --generate-tests" (absorbed from test-gen skill).
+ * Distinguishes test-gen runs from full 7-layer verify runs by checking
+ * if the result data has a TestGenResult shape (data.generatedFiles array).
+ * FORWARD DECLARATION — also defined after Category 7 for locality; only this one is used.
+ */
+function lastWasVerifyTestGenEarly(state: RecommendationState): boolean {
+  if (!lastWas(state, 'workflow.verify')) return false;
+  const data = state.lastResult?.data as Record<string, unknown> | undefined;
+  return Array.isArray(data?.generatedFiles);
+}
+
+// ---------------------------------------------------------------------------
 // Category 1: Workflow Chain Transitions (rules 1-7)
 // Core workflow: discuss -> plan -> execute -> verify -> ship
 // ---------------------------------------------------------------------------
@@ -79,10 +95,11 @@ const workflowTransitionRules: RecommendationRule[] = [
 
   // Rule 2: After verify success (full 7-layer) -> ship
   // Phase 33 Wave 1: excludes coverage-only runs (verify --coverage → handled by Rule 30/31)
+  // Phase 33 Wave 2: excludes test-gen runs (verify --generate-tests → handled by Rule 33)
   rule(
     'after-verify-success',
     'After successful full verification, ship the changes',
-    (s) => lastWas(s, 'workflow.verify') && lastSucceeded(s) && !lastWasVerifyCoverage(s),
+    (s) => lastWas(s, 'workflow.verify') && lastSucceeded(s) && !lastWasVerifyCoverage(s) && !lastWasVerifyTestGenEarly(s),
     () => [
       rec('workflow.ship', 'Ship changes', 'Verification passed -- ready to ship', 'high'),
     ],
@@ -500,17 +517,7 @@ function lastWasVerifyCoverage(state: RecommendationState): boolean {
   return typeof (data?.overall as Record<string, unknown> | undefined)?.lines !== 'undefined';
 }
 
-/**
- * Phase 33 Wave 2: Helper to detect "verify --generate-tests" (absorbed from test-gen skill).
- * Distinguishes test-gen runs from full 7-layer verify runs by checking
- * if the result data has a TestGenResult shape (data.generatedFiles array).
- */
-function lastWasVerifyTestGen(state: RecommendationState): boolean {
-  if (!lastWas(state, 'workflow.verify')) return false;
-  const data = state.lastResult?.data as Record<string, unknown> | undefined;
-  // TestGenResult has data.generatedFiles array
-  return Array.isArray(data?.generatedFiles);
-}
+// lastWasVerifyTestGen: see lastWasVerifyTestGenEarly (forward-declared before Category 1)
 
 const verificationPipelineRules: RecommendationRule[] = [
   // Rule 29: After verify WARN -> suggest review for human analysis
@@ -566,7 +573,7 @@ const verificationPipelineRules: RecommendationRule[] = [
   rule(
     'after-test-gen-success',
     'After successful test generation (verify --generate-tests), re-check coverage',
-    (s) => lastWas(s, 'workflow.verify') && lastSucceeded(s) && lastWasVerifyTestGen(s),
+    (s) => lastWas(s, 'workflow.verify') && lastSucceeded(s) && lastWasVerifyTestGenEarly(s),
     () => [
       rec('workflow.verify', 'Re-check coverage', 'Tests generated -- re-check coverage with verify --coverage', 'high'),
     ],
@@ -577,7 +584,7 @@ const verificationPipelineRules: RecommendationRule[] = [
   rule(
     'after-test-gen-fail',
     'After test generation failure (verify --generate-tests), debug the issues',
-    (s) => lastWas(s, 'workflow.verify') && lastFailed(s) && lastWasVerifyTestGen(s),
+    (s) => lastWas(s, 'workflow.verify') && lastFailed(s) && lastWasVerifyTestGenEarly(s),
     () => [
       rec('workflow.debug', 'Debug test-gen', 'Test generation failed -- investigate', 'medium'),
       rec('workflow.verify', 'Retry verify --generate-tests', 'Retry test generation with verify --generate-tests', 'low'),

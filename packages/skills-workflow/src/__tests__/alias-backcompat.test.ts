@@ -1,5 +1,5 @@
 /**
- * Alias Backwards-Compat Tests (Phase 32 + Phase 33 Wave 1)
+ * Alias Backwards-Compat Tests (Phase 32 + Phase 33 Wave 1 + Phase 33 Wave 2)
  *
  * End-to-end verification that alias infrastructure doesn't break existing usage.
  * Drives through the SkillRegistry API directly (no CLI spawn needed).
@@ -22,6 +22,12 @@
  * 13. 'seed' resolves to noteSkill with seed: true
  * 14. 'backlog' resolves to noteSkill with backlog: true
  * 15. All 6 legacy ids resolve via resolveId (ctx.run() backcompat)
+ *
+ * Phase 33 Wave 2 cases:
+ * 16. 'test-gen' resolves to verifySkill with generate-tests: true
+ * 17. 'assume' resolves to planSkill with assume: true
+ * 18. 'export' resolves to docSkill with report: true, html: true
+ * 19. All 3 Wave 2 legacy ids resolve via resolveId (ctx.run() backcompat)
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -31,6 +37,8 @@ import quickSkill from '../quick.skill.js';
 import { statusSkill } from '../status.skill.js';
 import verifySkill from '../verify.skill.js';
 import noteSkill from '../note.skill.js';
+import planSkill from '../plan.skill.js';
+import docSkill from '../doc.skill.js';
 
 // ---------------------------------------------------------------------------
 // Mock context factory (no real filesystem or SQLite needed)
@@ -85,6 +93,8 @@ function buildRegistry() {
   registry.register(statusSkill);
   registry.register(verifySkill);
   registry.register(noteSkill);
+  registry.register(planSkill);
+  registry.register(docSkill);
   return registry;
 }
 
@@ -270,6 +280,59 @@ describe('alias backwards-compat (Phase 32)', () => {
       'workflow.todo',
       'workflow.seed',
       'workflow.backlog',
+    ];
+
+    for (const id of legacyIds) {
+      const result = registry.resolveId(id);
+      expect(result, `resolveId('${id}') should be defined`).toBeDefined();
+      expect(result?.isAlias, `resolveId('${id}') should be an alias`).toBe(true);
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Phase 33 Wave 2 cases (cases 16-19)
+  // ---------------------------------------------------------------------------
+
+  // Case 16: 'test-gen' resolves to verifySkill with generate-tests: true
+  it('registry.resolveCommand("test-gen") returns verifySkill with generate-tests: true', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('test-gen');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(verifySkill);
+    expect(result?.defaultArgs).toEqual({ 'generate-tests': true });
+  });
+
+  // Case 17: 'assume' resolves to planSkill with assume: true
+  it('registry.resolveCommand("assume") returns planSkill with assume: true', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('assume');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(planSkill);
+    expect(result?.defaultArgs).toEqual({ assume: true });
+  });
+
+  // Case 18: 'export' resolves to docSkill with report: true, html: true
+  it('registry.resolveCommand("export") returns docSkill with report: true, html: true', () => {
+    const registry = buildRegistry();
+    const result = registry.resolveCommand('export');
+
+    expect(result).toBeDefined();
+    expect(result?.isAlias).toBe(true);
+    expect(result?.skill).toBe(docSkill);
+    expect(result?.defaultArgs).toEqual({ report: true, html: true });
+  });
+
+  // Case 19: All 3 Wave 2 legacy ids resolve via resolveId (ctx.run() backcompat)
+  it('all 3 Wave 2 legacy ids resolve via registry.resolveId (ctx.run() backcompat)', () => {
+    const registry = buildRegistry();
+    const legacyIds = [
+      'workflow.test-gen',
+      'workflow.assume',
+      'workflow.export',
     ];
 
     for (const id of legacyIds) {

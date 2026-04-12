@@ -51,7 +51,7 @@ export interface HtmlReportOptions {
 export interface ReportOptions {
   cwd: string;
   outputPath?: string;
-  stateGet: <T>(key: string) => Promise<T | null>;
+  stateGet: <T>(key: string) => Promise<T | null | undefined>;
 }
 
 export interface ReportResult {
@@ -757,7 +757,7 @@ export async function generateHtmlReport(opts: ReportOptions): Promise<ReportRes
 
   // Cost data from usage history in state
   const costRows: CostRow[] = [];
-  const usageHistory = await stateGet<UsageEntry[]>('usage.history') ?? null;
+  const usageHistory = (await stateGet<UsageEntry[]>('usage.history')) ?? null;
   if (usageHistory && usageHistory.length > 0) {
     const bySkill = new Map<string, number>();
     for (const entry of usageHistory) {

@@ -31,7 +31,7 @@ export interface TestGenOptions {
   framework?: string;
   mockExternal?: boolean;
   agentRun: (request: AgentRequest) => Promise<AgentResult>;
-  log: { info: (...args: unknown[]) => void; warn: (...args: unknown[]) => void };
+  log: { info: (message: string, data?: Record<string, unknown>) => void; warn: (message: string, data?: Record<string, unknown>) => void };
 }
 
 export interface TestGenResult {
