@@ -23,7 +23,7 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 
 - **Deterministic harness** — lint, health, guard run with zero LLM cost
 - **7-layer Swiss cheese verification** — multi-agent review, guardrails, BDD criteria, permission audit, adversarial test, cross-model, human eval
-- **18 specialized agents** — planner, executor, debugger, verifier, researcher, and 12 more
+- **23 specialized agents** — planner, executor, debugger, verifier, researcher, and 17 more
 - **12-point plan checker** — requirements, scope, criteria, Nyquist, CLAUDE.md compliance, cross-plan contracts
 - **Adaptive lifecycle** — pivot, rethink, backtrack at any stage without losing progress
 - **Blast radius analysis** — dependency graph check before every execution
@@ -36,25 +36,13 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
 - **Korean i18n** — 81 commands with Korean descriptions, interactive installer
 
-### New in v0.6 — Light Harness
+### New in v0.8.0
 
-**Context Intelligence** — SUNCO now monitors context window usage in real-time and adapts automatically:
-
-- **4-tier context zones** (Green → Yellow → Orange → Red) with auto-pause at Orange and graceful degradation at Red
-- **Smart artifact loading** — completed phase artifacts are summarized in Orange zone, skipped in Red zone, reducing context consumption by up to 60%
-- **Context-aware status line** — live zone indicator and usage percentage in the Claude Code status bar
-
-**Smart Routing** — every skill declares its complexity, and the pipeline selects the optimal model tier:
-
-- **Skill complexity hints** (`simple` / `standard` / `complex`) on all 19 agent-powered skills
-- **Budget-aware model selection** — automatically downgrades model tier when budget reaches 75%+
-- **Routing tracker** — records success/failure per skill×model for accuracy improvement over time
-
-**Operational Resilience** — crash recovery, stuck detection, and session continuity:
-
-- **Auto-pause on context pressure** — Orange zone triggers automatic handoff creation
-- **Session recording** — every skill invocation is tracked with model tier, duration, and outcome
-- **Infinite execution** — context rotation with adaptive timeouts prevents mid-phase context exhaustion
+- **Alias Infrastructure** — `SkillDefinition.aliases[]` with deprecation warnings; deprecated commands auto-route to absorbers
+- **Full Absorption (Phase 33)** — 11 satellite skills merged into 4 absorber skills via shared modules. Surface reduced from 46 to 35 skill files.
+- **Codex Layer 6 (Phase 34)** — `CodexCliProvider` enables true cross-family verification (Claude + OpenAI Codex CLI). `--require-codex` strict mode for pre-ship gates.
+- **CLI Dashboard TUI** — `sunco status --live` with Ink, 5-section real-time layout
+- **1,332 tests** across 4 packages, 10/10 turbo green
 
 ## Quick Start
 
@@ -156,11 +144,8 @@ Each step has built-in quality gates:
 | `/sunco:guard` | Real-time lint-on-change |
 | `/sunco:agents` | Agent instruction file analysis |
 | `/sunco:status` | Current project state |
-| `/sunco:query` | Query project data |
 | `/sunco:graph` | Code dependency graph + blast radius |
-| `/sunco:export` | HTML project reports |
 | `/sunco:headless` | CI/CD mode with JSON output |
-| `/sunco:validate` | Validate planning artifacts |
 | `/sunco:settings` | Configure SUNCO behavior |
 | `/sunco:help` | Full command catalog |
 
@@ -172,7 +157,7 @@ Each step has built-in quality gates:
 | `/sunco:discuss` | Extract decisions and gray areas |
 | `/sunco:plan` | Create execution plans with BDD criteria |
 | `/sunco:execute` | Parallel execution with lint-gate |
-| `/sunco:verify` | 7-layer Swiss cheese verification |
+| `/sunco:verify` | 7-layer verification, `--coverage` for test audit, `--generate-tests` for AI test gen, `--require-codex` for strict cross-model |
 | `/sunco:review` | Multi-provider cross-review |
 | `/sunco:ship` | PR with verification pre-check |
 | `/sunco:auto` | Full autonomous pipeline with crash recovery |
@@ -181,9 +166,7 @@ Each step has built-in quality gates:
 
 | Command | Description |
 |---------|-------------|
-| `/sunco:debug` | Systematic debugging with persistent state |
-| `/sunco:diagnose` | Analyze build/test output |
-| `/sunco:forensics` | Post-mortem investigation |
+| `/sunco:debug` | Systematic debugging with persistent state, `--parse` for diagnostics, `--postmortem` for forensics |
 
 ### Session & Ideas
 
@@ -193,10 +176,7 @@ Each step has built-in quality gates:
 | `/sunco:resume` | Restore from last session |
 | `/sunco:next` | Auto-detect next step |
 | `/sunco:progress` | Where am I, what's next |
-| `/sunco:note` | Zero-friction idea capture |
-| `/sunco:todo` | Task management |
-| `/sunco:seed` | Plant ideas with trigger conditions |
-| `/sunco:backlog` | Parking lot for ideas |
+| `/sunco:note` | Zero-friction idea capture, `--todo`/`--seed`/`--backlog` for task types |
 
 ### Composition
 
@@ -262,7 +242,7 @@ sunco/bin/                # Engine + sunco-tools.cjs
 sunco/workflows/          # 77 workflow files
 sunco/references/         # 16 reference documents
 sunco/templates/          # 49 artifact templates
-sunco/agents/             # 18 specialized agents
+sunco/agents/             # 23 specialized agents
 sunco/VERSION
 hooks/                    # 5 hooks (update, statusline, context monitor, prompt guard, mode router)
 ```

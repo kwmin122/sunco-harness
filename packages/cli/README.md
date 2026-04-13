@@ -2,7 +2,7 @@
 
 **Agent Workspace OS** — harness engineering for AI coding agents.
 
-65 skills. 7-layer verification. Adaptive lifecycle. Zero mistakes.
+81 skills. 7-layer verification. Cross-model review. Zero mistakes.
 
 ```bash
 npx popcoru
@@ -13,10 +13,11 @@ npx popcoru
 In an era where AI agents write code, the builder's job is not writing code — it's **setting up the field so agents make fewer mistakes**. SUNCO is that field.
 
 - **Harness Engineering** — lint, health check, and guard enforce quality deterministically (zero LLM cost)
-- **65 Skills** — every capability is a skill. No hardcoded commands.
-- **7-Layer Verification** — multi-agent review, guardrails, BDD, permissions, adversarial, cross-model, human eval
-- **Adaptive Lifecycle** — pivot, rethink, backtrack, reinforce when requirements change
-- **Multi-Runtime** — Claude Code, Codex, Cursor, Antigravity
+- **81 Skills** — every capability is a skill. No hardcoded commands.
+- **7-Layer Verification** — multi-agent review, guardrails, BDD, permissions, adversarial, cross-model (Codex), human eval
+- **Skill Absorption** — related commands merge via aliases, keeping the surface clean
+- **Multi-Runtime** — Claude Code, Codex CLI, Cursor, Antigravity
+- **Cross-Model** — Layer 6 uses Codex CLI for true cross-family verification (not same-model theater)
 
 ## Install
 
@@ -37,7 +38,35 @@ Interactive installer asks: language (EN/KR), runtime (Claude Code/Codex/Cursor/
 /sunco:ship 1        # create PR and release
 ```
 
-## Commands (65)
+## Commands (81)
+
+### User Tier (Daily)
+| Command | Description |
+|---------|-------------|
+| `new` | Bootstrap from idea to roadmap |
+| `next` | Auto-detect and advance to the next step |
+| `do` | Natural language -> command routing |
+| `status` | Current state, `--live` for TUI dashboard, `--brief` for context |
+| `help` | Full command guide |
+| `review` | Auto-routed review (CEO/eng/design) |
+
+### Workflow
+| Command | Description |
+|---------|-------------|
+| `discuss` | Extract decisions before planning |
+| `plan` | Create execution plans, `--assume` for approach preview |
+| `execute` | Wave-based parallel execution |
+| `verify` | 7-layer verification, `--coverage` for test audit, `--generate-tests` for AI test gen, `--require-codex` for strict cross-model |
+| `ship` | Create PR after verification |
+| `release` | Version bump, changelog, tag, npm publish |
+| `auto` | Full autonomous pipeline (discuss -> ship) |
+| `quick` | Fast execution with guarantees |
+
+### Debug
+| Command | Description |
+|---------|-------------|
+| `debug` | Systematic debugging with Iron Law, `--parse` for diagnostics, `--postmortem` for forensics |
+| `doc` | Document generation (HWPX/markdown), `--report` for HTML export |
 
 ### Harness (Zero LLM Cost)
 | Command | Description |
@@ -48,91 +77,56 @@ Interactive installer asks: language (EN/KR), runtime (Claude Code/Codex/Cursor/
 | `guard` | Real-time lint-on-change + rule drafting |
 | `agents` | Agent instruction analysis |
 
-### Workflow
-| Command | Description |
-|---------|-------------|
-| `new` | Bootstrap from idea to roadmap |
-| `discuss` | Extract decisions before planning |
-| `plan` | Create verified execution plans |
-| `execute` | Wave-based parallel execution |
-| `verify` | 7-layer verification |
-| `ship` | Create PR after verification |
-| `auto` | Full autonomous pipeline |
-
-### Adaptive Lifecycle (NEW in v0.3.2)
-| Command | Description |
-|---------|-------------|
-| `pivot` | Detect scope changes, re-route phases |
-| `rethink` | Revise specific decisions |
-| `backtrack` | Restore to rollback point |
-| `reinforce` | Add requirements mid-milestone |
-| `where-am-i` | Full orientation dashboard |
-| `impact-analysis` | Invalidation cascade |
-| `design-pingpong` | Cross-model merge + debate |
-
-### Debug
-| Command | Description |
-|---------|-------------|
-| `debug` | Systematic debugging with state |
-| `diagnose` | Quick system diagnostic |
-| `forensics` | Post-mortem analysis |
-
 ### Session
 | Command | Description |
 |---------|-------------|
-| `status` | Current state |
-| `progress` | Phase completion % |
-| `next` | Auto-advance |
+| `note` | Idea capture, `--todo`/`--seed`/`--backlog` for task types |
 | `pause` / `resume` | Session management |
-| `where-am-i` | Orientation dashboard |
-
-### Composition
-| Command | Description |
-|---------|-------------|
-| `auto` | Full pipeline (discuss -> ship) |
-| `quick` | Fast execution with guarantees |
-| `fast` | Skip planning, execute immediately |
-| `do` | Natural language -> command routing |
-| `mode` | SUNCO super mode |
+| `where-am-i` | Full orientation dashboard |
+| `progress` | Phase completion overview |
 
 ## Architecture
 
 ```
-sunco-tools.cjs (2,179 lines)    — Workflow automation engine
-65 commands                        — Thin routers to workflows
-64 workflows                       — Full process definitions
-18 agents                          — Specialized AI agent definitions
-15 references                      — Domain knowledge documents
-25+ templates                      — Artifact templates
-4 hooks                            — Git/lifecycle hooks
+packages/
+  core/              — CLI engine, config, state, skill system, agent router
+  skills-harness/    — Deterministic backbone (zero LLM cost)
+  skills-workflow/   — 35 workflow skills + 9 shared modules
+  skills-extension/  — Extension point for user-defined skills
+  cli/               — CLI entry point + published artifacts
+
+Published artifacts:
+  81 commands          — Skill definitions
+  77 workflows         — Process implementations
+  23 agents            — Specialized AI agent instructions
+  16 references        — Domain knowledge documents
+  37 templates         — Artifact templates
+  6 hooks              — Lifecycle hooks
 ```
 
-## v0.3.2 Highlights
+## v0.8.0 Highlights
 
-- **Adaptive Lifecycle** — 7 new workflows for handling scope changes mid-project
-- **Quality Supremacy** — executor, phase-researcher, integration-checker agents enhanced
-- **Artifact Hash System** — detect changes to planning artifacts, compute invalidation cascade
-- **Rollback Points** — snapshot and restore .planning/ state at any phase boundary
-- **Design Pingpong** — cross-model merge + debate protocol (2.4x cost, opt-in)
-- **Guard --draft-claude-rules** — auto-generate conditional .claude/rules/ from codebase patterns
-- **Codex Benchmark** — A/B comparison framework for harness quality testing
+- **Alias Infrastructure** — `SkillDefinition.aliases[]` with deprecation warnings and default args injection
+- **Full Absorption** — 11 satellite skills merged into 4 absorbers via shared modules (35 skills from 46)
+- **Codex Layer 6** — `CodexCliProvider` for true cross-family verification (Claude + OpenAI Codex)
+- **`--require-codex`** — strict mode flag for pre-ship cross-model gates
+- **CLI Dashboard TUI** — `sunco status --live` with Ink, 5-section layout, 1Hz polling
+- **1,332 tests** — 10/10 turbo tasks green
 
 ## Stats
 
-| Category | Lines |
-|----------|-------|
-| Workflows | 25,306 |
-| Templates | 7,347 |
-| References | 5,026 |
-| Agents | 10,111 |
-| Tools | 2,529 |
-| **Total** | **50,319** |
+| Package | Tests | Source Files |
+|---------|-------|-------------|
+| @sunco/core | 368 | 244 |
+| @sunco/skills-harness | 146 | — |
+| @sunco/skills-workflow | 795 | — |
+| popcoru (meta) | 23 | — |
+| **Total** | **1,332** | **63,466 lines** |
 
 ## Links
 
 - [GitHub](https://github.com/kwmin122/sunco-harness)
 - [npm](https://www.npmjs.com/package/popcoru)
-- [Landing Page](https://sunco-harness.vercel.app)
 
 ## License
 
