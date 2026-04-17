@@ -59,6 +59,18 @@ vi.mock('../prompts/execute.js', () => ({
   buildExecutePrompt: vi.fn().mockReturnValue('Execute prompt content'),
 }));
 
+vi.mock('../shared/gates.js', () => ({
+  specApprovalGate: vi.fn().mockResolvedValue({
+    passed: true,
+    verdict: 'PASS',
+    reason: 'spec-approval-gate PASSED (mocked)',
+  }),
+  // keep proceedGate/artifactGate as no-ops if referenced elsewhere
+  proceedGate: vi.fn(),
+  artifactGate: vi.fn(),
+  planGate: vi.fn(),
+}));
+
 import { readFile, readdir } from 'node:fs/promises';
 import { parsePlanMd, groupPlansByWave } from '../shared/plan-parser.js';
 import { resolvePhaseDir } from '../shared/phase-reader.js';
@@ -433,5 +445,42 @@ describe('executeSkill', () => {
     const askCall = vi.mocked(ctx.ui.ask).mock.calls[0];
     // Verify the ask was about the plan requiring human verification
     expect(askCall).toBeDefined();
+  });
+
+  // --- Spec-approval gate integration (Superpowers brainstorming HARD-GATE) ---
+
+  it('refuses to execute when spec-approval gate blocks', async () => {
+    const gates = await import('../shared/gates.js');
+    vi.mocked(gates.specApprovalGate).mockResolvedValueOnce({
+      passed: false,
+      verdict: 'BLOCKED',
+      reason: 'spec-approval-gate BLOCKED: no approved spec found.',
+      findings: ['.planning/PROJECT.md missing'],
+    });
+
+    const ctx = createMockContext({ args: { phase: 1 } });
+    const result = await executeSkill.execute(ctx);
+
+    expect(result.success).toBe(false);
+    expect(result.summary).toMatch(/spec-approval-gate BLOCKED/);
+    // The provider check must not have been reached.
+    expect(ctx.agent.listProviders).not.toHaveBeenCalled();
+  });
+
+  it('honors --bypass-spec-approval <reason>', async () => {
+    const gates = await import('../shared/gates.js');
+    setupValidPhase();
+    const ctx = createMockContext({
+      args: { phase: 1, 'bypass-spec-approval': 'trivial doc patch' },
+    });
+    await executeSkill.execute(ctx);
+
+    const specGateCalls = vi.mocked(gates.specApprovalGate).mock.calls;
+    expect(specGateCalls.length).toBeGreaterThanOrEqual(1);
+    const lastCall = specGateCalls[specGateCalls.length - 1]!;
+    expect(lastCall[1]).toMatchObject({
+      bypassSpecApproval: true,
+      bypassReason: 'trivial doc patch',
+    });
   });
 });

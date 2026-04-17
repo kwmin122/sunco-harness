@@ -173,3 +173,108 @@ export async function artifactGate(ctx: SkillContext): Promise<GateResult> {
 
   return { passed: true, verdict: 'PASS', reason: 'artifact-gate PASSED: all required files present' };
 }
+
+// ---------------------------------------------------------------------------
+// Spec Approval Gate (Superpowers brainstorming HARD-GATE parity)
+// ---------------------------------------------------------------------------
+
+/**
+ * Spec Approval Gate — refuses to implement when no approved design/spec
+ * exists for the work. Mirrors Superpowers' HARD-GATE: "do not invoke
+ * implementation skills until a design has been presented and approved."
+ *
+ * Passes (skips the gate) when any of these is true:
+ *   - `.planning/PROJECT.md` exists (means `/sunco:new` ran at least once)
+ *   - `docs/superpowers/specs/` contains at least one approved spec
+ *   - `.sun/designs/` contains an `APPROVED` design doc from /sunco:office-hours
+ *   - the caller opts out with `bypassSpecApproval=true` (for legitimate
+ *     greenfield / trivial ops — recorded in the result reason)
+ *
+ * Blocks (verdict=BLOCKED) when none of the above is found, with
+ * guidance to run /sunco:office-hours → /sunco:brainstorming → /sunco:new
+ * (the default project-start chain).
+ */
+export interface SpecApprovalOptions {
+  /** Caller-side opt-out (e.g. /sunco:quick --full for a one-liner). */
+  bypassSpecApproval?: boolean;
+  /** Human-readable reason for the bypass, recorded in the result. */
+  bypassReason?: string;
+}
+
+export async function specApprovalGate(
+  ctx: SkillContext,
+  opts: SpecApprovalOptions = {},
+): Promise<GateResult> {
+  if (opts.bypassSpecApproval) {
+    return {
+      passed: true,
+      verdict: 'PASS',
+      reason: `spec-approval-gate BYPASSED: ${opts.bypassReason ?? 'caller opt-out'}`,
+    };
+  }
+
+  const { readdir, readFile } = await import('node:fs/promises');
+
+  const projectMd = join(ctx.cwd, '.planning', 'PROJECT.md');
+  try {
+    await access(projectMd);
+    return {
+      passed: true,
+      verdict: 'PASS',
+      reason: 'spec-approval-gate PASSED: .planning/PROJECT.md exists',
+    };
+  } catch {
+    // fall through to deeper checks
+  }
+
+  const specsDir = join(ctx.cwd, 'docs', 'superpowers', 'specs');
+  try {
+    const entries = await readdir(specsDir);
+    const md = entries.filter((f) => f.endsWith('.md'));
+    if (md.length > 0) {
+      return {
+        passed: true,
+        verdict: 'PASS',
+        reason: `spec-approval-gate PASSED: ${md.length} Superpowers spec(s) in ${specsDir}`,
+      };
+    }
+  } catch {
+    // specs dir absent → fall through
+  }
+
+  const designsDir = join(ctx.cwd, '.sun', 'designs');
+  try {
+    const entries = await readdir(designsDir);
+    for (const name of entries) {
+      if (!name.endsWith('.md')) continue;
+      try {
+        const txt = await readFile(join(designsDir, name), 'utf-8');
+        if (/Status:\s*APPROVED/i.test(txt)) {
+          return {
+            passed: true,
+            verdict: 'PASS',
+            reason: `spec-approval-gate PASSED: approved office-hours design ${name}`,
+          };
+        }
+      } catch {
+        // skip unreadable
+      }
+    }
+  } catch {
+    // designs dir absent → fall through
+  }
+
+  return {
+    passed: false,
+    verdict: 'BLOCKED',
+    reason:
+      'spec-approval-gate BLOCKED: no approved spec found. ' +
+      'Run /sunco:office-hours → /sunco:brainstorming → /sunco:new --from-preflight <spec>, ' +
+      'or pass --bypass-spec-approval with a reason if this is a trivial op.',
+    findings: [
+      '.planning/PROJECT.md missing',
+      'no *.md in docs/superpowers/specs/',
+      'no APPROVED design in .sun/designs/',
+    ],
+  };
+}

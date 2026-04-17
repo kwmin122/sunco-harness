@@ -25,6 +25,7 @@ import { WorktreeManager } from './shared/worktree-manager.js';
 import { resolvePhaseDir, writePhaseArtifact, readPhaseArtifact } from './shared/phase-reader.js';
 import { captureGitState } from './shared/git-state.js';
 import { buildExecutePrompt } from './prompts/execute.js';
+import { specApprovalGate } from './shared/gates.js';
 import { buildSliceContractPrompt } from './prompts/slice-contract.js';
 import type { ExecuteAgentSummary } from './prompts/execute.js';
 
@@ -173,6 +174,11 @@ export default defineSkill({
       flags: '-p, --phase <number>',
       description: 'Phase number to execute',
     },
+    {
+      flags: '--bypass-spec-approval <reason>',
+      description:
+        'Skip the Superpowers spec-approval HARD-GATE. Requires a reason. Use only for greenfield bootstrap or trivial patches.',
+    },
   ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
@@ -188,6 +194,22 @@ export default defineSkill({
       const msg = 'Usage: sunco execute --phase <number>';
       await ctx.ui.result({ success: false, title: 'Execute', summary: msg });
       return { success: false, summary: msg };
+    }
+
+    // --- Step 0.5: Spec-approval HARD-GATE (Superpowers brainstorming parity) ---
+    const bypassReason = ctx.args['bypass-spec-approval'] as string | undefined;
+    const specGate = await specApprovalGate(ctx, {
+      bypassSpecApproval: Boolean(bypassReason),
+      bypassReason,
+    });
+    if (!specGate.passed) {
+      await ctx.ui.result({
+        success: false,
+        title: 'Execute',
+        summary: specGate.reason,
+        details: specGate.findings ?? [],
+      });
+      return { success: false, summary: specGate.reason, data: { gate: specGate } };
     }
 
     // --- Step 1: Check provider availability ---
