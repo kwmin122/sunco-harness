@@ -39,6 +39,7 @@ export { default as settingsSkill } from './settings.skill.js';
 export { default as brainstormingSkill } from './brainstorming.skill.js';
 export { default as newSkill } from './new.skill.js';
 export { default as newSkillMetaSkill } from './new-skill.skill.js';
+export { default as orchestrateSkill } from './orchestrate.skill.js';
 export { default as scanSkill } from './scan.skill.js';
 
 // Phase 5 context + planning skills

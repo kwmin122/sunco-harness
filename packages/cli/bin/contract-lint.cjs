@@ -176,6 +176,16 @@ if (fs.existsSync(insertPhaseWf)) {
   const wf = fs.readFileSync(insertPhaseWf, 'utf8');
   check('insert-phase routes new capabilities to brainstorming', wf.includes('/sunco:brainstorming'));
 }
+const orchestrateCmd = path.join(cmdsDir, 'orchestrate.md');
+check('orchestrate command installed', fs.existsSync(orchestrateCmd));
+const orchestrateWf = path.join(pkgRoot, 'workflows', 'orchestrate.md');
+check('orchestrate workflow installed', fs.existsSync(orchestrateWf));
+if (fs.existsSync(orchestrateWf)) {
+  const wf = fs.readFileSync(orchestrateWf, 'utf8');
+  check('orchestrate names the role taxonomy', wf.includes('explorer') && wf.includes('librarian') && wf.includes('oracle'));
+  check('orchestrate declares OmO attribution without vendoring', wf.includes('OmO') && wf.includes('clean-room'));
+  check('orchestrate forbids fixed pipelines', /signal[s]?\s*-?\s*derived|signal-driven|NO\s+fixed\s+pipeline/i.test(wf));
+}
 
 // 7. README contract alignment
 console.log('');

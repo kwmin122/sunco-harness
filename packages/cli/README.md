@@ -2,7 +2,7 @@
 
 **Agent Workspace OS** — harness engineering for AI coding agents.
 
-83 skills. 7-layer verification. Cross-model review. Zero mistakes.
+84 skills. 7-layer verification. Cross-model review. Zero mistakes.
 
 ```bash
 npx popcoru
@@ -13,7 +13,7 @@ npx popcoru
 In an era where AI agents write code, the builder's job is not writing code — it's **setting up the field so agents make fewer mistakes**. SUNCO is that field.
 
 - **Harness Engineering** — lint, health check, and guard enforce quality deterministically (zero LLM cost)
-- **83 Skills** — every capability is a skill. No hardcoded commands.
+- **84 Skills** — every capability is a skill. No hardcoded commands.
 - **7-Layer Verification** — multi-agent review, guardrails, BDD, permissions, adversarial, cross-model (Codex), human eval
 - **Skill Absorption** — related commands merge via aliases, keeping the surface clean
 - **Multi-Runtime** — Claude Code, Codex CLI, Cursor, Antigravity
@@ -38,7 +38,7 @@ Interactive installer asks: language (EN/KR), runtime (Claude Code/Codex/Cursor/
 /sunco:ship 1        # create PR and release
 ```
 
-## Commands (83)
+## Commands (84)
 
 ### User Tier (Daily)
 | Command | Description |
@@ -96,7 +96,7 @@ packages/
   cli/               — CLI entry point + published artifacts
 
 Published artifacts:
-  83 commands          — Skill definitions
+  84 commands          — Skill definitions
   77 workflows         — Process implementations
   23 agents            — Specialized AI agent instructions
   16 references        — Domain knowledge documents
@@ -112,7 +112,7 @@ Published artifacts:
 - **`/sunco:review --fix`** — auto-routes agreed issues through `/sunco:quick` and re-verifies
 - **`/sunco:brainstorming --visual`** — auto-boots the vendored visual companion server
 - **`/sunco:new-skill`** — scaffolds new SUNCO skills + colocated tests
-- **83 slash commands**, 847 workflow tests, 59/59 contract lint
+- **84 slash commands**, 847 workflow tests, 59/59 contract lint
 
 ## v0.8.0 Highlights
 
