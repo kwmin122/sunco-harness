@@ -231,6 +231,8 @@ const DEPLOY_INTENT = [
   /\bship\s+(it|this|now)\b/i,
   /\bmerge\s+(it|main|master)\b/i,
   /\bpush\s+to\s+prod/i,
+  /\bapply\s+.+\bto\s+prod(uction)?\b/i,
+  /\bto\s+prod(uction)?\b/i,
   /배포/,
 ];
 
