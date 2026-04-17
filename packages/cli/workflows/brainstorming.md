@@ -64,6 +64,15 @@ $HOME/.claude/sunco/references/superpowers/brainstorming/SKILL.md
 
 That file is vendored from Superpowers and must remain the behavioral source of truth. Do not paraphrase it from memory. Do not replace it with a SUNCO-specific brainstorming flow.
 
+## Visual Companion Auto-Boot
+
+When the user passes `--visual`, the skill boots the vendored `start-server.sh` under `references/superpowers/brainstorming/scripts/` and injects the resulting URL into the agent prompt. The agent can then write HTML fragments to the server's `screen_dir` to show mockups, wireframes, or diagrams in the user's browser. The server runs in the background and survives the skill's exit; use the vendored `stop-server.sh` to shut it down.
+
+Rules:
+- Launching is best-effort. If the script is missing or fails, the skill falls back to text-only brainstorming and tells the agent the companion is `UNAVAILABLE`. Never blocks the user.
+- The agent is explicitly told to decide per-question — accepting the companion does not mean every question goes through the browser (see the vendored SKILL.md Visual Companion section).
+- Writes during brainstorming are scoped to the server's `screen_dir` only. Source code and planning artifacts remain untouchable.
+
 ## SUNCO Adapter
 
 Follow the Superpowers brainstorming process exactly through:

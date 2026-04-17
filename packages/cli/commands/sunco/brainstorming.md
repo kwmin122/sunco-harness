@@ -1,7 +1,7 @@
 ---
 name: sunco:brainstorming
 description: Run the vendored Superpowers brainstorming flow before SUNCO project planning.
-argument-hint: "[idea or @design-doc]"
+argument-hint: "[idea or @design-doc] [--visual]"
 allowed-tools:
   - Read
   - Write
@@ -10,6 +10,10 @@ allowed-tools:
   - Task
   - AskUserQuestion
 ---
+
+<flags>
+- `--visual` — Boot the vendored Superpowers visual companion (local HTTP server serving mockups, wireframes, diagrams) alongside the brainstorming agent. The server URL is passed to the agent so it knows it can publish visual content when a question warrants it. Use when the idea involves layout, UI, or spatial reasoning.
+</flags>
 
 <context>
 This command is the SUNCO wrapper for Superpowers' `brainstorming` skill.

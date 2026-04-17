@@ -3,23 +3,48 @@
  *
  * The behavioral source of truth is the Superpowers SKILL.md installed under
  * sunco/references/superpowers/brainstorming/SKILL.md.
+ *
+ * `--visual` opts into the vendored visual companion (local HTTP server
+ * serving mockups/diagrams). The server is booted via the vendored
+ * start-server.sh under superpowers/brainstorming/scripts/ and the URL
+ * is injected into the agent prompt so the agent knows it can publish
+ * visual content for the user.
  */
 
-import { readFile } from 'node:fs/promises';
+import { readFile, access } from 'node:fs/promises';
+import { constants as fsConstants } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { defineSkill } from '@sunco/core';
 import type { SkillContext, SkillResult } from '@sunco/core';
 
-async function readSuperpowersBrainstormingSource(ctx: SkillContext): Promise<string> {
-  const candidates = [
-    join(homedir(), '.claude', 'sunco', 'references', 'superpowers', 'brainstorming', 'SKILL.md'),
-    join(homedir(), '.codex', 'sunco', 'references', 'superpowers', 'brainstorming', 'SKILL.md'),
-    join(homedir(), '.cursor', 'sunco', 'references', 'superpowers', 'brainstorming', 'SKILL.md'),
-    join(homedir(), '.antigravity', 'sunco', 'references', 'superpowers', 'brainstorming', 'SKILL.md'),
-    join(ctx.cwd, 'packages', 'cli', 'references', 'superpowers', 'brainstorming', 'SKILL.md'),
-  ];
+const execFileP = promisify(execFile);
 
+const BRAINSTORM_REF_SEGMENTS = [
+  'sunco',
+  'references',
+  'superpowers',
+  'brainstorming',
+];
+
+function runtimeCandidatePaths(
+  ctx: SkillContext,
+  ...trailing: string[]
+): string[] {
+  const runtimes = ['.claude', '.codex', '.cursor', '.antigravity'];
+  const candidates = runtimes.map((r) =>
+    join(homedir(), r, ...BRAINSTORM_REF_SEGMENTS, ...trailing),
+  );
+  candidates.push(
+    join(ctx.cwd, 'packages', 'cli', 'references', 'superpowers', 'brainstorming', ...trailing),
+  );
+  return candidates;
+}
+
+async function readSuperpowersBrainstormingSource(ctx: SkillContext): Promise<string> {
+  const candidates = runtimeCandidatePaths(ctx, 'SKILL.md');
   for (const candidate of candidates) {
     try {
       return await readFile(candidate, 'utf-8');
@@ -27,8 +52,103 @@ async function readSuperpowersBrainstormingSource(ctx: SkillContext): Promise<st
       // Try the next runtime install location.
     }
   }
-
   throw new Error('Vendored Superpowers brainstorming source not found.');
+}
+
+/**
+ * Locate the vendored start-server.sh for the visual companion.
+ * Returns an absolute path or null if no runtime has it installed.
+ */
+export async function findVisualStartScript(ctx: SkillContext): Promise<string | null> {
+  const candidates = runtimeCandidatePaths(ctx, 'scripts', 'start-server.sh');
+  for (const candidate of candidates) {
+    try {
+      await access(candidate, fsConstants.F_OK);
+      return candidate;
+    } catch {
+      // Try next.
+    }
+  }
+  return null;
+}
+
+export interface VisualCompanionLaunch {
+  started: boolean;
+  url?: string;
+  sessionDir?: string;
+  stateDir?: string;
+  screenDir?: string;
+  port?: number;
+  error?: string;
+}
+
+/**
+ * Parse the first `server-started` JSON line from start-server.sh stdout.
+ * Returns null if the line is missing or not valid JSON.
+ */
+export function parseVisualStartOutput(stdout: string): VisualCompanionLaunch | null {
+  const line = stdout
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l.includes('server-started') || l.includes('"url"'));
+  if (!line) return null;
+  try {
+    const parsed = JSON.parse(line) as Record<string, unknown>;
+    return {
+      started: true,
+      url: typeof parsed.url === 'string' ? parsed.url : undefined,
+      sessionDir: typeof parsed.session_dir === 'string'
+        ? parsed.session_dir
+        : typeof parsed.sessionDir === 'string'
+          ? parsed.sessionDir
+          : undefined,
+      stateDir: typeof parsed.state_dir === 'string' ? parsed.state_dir : undefined,
+      screenDir: typeof parsed.screen_dir === 'string' ? parsed.screen_dir : undefined,
+      port: typeof parsed.port === 'number' ? parsed.port : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Boot the visual companion server by invoking the vendored
+ * start-server.sh. Runs with a 15s timeout and captures stdout. Returns
+ * a VisualCompanionLaunch describing the result. Never throws — returns
+ * `{ started: false, error }` on any failure so the caller can keep
+ * going with text-only brainstorming.
+ */
+export async function startVisualCompanion(
+  ctx: SkillContext,
+): Promise<VisualCompanionLaunch> {
+  const script = await findVisualStartScript(ctx);
+  if (!script) {
+    return {
+      started: false,
+      error:
+        'Visual companion scripts not found. The vendored superpowers/brainstorming/scripts/ directory is not installed.',
+    };
+  }
+  try {
+    const { stdout } = await execFileP(
+      'bash',
+      [script, '--project-dir', ctx.cwd, '--background'],
+      { timeout: 15_000, maxBuffer: 1024 * 1024 },
+    );
+    const parsed = parseVisualStartOutput(stdout);
+    if (!parsed) {
+      return {
+        started: false,
+        error: 'start-server.sh did not emit a recognizable server-started line.',
+      };
+    }
+    return parsed;
+  } catch (err) {
+    return {
+      started: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
 
 export default defineSkill({
@@ -49,6 +169,13 @@ export default defineSkill({
   complexity: 'complex',
   tier: 'user',
   description: 'Run vendored Superpowers brainstorming before SUNCO planning',
+  options: [
+    {
+      flags: '--visual',
+      description:
+        'Boot the vendored Superpowers visual companion (browser-based mockups/diagrams) and expose the URL to the brainstorming agent.',
+    },
+  ],
 
   async execute(ctx: SkillContext): Promise<SkillResult> {
     await ctx.ui.entry({
@@ -83,6 +210,27 @@ export default defineSkill({
       return { success: false, summary: msg };
     }
 
+    // Optional: boot the visual companion server when --visual is passed.
+    const visualFlag = ctx.args.visual === true || ctx.args.visual === 'true';
+    let visual: VisualCompanionLaunch | undefined;
+    if (visualFlag) {
+      visual = await startVisualCompanion(ctx);
+      if (visual.started && visual.url) {
+        await ctx.state.set('brainstorming.visualCompanion', {
+          url: visual.url,
+          sessionDir: visual.sessionDir,
+          screenDir: visual.screenDir,
+          startedAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    const visualBlock = visual
+      ? visual.started
+        ? `\nVisual companion: ACTIVE. URL: ${visual.url ?? '(unknown)'}. Write HTML fragments to ${visual.screenDir ?? '(screen dir unknown)'} when a visual question warrants it. Remember: per-question decision, not per-session.\n`
+        : `\nVisual companion: UNAVAILABLE (${visual.error ?? 'unknown error'}). Continue with text-only brainstorming.\n`
+      : '';
+
     const result = await ctx.agent.run({
       role: 'planning',
       prompt: `Run the following Superpowers brainstorming skill as SUNCO's brainstorming layer.
@@ -92,7 +240,7 @@ Hard requirements:
 - Do not implement, scaffold, or modify product code.
 - Produce the approved design/spec content in your output. If tool permissions prevent writing the file directly, include the recommended path.
 - After the spec is approved, the next step is /sunco:new --from-preflight <spec-path>.
-
+${visualBlock}
 User idea:
 ${idea || '(no idea provided)'}
 
@@ -101,7 +249,7 @@ ${superpowersSource}`,
       permissions: {
         role: 'planning',
         readPaths: ['**'],
-        writePaths: [],
+        writePaths: visual?.started && visual.screenDir ? [visual.screenDir + '/**'] : [],
         allowTests: false,
         allowNetwork: false,
         allowGitWrite: false,
@@ -122,13 +270,21 @@ ${superpowersSource}`,
       success: true,
       title: 'Brainstorming',
       summary,
-      details: result.outputText ? [result.outputText.slice(0, 2000)] : undefined,
+      details: [
+        ...(result.outputText ? [result.outputText.slice(0, 2000)] : []),
+        ...(visual?.started && visual.url
+          ? [`Visual companion running at ${visual.url}`]
+          : []),
+      ],
     });
 
     return {
       success: true,
       summary,
-      data: { next: '/sunco:new --from-preflight <spec-path>' },
+      data: {
+        next: '/sunco:new --from-preflight <spec-path>',
+        ...(visual ? { visualCompanion: visual } : {}),
+      },
     };
   },
 });

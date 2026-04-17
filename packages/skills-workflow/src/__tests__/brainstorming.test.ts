@@ -17,10 +17,13 @@ vi.mock('node:fs/promises', () => ({
   readFile: vi
     .fn()
     .mockRejectedValue(Object.assign(new Error('ENOENT'), { code: 'ENOENT' })),
+  access: vi
+    .fn()
+    .mockRejectedValue(Object.assign(new Error('ENOENT'), { code: 'ENOENT' })),
 }));
 
-import { readFile } from 'node:fs/promises';
-import brainstormingSkill from '../brainstorming.skill.js';
+import { readFile, access } from 'node:fs/promises';
+import brainstormingSkill, { parseVisualStartOutput } from '../brainstorming.skill.js';
 import type { SkillContext, AgentResult } from '@sunco/core';
 
 // ---------------------------------------------------------------------------
@@ -203,5 +206,61 @@ describe('brainstormingSkill', () => {
     };
     // The interactive answer "a cool idea" should make it into the prompt.
     expect(runArg.prompt).toContain('a cool idea');
+  });
+
+  it('skips visual companion boot when --visual is absent', async () => {
+    vi.mocked(readFile).mockResolvedValueOnce('# Brainstorming');
+
+    const ctx = createMockContext({
+      args: { _: ['idea'] },
+    } as Partial<SkillContext>);
+
+    const result = await brainstormingSkill.execute(ctx);
+    const data = result.data as { visualCompanion?: unknown } | undefined;
+    expect(data?.visualCompanion).toBeUndefined();
+
+    const runArg = vi.mocked(ctx.agent.run).mock.calls[0]![0] as { prompt: string };
+    expect(runArg.prompt).not.toMatch(/Visual companion:/);
+  });
+
+  it('reports unavailable when --visual is on but start script is not installed', async () => {
+    // SKILL.md found, but access() rejects for every candidate script path.
+    vi.mocked(readFile).mockResolvedValueOnce('# Brainstorming');
+
+    const ctx = createMockContext({
+      args: { _: ['idea'], visual: true },
+    } as Partial<SkillContext>);
+
+    const result = await brainstormingSkill.execute(ctx);
+
+    const data = result.data as {
+      visualCompanion?: { started: boolean; error?: string };
+    };
+    expect(data.visualCompanion?.started).toBe(false);
+    expect(data.visualCompanion?.error).toBeDefined();
+    const runArg = vi.mocked(ctx.agent.run).mock.calls[0]![0] as { prompt: string };
+    expect(runArg.prompt).toContain('Visual companion: UNAVAILABLE');
+  });
+});
+
+describe('parseVisualStartOutput', () => {
+  it('extracts url/port/screen_dir from a server-started JSON line', () => {
+    const raw =
+      '{"type":"server-started","port":52341,"url":"http://localhost:52341","session_dir":"/tmp/x","state_dir":"/tmp/x/state","screen_dir":"/tmp/x/content"}\n';
+    const parsed = parseVisualStartOutput(raw);
+    expect(parsed).toMatchObject({
+      started: true,
+      url: 'http://localhost:52341',
+      port: 52341,
+      screenDir: '/tmp/x/content',
+    });
+  });
+
+  it('returns null when no recognizable line is present', () => {
+    expect(parseVisualStartOutput('no server here\njust noise\n')).toBeNull();
+  });
+
+  it('returns null when the line is not valid JSON', () => {
+    expect(parseVisualStartOutput('server-started but not json\n')).toBeNull();
   });
 });
