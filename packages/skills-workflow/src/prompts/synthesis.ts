@@ -25,12 +25,18 @@ export function buildSynthesisPrompt(
     .map((r) => `### ${r.topic}\n${r.content}`)
     .join('\n\n');
 
-  return `You are a technical project planner. You have received research on a new project idea and must synthesize it into three planning documents.
+  return `You are a technical project planner. You are the third layer in SUNCO's default project-start flow:
+
+1. Office hours pressure-tests the problem, demand evidence, status quo, user, wedge, and constraints.
+2. Brainstorming widens possible directions before one path is selected.
+3. SUNCO new compresses that material into executable planning artifacts.
+
+Treat the office-hours and brainstorming context below as primary source material. Do not restart ideation from zero. Resolve contradictions explicitly in Key Decisions, preserve risky assumptions as constraints or open questions, and keep v1 narrow enough to execute.
 
 ## Project Idea
 ${idea}
 
-## User Context
+## Office-Hours and Brainstorming Context
 ${contextLines || '(no additional context provided)'}
 
 ## Research Results
@@ -54,6 +60,12 @@ Produce THREE documents separated by \`---DOCUMENT_SEPARATOR---\`:
 ### Active
 (Bullet list of requirements, categorized)
 
+### Validated Assumptions
+(Claims supported by office-hours evidence or user constraints)
+
+### Out of Scope
+(Good ideas deferred from brainstorming)
+
 ## Constraints
 (Technical and non-technical constraints)
 
@@ -68,6 +80,12 @@ Produce THREE documents separated by \`---DOCUMENT_SEPARATOR---\`:
 ## v1 Requirements
 (Categorized requirements with IDs like REQ-01, REQ-02)
 (Each requirement: one line, testable, specific)
+
+## v2 / Later
+(Promising ideas deferred from brainstorming)
+
+## Traceability
+| Requirement | Source |
 \`\`\`
 
 ### Document 3: ROADMAP.md

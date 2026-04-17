@@ -57,6 +57,10 @@
       "import": "./dist/new.skill.js",
       "types": "./dist/new.skill.d.ts"
     },
+    "./brainstorming": {
+      "import": "./dist/brainstorming.skill.js",
+      "types": "./dist/brainstorming.skill.d.ts"
+    },
     "./scan": {
       "import": "./dist/scan.skill.js",
       "types": "./dist/scan.skill.d.ts"

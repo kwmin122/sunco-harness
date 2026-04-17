@@ -230,7 +230,14 @@ Present to user:
 
 ## Phase 6: Handoff
 
-Suggest next steps:
+Default project-start chain:
+
+1. If the user is starting from a raw idea or new project, automatically continue to `/sunco:brainstorming` with the approved office-hours design doc as context.
+2. `/sunco:brainstorming` then hands the approved Superpowers spec to `/sunco:new --from-preflight <spec-path>`.
+
+Only stop after office-hours if the user explicitly asks for office-hours as a standalone diagnostic.
+
+Other optional next steps:
 - `/sunco:ceo-review` for ambitious features
 - `/sunco:eng-review` for implementation planning
 - `/sunco:design-review` for visual/UX review

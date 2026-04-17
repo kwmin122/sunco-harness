@@ -38,6 +38,7 @@ import {
   resumeSkill,
   phaseSkill,
   settingsSkill as workflowSettingsSkill,
+  brainstormingSkill,
   newSkill,
   scanSkill,
   discussSkill,
@@ -95,6 +96,7 @@ const preloadedSkills = [
   resumeSkill,
   phaseSkill,
   // Phase 4 project initialization skills
+  brainstormingSkill,
   newSkill,
   scanSkill,
   // Phase 5 context + planning skills

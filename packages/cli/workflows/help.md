@@ -336,15 +336,22 @@ Multi-perspective plan review before implementation.
 
 | Command | Description | Key Flags |
 |---------|-------------|-----------|
-| `sunco office-hours` | Pre-project brainstorming with forced questions | |
+| `sunco office-hours` | Pre-project diagnostic; chains to Superpowers brainstorming by default | |
+| `sunco brainstorming` | Vendored Superpowers brainstorming before SUNCO planning | |
 | `sunco ceo-review` | CEO/founder-mode plan review — scope, 10-star, premises | `--expand`, `--hold`, `--selective` |
 | `sunco eng-review` | Engineering review — architecture, tests, performance | |
 | `sunco design-review` | Designer's eye — dimensional scoring 0-10 | `--lite` |
 
 ### `/sunco:office-hours`
-Structured brainstorming before building. Two modes: Startup (6 diagnostic forcing questions) or Builder (generative design partner). Produces a design doc, never code.
+Structured diagnostic before building. Two modes: Startup (6 diagnostic forcing questions) or Builder (generative design partner). For project starts, continues to `/sunco:brainstorming` by default. Produces a design doc, never code.
 ```
 /sunco:office-hours
+```
+
+### `/sunco:brainstorming`
+Runs the vendored Superpowers brainstorming flow and hands the approved spec to `/sunco:new --from-preflight`.
+```
+/sunco:brainstorming
 ```
 
 ### `/sunco:ceo-review`

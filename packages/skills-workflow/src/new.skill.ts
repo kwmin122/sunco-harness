@@ -2,12 +2,10 @@
  * @sunco/skills-workflow - New Project Skill
  *
  * Agent-powered greenfield project bootstrap.
- * Guides users from idea to roadmap via multi-step orchestration:
- *   1. Accept idea (CLI args or interactive askText)
- *   2. Ask 5-8 adaptive clarifying questions
- *   3. Dispatch parallel research agents (tech-stack, competitors, architecture, challenges, ecosystem)
- *   4. Synthesize research into PROJECT.md + REQUIREMENTS.md + ROADMAP.md
- *   5. Write artifacts to .planning/
+ * Guides users from idea to roadmap via three-layer development:
+ *   1. Office-hours diagnostic: pressure-test the problem and user
+ *   2. Superpowers brainstorming: widen candidate approaches before committing
+ *   3. SUNCO new: research and synthesize PROJECT.md + REQUIREMENTS.md + ROADMAP.md
  *
  * Requirements: WF-01 (agent-powered project bootstrap)
  * Decisions: D-01 (multi-step), D-02 (parallel research), D-03 (output artifacts),
@@ -26,6 +24,7 @@ import { writePlanningArtifact } from './shared/planning-writer.js';
 
 /** Research topics for parallel agent dispatch (D-02) */
 const RESEARCH_TOPICS = [
+  'brainstorming',
   'tech-stack',
   'competitors',
   'architecture',
@@ -67,97 +66,68 @@ type Question = ChoiceQuestion | TextQuestion;
 const QUESTIONS: Question[] = [
   {
     type: 'choice',
-    key: 'projectType',
-    message: 'What type of project is this?',
+    key: 'goal',
+    message: "Before we turn this into a project, what's the goal?",
     options: [
-      { id: 'cli', label: 'CLI tool' },
-      { id: 'webapp', label: 'Web app' },
-      { id: 'api', label: 'API service' },
-      { id: 'library', label: 'Library' },
-      { id: 'mobile', label: 'Mobile app' },
-      { id: 'other', label: 'Other' },
+      { id: 'startup', label: 'Startup / product' },
+      { id: 'internal', label: 'Internal tool / intrapreneurship' },
+      { id: 'demo', label: 'Hackathon / demo' },
+      { id: 'oss', label: 'Open source / research' },
+      { id: 'learning', label: 'Learning / personal' },
+      { id: 'creative', label: 'Creative side project' },
     ],
-    defaultId: 'webapp',
+    defaultId: 'startup',
   },
   {
-    type: 'choice',
-    key: 'platform',
-    message: 'Target platform?',
-    options: [
-      { id: 'browser', label: 'Browser' },
-      { id: 'node', label: 'Node.js' },
-      { id: 'both', label: 'Both (Browser + Node)' },
-      { id: 'native', label: 'Native (Desktop/Mobile)' },
-    ],
-    defaultId: 'node',
+    type: 'text',
+    key: 'demandEvidence',
+    message: "Office hours: what's the strongest evidence someone actually wants this?",
+    placeholder: 'Specific user behavior, money, pain, workaround, or personal need...',
   },
   {
-    type: 'choice',
-    key: 'language',
-    message: 'Primary language?',
-    options: [
-      { id: 'typescript', label: 'TypeScript' },
-      { id: 'python', label: 'Python' },
-      { id: 'rust', label: 'Rust' },
-      { id: 'go', label: 'Go' },
-      { id: 'java', label: 'Java' },
-      { id: 'other', label: 'Other' },
-    ],
-    defaultId: 'typescript',
+    type: 'text',
+    key: 'statusQuo',
+    message: 'Office hours: what do people do today instead, even if it is messy?',
+    placeholder: 'Current workflow, competitor, spreadsheet, manual process, nothing...',
   },
   {
     type: 'text',
     key: 'targetUsers',
-    message: 'Describe your target users:',
-    placeholder: 'e.g., developers building web apps...',
+    message: 'Office hours: who needs this most, specifically?',
+    placeholder: 'Role, team, community, or named first user...',
   },
   {
     type: 'text',
-    key: 'coreProblem',
-    message: "What's the core problem you're solving?",
-    placeholder: 'e.g., existing tools are too slow for...',
+    key: 'narrowestWedge',
+    message: 'Office hours: what is the smallest version worth building first?',
+    placeholder: 'One workflow, one result, one audience...',
+  },
+  {
+    type: 'text',
+    key: 'coolestVersion',
+    message: 'Brainstorming: what would make this feel meaningfully better than the obvious version?',
+    placeholder: 'A surprising interaction, automation, UX, insight, or 10x angle...',
+  },
+  {
+    type: 'text',
+    key: 'constraints',
+    message: 'Brainstorming: what constraints should shape the solution?',
+    placeholder: 'Time, budget, tech stack, privacy, team size, launch date...',
   },
   {
     type: 'choice',
-    key: 'scale',
-    message: 'Scale expectations?',
+    key: 'projectShape',
+    message: 'What kind of deliverable should v1 become?',
     options: [
-      { id: 'personal', label: 'Personal / side project' },
-      { id: 'team', label: 'Small team' },
-      { id: 'startup', label: 'Startup' },
-      { id: 'enterprise', label: 'Enterprise' },
+      { id: 'webapp', label: 'Web app' },
+      { id: 'api', label: 'API service' },
+      { id: 'cli', label: 'CLI tool' },
+      { id: 'library', label: 'Library' },
+      { id: 'mobile', label: 'Mobile app' },
+      { id: 'docs', label: 'Docs / research artifact' },
+      { id: 'other', label: 'Other / decide from context' },
     ],
-    defaultId: 'personal',
-  },
-  // Conditional: only for web projects
-  {
-    type: 'choice',
-    key: 'frontend',
-    message: 'Frontend framework preference?',
-    options: [
-      { id: 'react', label: 'React' },
-      { id: 'vue', label: 'Vue' },
-      { id: 'svelte', label: 'Svelte' },
-      { id: 'none', label: 'No framework / SSR only' },
-    ],
-    defaultId: 'react',
-    condition: (answers) =>
-      answers.projectType === 'webapp' || answers.projectType === 'Web app',
-  },
-  // Conditional: only for API projects
-  {
-    type: 'choice',
-    key: 'database',
-    message: 'Database preference?',
-    options: [
-      { id: 'postgres', label: 'PostgreSQL' },
-      { id: 'sqlite', label: 'SQLite' },
-      { id: 'mongodb', label: 'MongoDB' },
-      { id: 'none', label: 'No database / TBD' },
-    ],
-    defaultId: 'postgres',
-    condition: (answers) =>
-      answers.projectType === 'api' || answers.projectType === 'API service',
+    defaultId: 'webapp',
   },
 ];
 
@@ -179,7 +149,7 @@ export default defineSkill({
   async execute(ctx: SkillContext): Promise<SkillResult> {
     await ctx.ui.entry({
       title: 'New Project',
-      description: 'Agent-powered project bootstrap',
+      description: 'Office hours -> Superpowers brainstorming -> project bootstrap',
     });
 
     // -----------------------------------------------------------------------
@@ -221,7 +191,7 @@ export default defineSkill({
     }
 
     // -----------------------------------------------------------------------
-    // Step 2: Ask 5-8 clarifying questions (D-01 step 2, D-04)
+    // Step 2: Office-hours diagnostic + brainstorming (D-01 step 2, D-04)
     // -----------------------------------------------------------------------
     const answers: Record<string, string> = {};
 
@@ -235,7 +205,7 @@ export default defineSkill({
     }
 
     const questionProgress = ctx.ui.progress({
-      title: 'Gathering context',
+      title: 'Office hours and brainstorming',
       total: applicableQuestions.length,
     });
 
@@ -265,7 +235,9 @@ export default defineSkill({
       questionProgress.update({ completed: questionsAsked });
     }
 
-    questionProgress.done({ summary: `${questionsAsked} questions answered` });
+    questionProgress.done({
+      summary: `${questionsAsked} preflight questions answered`,
+    });
 
     // -----------------------------------------------------------------------
     // Step 3: Parallel research dispatch (D-01 step 3, D-02)

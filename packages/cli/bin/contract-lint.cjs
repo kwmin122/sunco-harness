@@ -112,6 +112,35 @@ for (const g of gateFiles) {
   check(`Gate: ${g}`, fs.existsSync(path.join(cmdsDir, g)));
 }
 
+// 6b. Project-start chain: office-hours -> brainstorming -> new
+console.log('');
+const chainCommands = ['office-hours.md', 'brainstorming.md', 'new.md'];
+for (const c of chainCommands) {
+  check(`Project-start command: ${c}`, fs.existsSync(path.join(cmdsDir, c)));
+}
+const chainWorkflows = ['office-hours.md', 'brainstorming.md', 'new-project.md'];
+for (const w of chainWorkflows) {
+  check(`Project-start workflow: ${w}`, fs.existsSync(path.join(pkgRoot, 'workflows', w)));
+}
+const vendoredSkill = path.join(pkgRoot, 'references', 'superpowers', 'brainstorming', 'SKILL.md');
+check('Vendored Superpowers brainstorming SKILL.md exists', fs.existsSync(vendoredSkill));
+if (fs.existsSync(vendoredSkill)) {
+  const vendored = fs.readFileSync(vendoredSkill, 'utf8');
+  check('Vendored SKILL.md preserves Superpowers HARD-GATE', vendored.includes('<HARD-GATE>'));
+  check('Vendored SKILL.md wires SUNCO handoff', vendored.includes('/sunco:new --from-preflight'));
+}
+const brainstormingWf = path.join(pkgRoot, 'workflows', 'brainstorming.md');
+if (fs.existsSync(brainstormingWf)) {
+  const wf = fs.readFileSync(brainstormingWf, 'utf8');
+  check('brainstorming workflow references vendored source', wf.includes('references/superpowers/brainstorming/SKILL.md'));
+  check('brainstorming workflow hands off to /sunco:new --from-preflight', wf.includes('/sunco:new --from-preflight'));
+}
+const officeHoursWf = path.join(pkgRoot, 'workflows', 'office-hours.md');
+if (fs.existsSync(officeHoursWf)) {
+  const wf = fs.readFileSync(officeHoursWf, 'utf8');
+  check('office-hours workflow chains into brainstorming by default', wf.includes('/sunco:brainstorming'));
+}
+
 // 7. README contract alignment
 console.log('');
 if (fs.existsSync(repoReadme)) {

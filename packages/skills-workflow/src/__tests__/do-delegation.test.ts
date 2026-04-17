@@ -115,4 +115,24 @@ describe('do.skill.ts delegation', () => {
     const [, args] = runMock.mock.calls[0]!;
     expect(args._).toContain('build the new feature');
   });
+
+  it('routes new project idea requests to workflow.new', async () => {
+    const ctx = createMockCtx('아이디어와 함께 스킬사용하며 프로젝트 시작해줘');
+    await doSkillModule.execute(ctx);
+
+    const runMock = ctx.run as ReturnType<typeof vi.fn>;
+    const [skillId, args] = runMock.mock.calls[0]!;
+    expect(skillId).toBe('workflow.new');
+    expect(args._).toContain('아이디어와 함께 스킬사용하며 프로젝트 시작해줘');
+  });
+
+  it('routes explicit brainstorming requests to workflow.brainstorming', async () => {
+    const ctx = createMockCtx('브레인스토밍 해줘');
+    await doSkillModule.execute(ctx);
+
+    const runMock = ctx.run as ReturnType<typeof vi.fn>;
+    const [skillId, args] = runMock.mock.calls[0]!;
+    expect(skillId).toBe('workflow.brainstorming');
+    expect(args._).toContain('브레인스토밍 해줘');
+  });
 });

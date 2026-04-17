@@ -48,7 +48,8 @@ Score each known SUNCO command against the parsed intent. First match wins.
 | Verb + Object | Command | Notes |
 |---|---|---|
 | start/create + milestone (new) | `/sunco:milestone new` | |
-| start/create + project | `/sunco:init` | |
+| start/create + project/idea | `/sunco:new` | Uses office-hours → Superpowers brainstorming → new chain |
+| brainstorm + idea/project | `/sunco:brainstorming` | Uses vendored Superpowers brainstorming |
 | create/add + workspace | `/sunco:workspaces new [name]` | Extract name from modifier |
 | show/check + status | `/sunco:status` | |
 | show/what + next | `/sunco:next` | |

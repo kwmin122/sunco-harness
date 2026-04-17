@@ -257,6 +257,53 @@ console.log(`\n${BOLD}9. Product Contract${RESET}`);
 const contractPath = path.join(suncoDir, 'references', 'product-contract.md');
 check('product-contract.md present', fs.existsSync(contractPath));
 
+// 10. Project-start chain: office-hours -> brainstorming -> new
+console.log(`\n${BOLD}10. Project-Start Chain${RESET}`);
+const vendoredSkillPath = path.join(
+  suncoDir, 'references', 'superpowers', 'brainstorming', 'SKILL.md'
+);
+check('vendored Superpowers brainstorming SKILL.md present', fs.existsSync(vendoredSkillPath));
+if (fs.existsSync(vendoredSkillPath)) {
+  const content = fs.readFileSync(vendoredSkillPath, 'utf8');
+  check('vendored SKILL.md preserves HARD-GATE', content.includes('<HARD-GATE>'));
+  check('vendored SKILL.md wires SUNCO handoff', content.includes('/sunco:new --from-preflight'));
+}
+const brainstormingWfPath = path.join(suncoDir, 'workflows', 'brainstorming.md');
+check('brainstorming workflow installed', fs.existsSync(brainstormingWfPath));
+if (fs.existsSync(brainstormingWfPath)) {
+  const wf = fs.readFileSync(brainstormingWfPath, 'utf8');
+  // Runtime path replacement should have rewritten .claude/ references for non-Claude runtimes.
+  const hasVendorRef = wf.includes(`${runtimeDir}/sunco/references/superpowers/brainstorming/SKILL.md`);
+  check(`brainstorming workflow references vendored source for ${runtime}`, hasVendorRef);
+}
+const officeHoursWfPath = path.join(suncoDir, 'workflows', 'office-hours.md');
+check('office-hours workflow installed', fs.existsSync(officeHoursWfPath));
+if (fs.existsSync(officeHoursWfPath)) {
+  const wf = fs.readFileSync(officeHoursWfPath, 'utf8');
+  check('office-hours chains into /sunco:brainstorming', wf.includes('/sunco:brainstorming'));
+}
+
+// Command presence differs by runtime surface (commands/ vs skills/ vs skills-cursor/)
+let chainCmdPresent = true;
+const chainNames = ['office-hours', 'brainstorming', 'new'];
+if (runtime === 'codex') {
+  for (const n of chainNames) {
+    const f = path.join(targetDir, 'skills', `sunco-${n}`, 'SKILL.md');
+    if (!fs.existsSync(f)) chainCmdPresent = false;
+  }
+} else if (runtime === 'cursor') {
+  for (const n of chainNames) {
+    const f = path.join(targetDir, 'skills-cursor', `sunco-${n}`, 'SKILL.md');
+    if (!fs.existsSync(f)) chainCmdPresent = false;
+  }
+} else {
+  for (const n of chainNames) {
+    const f = path.join(targetDir, 'commands', 'sunco', `${n}.md`);
+    if (!fs.existsSync(f)) chainCmdPresent = false;
+  }
+}
+check(`project-start chain commands installed (${runtime})`, chainCmdPresent);
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

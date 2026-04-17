@@ -14,6 +14,7 @@ export default defineConfig({
     'src/backlog.skill.ts',
     'src/phase.skill.ts',
     'src/settings.skill.ts',
+    'src/brainstorming.skill.ts',
     'src/new.skill.ts',
     'src/scan.skill.ts',
     'src/discuss.skill.ts',

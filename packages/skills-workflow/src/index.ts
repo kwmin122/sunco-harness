@@ -36,6 +36,7 @@ export { default as noteSkill } from './note.skill.js';
 
 export { default as phaseSkill } from './phase.skill.js';
 export { default as settingsSkill } from './settings.skill.js';
+export { default as brainstormingSkill } from './brainstorming.skill.js';
 export { default as newSkill } from './new.skill.js';
 export { default as scanSkill } from './scan.skill.js';
 

@@ -27,7 +27,8 @@ Analyze $ARGUMENTS for keywords and intent patterns:
 
 | Pattern | Route to |
 |---------|---------|
-| "bootstrap", "new project", "start a project" | `/sunco:new` |
+| "bootstrap", "new project", "start a project", "아이디어로 시작", "아이디어와 함께 스킬사용" | `/sunco:new` using the default office-hours → Superpowers brainstorming → new chain |
+| "brainstorm", "brainstorming", "브레인스토밍" | `/sunco:brainstorming` |
 | "phase N", "discuss phase", "decisions for" | `/sunco:discuss N` |
 | "plan phase", "create plans for" | `/sunco:plan N` |
 | "execute phase", "run phase", "implement phase" | `/sunco:execute N` |

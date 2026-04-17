@@ -5,6 +5,8 @@
  */
 
 const TOPIC_INSTRUCTIONS: Record<string, string> = {
+  brainstorming:
+    'Use the vendored Superpowers brainstorming skill as the behavioral source of truth when it is available in SUNCO references. Preserve its hard gate against implementation, one-question-at-a-time discovery, 2-3 approach exploration, explicit design approval, spec review, and handoff. For this research report, summarize the approved design direction, deferred options, risks, and the next /sunco:new --from-preflight handoff.',
   'tech-stack':
     'Identify languages, frameworks, databases, and infrastructure. Consider the project\'s scale, target platform, and team constraints from context.',
   competitors:

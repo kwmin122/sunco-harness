@@ -1,5 +1,5 @@
 <purpose>
-Initialize a new project through unified flow: questioning, research (optional), requirements, roadmap. This is the most leveraged moment in any project — deep questioning here means better plans, better execution, better outcomes. One workflow takes you from idea to ready-for-planning.
+Initialize a new project through the default three-layer flow: office-hours diagnostic, brainstorming, then SUNCO new planning artifacts. This is the most leveraged moment in any project — deep questioning here means better plans, better execution, better outcomes. One workflow takes you from idea to ready-for-planning.
 </purpose>
 
 <required_reading>
@@ -236,7 +236,7 @@ Proceed to Step 4 (skip Steps 3 and 5).
 
 ---
 
-## 3. Deep Questioning
+## 3. Preflight: Office Hours + Brainstorming
 
 **If auto mode:** Skip (already handled in Step 2a). Extract project context from provided document instead and proceed to Step 4.
 
@@ -244,7 +244,7 @@ Proceed to Step 4 (skip Steps 3 and 5).
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- SUNCO ► QUESTIONING
+ SUNCO ► OFFICE HOURS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -258,79 +258,71 @@ Proceed to Step 4 (skip Steps 3 and 5).
 
 > "What do you want to build?"
 
-Wait for their response. This gives you the context needed to ask intelligent follow-up questions. Do not rush. This is the most leveraged moment in the workflow.
+### 3.2. Office Hours Diagnostic
 
-### 3.2. Socratic Interview — Round 1
+Treat this as the embedded `/sunco:office-hours` layer. Ask one question at a time. Do not generate requirements yet.
 
-Based on what they said, ask follow-up questions that dig into their response. Do NOT ask technical questions in Round 1. Focus on domain, users, problem, and scope.
+Ask:
 
-Use AskUserQuestion with 3–4 questions grouped by theme. Pick the most relevant from these categories based on what they said:
+1. "What's the goal with this?"
+   - Startup / product
+   - Internal tool / intrapreneurship
+   - Hackathon / demo
+   - Open source / research
+   - Learning / personal
+   - Creative side project
+2. "What's the strongest evidence someone actually wants this?"
+3. "What are people doing today instead, even if it is messy?"
+4. "Who needs this most, specifically?"
+5. "What's the smallest version worth building first?"
 
-**Category A: Domain and Problem**
-- What type of product is this? (CLI tool / web app / API service / mobile app / library / other)
-- What problem are you actually solving, in one sentence?
-- Is this replacing something that exists today, or creating a new behavior?
-- What happens if this doesn't get built? (Who suffers, and how?)
+Output an internal preflight summary:
 
-**Category B: Users**
-- Who are the target users? (One sentence — e.g., "solo developers who deploy to Vercel")
-- What do they do today instead of using this?
-- What does success look like for a user in their first 10 minutes?
-- What's the one thing this must do better than anything else available?
+```
+OFFICE_HOURS_SUMMARY:
+- Goal:
+- Demand evidence:
+- Status quo:
+- Target user:
+- Narrowest wedge:
+- Risks:
+```
 
-**Category C: Scope and Constraints**
-- What absolutely must be in v1 for it to be worth shipping?
-- What should be explicitly NOT in v1? (naming exclusions is as important as inclusions)
-- Is there a deadline or external pressure shaping scope?
-- What's already decided that I shouldn't question?
+### 3.3. Brainstorming
 
-**Category D: Success Criteria**
-- How will you know v1 is working? What would a user say?
-- What does a successful first week look like?
-- What would make you confident enough to show this to real users?
+Display stage banner:
 
-**Batching:** Ask 3–4 questions at once using AskUserQuestion with multiSelect: false per question. Group related questions. Do not ask 8 questions in a single batch.
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SUNCO ► BRAINSTORMING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
-**Max rounds:** 2 rounds of 3–4 questions each. Stop when you can write a clear PROJECT.md.
+Treat this as the embedded `/sunco:brainstorming` layer.
 
-### 3.3. Socratic Interview — Round 2 (conditional)
+MANDATORY: Read the vendored Superpowers brainstorming source before proceeding:
 
-After Round 1, evaluate whether you have enough to write a clear PROJECT.md. Mentally check:
+```text
+$HOME/.claude/sunco/references/superpowers/brainstorming/SKILL.md
+```
 
-- [ ] Domain is understood (type, space, competition)
-- [ ] Target users are specific (not "everyone" or "developers")
-- [ ] Core value proposition is clear (one sentence)
-- [ ] v1 scope boundaries are defined (in AND out)
-- [ ] At least one success criterion is testable
-- [ ] No critical unknown would change architecture decisions
+Follow that Superpowers process as the source of truth. Use the office-hours summary as context. Preserve its hard gate: do not implement, scaffold, or write code during brainstorming.
 
-If gaps remain, run Round 2 with 3–4 targeted questions. Only ask about genuine unknowns — do not re-ask things already answered.
+SUNCO-specific terminal adaptation: after the written brainstorming spec is approved, continue to Step 4 in this workflow instead of invoking Superpowers `writing-plans`.
 
-**Do NOT ask technical questions.** Technical decisions come during research and planning. In questioning, you are only learning the problem space, users, and constraints.
+Persist an internal preflight summary:
 
-Example of bad Round 2 questions (too technical):
-- "What database are you using?" — wrong time
-- "REST or GraphQL?" — wrong time
-- "What's your deployment strategy?" — wrong time
+```
+PREFLIGHT_CONTEXT:
+- Raw idea:
+- Office-hours summary:
+- Superpowers brainstorming spec path:
+- Approved approach/design:
+- Deferred ideas:
+- Open assumptions:
+```
 
-Example of good Round 2 questions:
-- "You said 'enterprise teams' — how many people are on a typical team?"
-- "What does 'fast' mean to you? Seconds? Milliseconds?"
-- "You mentioned compliance — is that GDPR, SOC2, both, or something else?"
-
-### 3.4. Decision Gate
-
-When you could write a clear PROJECT.md, use AskUserQuestion:
-
-- header: "Ready?"
-- question: "I think I understand what you're building. Ready to create PROJECT.md?"
-- options:
-  - "Create PROJECT.md" — Let's move forward
-  - "Keep exploring" — I want to share more / ask me more questions
-
-If "Keep exploring": ask what they want to add, or identify gaps and probe naturally.
-
-Loop until "Create PROJECT.md" selected.
+Proceed to Step 4 using `PREFLIGHT_CONTEXT` as the primary source. Do not restart ideation from zero.
 
 ---
 

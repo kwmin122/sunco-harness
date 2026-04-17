@@ -12,6 +12,22 @@ import { defineSkill, appendRoutingMiss } from '@sunco/core';
 import type { SkillContext, SkillResult } from '@sunco/core';
 import { classifyInput, CATEGORY_SKILL_MAP } from './shared/category-classifier.js';
 
+function isNewProjectBootstrapIntent(input: string): boolean {
+  return [
+    /\b(?:bootstrap|start|create|new|init|initialize)\b.*\b(?:project|app|product|startup|idea)\b/i,
+    /\b(?:project|app|product|startup|idea)\b.*\b(?:bootstrap|start|create|new|init|initialize)\b/i,
+    /(?:새\s*프로젝트|프로젝트\s*시작|프로젝트\s*초기화|아이디어.*(?:시작|개발|구체화|디벨롭)|(?:시작|개발|구체화|디벨롭).*아이디어)/i,
+    /(?:스킬\s*사용|스킬사용).*(?:아이디어|프로젝트|시작)/i,
+  ].some((pattern) => pattern.test(input));
+}
+
+function isBrainstormingIntent(input: string): boolean {
+  return [
+    /\bbrainstorm(?:ing)?\b/i,
+    /브레인\s*스토밍/i,
+  ].some((pattern) => pattern.test(input));
+}
+
 export default defineSkill({
   id: 'workflow.do',
   command: 'do',
@@ -48,6 +64,52 @@ export default defineSkill({
       const msg = 'No input provided. Usage: sunco do "your request here"';
       await ctx.ui.result({ success: false, title: 'Do', summary: msg });
       return { success: false, summary: msg };
+    }
+
+    if (isNewProjectBootstrapIntent(userInput)) {
+      const label = '\u2192 new-project: office-hours -> brainstorming -> new';
+      const skillResult = await ctx.run('workflow.new', { _: [userInput] });
+
+      await ctx.ui.result({
+        success: skillResult.success,
+        title: 'Do',
+        summary: `Routed to workflow.new: ${skillResult.summary ?? ''}`,
+        details: [label],
+      });
+
+      return {
+        success: skillResult.success,
+        summary: `workflow.new: ${skillResult.summary ?? ''}`,
+        data: {
+          routed: 'workflow.new',
+          category: 'planning',
+          confidence: 1,
+          signals: [{ kind: 'phrase', value: 'new project bootstrap' }],
+        },
+      };
+    }
+
+    if (isBrainstormingIntent(userInput)) {
+      const label = '\u2192 brainstorming: Superpowers brainstorming';
+      const skillResult = await ctx.run('workflow.brainstorming', { _: [userInput] });
+
+      await ctx.ui.result({
+        success: skillResult.success,
+        title: 'Do',
+        summary: `Routed to workflow.brainstorming: ${skillResult.summary ?? ''}`,
+        details: [label],
+      });
+
+      return {
+        success: skillResult.success,
+        summary: `workflow.brainstorming: ${skillResult.summary ?? ''}`,
+        data: {
+          routed: 'workflow.brainstorming',
+          category: 'planning',
+          confidence: 1,
+          signals: [{ kind: 'phrase', value: 'brainstorming' }],
+        },
+      };
     }
 
     const classification = classifyInput(userInput);
