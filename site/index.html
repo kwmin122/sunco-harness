@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>SUNCO | Agent Workspace OS</title>
-<meta name="description" content="AI 코딩 에이전트가 실수를 덜 하게 판을 깔아주는 OS. 81 Skills. 7-Layer Verification. Zero Mistakes.">
+<meta name="description" content="AI 코딩 에이전트가 실수를 덜 하게 판을 깔아주는 OS. 85 Skills · Ambient Advisor · 7-Layer Verification · Zero Mistakes.">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script>
@@ -83,12 +83,12 @@ tailwind.config = {
 
   <div class="max-w-7xl mx-auto px-6 relative z-10">
     <div class="fade-up">
-      <span class="uppercase tracking-[0.2em] text-emerald-400 font-headline text-xs font-bold">v0.6.0 &mdash; Light Harness — Context Intelligence + Smart Routing</span>
+      <span class="uppercase tracking-[0.2em] text-emerald-400 font-headline text-xs font-bold">v0.11.1 &mdash; Ambient Advisor · Runtime-Aware Picker · Deterministic Core</span>
       <h1 class="text-[clamp(3rem,8vw,7rem)] font-black font-headline tracking-tighter leading-[0.85] mt-4">
         HARNESS YOUR <span class="text-emerald-400 italic">AGENTS</span>
       </h1>
       <p class="text-xl md:text-2xl text-white/50 font-medium mt-6 max-w-xl">
-        77 Skills. 7-Layer Verification. <span class="text-white">Zero Mistakes.</span>
+        85 Skills. 7-Layer Verification. Ambient Advisor. <span class="text-white">Zero Mistakes.</span>
       </p>
     </div>
 
@@ -107,7 +107,7 @@ tailwind.config = {
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝</span>
 
-  <span class="bold">SUNCO v0.6.0</span>
+  <span class="bold">SUNCO v0.11.1</span>
   <span class="dim">Agent Workspace OS — harness engineering for AI agents</span>
 
   <span class="bold">Select language / 언어를 선택하세요</span>
@@ -127,10 +127,10 @@ tailwind.config = {
 
   Choice <span class="dim">[1]</span>: <span class="yellow">5</span>
 
-  <span class="green">✓</span> Claude Code: <span class="bold">명령어</span> <span class="dim">(81 개 스킬)</span>
-  <span class="green">✓</span> Claude Code: <span class="bold">엔진</span>  <span class="dim">(25 개 파일)</span>
-  <span class="green">✓</span> Claude Code: <span class="bold">훅</span>   <span class="dim">(5 개 파일)</span>
-  <span class="green">✓</span> Claude Code: <span class="bold">문서</span>    <span class="dim">(162 개 파일)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">명령어</span> <span class="dim">(85 개 스킬)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">엔진</span>  <span class="dim">(54 개 파일)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">훅</span>   <span class="dim">(8 개 파일 &middot; advisor 앰비언트/포스트액션 포함)</span>
+  <span class="green">✓</span> Claude Code: <span class="bold">문서</span>    <span class="dim">(179 개 파일)</span>
 
   <span class="green">완료!</span> <span class="green">/sunco:help</span> — /sunco:help를 실행하여 시작하세요.</div>
     </div>
@@ -296,7 +296,7 @@ Run <span class="green">/sunco:ship 3</span> to create the PR.</div>
           <span class="text-stroke">CONFIDENCE</span>
         </h2>
         <p class="text-xl text-white/50 leading-relaxed max-w-md">
-          Every phase passes through 6 independent verification layers. What slips through one gets caught by the next.
+          Every phase passes through 7 independent verification layers. What slips through one gets caught by the next.
         </p>
         <div class="mt-8 space-y-3 text-sm">
           <div class="flex items-center gap-3"><span class="text-emerald-400">01</span> <span class="text-white/70">Multi-agent cross-review</span></div>
@@ -333,7 +333,7 @@ Run <span class="green">/sunco:ship 3</span> to create the PR.</div>
         <div class="terminal-body text-center py-12">
           <div class="text-emerald-400 text-6xl mb-4">&#9889;</div>
           <div class="font-headline font-black text-3xl tracking-tighter text-white">/sunco:mode</div>
-          <div class="font-mono text-xs uppercase tracking-[0.4em] text-emerald-400/60 mt-3">81 skills armed and ready</div>
+          <div class="font-mono text-xs uppercase tracking-[0.4em] text-emerald-400/60 mt-3">85 skills armed and ready</div>
           <div class="mt-8 flex flex-wrap justify-center gap-3 text-xs font-mono text-white/30">
             <span>DISCUSS</span>
             <span class="text-emerald-400">&#8594;</span>
@@ -359,52 +359,93 @@ Run <span class="green">/sunco:ship 3</span> to create the PR.</div>
   </div>
 </section>
 
-<!-- Light Harness (v0.6) -->
+<!-- Ambient Advisor (v0.11) -->
 <section class="py-32 bg-[#131313] border-t border-white/5">
   <div class="max-w-7xl mx-auto px-6">
     <div class="mb-16">
-      <span class="uppercase tracking-[0.2em] text-emerald-400 font-headline text-xs font-bold">New in v0.6</span>
+      <span class="uppercase tracking-[0.2em] text-emerald-400 font-headline text-xs font-bold">New in v0.11</span>
       <h2 class="text-4xl md:text-6xl font-black font-headline tracking-tighter leading-none mt-4">
-        LIGHT <span class="text-emerald-400 italic">HARNESS</span>
+        AMBIENT <span class="text-emerald-400 italic">ADVISOR</span>
       </h2>
+      <p class="mt-6 text-white/50 max-w-2xl text-lg leading-relaxed">
+        자연어로 개발하면, 뒤에서 advisor가 위험 신호를 감지해 <span class="text-emerald-400">Risk / Suggestion</span> 두 줄만 조용히 꽂아줍니다. 결정적 분류기 기반 — 코드는 쓰지 않고, 스킬도 자동 실행하지 않습니다. API 키는 선택입니다.
+      </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Context Intelligence -->
-      <div class="bg-[#1f1f1f] rounded-xl p-8 border border-white/5 hover:border-emerald-500/20 transition-all">
-        <div class="text-emerald-400 text-3xl mb-6">&#9673;</div>
-        <h3 class="font-headline font-black text-xl tracking-tighter mb-3">CONTEXT INTELLIGENCE</h3>
-        <p class="text-white/40 text-sm leading-relaxed mb-6">4-tier context zones that adapt loading strategy in real-time. Orange zone auto-summarizes, Red zone auto-pauses.</p>
-        <div class="flex flex-wrap gap-2">
-          <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono text-[10px]">GREEN 0-50%</span>
-          <span class="px-2 py-1 bg-yellow-500/10 text-yellow-400 rounded font-mono text-[10px]">YELLOW 50-70%</span>
-          <span class="px-2 py-1 bg-orange-500/10 text-orange-400 rounded font-mono text-[10px]">ORANGE 70-85%</span>
-          <span class="px-2 py-1 bg-red-500/10 text-red-400 rounded font-mono text-[10px]">RED 85%+</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+      <!-- Advisor terminal -->
+      <div class="terminal glow">
+        <div class="terminal-header">
+          <div class="terminal-dot bg-[#ff5f56]"></div>
+          <div class="terminal-dot bg-[#ffbd2e]"></div>
+          <div class="terminal-dot bg-[#27c93f]"></div>
+          <span class="text-white/30 text-xs font-mono ml-2">Claude Code &middot; UserPromptSubmit hook</span>
         </div>
+        <div class="terminal-body text-sm"><span class="dim">you:</span> fix the login session cookie bug
+
+<span class="dim">&lt;sunco_advisor visibility=&quot;internal&quot; level=&quot;guarded&quot;
+  confidence=&quot;high&quot; route=&quot;plan-execute-verify&quot;&gt;</span>
+<span class="bold">Risk:</span> auth/session code is changing.
+<span class="bold">Suggestion:</span> write a plan (<span class="green">/sunco:plan</span>)
+  before touching code; verify afterwards.
+<span class="dim">&lt;/sunco_advisor&gt;</span>
+
+<span class="cyan">claude:</span> <span class="dim">(honors the guidance — runs /sunco:plan first)</span></div>
       </div>
 
-      <!-- Smart Routing -->
-      <div class="bg-[#1f1f1f] rounded-xl p-8 border border-white/5 hover:border-emerald-500/20 transition-all">
-        <div class="text-emerald-400 text-3xl mb-6">&#9881;</div>
-        <h3 class="font-headline font-black text-xl tracking-tighter mb-3">SMART ROUTING</h3>
-        <p class="text-white/40 text-sm leading-relaxed mb-6">Every skill declares complexity. The pipeline selects the optimal model tier and downgrades at 75%+ budget.</p>
-        <div class="space-y-2 text-xs font-mono">
-          <div class="flex justify-between text-white/30"><span>simple (lint, do)</span><span class="text-emerald-400">fast</span></div>
-          <div class="flex justify-between text-white/30"><span>standard (execute)</span><span class="text-emerald-400">balanced</span></div>
-          <div class="flex justify-between text-white/30"><span>complex (plan, verify)</span><span class="text-emerald-400">quality</span></div>
+      <!-- Reconfigure terminal -->
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="terminal-dot bg-[#ff5f56]"></div>
+          <div class="terminal-dot bg-[#ffbd2e]"></div>
+          <div class="terminal-dot bg-[#27c93f]"></div>
+          <span class="text-white/30 text-xs font-mono ml-2">/sunco:advisor --reconfigure</span>
         </div>
+        <div class="terminal-body text-sm"><span class="bold">Configure SUNCO advisor for Claude Code.</span>
+<span class="dim">The deterministic classifier always runs; this pick only
+chooses the voice layered on top.</span>
+
+<span class="green">1)</span> Claude Opus 4.7 — thinking: high <span class="yellow">(Recommended)</span>
+<span class="green">2)</span> Claude Opus 4.7 — thinking: max
+<span class="green">3)</span> Claude Sonnet 4.6 — thinking: high
+<span class="green">4)</span> Claude Haiku 4.5 — thinking: off
+<span class="green">5)</span> Deterministic only
+<span class="green">6)</span> Custom — edit .sun/config.toml
+
+<span class="dim">Advanced external providers (optional):</span>
+<span class="dim">  Anthropic API key: not set</span>
+<span class="dim">  Claude CLI:        available</span>
+<span class="dim">  Codex CLI:         available</span></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Intervention levels -->
+      <div class="bg-[#1f1f1f] rounded-xl p-6 border border-white/5 hover:border-emerald-500/20 transition-all">
+        <div class="text-emerald-400 text-2xl mb-4">&#9673;</div>
+        <h3 class="font-headline font-black text-sm tracking-tighter mb-2">4 LEVELS</h3>
+        <p class="text-white/40 text-xs leading-relaxed">silent / notice / guarded / blocker. blocker는 기본적으로 guarded로 다운그레이드.</p>
       </div>
 
-      <!-- Operational Resilience -->
-      <div class="bg-[#1f1f1f] rounded-xl p-8 border border-white/5 hover:border-emerald-500/20 transition-all">
-        <div class="text-emerald-400 text-3xl mb-6">&#8635;</div>
-        <h3 class="font-headline font-black text-xl tracking-tighter mb-3">INFINITE EXECUTION</h3>
-        <p class="text-white/40 text-sm leading-relaxed mb-6">Context rotation with adaptive timeouts. Auto-pause creates handoffs before context exhaustion. Resume where you left off.</p>
-        <div class="flex flex-wrap gap-2">
-          <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono text-[10px]">AUTO-PAUSE</span>
-          <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono text-[10px]">HANDOFF</span>
-          <span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded font-mono text-[10px]">RESUME</span>
-        </div>
+      <!-- Noise budget -->
+      <div class="bg-[#1f1f1f] rounded-xl p-6 border border-white/5 hover:border-emerald-500/20 transition-all">
+        <div class="text-emerald-400 text-2xl mb-4">&#9881;</div>
+        <h3 class="font-headline font-black text-sm tracking-tighter mb-2">NOISE BUDGET</h3>
+        <p class="text-white/40 text-xs leading-relaxed">같은 키 30분 디듀프. 세션당 5개. 프롬프트당 1개.</p>
+      </div>
+
+      <!-- Runtime-native -->
+      <div class="bg-[#1f1f1f] rounded-xl p-6 border border-white/5 hover:border-emerald-500/20 transition-all">
+        <div class="text-emerald-400 text-2xl mb-4">&#8614;</div>
+        <h3 class="font-headline font-black text-sm tracking-tighter mb-2">RUNTIME-NATIVE</h3>
+        <p class="text-white/40 text-xs leading-relaxed">Claude Code → Claude. Codex → GPT-5.4. Cursor → native. 모두 런타임의 자체 인증 사용.</p>
+      </div>
+
+      <!-- Never auto -->
+      <div class="bg-[#1f1f1f] rounded-xl p-6 border border-emerald-500/10 hover:border-emerald-500/30 transition-all pulse-glow">
+        <div class="text-emerald-400 text-2xl mb-4">&#10060;</div>
+        <h3 class="font-headline font-black text-sm tracking-tighter mb-2 text-emerald-400">NEVER AUTO</h3>
+        <p class="text-white/40 text-xs leading-relaxed">autoExecuteSkills = false. 타입 수준 리터럴. 코드를 쓰지 않고, 스킬을 자동 실행하지 않음.</p>
       </div>
     </div>
   </div>
