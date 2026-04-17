@@ -257,6 +257,30 @@ const MIGRATION_APPLY_INTENT = [
   /마이그레이션.*적용/,
 ];
 
+const INTENT_AUTH = [
+  /\blogin\b/i,
+  /\blogout\b/i,
+  /\bauth\b/i,
+  /\bsession\b/i,
+  /\boauth\b/i,
+  /로그인/,
+  /인증/,
+];
+
+const INTENT_PAYMENTS = [
+  /\bpayment/i,
+  /\bstripe\b/i,
+  /\bbilling\b/i,
+  /\bcheckout\b/i,
+  /결제/,
+];
+
+const INTENT_SCHEMA = [
+  /\bschema\s+(change|update)/i,
+  /\bmigration\b/i,
+  /스키마\s*(변경|수정)/,
+];
+
 // ---------------------------------------------------------------------------
 // Path matchers
 // ---------------------------------------------------------------------------
@@ -339,6 +363,11 @@ export function extractSignals(input: RiskInput): RiskSignal[] {
   if (DESTRUCTIVE_INTENT.some((p) => p.test(intent))) signals.add('destructiveIntent');
   if (MONEY_INTENT.some((p) => p.test(intent))) signals.add('moneyMovementIntent');
   if (MIGRATION_APPLY_INTENT.some((p) => p.test(intent))) signals.add('touchesMigration');
+  // Intent-based guarded signals (used when caller has no files to scan,
+  // e.g. /sunco:advisor "<task>" without diff context).
+  if (INTENT_AUTH.some((p) => p.test(intent))) signals.add('touchesAuth');
+  if (INTENT_PAYMENTS.some((p) => p.test(intent))) signals.add('touchesPayments');
+  if (INTENT_SCHEMA.some((p) => p.test(intent))) signals.add('touchesSchema');
 
   // Stable order
   return SIGNAL_ORDER.filter((s) => signals.has(s));

@@ -89,7 +89,7 @@ All copied hooks MUST be registered. Unregistered hooks MUST NOT be shipped.
 
 ## Command Count
 
-- **Total commands**: 84 (77 original + 4 gates + Superpowers brainstorming wrapper + writing-skills meta-skill + orchestrate)
+- **Total commands**: 85 (77 original + 4 gates + Superpowers brainstorming wrapper + writing-skills meta-skill + orchestrate + advisor)
 - Commands listed in: `packages/cli/commands/sunco/`
 
 ## Gate Contract

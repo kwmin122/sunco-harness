@@ -69,6 +69,10 @@
       "import": "./dist/orchestrate.skill.js",
       "types": "./dist/orchestrate.skill.d.ts"
     },
+    "./advisor": {
+      "import": "./dist/advisor.skill.js",
+      "types": "./dist/advisor.skill.d.ts"
+    },
     "./scan": {
       "import": "./dist/scan.skill.js",
       "types": "./dist/scan.skill.d.ts"

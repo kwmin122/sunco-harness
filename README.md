@@ -7,7 +7,7 @@ Agent Workspace OS — harness engineering for AI coding agents
 
 ## What is SUNCO?
 
-SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 84 slash commands that enforce quality at every step — security audits, lint gates, blast radius analysis, 7-layer verification, multi-perspective reviews, and a proactive recommender.
+SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 85 slash commands that enforce quality at every step — security audits, lint gates, blast radius analysis, 7-layer verification, multi-perspective reviews, and a proactive recommender.
 
 **One command to install:**
 
@@ -28,20 +28,20 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Adaptive lifecycle** — pivot, rethink, backtrack at any stage without losing progress
 - **Blast radius analysis** — dependency graph check before every execution
 - **Per-task checkpointing** — crash recovery resumes from exact task, not from scratch
-- **84 slash commands** covering the full development lifecycle
+- **85 slash commands** covering the full development lifecycle
 - **Security audit (CSO)** — OWASP Top 10, STRIDE, secret detection, supply chain risk
 - **Multi-perspective reviews** — CEO, engineering, design reviews before implementation
 - **Operations** — retro, benchmark, land-and-deploy, canary monitoring
 - **Safety guardrails** — destructive command warnings, directory freeze
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
-- **Korean i18n** — 84 commands with Korean descriptions, interactive installer
+- **Korean i18n** — 85 commands with Korean descriptions, interactive installer
 
 ### New in v0.10.0
 
 - **`/sunco:orchestrate`** — dynamic multi-agent router (explorer/librarian/oracle/developer/frontend/docs/verifier/debugger). Deterministic signal-based routing, no fixed pipeline, orchestrator never writes code. Clean-room reimplementation inspired by OmO's Sisyphus (AGPL-3.0, no code vendored) and gstack's role-based sprint discipline.
 - **Spec-approval HARD-GATE** — `/sunco:execute` now refuses to run without an approved design/spec (`.planning/PROJECT.md`, `docs/superpowers/specs/*.md`, or `.sun/designs/*APPROVED*`). Explicit `--bypass-spec-approval <reason>` for greenfield or trivial patches. Superpowers brainstorming HARD-GATE finally enforced at runtime, not just docs.
 - **gstack ↔ SUNCO Sprint Map** and **OmO ↔ SUNCO Routing Map** documented in `/sunco:help` and pinned by contract-lint so the three-framework parity can't silently regress.
-- **883 workflow tests**, 66/66 contract lint, 84 slash commands
+- **883 workflow tests**, 66/66 contract lint, 85 slash commands
 
 ### New in v0.9.0
 
@@ -51,7 +51,7 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **`/sunco:review --fix`** — receiving-code-review loop: agreed issues auto-route through `/sunco:quick` and re-verify
 - **`/sunco:brainstorming --visual`** — auto-boots the vendored visual companion server and feeds the URL to the planning agent
 - **`/sunco:new-skill`** — deterministic scaffolder for new SUNCO skills + colocated tests (writing-skills parity)
-- **847 workflow tests**, 59/59 contract lint, 84 slash commands
+- **847 workflow tests**, 59/59 contract lint, 85 slash commands
 
 ### New in v0.8.0
 
@@ -174,6 +174,7 @@ Each step has built-in quality gates:
 | `/sunco:brainstorming` | Run vendored Superpowers brainstorming before SUNCO planning |
 | `/sunco:new-skill` | Scaffold a new SUNCO skill file + colocated test (Superpowers writing-skills parity) |
 | `/sunco:orchestrate` | Dynamic multi-agent router (explorer/librarian/oracle/developer/frontend/docs/verifier) |
+| `/sunco:advisor` | Ambient advisor debug surface — classify task, reconfigure model, show last decision |
 | `/sunco:discuss` | Extract decisions and gray areas |
 | `/sunco:plan` | Create execution plans with BDD criteria |
 | `/sunco:execute` | Parallel execution with lint-gate |
@@ -257,7 +258,7 @@ Each step has built-in quality gates:
 
 **Claude Code** (`~/.claude/`):
 ```
-commands/sunco/           # 84 slash commands
+commands/sunco/           # 85 slash commands
 sunco/bin/                # Engine + sunco-tools.cjs
 sunco/workflows/          # 77 workflow files
 sunco/references/         # 16 reference documents
@@ -296,7 +297,7 @@ npx popcoru --all                 # Install for all available runtimes
 ### SUNCO가 뭔가요?
 
 SUNCO는 AI 코딩 에이전트(Claude Code 등)가 실수를 덜 하도록 도와주는 도구입니다.
-설치하면 84개의 슬래시 명령어(`/sunco:help`, `/sunco:lint` 등)가 추가되어, AI가 코드를 작성할 때 자동으로 품질을 검사하고 검증합니다.
+설치하면 85개의 슬래시 명령어(`/sunco:help`, `/sunco:lint` 등)가 추가되어, AI가 코드를 작성할 때 자동으로 품질을 검사하고 검증합니다.
 
 ### 설치 전 준비
 
@@ -326,7 +327,7 @@ npx popcoru
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝
 
- ✓ Installed commands/sunco (84 skills)
+ ✓ Installed commands/sunco (85 skills)
  ✓ Installed sunco engine
  ✓ Installed hooks
  ✓ Installed docs

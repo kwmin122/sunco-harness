@@ -18,6 +18,7 @@ export default defineConfig({
     'src/new.skill.ts',
     'src/new-skill.skill.ts',
     'src/orchestrate.skill.ts',
+    'src/advisor.skill.ts',
     'src/scan.skill.ts',
     'src/discuss.skill.ts',
     'src/assume.skill.ts',

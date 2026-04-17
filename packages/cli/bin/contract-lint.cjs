@@ -230,6 +230,10 @@ if (fs.existsSync(advisorMatrixPath)) {
     check(`runtime matrix row: ${r}`, new RegExp(`runtime:\\s*'${r}'`).test(src));
   }
 }
+const advisorCmd = path.join(cmdsDir, 'advisor.md');
+check('advisor command installed', fs.existsSync(advisorCmd));
+const advisorWf = path.join(pkgRoot, 'workflows', 'advisor.md');
+check('advisor workflow installed', fs.existsSync(advisorWf));
 
 // 7. README contract alignment
 console.log('');
