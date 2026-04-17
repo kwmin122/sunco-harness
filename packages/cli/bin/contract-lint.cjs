@@ -186,6 +186,11 @@ if (fs.existsSync(orchestrateWf)) {
   check('orchestrate declares OmO attribution without vendoring', wf.includes('OmO') && wf.includes('clean-room'));
   check('orchestrate forbids fixed pipelines', /signal[s]?\s*-?\s*derived|signal-driven|NO\s+fixed\s+pipeline/i.test(wf));
 }
+if (fs.existsSync(helpWf)) {
+  const wf = fs.readFileSync(helpWf, 'utf8');
+  check('help maps gstack sprint stages to SUNCO', wf.includes('gstack') && wf.includes('Sprint Map') && wf.includes('/office-hours') && wf.includes('/sunco:office-hours'));
+  check('help maps OmO roles to SUNCO delegates', wf.includes('OmO') && wf.includes('Sisyphus') && wf.includes('/sunco:orchestrate'));
+}
 
 // 7. README contract alignment
 console.log('');

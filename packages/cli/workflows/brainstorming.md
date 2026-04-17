@@ -52,6 +52,34 @@ Mapping to Superpowers' 14 skills so readers can reason about it from either sid
 | finishing-a-development-branch | `/sunco:ship`, `/sunco:land`, `/sunco:pr-branch` | Merge + release chain |
 | writing-skills | `/sunco:new-skill` + `@sunco/core` `defineSkill` | Scaffolds `.skill.ts` + test; user wires barrel/tsup/preload |
 
+### gstack sprint stages mapped onto this chain
+
+gstack's Think → Plan → Build → Review → Test → Ship → Reflect sprint discipline lines up with SUNCO stages:
+
+| gstack stage | SUNCO step |
+|---|---|
+| Think | `/sunco:office-hours` |
+| Plan (product / eng / design) | `/sunco:ceo-review` / `/sunco:eng-review` / `/sunco:design-review` |
+| Build | `/sunco:execute` or `/sunco:orchestrate` |
+| Review | `/sunco:review` |
+| Test | `/sunco:verify` (layers 5 + 7) |
+| Ship | `/sunco:ship` → `/sunco:land` |
+| Reflect | `/sunco:retro` |
+
+### OmO Sisyphus routing mapped onto SUNCO skills
+
+OmO's orchestrator-delegates-but-never-codes principle (AGPL-3.0, clean-room reimplementation) lives in `/sunco:orchestrate`:
+
+| OmO role | SUNCO delegate | Read-only? |
+|---|---|---|
+| Sisyphus | `/sunco:orchestrate` | yes (orchestrator never writes) |
+| explore | `workflow.scan` | yes |
+| librarian | `workflow.research` | yes |
+| oracle | `sunco-reviewer` | yes |
+| develop | `/sunco:quick` | no |
+| frontend-ui-ux-engineer | `/sunco:quick` (UI) | no |
+| document-writer | `/sunco:doc` | no |
+
 **Why this map matters for brainstorming:** the spec you write here must be implementable by `/sunco:plan` without needing to re-interview the user. Keep every decision that affects phases, tasks, or verification in the spec; keep everything that is merely opinion out of it.
 
 ## Source Of Truth

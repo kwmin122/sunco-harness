@@ -55,11 +55,45 @@ SUNCO treats Superpowers' 14 built-in skills as a behavioral reference and cover
 | systematic-debugging | `/sunco:debug` (Iron Law: reproduce → root cause → fix → verify) |
 | verification-before-completion | `/sunco:verify` + `/sunco:proceed-gate` |
 | requesting-code-review | `/sunco:review` |
-| receiving-code-review | `/sunco:review` → `/sunco:quick`/`/sunco:execute` loop |
-| dispatching-parallel-agents | `wave.parallelization: true` in plans |
+| receiving-code-review | `/sunco:review --fix` → `/sunco:quick`/`/sunco:execute` loop |
+| dispatching-parallel-agents | `wave.parallelization: true` in plans + `/sunco:orchestrate` |
 | using-git-worktrees | `/sunco:workspaces`, `/sunco:workstreams` |
 | finishing-a-development-branch | `/sunco:ship`, `/sunco:land`, `/sunco:pr-branch` |
 | writing-skills | `/sunco:new-skill` + `@sunco/core` `defineSkill` |
+
+### gstack ↔ SUNCO Sprint Map
+
+gstack's Think → Plan → Build → Review → Test → Ship → Reflect sprint discipline maps one-to-one onto SUNCO's workflow surface:
+
+| gstack stage | gstack command | SUNCO equivalent |
+|---|---|---|
+| Think | /office-hours | `/sunco:office-hours` (startup/builder modes) |
+| Plan (product) | /plan-ceo-review | `/sunco:ceo-review` |
+| Plan (engineering) | /plan-eng-review | `/sunco:eng-review` |
+| Plan (design) | /plan-design-review | `/sunco:design-review` |
+| Build | implementation | `/sunco:execute` + `/sunco:orchestrate` |
+| Review | /review | `/sunco:review` (eng/ceo/design auto-routed) |
+| Test | /qa, /browse | `/sunco:verify` Layer 5 adversarial + Layer 7 human eval (persistent browser daemon is on the roadmap) |
+| Ship | /ship | `/sunco:ship` → `/sunco:land` |
+| Reflect | /retro | `/sunco:retro` |
+
+gstack's philosophy "Planning is not review. Review is not shipping. Founder taste is not engineering rigor." is enforced in SUNCO via separate review skills (`/sunco:ceo-review` vs `/sunco:eng-review` vs `/sunco:design-review`) and distinct gates (`plan-gate`, `proceed-gate`, `artifact-gate`, `spec-approval-gate`).
+
+### OmO ↔ SUNCO Routing Map
+
+OmO's Sisyphus orchestrator maps onto SUNCO's `/sunco:orchestrate` (clean-room reimplementation — no AGPL code vendored):
+
+| OmO role | SUNCO delegate |
+|---|---|
+| Sisyphus orchestrator | `/sunco:orchestrate` |
+| explore | `workflow.scan` (via explorer role) |
+| librarian | `workflow.research` (via librarian role) |
+| oracle | `sunco-reviewer` subagent (via oracle role, read-only) |
+| develop | `/sunco:quick` (via developer role) |
+| frontend-ui-ux-engineer | `/sunco:quick` with UI context (via frontend role) |
+| document-writer | `/sunco:doc` (via docs role) |
+
+SUNCO's routing is deterministic (keyword/regex signals, zero LLM cost at the router layer) and honors OmO's core invariants: orchestrator never writes code, read-only roles precede write roles, no fixed pipeline.
 
 ---
 
