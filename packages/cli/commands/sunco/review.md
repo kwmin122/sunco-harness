@@ -1,7 +1,7 @@
 ---
 name: sunco:review
 description: Multi-provider cross-review of a phase. Spawns independent review agents (optionally using different AI providers) to get diverse perspectives on code quality, architecture, and correctness.
-argument-hint: "[phase] [--providers claude,gpt] [--focus security|architecture|quality]"
+argument-hint: "[phase] [--providers claude,gpt] [--focus security|architecture|quality] [--fix]"
 allowed-tools:
   - Read
   - Bash
@@ -17,6 +17,8 @@ allowed-tools:
 **Flags:**
 - `--providers claude,gpt` — Which AI providers to use for review agents. Default: claude only.
 - `--focus security|architecture|quality` — Focus the review on a specific dimension. Default: all.
+- `--fix` — After the review completes, auto-route each *agreed* issue (≥2 reviewers) through `/sunco:quick`, then re-run `/sunco:verify`. Solo opinions are surfaced but never auto-fixed. Caps at 5 issues per run; override with `--max-fix N`. This is the Superpowers `receiving-code-review` loop implemented as a skill.
+- `--max-fix <n>` — Max agreed issues to auto-fix in one run. Default: 5.
 </context>
 
 <objective>
