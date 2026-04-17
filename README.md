@@ -36,6 +36,13 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
 - **Korean i18n** — 84 commands with Korean descriptions, interactive installer
 
+### New in v0.10.0
+
+- **`/sunco:orchestrate`** — dynamic multi-agent router (explorer/librarian/oracle/developer/frontend/docs/verifier/debugger). Deterministic signal-based routing, no fixed pipeline, orchestrator never writes code. Clean-room reimplementation inspired by OmO's Sisyphus (AGPL-3.0, no code vendored) and gstack's role-based sprint discipline.
+- **Spec-approval HARD-GATE** — `/sunco:execute` now refuses to run without an approved design/spec (`.planning/PROJECT.md`, `docs/superpowers/specs/*.md`, or `.sun/designs/*APPROVED*`). Explicit `--bypass-spec-approval <reason>` for greenfield or trivial patches. Superpowers brainstorming HARD-GATE finally enforced at runtime, not just docs.
+- **gstack ↔ SUNCO Sprint Map** and **OmO ↔ SUNCO Routing Map** documented in `/sunco:help` and pinned by contract-lint so the three-framework parity can't silently regress.
+- **883 workflow tests**, 66/66 contract lint, 84 slash commands
+
 ### New in v0.9.0
 
 - **Superpowers 14-skill parity** — every built-in skill from the Superpowers framework (brainstorming, writing-plans, executing-plans, TDD, systematic-debugging, verification-before-completion, requesting/receiving-code-review, subagent-driven development, git-worktrees, finishing-a-branch, writing-skills, visual companion) has a SUNCO equivalent

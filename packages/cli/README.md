@@ -104,6 +104,13 @@ Published artifacts:
   6 hooks              — Lifecycle hooks
 ```
 
+## v0.10.0 Highlights
+
+- **`/sunco:orchestrate`** — dynamic multi-agent router. Deterministic signal-based routing across 8 roles (explorer/librarian/oracle/developer/frontend/docs/verifier/debugger). No fixed pipeline. Clean-room reimplementation of OmO Sisyphus + gstack role discipline; no AGPL code vendored.
+- **Spec-approval HARD-GATE** — `/sunco:execute` refuses to run without an approved spec. Superpowers brainstorming HARD-GATE now enforced at runtime.
+- **gstack Sprint Map & OmO Routing Map** documented in `/sunco:help` and pinned by contract-lint.
+- **883 workflow tests**, 66/66 contract lint, 84 slash commands.
+
 ## v0.9.0 Highlights
 
 - **Superpowers 14-skill parity** — every built-in Superpowers skill now has a SUNCO equivalent; `brainstorming` is vendored verbatim and extended with SUNCO rigor
