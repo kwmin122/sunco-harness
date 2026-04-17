@@ -25,12 +25,22 @@ The 7 layers:
 | Layer | Name | Type | Catches |
 |-------|------|------|---------|
 | 1 | Multi-agent cross-review | AI | Logic errors, quality issues, missing edge cases |
-| 2 | Guardrails | Deterministic | Lint errors, type errors, test failures |
+| 2 | Guardrails | Deterministic | Lint, types, test failures, **TDD gate** (see below) |
 | 3 | BDD criteria check | Hybrid | Unmet acceptance criteria from PLANs |
 | 4 | Permission audit | Deterministic | Scope violations, unauthorized file access, secrets |
 | 5 | Adversarial test | AI | Exploitable inputs, race conditions, bypass paths |
 | 6 | Cross-model verification | AI (different model) | Same-model blind spots, structural issues |
 | 7 | Human eval gate | Human | Final sign-off, subjective quality, UX judgment |
+
+### Layer 2 — TDD gate (Superpowers test-driven-development parity)
+
+For every plan whose frontmatter declares `type: tdd`, Layer 2 now runs a deterministic TDD gate that enforces Red-Green-Refactor discipline:
+
+1. **Test files must be listed.** `files_modified` must include at least one `.test.*` / `.spec.*` or `__tests__/...` path. Missing → `high` severity finding.
+2. **Every production file needs a colocated test.** Any non-test file in `files_modified` that has no matching test in the same plan raises a `medium` severity finding.
+3. **Test-first commit order.** Where git history exists, the production file's first commit must not be strictly earlier than its test's first commit. Violation → `high` severity finding (blocks verdict).
+
+Plans tagged `type: execute` are unaffected. If a phase has zero `type: tdd` plans the TDD gate is a no-op.
 
 Reference: `packages/cli/references/swiss-cheese.md` for the theoretical basis.
 

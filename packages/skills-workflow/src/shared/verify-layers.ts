@@ -23,6 +23,7 @@ import type { VerifyFinding, LayerResult } from './verify-types.js';
 import type { ParsedPlan } from './plan-parser.js';
 import { readPhaseArtifactSmart } from './phase-reader.js';
 import { readContextZone } from './context-zones.js';
+import { runTddGate, tddFindingToVerify } from './tdd-gate.js';
 import { buildVerifySecurityPrompt } from '../prompts/verify-security.js';
 import { buildVerifyPerformancePrompt } from '../prompts/verify-performance.js';
 import { buildVerifyArchitecturePrompt } from '../prompts/verify-architecture.js';
@@ -449,6 +450,19 @@ export async function runLayer2Deterministic(
     }
   } catch (err) {
     ctx.log.warn('Guard skill not available or failed', { error: err });
+  }
+
+  // TDD gate: for plans tagged `type: tdd`, check test-first discipline.
+  // Silently skipped when no such plans exist — no-op for non-TDD projects.
+  try {
+    const tdd = await runTddGate(ctx);
+    if (tdd.ran) {
+      for (const f of tdd.findings) {
+        findings.push(tddFindingToVerify(f));
+      }
+    }
+  } catch (err) {
+    ctx.log.warn('TDD gate failed; skipping', { error: err });
   }
 
   const hasCriticalOrHigh = findings.some(

@@ -37,6 +37,7 @@ export interface VerifyFinding {
     | 'lint'
     | 'guard'
     | 'tribal'
+    | 'tdd'
     | 'acceptance'
     | 'scope'
     | 'adversarial'
