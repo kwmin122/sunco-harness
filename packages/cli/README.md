@@ -104,6 +104,16 @@ Published artifacts:
   6 hooks              — Lifecycle hooks
 ```
 
+## v0.9.0 Highlights
+
+- **Superpowers 14-skill parity** — every built-in Superpowers skill now has a SUNCO equivalent; `brainstorming` is vendored verbatim and extended with SUNCO rigor
+- **Default project-start chain** — `/sunco:office-hours` → `/sunco:brainstorming` → `/sunco:new` on all four runtimes
+- **TDD gate** — `type: tdd` plans get deterministic Red-Green-Refactor enforcement in verify Layer 2
+- **`/sunco:review --fix`** — auto-routes agreed issues through `/sunco:quick` and re-verifies
+- **`/sunco:brainstorming --visual`** — auto-boots the vendored visual companion server
+- **`/sunco:new-skill`** — scaffolds new SUNCO skills + colocated tests
+- **83 slash commands**, 847 workflow tests, 59/59 contract lint
+
 ## v0.8.0 Highlights
 
 - **Alias Infrastructure** — `SkillDefinition.aliases[]` with deprecation warnings and default args injection

@@ -36,6 +36,16 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
 - **Korean i18n** — 83 commands with Korean descriptions, interactive installer
 
+### New in v0.9.0
+
+- **Superpowers 14-skill parity** — every built-in skill from the Superpowers framework (brainstorming, writing-plans, executing-plans, TDD, systematic-debugging, verification-before-completion, requesting/receiving-code-review, subagent-driven development, git-worktrees, finishing-a-branch, writing-skills, visual companion) has a SUNCO equivalent
+- **Default project-start chain** — `/sunco:office-hours` → `/sunco:brainstorming` → `/sunco:new --from-preflight <spec>` on every runtime (Claude Code, Codex, Cursor, Antigravity); Superpowers brainstorming vendored verbatim as source of truth and extended with SUNCO rigor
+- **TDD gate in Layer 2** — plans tagged `type: tdd` now get deterministic test-first enforcement (test file presence, colocated match, test-first commit order)
+- **`/sunco:review --fix`** — receiving-code-review loop: agreed issues auto-route through `/sunco:quick` and re-verify
+- **`/sunco:brainstorming --visual`** — auto-boots the vendored visual companion server and feeds the URL to the planning agent
+- **`/sunco:new-skill`** — deterministic scaffolder for new SUNCO skills + colocated tests (writing-skills parity)
+- **847 workflow tests**, 59/59 contract lint, 83 slash commands
+
 ### New in v0.8.0
 
 - **Alias Infrastructure** — `SkillDefinition.aliases[]` with deprecation warnings; deprecated commands auto-route to absorbers
