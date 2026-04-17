@@ -2,6 +2,20 @@
 
 7-layer Swiss cheese verification for a completed phase. Each layer catches different failure modes. Layers are designed to have low correlation — a bug that slips through one layer is likely caught by another. Used by `/sunco:verify`.
 
+## Verification-Before-Completion Principle (Superpowers parity)
+
+A phase is not "done" because code was written, the executor exited zero, or the tests compiled. A phase is done when **proof exists** that every requirement it claims to cover is met and the 7-layer cheese actually closes.
+
+Operational rules:
+
+1. **Never mark a phase complete without a fresh verify run.** Old VERIFICATION.md from a prior execution counts as noise, not proof.
+2. **`/sunco:execute` completing successfully is not sufficient.** Execution produces code; verification produces proof. The two must be separate artifacts.
+3. **Running `/sunco:verify` is the author's responsibility, not the reader's.** Do not hand off a phase to `/sunco:review` or `/sunco:ship` with stale verification output and expect reviewers to re-run it.
+4. **Failed layers block downstream commands.** `/sunco:proceed-gate`, `/sunco:ship`, and `/sunco:release` MUST refuse to run when VERIFICATION.md has unresolved findings.
+5. **Human eval (Layer 7) is not optional for user-facing features.** Skipping it for subjective quality work silently lowers the proof bar to "it compiles."
+
+If you find yourself tempted to ship without verify, the correct question is not "can we skip it?" but "why did we finish a phase we cannot prove?"
+
 ---
 
 ## Overview

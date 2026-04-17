@@ -4,6 +4,18 @@ Insert an urgent or mid-milestone phase between two existing phases using decima
 
 ---
 
+## Pre-Check: New Capability Requires Brainstorming
+
+Decimal phases are almost always unplanned when they are inserted — that is their reason for existing. If the inserted phase introduces a new user-facing capability, subsystem, or architectural change, run brainstorming BEFORE this workflow:
+
+```text
+/sunco:brainstorming "<the new capability being squeezed in>"
+```
+
+Feed the approved spec to `/sunco:reinforce` (to add requirements to the current milestone) or directly supply it as context to `/sunco:discuss <phase>` after this insert completes. Only skip brainstorming when the inserted phase is a pure bugfix / hotfix whose scope fits in a single `/sunco:quick`.
+
+---
+
 ## Overview
 
 Five steps:

@@ -4,6 +4,20 @@ Append a new phase to the end of the project roadmap. Reads ROADMAP.md to determ
 
 ---
 
+## Pre-Check: New Capability vs. Already-Planned Work
+
+If the phase you are about to add represents a **new capability** (a feature/subsystem whose shape is not yet documented in ROADMAP.md or REQUIREMENTS.md), run brainstorming before this workflow:
+
+```text
+/sunco:brainstorming "<the new capability>"
+```
+
+Then feed the approved spec to `/sunco:new --from-preflight <spec>` to update REQUIREMENTS.md/ROADMAP.md, or to `/sunco:reinforce` to insert the requirements into the current milestone. Only return here after the spec exists.
+
+Skip brainstorming when the phase is **already in ROADMAP.md** and you are only materializing its directory/stubs — that is this workflow's actual job.
+
+---
+
 ## Overview
 
 Four steps:

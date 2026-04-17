@@ -243,6 +243,23 @@ Next:
 
 ---
 
+## Receiving Review Feedback (Superpowers receiving-code-review parity)
+
+Review is not complete when REVIEWS.md is written — it is complete when the code is either fixed or the user has explicitly accepted the risk. Follow this loop:
+
+1. **Agreed issues (≥2 reviewers)** → MUST fix. Route:
+   - Small, localized fix → `/sunco:quick "fix <issue> in <file>:<line>"`
+   - Spans multiple tasks or a plan → add a decimal plan (e.g. `NN-01-fix.md`) and re-run `/sunco:execute NN` (wave-scoped, with worktree isolation)
+   - Changes break prior acceptance criteria → update the plan, re-run `/sunco:plan NN` for the affected plan before re-executing
+2. **After every fix pass** → re-run `/sunco:verify NN` to confirm the 7-layer swiss cheese still closes. Never claim a fix is done without fresh verification output.
+3. **Re-run `/sunco:review NN`** → the review loop terminates only when verdict is PASS or PASS WITH WARNINGS that the user has explicitly accepted (logged in REVIEWS.md).
+4. **Solo issues (1 reviewer)** → discuss with user; accept, defer, or fix. Record the decision in REVIEWS.md so it does not resurface on the next review.
+5. **Only after the review loop closes** → `/sunco:proceed-gate` (zero unresolved findings) → `/sunco:ship NN`.
+
+Ship-anyway is an escape hatch, not the default path. If it is chosen, every unresolved finding MUST be surfaced in the PR body so the human reviewer can see what was knowingly deferred.
+
+---
+
 ## Success Criteria
 
 - [ ] Correct review target identified (plan vs. execution)

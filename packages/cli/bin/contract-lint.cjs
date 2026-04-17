@@ -128,17 +128,53 @@ if (fs.existsSync(vendoredSkill)) {
   const vendored = fs.readFileSync(vendoredSkill, 'utf8');
   check('Vendored SKILL.md preserves Superpowers HARD-GATE', vendored.includes('<HARD-GATE>'));
   check('Vendored SKILL.md wires SUNCO handoff', vendored.includes('/sunco:new --from-preflight'));
+  check('Vendored SKILL.md forbids /sunco:execute during brainstorming', vendored.includes('/sunco:execute'));
+  check('Vendored SKILL.md forbids /sunco:ship during brainstorming', vendored.includes('/sunco:ship'));
 }
 const brainstormingWf = path.join(pkgRoot, 'workflows', 'brainstorming.md');
 if (fs.existsSync(brainstormingWf)) {
   const wf = fs.readFileSync(brainstormingWf, 'utf8');
   check('brainstorming workflow references vendored source', wf.includes('references/superpowers/brainstorming/SKILL.md'));
   check('brainstorming workflow hands off to /sunco:new --from-preflight', wf.includes('/sunco:new --from-preflight'));
+  check('brainstorming workflow shows full lifecycle map', wf.includes('Full Lifecycle Map'));
+  check('brainstorming workflow maps Superpowers 14 skills', wf.includes('Superpowers skill') && wf.includes('writing-plans') && wf.includes('test-driven-development'));
 }
 const officeHoursWf = path.join(pkgRoot, 'workflows', 'office-hours.md');
 if (fs.existsSync(officeHoursWf)) {
   const wf = fs.readFileSync(officeHoursWf, 'utf8');
   check('office-hours workflow chains into brainstorming by default', wf.includes('/sunco:brainstorming'));
+}
+const helpWf = path.join(pkgRoot, 'workflows', 'help.md');
+if (fs.existsSync(helpWf)) {
+  const wf = fs.readFileSync(helpWf, 'utf8');
+  check('help workflow shows full feature lifecycle', wf.includes('/sunco:office-hours') && wf.includes('/sunco:brainstorming') && wf.includes('/sunco:verify') && wf.includes('/sunco:review'));
+  check('help workflow exposes Superpowers ↔ SUNCO skill map', wf.includes('Superpowers') && wf.includes('SUNCO equivalent'));
+}
+const planWf = path.join(pkgRoot, 'workflows', 'plan-phase.md');
+if (fs.existsSync(planWf)) {
+  const wf = fs.readFileSync(planWf, 'utf8');
+  check('plan-phase enforces zero-context-executor discipline', wf.includes('zero prior context') || wf.includes('zero codebase context'));
+}
+const reviewWf = path.join(pkgRoot, 'workflows', 'review.md');
+if (fs.existsSync(reviewWf)) {
+  const wf = fs.readFileSync(reviewWf, 'utf8');
+  check('review workflow documents receive-review loop', wf.includes('Receiving Review Feedback') || wf.includes('receiving-code-review'));
+  check('review workflow mandates re-verify after fix', wf.includes('/sunco:verify'));
+}
+const verifyWf = path.join(pkgRoot, 'workflows', 'verify-phase.md');
+if (fs.existsSync(verifyWf)) {
+  const wf = fs.readFileSync(verifyWf, 'utf8');
+  check('verify-phase states verification-before-completion principle', wf.includes('Verification-Before-Completion') || wf.includes('proof exists'));
+}
+const addPhaseWf = path.join(pkgRoot, 'workflows', 'add-phase.md');
+if (fs.existsSync(addPhaseWf)) {
+  const wf = fs.readFileSync(addPhaseWf, 'utf8');
+  check('add-phase routes new capabilities to brainstorming', wf.includes('/sunco:brainstorming'));
+}
+const insertPhaseWf = path.join(pkgRoot, 'workflows', 'insert-phase.md');
+if (fs.existsSync(insertPhaseWf)) {
+  const wf = fs.readFileSync(insertPhaseWf, 'utf8');
+  check('insert-phase routes new capabilities to brainstorming', wf.includes('/sunco:brainstorming'));
 }
 
 // 7. README contract alignment

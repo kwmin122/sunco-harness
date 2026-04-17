@@ -6,22 +6,60 @@ All commands, organized by category. Each entry shows the command, what it does,
 
 ## Getting Started
 
-The standard workflow for a new project:
+The full feature lifecycle, from raw idea to landed PR:
 
 ```
-/sunco:init        → scaffold .sun/ and .planning/
-/sunco:new         → bootstrap from idea to roadmap
-/sunco:discuss 1   → extract decisions for Phase 1
-/sunco:plan 1      → create atomic execution plans
-/sunco:execute 1   → run plans in parallel waves
-/sunco:verify 1    → 7-layer Swiss cheese verification
-/sunco:ship 1      → create PR and prepare release
+idea
+  ↓
+/sunco:office-hours        (pressure-test problem, user, wedge, demand evidence)
+  ↓
+/sunco:brainstorming       (vendored Superpowers — design/spec, HARD-GATE: no code)
+  ↓
+/sunco:new --from-preflight <spec>   (PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md)
+  ↓ ── per phase ──────────────────────────────────────────────────────────────
+/sunco:discuss N           (decisions + gray areas)
+  ↓
+/sunco:plan N              (bite-sized tasks, exact paths, BDD, verification steps)
+  ↓
+/sunco:execute N           (wave + worktree, fresh subagent per plan, lint-gate)
+  ↓
+/sunco:verify N            (7-layer swiss cheese — proof before completion)
+  ↓
+/sunco:review N            (multi-provider review; feedback → /sunco:quick|execute loop)
+  ↓
+/sunco:proceed-gate        (zero unresolved findings)
+  ↓
+/sunco:ship N              (PR) → /sunco:land (merge + deploy)
 ```
 
 For existing projects, start from wherever you are:
+- Raw idea, no spec → `/sunco:office-hours` (chains into brainstorming → new)
+- Have spec, no project → `/sunco:new --from-preflight <spec>`
 - Know what to build → `/sunco:discuss [N]`
 - Have context, need plans → `/sunco:plan [N]`
 - Have plans, need execution → `/sunco:execute [N]`
+- Have code, need proof → `/sunco:verify [N]` → `/sunco:review [N]`
+
+### Superpowers ↔ SUNCO Skill Map
+
+SUNCO treats Superpowers' 14 built-in skills as a behavioral reference and covers the whole chain:
+
+| Superpowers skill | SUNCO equivalent |
+|---|---|
+| using-superpowers | `/sunco:mode`, `/sunco:help` |
+| brainstorming | `/sunco:brainstorming` (vendored source of truth) |
+| writing-plans | `/sunco:plan` |
+| executing-plans | `/sunco:execute` |
+| subagent-driven-development | wave execution + `/sunco:workspaces` worktree |
+| test-driven-development | `/sunco:test-gen` + `type: tdd` plan flag |
+| systematic-debugging | `/sunco:debug` (Iron Law: reproduce → root cause → fix → verify) |
+| verification-before-completion | `/sunco:verify` + `/sunco:proceed-gate` |
+| requesting-code-review | `/sunco:review` |
+| receiving-code-review | `/sunco:review` → `/sunco:quick`/`/sunco:execute` loop |
+| dispatching-parallel-agents | `wave.parallelization: true` in plans |
+| using-git-worktrees | `/sunco:workspaces`, `/sunco:workstreams` |
+| finishing-a-development-branch | `/sunco:ship`, `/sunco:land`, `/sunco:pr-branch` |
+| writing-skills | `@sunco/core` `defineSkill` + `.claude/rules/conventions.md` |
 
 ---
 

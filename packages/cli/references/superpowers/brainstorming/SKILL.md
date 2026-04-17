@@ -14,6 +14,15 @@ Start by understanding the current project context, then ask questions one at a 
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+
+Explicitly forbidden during brainstorming:
+
+- `/sunco:execute`, `/sunco:quick`, `/sunco:fast` (implementation)
+- `/sunco:ship`, `/sunco:release`, `/sunco:land` (delivery)
+- `/sunco:test-gen`, `/sunco:verify`, `/sunco:review` (post-implementation gates)
+- `writing-plans`, `executing-plans`, `test-driven-development` (Superpowers implementation skills)
+
+The ONLY allowed next steps from brainstorming are: continue clarifying, write/revise the spec, or hand off to the terminal state declared in this skill's frontmatter.
 </HARD-GATE>
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"

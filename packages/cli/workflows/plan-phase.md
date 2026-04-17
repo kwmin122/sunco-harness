@@ -1,5 +1,7 @@
 <purpose>
 Create executable phase plans (PLAN.md files) for a roadmap phase with integrated research, wave assignment, and plan verification. Default flow: Initialize → Check Existing Plans → Research → Create Plans → Verify Plans → Wave Assignment → Write Plans → Commit. Orchestrates sunco-phase-researcher and sunco-plan-checker subagents with a revision loop (max 3 iterations).
+
+**Writing-plans discipline (Superpowers parity):** Every task in this plan MUST be executable by an agent that has zero prior context about this codebase. Assume the executor has read only the files listed in `read_first` and the canonical refs. If a task cannot be completed from its `<action>` text, `<files>` list, and `<acceptance_criteria>` alone, the plan is incomplete — not the executor.
 </purpose>
 
 <required_reading>
