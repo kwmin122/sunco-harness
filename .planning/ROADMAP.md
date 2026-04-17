@@ -456,4 +456,12 @@ v1.2 Phases: 17 -> 18 -> 19 -> 20 -> 21 (Light Harness)
 | 24d. Harness Evolution              | -              | Complete    | 2026-04-08 |
 | 25. Workflow Surface Simplification | 0/?            | Not started | -          |
 
+---
+
+## v1.3 Closeout (2026-04-18)
+
+v1.3 is closed as a consolidation milestone. Its absorption/pivot work (Phase 22–28, 30, 32, 33, 34) is preserved as the foundation for the v1.4 Impeccable Fusion direction. Candidate/unmarked items (Phase 23a, 23b, 29, 31) remain historical or may be reintroduced explicitly in v1.4+.
+
+**Note on internal drift**: The Milestones progress table above contains additional drift (e.g., Phase 22/25 marked "Not started" despite the Phase entry list showing completion dates). Comprehensive ROADMAP refresh is deferred to a dedicated cleanup task; this closeout note establishes the canonical v1.3 record.
+
 

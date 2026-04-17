@@ -1,5 +1,7 @@
 # SUN
 
+**Historical note (2026-04-18)**: This document's core content reflects the 2026-03-29 v1.1 operational resilience pivot snapshot. The project has since advanced through **v1.2 Light Harness** (Phase 17–21, completed 2026-04-06) and **v1.3 consolidation/pivot absorption** (Phase 22–34 advanced through 2026-04-13; completed work preserved, Phase 23a/b/29/31 candidates remain historical). **v1.4 Impeccable Fusion** initialization follows in a subsequent commit. Comprehensive PROJECT.md refresh is deferred to a dedicated cleanup task.
+
 ## What This Is
 
 SUN is an independent workspace OS for agent-era builders. In an era where AI agents write code, the builder's job is not writing code — it's setting up the field so agents make fewer mistakes. SUN is that field. A standalone CLI runtime with a skill-based architecture, harness engineering at its core, a 6-stage review pipeline with 5-layer Swiss cheese verification, and a dedicated terminal for real-time agent observation. The first workspace OS for Korean developers. Zero competitors.

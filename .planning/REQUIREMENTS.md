@@ -256,6 +256,12 @@
 - **LH-23**: 스킬 학습 프로필 -- 사용자별 스킬 사용 패턴 분석 → 자동 추천 개인화
 - **LH-24**: 하네스 자체 토큰 예산 5% 제한 -- 하네스 로딩(CLAUDE.md, 훅, 상태)이 전체 컨텍스트의 5% 이하 (HarnessOS 목표)
 
+## v1.3 Historical Note (no backfill)
+
+v1.3 work (Phase 22–34) was executed as internal consolidation / pivot absorption without formal REQ-ID assignment. See `ROADMAP.md` § v1.3 Closeout for phase-level detail and `.planning/phases/22-*` through `34-*` for implementation artifacts. Retroactive REQ documentation is intentionally out of scope. v1.4 onward resumes formal REQ-ID discipline.
+
+---
+
 ## v2 Requirements
 
 ### Extension Skills
