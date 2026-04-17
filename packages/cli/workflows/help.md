@@ -59,7 +59,7 @@ SUNCO treats Superpowers' 14 built-in skills as a behavioral reference and cover
 | dispatching-parallel-agents | `wave.parallelization: true` in plans |
 | using-git-worktrees | `/sunco:workspaces`, `/sunco:workstreams` |
 | finishing-a-development-branch | `/sunco:ship`, `/sunco:land`, `/sunco:pr-branch` |
-| writing-skills | `@sunco/core` `defineSkill` + `.claude/rules/conventions.md` |
+| writing-skills | `/sunco:new-skill` + `@sunco/core` `defineSkill` |
 
 ---
 

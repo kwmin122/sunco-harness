@@ -40,6 +40,7 @@ import {
   settingsSkill as workflowSettingsSkill,
   brainstormingSkill,
   newSkill,
+  newSkillMetaSkill,
   scanSkill,
   discussSkill,
   // Phase 33 Wave 2: assumeSkill removed from preloaded — 'assume' is now an alias on planSkill
@@ -98,6 +99,7 @@ const preloadedSkills = [
   // Phase 4 project initialization skills
   brainstormingSkill,
   newSkill,
+  newSkillMetaSkill,
   scanSkill,
   // Phase 5 context + planning skills
   discussSkill,

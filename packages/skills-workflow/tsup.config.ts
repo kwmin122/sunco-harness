@@ -16,6 +16,7 @@ export default defineConfig({
     'src/settings.skill.ts',
     'src/brainstorming.skill.ts',
     'src/new.skill.ts',
+    'src/new-skill.skill.ts',
     'src/scan.skill.ts',
     'src/discuss.skill.ts',
     'src/assume.skill.ts',

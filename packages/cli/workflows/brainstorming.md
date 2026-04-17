@@ -50,7 +50,7 @@ Mapping to Superpowers' 14 skills so readers can reason about it from either sid
 | dispatching-parallel-agents | `wave.parallelization` in `/sunco:execute` | Built into plan schema |
 | using-git-worktrees | `/sunco:workspaces`, `/sunco:workstreams` | Native worktree support |
 | finishing-a-development-branch | `/sunco:ship`, `/sunco:land`, `/sunco:pr-branch` | Merge + release chain |
-| writing-skills | `@sunco/core` `defineSkill` + `.claude/rules/conventions.md` | Pattern-based extension |
+| writing-skills | `/sunco:new-skill` + `@sunco/core` `defineSkill` | Scaffolds `.skill.ts` + test; user wires barrel/tsup/preload |
 
 **Why this map matters for brainstorming:** the spec you write here must be implementable by `/sunco:plan` without needing to re-interview the user. Keep every decision that affects phases, tasks, or verification in the spec; keep everything that is merely opinion out of it.
 

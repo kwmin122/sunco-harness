@@ -7,7 +7,7 @@ Agent Workspace OS — harness engineering for AI coding agents
 
 ## What is SUNCO?
 
-SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 82 slash commands that enforce quality at every step — security audits, lint gates, blast radius analysis, 7-layer verification, multi-perspective reviews, and a proactive recommender.
+SUNCO is a skill pack for Claude Code (and other AI coding agents). It installs 83 slash commands that enforce quality at every step — security audits, lint gates, blast radius analysis, 7-layer verification, multi-perspective reviews, and a proactive recommender.
 
 **One command to install:**
 
@@ -28,13 +28,13 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Adaptive lifecycle** — pivot, rethink, backtrack at any stage without losing progress
 - **Blast radius analysis** — dependency graph check before every execution
 - **Per-task checkpointing** — crash recovery resumes from exact task, not from scratch
-- **82 slash commands** covering the full development lifecycle
+- **83 slash commands** covering the full development lifecycle
 - **Security audit (CSO)** — OWASP Top 10, STRIDE, secret detection, supply chain risk
 - **Multi-perspective reviews** — CEO, engineering, design reviews before implementation
 - **Operations** — retro, benchmark, land-and-deploy, canary monitoring
 - **Safety guardrails** — destructive command warnings, directory freeze
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
-- **Korean i18n** — 82 commands with Korean descriptions, interactive installer
+- **Korean i18n** — 83 commands with Korean descriptions, interactive installer
 
 ### New in v0.8.0
 
@@ -155,6 +155,7 @@ Each step has built-in quality gates:
 |---------|-------------|
 | `/sunco:new` | Bootstrap project from idea via office-hours → Superpowers brainstorming → planning artifacts |
 | `/sunco:brainstorming` | Run vendored Superpowers brainstorming before SUNCO planning |
+| `/sunco:new-skill` | Scaffold a new SUNCO skill file + colocated test (Superpowers writing-skills parity) |
 | `/sunco:discuss` | Extract decisions and gray areas |
 | `/sunco:plan` | Create execution plans with BDD criteria |
 | `/sunco:execute` | Parallel execution with lint-gate |
@@ -238,7 +239,7 @@ Each step has built-in quality gates:
 
 **Claude Code** (`~/.claude/`):
 ```
-commands/sunco/           # 82 slash commands
+commands/sunco/           # 83 slash commands
 sunco/bin/                # Engine + sunco-tools.cjs
 sunco/workflows/          # 77 workflow files
 sunco/references/         # 16 reference documents
@@ -277,7 +278,7 @@ npx popcoru --all                 # Install for all available runtimes
 ### SUNCO가 뭔가요?
 
 SUNCO는 AI 코딩 에이전트(Claude Code 등)가 실수를 덜 하도록 도와주는 도구입니다.
-설치하면 82개의 슬래시 명령어(`/sunco:help`, `/sunco:lint` 등)가 추가되어, AI가 코드를 작성할 때 자동으로 품질을 검사하고 검증합니다.
+설치하면 83개의 슬래시 명령어(`/sunco:help`, `/sunco:lint` 등)가 추가되어, AI가 코드를 작성할 때 자동으로 품질을 검사하고 검증합니다.
 
 ### 설치 전 준비
 
@@ -307,7 +308,7 @@ npx popcoru
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝
 
- ✓ Installed commands/sunco (82 skills)
+ ✓ Installed commands/sunco (83 skills)
  ✓ Installed sunco engine
  ✓ Installed hooks
  ✓ Installed docs
