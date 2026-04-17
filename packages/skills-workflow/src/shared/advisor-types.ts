@@ -129,19 +129,71 @@ export type AdvisorProfile =
   | 'inherit'
   | 'custom';
 
+/** Runtime the advisor is running inside. */
+export type AdvisorRuntime = 'claude' | 'codex' | 'cursor' | 'antigravity' | 'unknown';
+
+/**
+ * How the advisor arrives at its *voice*. The deterministic classifier
+ * (risk → policy → message) ALWAYS runs regardless of engine — `engine`
+ * controls whether an additional optional "voice" is layered on top.
+ *
+ *   deterministic  — no model call. Template Risk/Suggestion only. Safest,
+ *                    fastest, the product default for uncertain runtimes.
+ *   runtime-native — delegate the voice to the runtime's native model
+ *                    (Claude Code uses Claude, Codex uses GPT-5.4, etc.).
+ *                    NO SUNCO-managed API key required.
+ *   external-cli   — call a local CLI binary (claude / codex) that the
+ *                    user has authenticated separately.
+ *   external-api   — hit an HTTPS API endpoint using SUNCO-managed
+ *                    credentials. Reserved for future use — NOT shipped
+ *                    in v0.11.x; picker does not surface this.
+ */
+export type AdvisorEngine =
+  | 'deterministic'
+  | 'runtime-native'
+  | 'external-cli'
+  | 'external-api';
+
+/** Model family lineage. Used for display + routing decisions. */
+export type AdvisorFamily =
+  | 'claude'
+  | 'codex'
+  | 'cursor'
+  | 'antigravity'
+  | 'local'
+  | 'custom';
+
+/** Reasoning effort for Codex/GPT-style reasoning models. */
+export type ReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh';
+
 export interface AdvisorConfig {
   /** Master on/off. When false, the advisor never surfaces. */
   enabled: boolean;
   /**
-   * Model id. One of:
-   *   - 'claude-opus-4-7' | 'claude-sonnet-4-6' | 'claude-haiku-4-5'
-   *   - 'codex-cli'  (external cross-family)
-   *   - 'gpt-5.x' | 'gemini-2.5-pro'  (if provider detected)
-   *   - 'custom' (user edits .sun/config.toml manually)
+   * Runtime the advisor believes it is running inside. Detected at
+   * reconfigure time; used to default the model/engine sensibly.
+   */
+  runtime: AdvisorRuntime;
+  /** How the voice is produced (see AdvisorEngine). Classifier is always deterministic. */
+  engine: AdvisorEngine;
+  /** Model family lineage. */
+  family: AdvisorFamily;
+  /**
+   * Model id in the active family's dialect, or a sentinel:
+   *   - 'deterministic'      — no model voice, template only
+   *   - 'claude-opus-4-7'    — Claude family
+   *   - 'claude-sonnet-4-6'
+   *   - 'claude-haiku-4-5'
+   *   - 'gpt-5.4'            — Codex/OpenAI family
+   *   - 'gpt-5.4-mini'
+   *   - 'cursor-native'      — Cursor runtime passthrough
+   *   - 'custom'             — user maintains the row manually
    */
   model: string;
-  /** Extended thinking tier. Ignored when the model doesn't support it. */
+  /** Extended thinking tier (Claude-family). Ignored by other families. */
   thinking: ThinkingTier;
+  /** Reasoning effort (Codex/GPT-family). Ignored by other families. */
+  reasoningEffort?: ReasoningEffort;
   /** Profile preset. */
   profile: AdvisorProfile;
   /** Soft cap per session in USD. Warn, never block. */
@@ -166,14 +218,22 @@ export interface AdvisorConfig {
   suppressSameKeyMinutes: number;
 }
 
-/** Default config shipped with a fresh install. */
+/**
+ * Default config for a fresh install. NOTE: `runtime` starts as
+ * 'unknown' — advisor-selector overrides it during install/reconfigure.
+ * `engine` defaults to 'deterministic' so zero-config installs never
+ * call a model.
+ */
 export const DEFAULT_ADVISOR_CONFIG: AdvisorConfig = {
   enabled: true,
-  model: 'claude-opus-4-7',
-  thinking: 'high',
+  runtime: 'unknown',
+  engine: 'deterministic',
+  family: 'local',
+  model: 'deterministic',
+  thinking: 'off',
   profile: 'inherit',
   costCapPerSessionUSD: 5.0,
-  fallback: 'claude-sonnet-4-6',
+  fallback: 'deterministic',
   promptInjection: true,
   postActionQueue: true,
   autoExecuteSkills: false,
@@ -183,55 +243,141 @@ export const DEFAULT_ADVISOR_CONFIG: AdvisorConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Model options (first-run picker contract)
+// Runtime-aware defaults (v0.11.1)
 // ---------------------------------------------------------------------------
 
 /**
- * One row in the advisor-selector picker. The implementation in Phase 1
- * must honor this shape; it MUST NOT add fields without updating this
- * contract and the advisor-contract.md document.
+ * Default advisor config by runtime. Selector picks from this table
+ * first, provider detection only augments/overrides. Zero provider
+ * detection is acceptable — the runtime-native engine relies on the
+ * runtime's own authentication, not a SUNCO-managed API key.
+ */
+export const RUNTIME_ADVISOR_DEFAULTS: Record<
+  Exclude<AdvisorRuntime, 'unknown'>,
+  Partial<AdvisorConfig>
+> = {
+  claude: {
+    runtime: 'claude',
+    engine: 'runtime-native',
+    family: 'claude',
+    model: 'claude-opus-4-7',
+    thinking: 'high',
+    fallback: 'claude-sonnet-4-6',
+  },
+  codex: {
+    runtime: 'codex',
+    engine: 'runtime-native',
+    family: 'codex',
+    model: 'gpt-5.4',
+    thinking: 'off',
+    reasoningEffort: 'high',
+    fallback: 'gpt-5.4-mini',
+  },
+  cursor: {
+    runtime: 'cursor',
+    engine: 'runtime-native',
+    family: 'cursor',
+    model: 'cursor-native',
+    thinking: 'off',
+    fallback: 'deterministic',
+  },
+  antigravity: {
+    runtime: 'antigravity',
+    engine: 'deterministic',
+    family: 'antigravity',
+    model: 'deterministic',
+    thinking: 'off',
+    fallback: 'deterministic',
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Advisor behavior picker (v0.11.1 — runtime-aware)
+// ---------------------------------------------------------------------------
+
+/**
+ * One row in the advisor-selector picker.
+ *
+ * v0.11.1 rewrite — these are NOT "model providers". They are advisor
+ * behavior presets that the user picks once per runtime. The classifier
+ * (risk + policy) always runs deterministically regardless of pick; the
+ * row only decides whether to layer a runtime-native "voice" on top.
+ *
+ * Picker filtering:
+ *   - `scope`: 'always' rows are shown in every runtime. 'runtime-native'
+ *     rows only show when `runtime` matches the active runtime. 'advanced'
+ *     rows only show when the matching provider is detected (we keep them
+ *     so power users who DO have external API keys can pick them).
+ *   - `requiresProvider`: only meaningful for 'advanced' scope.
+ *
+ * Per-runtime ordering is handled by advisor-selector.ts, not the
+ * row definition itself.
  */
 export interface AdvisorModelOption {
   /** Stable id written to config.toml */
   id: string;
   /** Short one-line label shown in the picker */
   label: string;
-  /** Secondary caption, e.g. "quality, slow, expensive" */
+  /** Secondary caption */
   caption: string;
-  /** Thinking tier baked into this option. null for custom/passthrough. */
+  /** Engine this option implies. */
+  engine: AdvisorEngine;
+  /** Family of the advisor voice (or 'local' for deterministic). */
+  family: AdvisorFamily;
+  /** Thinking tier baked into this option (Claude-family). */
   thinking: ThinkingTier | null;
-  /** Is this option visible by default (without provider detection)? */
-  defaultVisible: boolean;
-  /**
-   * Which provider must be detected for this option to show up in picker.
-   * null for always-available ids (custom, edit config).
-   */
-  requiresProvider:
+  /** Reasoning effort baked into this option (Codex/GPT-family). */
+  reasoningEffort?: ReasoningEffort;
+  /** When should this row be offered. */
+  scope: 'always' | 'runtime-native' | 'advanced';
+  /** For scope='runtime-native', which runtime owns it. */
+  runtime?: Exclude<AdvisorRuntime, 'unknown'>;
+  /** For scope='advanced', which external provider must be present. */
+  requiresProvider?:
     | 'anthropic'
     | 'codex-cli'
     | 'openai'
-    | 'google'
-    | null;
+    | 'google';
 }
 
 /**
- * The default picker list. first-run UI shows rows in this order. Rows
- * whose `requiresProvider` is not detected are filtered out (unless
- * `defaultVisible` is true). Implementation in Phase 1 imports this
- * constant and must not reorder or mutate it in place.
+ * The full picker row registry. advisor-selector.ts filters + orders
+ * this based on the detected runtime and providers.
+ *
+ * Ordering intent:
+ *   1. Runtime-native rows for the active runtime (most relevant)
+ *   2. Deterministic row (always-safe fallback)
+ *   3. Custom (escape hatch)
+ *   4. Advanced rows when providers are detected (power-user territory)
  */
 export const DEFAULT_ADVISOR_MODEL_OPTIONS: readonly AdvisorModelOption[] = [
-  { id: 'claude-opus-4-7@max',    label: 'Opus 4.7 — thinking: max',    caption: 'quality, slow, expensive', thinking: 'max',    defaultVisible: true,  requiresProvider: 'anthropic' },
-  { id: 'claude-opus-4-7@high',   label: 'Opus 4.7 — thinking: high',   caption: 'quality, slower',          thinking: 'high',   defaultVisible: true,  requiresProvider: 'anthropic' },
-  { id: 'claude-opus-4-7@medium', label: 'Opus 4.7 — thinking: medium', caption: 'balanced default',         thinking: 'medium', defaultVisible: true,  requiresProvider: 'anthropic' },
-  { id: 'claude-sonnet-4-6@max',  label: 'Sonnet 4.6 — thinking: max',  caption: 'fast, strong',             thinking: 'max',    defaultVisible: true,  requiresProvider: 'anthropic' },
-  { id: 'claude-sonnet-4-6@high', label: 'Sonnet 4.6 — thinking: high', caption: 'fast, balanced',           thinking: 'high',   defaultVisible: true,  requiresProvider: 'anthropic' },
-  { id: 'claude-haiku-4-5@off',   label: 'Haiku 4.5 — thinking: off',   caption: 'fastest, cheapest',        thinking: 'off',    defaultVisible: true,  requiresProvider: 'anthropic' },
-  { id: 'codex-cli',              label: 'Codex CLI — cross-family',    caption: 'external, different perspective', thinking: null, defaultVisible: true, requiresProvider: 'codex-cli' },
-  { id: 'custom',                 label: 'Custom — edit .sun/config.toml', caption: 'write your own',        thinking: null,     defaultVisible: true,  requiresProvider: null },
-  // Detected-only advanced options (hidden unless provider exists)
-  { id: 'gpt-5',        label: 'GPT-5 (advanced, detected)',      caption: 'cross-family if OPENAI_API_KEY set', thinking: null, defaultVisible: false, requiresProvider: 'openai' },
-  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro (advanced, detected)', caption: 'cross-family if GOOGLE_API_KEY set', thinking: null, defaultVisible: false, requiresProvider: 'google' },
+  // Claude runtime-native
+  { id: 'claude-opus-4-7@high',    label: 'Claude Opus 4.7 — thinking: high (Recommended)', caption: 'best judgment, slower',         engine: 'runtime-native', family: 'claude', thinking: 'high',   scope: 'runtime-native', runtime: 'claude' },
+  { id: 'claude-opus-4-7@max',     label: 'Claude Opus 4.7 — thinking: max',                caption: 'deepest analysis, expensive',   engine: 'runtime-native', family: 'claude', thinking: 'max',    scope: 'runtime-native', runtime: 'claude' },
+  { id: 'claude-sonnet-4-6@high',  label: 'Claude Sonnet 4.6 — thinking: high',             caption: 'fast, strong default',          engine: 'runtime-native', family: 'claude', thinking: 'high',   scope: 'runtime-native', runtime: 'claude' },
+  { id: 'claude-haiku-4-5@off',    label: 'Claude Haiku 4.5 — thinking: off',               caption: 'fastest, cheapest',             engine: 'runtime-native', family: 'claude', thinking: 'off',    scope: 'runtime-native', runtime: 'claude' },
+
+  // Codex runtime-native
+  { id: 'gpt-5.4@high',            label: 'GPT-5.4 — reasoning: high (Recommended)',        caption: 'Codex default, strong reasoning', engine: 'runtime-native', family: 'codex', thinking: 'off', reasoningEffort: 'high', scope: 'runtime-native', runtime: 'codex' },
+  { id: 'gpt-5.4@xhigh',           label: 'GPT-5.4 — reasoning: xhigh',                     caption: 'deepest reasoning, slower',     engine: 'runtime-native', family: 'codex', thinking: 'off', reasoningEffort: 'xhigh', scope: 'runtime-native', runtime: 'codex' },
+  { id: 'gpt-5.4-mini@high',       label: 'GPT-5.4 mini — reasoning: high',                 caption: 'faster, cheaper Codex voice',   engine: 'runtime-native', family: 'codex', thinking: 'off', reasoningEffort: 'high', scope: 'runtime-native', runtime: 'codex' },
+  { id: 'gpt-5.2-codex@high',      label: 'GPT-5.2 Codex — reasoning: high',                caption: 'code-focused variant',          engine: 'runtime-native', family: 'codex', thinking: 'off', reasoningEffort: 'high', scope: 'runtime-native', runtime: 'codex' },
+
+  // Cursor runtime-native
+  { id: 'cursor-native@inherit',   label: 'Cursor native',                                  caption: "uses Cursor's active model",    engine: 'runtime-native', family: 'cursor', thinking: 'off', scope: 'runtime-native', runtime: 'cursor' },
+
+  // Antigravity: only deterministic available for now
+  // (no runtime-native row until upstream support lands)
+
+  // Deterministic + Custom — always offered
+  { id: 'deterministic',           label: 'Deterministic only',                             caption: 'classifier + policy, no model voice', engine: 'deterministic', family: 'local',  thinking: 'off', scope: 'always' },
+  { id: 'custom',                  label: 'Custom — edit .sun/config.toml',                 caption: 'write your own',                engine: 'deterministic', family: 'custom', thinking: 'off', scope: 'always' },
+
+  // Advanced / external (only shown when provider is detected)
+  { id: 'anthropic-api@high',      label: 'Claude via Anthropic API (advanced)',            caption: 'external, requires ANTHROPIC_API_KEY', engine: 'external-api', family: 'claude', thinking: 'high', scope: 'advanced', requiresProvider: 'anthropic' },
+  { id: 'codex-cli-bin',           label: 'Codex CLI binary (advanced)',                    caption: 'invokes local `codex` CLI',     engine: 'external-cli', family: 'codex',  thinking: 'off', reasoningEffort: 'high', scope: 'advanced', requiresProvider: 'codex-cli' },
+  { id: 'openai-api@gpt-5',        label: 'OpenAI GPT-5 (advanced)',                        caption: 'external, requires OPENAI_API_KEY', engine: 'external-api', family: 'codex', thinking: 'off', reasoningEffort: 'high', scope: 'advanced', requiresProvider: 'openai' },
+  { id: 'google-api@gemini-2.5',   label: 'Gemini 2.5 Pro (advanced)',                      caption: 'external, requires GOOGLE_API_KEY', engine: 'external-api', family: 'local', thinking: 'off', scope: 'advanced', requiresProvider: 'google' },
 ] as const;
 
 // ---------------------------------------------------------------------------

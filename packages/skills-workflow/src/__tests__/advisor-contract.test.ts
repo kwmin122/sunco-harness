@@ -26,8 +26,11 @@ describe('advisor contract — defaults', () => {
     expect(DEFAULT_ADVISOR_CONFIG.blocking).toBe(false);
   });
 
-  it('DEFAULT_ADVISOR_CONFIG model is a Claude Opus variant by default', () => {
-    expect(DEFAULT_ADVISOR_CONFIG.model).toMatch(/^claude-opus/);
+  it('DEFAULT_ADVISOR_CONFIG starts deterministic with runtime=unknown (v0.11.1 rewrite)', () => {
+    expect(DEFAULT_ADVISOR_CONFIG.runtime).toBe('unknown');
+    expect(DEFAULT_ADVISOR_CONFIG.engine).toBe('deterministic');
+    expect(DEFAULT_ADVISOR_CONFIG.family).toBe('local');
+    expect(DEFAULT_ADVISOR_CONFIG.model).toBe('deterministic');
   });
 
   it('DEFAULT_SUPPRESSION_POLICY imposes at least 30 minute dedupe', () => {
@@ -41,36 +44,45 @@ describe('advisor contract — defaults', () => {
   });
 });
 
-describe('advisor contract — model options', () => {
-  it('includes Opus/Sonnet/Haiku + codex-cli + custom as default-visible rows', () => {
-    const visible = DEFAULT_ADVISOR_MODEL_OPTIONS.filter((o) => o.defaultVisible).map((o) => o.id);
-    expect(visible).toEqual(
+describe('advisor contract — behavior picker (v0.11.1)', () => {
+  it('includes Claude runtime-native rows for Claude Code', () => {
+    const claudeRows = DEFAULT_ADVISOR_MODEL_OPTIONS.filter(
+      (o) => o.scope === 'runtime-native' && o.runtime === 'claude',
+    ).map((o) => o.id);
+    expect(claudeRows).toEqual(
       expect.arrayContaining([
-        'claude-opus-4-7@max',
         'claude-opus-4-7@high',
-        'claude-opus-4-7@medium',
-        'claude-sonnet-4-6@max',
+        'claude-opus-4-7@max',
         'claude-sonnet-4-6@high',
         'claude-haiku-4-5@off',
-        'codex-cli',
-        'custom',
       ]),
     );
   });
 
-  it('GPT-5 and Gemini 2.5 Pro are hidden until detected', () => {
-    const gpt = DEFAULT_ADVISOR_MODEL_OPTIONS.find((o) => o.id === 'gpt-5');
-    const gemini = DEFAULT_ADVISOR_MODEL_OPTIONS.find((o) => o.id === 'gemini-2.5-pro');
-    expect(gpt?.defaultVisible).toBe(false);
-    expect(gemini?.defaultVisible).toBe(false);
-    expect(gpt?.requiresProvider).toBe('openai');
-    expect(gemini?.requiresProvider).toBe('google');
+  it('includes Codex runtime-native rows with reasoning effort', () => {
+    const codexRows = DEFAULT_ADVISOR_MODEL_OPTIONS.filter(
+      (o) => o.scope === 'runtime-native' && o.runtime === 'codex',
+    );
+    expect(codexRows.map((o) => o.id)).toEqual(
+      expect.arrayContaining(['gpt-5.4@high', 'gpt-5.4@xhigh', 'gpt-5.4-mini@high']),
+    );
+    // Every codex row declares a reasoning effort, not a thinking tier.
+    for (const r of codexRows) {
+      expect(r.reasoningEffort).toBeDefined();
+    }
   });
 
-  it('custom row is always available (requiresProvider=null)', () => {
-    const custom = DEFAULT_ADVISOR_MODEL_OPTIONS.find((o) => o.id === 'custom');
-    expect(custom?.defaultVisible).toBe(true);
-    expect(custom?.requiresProvider).toBe(null);
+  it('always-available rows include deterministic + custom', () => {
+    const always = DEFAULT_ADVISOR_MODEL_OPTIONS.filter((o) => o.scope === 'always').map((o) => o.id);
+    expect(always).toEqual(expect.arrayContaining(['deterministic', 'custom']));
+  });
+
+  it('advanced rows are gated by requiresProvider (anthropic-api/codex-cli/openai/google)', () => {
+    const advanced = DEFAULT_ADVISOR_MODEL_OPTIONS.filter((o) => o.scope === 'advanced');
+    expect(advanced.length).toBeGreaterThanOrEqual(3);
+    for (const o of advanced) {
+      expect(o.requiresProvider).toBeDefined();
+    }
   });
 });
 

@@ -36,6 +36,13 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
 - **Korean i18n** — 85 commands with Korean descriptions, interactive installer
 
+### New in v0.11.1
+
+- **Runtime-aware advisor picker** — `/sunco:advisor --reconfigure` is now runtime-first, not provider-first. Claude Code sees Claude rows (Opus/Sonnet/Haiku) at the top, Codex sees GPT-5.4 rows (with reasoning: high/xhigh), Cursor sees `cursor-native`, Antigravity falls through to deterministic. **SUNCO works through the current runtime by default. API keys are optional.**
+- **Engine vs family separation** — `AdvisorConfig` now distinguishes `engine` (deterministic / runtime-native / external-cli / external-api) from `family` (claude / codex / cursor / antigravity / local / custom). Classifier always runs deterministically regardless of engine.
+- **Installer dedupe fix** — upgrades no longer duplicate `UserPromptSubmit` hooks. Cleanup now covers all four event types (SessionStart, PreToolUse, PostToolUse, UserPromptSubmit).
+- **1001 workflow tests**, 89/89 contract lint, 85 slash commands, 8 hooks.
+
 ### New in v0.11.0
 
 - **Ambient advisor** — new `/sunco:advisor` skill + two Claude Code hooks (UserPromptSubmit injection + PostToolUse queue) that watch your natural-language prompts and edits, then surface short `Risk: / Suggestion:` blocks when risk signals fire. Zero slash commands to remember. Deterministic classifier (risk-classifier + advisor-policy + advisor-message), never writes code, never auto-executes skills. `auto_execute_skills = false` is a typed literal, not a flag.

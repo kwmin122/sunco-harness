@@ -36,9 +36,11 @@ import { decideAdvice } from './shared/advisor-policy.js';
 import { annotateDecision } from './shared/advisor-message.js';
 import {
   applyPickerChoice,
-  buildPickerOptions,
+  buildRuntimeAdvisorOptions,
   detectProviders,
+  detectRuntime,
   parsePickerId,
+  renderProviderDiagnostics,
   resolveInitialConfig,
   shouldShowPicker,
 } from './shared/advisor-selector.js';
@@ -88,8 +90,16 @@ function serializeAdvisor(cfg: AdvisorConfig): string {
   const lines = [
     '[advisor]',
     `enabled = ${cfg.enabled}`,
+    `runtime = "${cfg.runtime}"`,
+    `engine = "${cfg.engine}"`,
+    `family = "${cfg.family}"`,
     `model = "${cfg.model}"`,
     `thinking = "${cfg.thinking}"`,
+  ];
+  if (cfg.reasoningEffort) {
+    lines.push(`reasoning_effort = "${cfg.reasoningEffort}"`);
+  }
+  lines.push(
     `profile = "${cfg.profile}"`,
     `cost_cap_per_session_usd = ${cfg.costCapPerSessionUSD}`,
     `fallback = "${cfg.fallback}"`,
@@ -100,7 +110,7 @@ function serializeAdvisor(cfg: AdvisorConfig): string {
     `blocking = ${cfg.blocking}`,
     `max_visible_per_session = ${cfg.maxVisiblePerSession}`,
     `suppress_same_key_minutes = ${cfg.suppressSameKeyMinutes}`,
-  ];
+  );
   return lines.join('\n') + '\n';
 }
 
@@ -113,8 +123,12 @@ async function readExistingConfig(): Promise<Partial<AdvisorConfig> | null> {
     if (!adv) return null;
     return {
       enabled: typeof adv.enabled === 'boolean' ? adv.enabled : undefined,
+      runtime: typeof adv.runtime === 'string' ? (adv.runtime as AdvisorConfig['runtime']) : undefined,
+      engine: typeof adv.engine === 'string' ? (adv.engine as AdvisorConfig['engine']) : undefined,
+      family: typeof adv.family === 'string' ? (adv.family as AdvisorConfig['family']) : undefined,
       model: typeof adv.model === 'string' ? adv.model : undefined,
       thinking: typeof adv.thinking === 'string' ? (adv.thinking as ThinkingTier) : undefined,
+      reasoningEffort: typeof adv.reasoning_effort === 'string' ? (adv.reasoning_effort as AdvisorConfig['reasoningEffort']) : undefined,
       profile: typeof adv.profile === 'string' ? (adv.profile as AdvisorConfig['profile']) : undefined,
       costCapPerSessionUSD: typeof adv.cost_cap_per_session_usd === 'number' ? adv.cost_cap_per_session_usd : undefined,
       fallback: typeof adv.fallback === 'string' ? adv.fallback : undefined,
@@ -227,16 +241,28 @@ export default defineSkill({
 // ---------------------------------------------------------------------------
 
 async function runReconfigure(ctx: SkillContext): Promise<SkillResult> {
+  const runtime = detectRuntime(process.env, process.argv[1] ?? '');
+  const providers = await makeEnvProbe();
+
   const existing = await readExistingConfig();
   const baseCfg: AdvisorConfig = existing
-    ? { ...DEFAULT_ADVISOR_CONFIG, ...existing, autoExecuteSkills: false }
-    : resolveInitialConfig(await makeEnvProbe());
+    ? { ...DEFAULT_ADVISOR_CONFIG, ...existing, runtime, autoExecuteSkills: false }
+    : resolveInitialConfig(runtime, providers);
 
-  const env = await makeEnvProbe();
-  const options = buildPickerOptions(env);
+  const options = buildRuntimeAdvisorOptions(runtime, providers);
+  const runtimeLabel =
+    runtime === 'unknown'
+      ? 'this environment'
+      : runtime === 'claude'
+        ? 'Claude Code'
+        : runtime === 'codex'
+          ? 'Codex'
+          : runtime === 'cursor'
+            ? 'Cursor'
+            : 'Antigravity';
 
   const answer = await ctx.ui.ask({
-    message: 'Pick your advisor — which model should act as your advisor?',
+    message: `Configure SUNCO advisor for ${runtimeLabel}. The deterministic classifier always runs; this pick only chooses the voice layered on top. Pick the behavior — API keys are optional.`,
     options: options.map((o) => ({
       id: o.id,
       label: o.label,
@@ -245,21 +271,28 @@ async function runReconfigure(ctx: SkillContext): Promise<SkillResult> {
   });
 
   const chosen = options.find((o) => o.id === answer.selectedId) ?? options[0]!;
-  const next = applyPickerChoice(baseCfg, chosen.id);
+  const next: AdvisorConfig = {
+    ...applyPickerChoice({ ...baseCfg, runtime }, chosen.id),
+    runtime,
+    autoExecuteSkills: false,
+  };
   await writeConfig(next);
 
-  const summary = `advisor set to ${next.model}${next.thinking ? ` (thinking=${next.thinking})` : ''}`;
+  const summary = `advisor set to ${next.engine}/${next.model}${next.thinking !== 'off' ? ` (thinking=${next.thinking})` : ''}${next.reasoningEffort ? ` (reasoning=${next.reasoningEffort})` : ''}`;
   await ctx.ui.result({
     success: true,
     title: 'Advisor',
     summary,
     details: [
       `Wrote ${configPath()}`,
+      `runtime=${next.runtime}, engine=${next.engine}, family=${next.family}`,
       `enabled=${next.enabled}, blocking=${next.blocking}, prompt_injection=${next.promptInjection}`,
       `auto_execute_skills=false (permanent)`,
+      '',
+      ...renderProviderDiagnostics(providers),
     ],
   });
-  return { success: true, summary, data: { config: next } };
+  return { success: true, summary, data: { config: next, runtime, providers } };
 }
 
 async function showLast(ctx: SkillContext): Promise<SkillResult> {
@@ -290,10 +323,11 @@ async function classifyTask(ctx: SkillContext): Promise<SkillResult> {
     return { success: false, summary: msg };
   }
 
+  const runtime = detectRuntime(process.env, process.argv[1] ?? '');
   const existing = await readExistingConfig();
   const cfg: AdvisorConfig = existing
-    ? { ...DEFAULT_ADVISOR_CONFIG, ...existing, autoExecuteSkills: false }
-    : DEFAULT_ADVISOR_CONFIG;
+    ? { ...DEFAULT_ADVISOR_CONFIG, ...existing, runtime, autoExecuteSkills: false }
+    : { ...DEFAULT_ADVISOR_CONFIG, runtime };
 
   // --model / --thinking one-shot overrides
   const modelOverride = ctx.args.model as string | undefined;

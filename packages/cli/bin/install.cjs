@@ -180,7 +180,7 @@ function patchSettings(targetDir, runtimeDir) {
   // before re-adding in the canonical flat format.
   if (!settings.hooks) settings.hooks = {};
 
-  for (const eventType of ['SessionStart', 'PreToolUse', 'PostToolUse']) {
+  for (const eventType of ['SessionStart', 'PreToolUse', 'PostToolUse', 'UserPromptSubmit']) {
     if (!Array.isArray(settings.hooks[eventType])) continue;
     settings.hooks[eventType] = settings.hooks[eventType].filter((h) => {
       // Flat format: { matcher, command }

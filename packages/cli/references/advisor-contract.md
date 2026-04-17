@@ -60,13 +60,29 @@ The `auto_execute_skills` field is hard-coded to `false` in the type
 system (`autoExecuteSkills: false`). Attempts to set it true are
 treated as false at runtime and flagged by contract-lint.
 
-## Model picker
+## Behavior picker (v0.11.1 — runtime-aware)
 
-Picker contract: `AdvisorModelOption[]` with `defaultVisible` and
-`requiresProvider` filters. First-run UI shows default-visible rows
-that pass provider detection. Detected-only rows (GPT-5, Gemini 2.5
-Pro, local providers) only appear when the corresponding provider is
-detected. `custom` is always visible as the escape hatch.
+The picker chooses advisor BEHAVIOR, not API providers. The deterministic
+classifier (risk → policy → message) always runs regardless of pick; the
+row only decides whether a runtime-native "voice" is layered on top.
+
+Picker ordering (computed by `advisor-selector.buildRuntimeAdvisorOptions`):
+
+1. **Runtime-native** rows for the active runtime. Claude Code gets
+   `claude-opus-4-7@high` (recommended), Codex gets `gpt-5.4@high`,
+   Cursor gets `cursor-native@inherit`, Antigravity has no native row
+   yet and falls through to deterministic.
+2. **Always** rows — `deterministic` (safe default) + `custom` (escape
+   hatch).
+3. **Advanced** rows — external API / CLI options that only surface
+   when their provider is actually detected (ANTHROPIC_API_KEY,
+   OPENAI_API_KEY, GOOGLE_API_KEY, or `codex` CLI on PATH).
+
+**SUNCO works through the current runtime by default. API keys are optional.**
+
+Picker rows live in `DEFAULT_ADVISOR_MODEL_OPTIONS`. Each row declares:
+`id`, `label`, `caption`, `engine`, `family`, `thinking`,
+`reasoningEffort` (Codex-family), `scope`, `runtime`, `requiresProvider`.
 
 ## Suppression / Noise budget
 

@@ -47,7 +47,7 @@ function makeCtx(args: Record<string, unknown>, overrides?: Partial<SkillContext
       entry: vi.fn().mockResolvedValue(undefined),
       ask: vi
         .fn()
-        .mockResolvedValue({ selectedId: 'claude-sonnet-4-6@high', selectedLabel: '', source: 'default' }),
+        .mockResolvedValue({ selectedId: 'deterministic', selectedLabel: '', source: 'default' }),
       askText: vi.fn().mockResolvedValue({ text: '' }),
       progress: vi.fn().mockReturnValue({ update: vi.fn(), done: vi.fn() }),
       result: vi.fn().mockResolvedValue(undefined),

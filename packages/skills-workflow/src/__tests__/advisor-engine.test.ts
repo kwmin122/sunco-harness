@@ -25,9 +25,11 @@ import {
 } from '../shared/advisor-message.js';
 import {
   applyPickerChoice,
-  buildPickerOptions,
+  buildRuntimeAdvisorOptions,
   detectProviders,
+  detectRuntime,
   parsePickerId,
+  renderProviderDiagnostics,
   resolveInitialConfig,
   shouldShowPicker,
 } from '../shared/advisor-selector.js';
@@ -269,71 +271,175 @@ describe('advisor-message', () => {
 // advisor-selector
 // ---------------------------------------------------------------------------
 
-describe('advisor-selector', () => {
+describe('advisor-selector — runtime detection (v0.11.1)', () => {
+  it('detectRuntime reads env hints first', () => {
+    expect(detectRuntime({ CLAUDE_CODE: '1' }, '')).toBe('claude');
+    expect(detectRuntime({ CLAUDECODE: '1' }, '')).toBe('claude');
+    expect(detectRuntime({ CODEX_CLI: '1' }, '')).toBe('codex');
+    expect(detectRuntime({ CURSOR_AGENT: '1' }, '')).toBe('cursor');
+    expect(detectRuntime({ ANTIGRAVITY: '1' }, '')).toBe('antigravity');
+  });
+
+  it('detectRuntime falls back to argv path', () => {
+    expect(detectRuntime({}, '/Users/x/.claude/sunco/bin/cli.js')).toBe('claude');
+    expect(detectRuntime({}, '/Users/x/.codex/sunco/bin/cli.js')).toBe('codex');
+    expect(detectRuntime({}, '/Users/x/.cursor/sunco/bin/cli.js')).toBe('cursor');
+    expect(detectRuntime({}, '/Users/x/.antigravity/sunco/bin/cli.js')).toBe('antigravity');
+  });
+
+  it('detectRuntime returns unknown when nothing matches', () => {
+    expect(detectRuntime({}, '/tmp/random')).toBe('unknown');
+  });
+});
+
+describe('advisor-selector — provider detection (Advanced only)', () => {
   it('detectProviders reads env + which', () => {
-    const env = { ANTHROPIC_API_KEY: 'x', OPENAI_API_KEY: undefined } as Record<string, string | undefined>;
+    const env = { ANTHROPIC_API_KEY: 'x' } as Record<string, string | undefined>;
     const which = (name: string) => name === 'codex';
     const p = detectProviders(env, which);
-    expect(p.anthropic).toBe(true);
+    expect(p.anthropicApi).toBe(true);
     expect(p.codexCli).toBe(true);
     expect(p.openai).toBe(false);
+    expect(p.google).toBe(false);
+  });
+});
+
+describe('advisor-selector — behavior picker', () => {
+  const noProviders = {
+    anthropicApi: false,
+    claudeCli: false,
+    codexCli: false,
+    openai: false,
+    google: false,
+  };
+
+  it('Claude runtime offers Claude rows first, then always rows', () => {
+    const opts = buildRuntimeAdvisorOptions('claude', noProviders);
+    const ids = opts.map((o) => o.id);
+    expect(ids[0]).toMatch(/^claude-/);
+    expect(ids).toContain('deterministic');
+    expect(ids).toContain('custom');
+    // No advanced rows when no providers are detected.
+    expect(ids.every((id) => !id.includes('api'))).toBe(true);
   });
 
-  it('buildPickerOptions hides anthropic rows when anthropic missing', () => {
-    const env = { anthropic: false, codexCli: true, openai: false, google: false };
-    const out = buildPickerOptions(env);
-    expect(out.some((o) => o.id.startsWith('claude-'))).toBe(false);
-    expect(out.some((o) => o.id === 'codex-cli')).toBe(true);
-    expect(out.some((o) => o.id === 'custom')).toBe(true);
+  it('Codex runtime offers GPT rows first', () => {
+    const opts = buildRuntimeAdvisorOptions('codex', noProviders);
+    const ids = opts.map((o) => o.id);
+    expect(ids[0]).toMatch(/^gpt-5/);
+    expect(ids).toContain('deterministic');
+    expect(ids).toContain('custom');
+    expect(ids.every((id) => !id.startsWith('claude-'))).toBe(true);
   });
 
-  it('buildPickerOptions hides GPT-5 unless openai detected', () => {
-    const base = { anthropic: true, codexCli: false, google: false };
-    const without = buildPickerOptions({ ...base, openai: false });
-    const with_ = buildPickerOptions({ ...base, openai: true });
-    expect(without.some((o) => o.id === 'gpt-5')).toBe(false);
-    expect(with_.some((o) => o.id === 'gpt-5')).toBe(true);
+  it('Cursor runtime offers cursor-native + deterministic/custom', () => {
+    const opts = buildRuntimeAdvisorOptions('cursor', noProviders);
+    const ids = opts.map((o) => o.id);
+    expect(ids).toContain('cursor-native@inherit');
+    expect(ids).toContain('deterministic');
   });
 
-  it('parsePickerId splits model@tier', () => {
+  it('Antigravity falls back to deterministic + custom only', () => {
+    const opts = buildRuntimeAdvisorOptions('antigravity', noProviders);
+    const ids = opts.map((o) => o.id);
+    // No antigravity runtime-native rows in the registry.
+    expect(ids.some((i) => i.includes('cursor-native') || i.startsWith('gpt-') || i.startsWith('claude-'))).toBe(false);
+    expect(ids).toContain('deterministic');
+  });
+
+  it('unknown runtime shows only always rows', () => {
+    const opts = buildRuntimeAdvisorOptions('unknown', noProviders);
+    expect(opts.every((o) => o.scope === 'always')).toBe(true);
+    expect(opts.map((o) => o.id)).toEqual(expect.arrayContaining(['deterministic', 'custom']));
+  });
+
+  it('Advanced rows appear when their provider is detected', () => {
+    const providers = { ...noProviders, openai: true, codexCli: true };
+    const opts = buildRuntimeAdvisorOptions('claude', providers);
+    const ids = opts.map((o) => o.id);
+    expect(ids).toContain('openai-api@gpt-5');
+    expect(ids).toContain('codex-cli-bin');
+  });
+
+  it('parsePickerId handles thinking AND reasoning tiers', () => {
     expect(parsePickerId('claude-opus-4-7@high')).toEqual({
       model: 'claude-opus-4-7',
       thinking: 'high',
+      reasoningEffort: null,
     });
-    expect(parsePickerId('codex-cli')).toEqual({
-      model: 'codex-cli',
+    expect(parsePickerId('gpt-5.4@xhigh')).toEqual({
+      model: 'gpt-5.4',
       thinking: null,
+      reasoningEffort: 'xhigh',
     });
-    expect(parsePickerId('claude-sonnet-4-6@bogus')).toEqual({
-      model: 'claude-sonnet-4-6',
+    expect(parsePickerId('deterministic')).toEqual({
+      model: 'deterministic',
       thinking: null,
+      reasoningEffort: null,
     });
   });
 
-  it('applyPickerChoice preserves non-model config fields', () => {
-    const base: AdvisorConfig = { ...DEFAULT_ADVISOR_CONFIG, blocking: true, costCapPerSessionUSD: 10 };
-    const next = applyPickerChoice(base, 'claude-sonnet-4-6@max');
-    expect(next.model).toBe('claude-sonnet-4-6');
-    expect(next.thinking).toBe('max');
+  it('applyPickerChoice preserves non-engine config fields', () => {
+    const base: AdvisorConfig = {
+      ...DEFAULT_ADVISOR_CONFIG,
+      blocking: true,
+      costCapPerSessionUSD: 10,
+    };
+    const next = applyPickerChoice(base, 'gpt-5.4@high');
+    expect(next.model).toBe('gpt-5.4');
+    expect(next.engine).toBe('runtime-native');
+    expect(next.family).toBe('codex');
+    expect(next.reasoningEffort).toBe('high');
     expect(next.blocking).toBe(true);
     expect(next.costCapPerSessionUSD).toBe(10);
   });
 
-  it('shouldShowPicker: first run = true', () => {
+  it('applyPickerChoice with deterministic wipes model to deterministic', () => {
+    const base: AdvisorConfig = { ...DEFAULT_ADVISOR_CONFIG, model: 'claude-opus-4-7', engine: 'runtime-native', family: 'claude' };
+    const next = applyPickerChoice(base, 'deterministic');
+    expect(next.engine).toBe('deterministic');
+    expect(next.model).toBe('deterministic');
+    expect(next.family).toBe('local');
+    expect(next.reasoningEffort).toBeUndefined();
+  });
+
+  it('shouldShowPicker: first run = true; saved claude config = false', () => {
     expect(shouldShowPicker(null)).toBe(true);
     expect(shouldShowPicker({})).toBe(true);
     expect(shouldShowPicker({ model: 'claude-opus-4-7' })).toBe(false);
-    expect(shouldShowPicker({ model: 'custom' })).toBe(false);
+    expect(shouldShowPicker({ family: 'custom' })).toBe(false);
     expect(shouldShowPicker({ enabled: false })).toBe(false);
   });
 
-  it('resolveInitialConfig falls back by provider availability', () => {
-    expect(resolveInitialConfig({ anthropic: true, codexCli: false, openai: false, google: false }).model)
-      .toMatch(/^claude-/);
-    expect(resolveInitialConfig({ anthropic: false, codexCli: true, openai: false, google: false }).model)
-      .toBe('codex-cli');
-    const none = resolveInitialConfig({ anthropic: false, codexCli: false, openai: false, google: false });
-    expect(none.enabled).toBe(false);
+  it('resolveInitialConfig respects runtime defaults', () => {
+    const noProv = { anthropicApi: false, claudeCli: false, codexCli: false, openai: false, google: false };
+    const claude = resolveInitialConfig('claude', noProv);
+    expect(claude.runtime).toBe('claude');
+    expect(claude.engine).toBe('runtime-native');
+    expect(claude.model).toMatch(/^claude-/);
+
+    const codex = resolveInitialConfig('codex', noProv);
+    expect(codex.model).toBe('gpt-5.4');
+    expect(codex.reasoningEffort).toBe('high');
+
+    const anti = resolveInitialConfig('antigravity', noProv);
+    expect(anti.engine).toBe('deterministic');
+    expect(anti.model).toBe('deterministic');
+
+    const unknown = resolveInitialConfig('unknown', noProv);
+    expect(unknown.engine).toBe('deterministic');
+  });
+
+  it('renderProviderDiagnostics always includes the optional disclaimer', () => {
+    const lines = renderProviderDiagnostics({
+      anthropicApi: false,
+      claudeCli: true,
+      codexCli: false,
+      openai: false,
+      google: false,
+    });
+    expect(lines.join('\n')).toContain('Advanced external providers');
+    expect(lines.join('\n')).toContain('API keys are optional');
   });
 });
 
