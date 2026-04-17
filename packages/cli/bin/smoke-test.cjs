@@ -306,6 +306,54 @@ if (runtime === 'codex') {
 }
 check(`project-start chain commands installed (${runtime})`, chainCmdPresent);
 
+// 11. UI Phase Router (Phase 36/M1.2) — source-dir validation
+console.log(`\n${BOLD}11. UI Phase Router (source)${RESET}`);
+// Source-dir (not installed-dir) by design: Phase 36 does not mutate the installed runtime.
+// Gate 1 axis #6 — runtime install mutation is explicit, user-driven only.
+const sourceWfDir = path.resolve(__dirname, '..', 'workflows');
+if (!fs.existsSync(sourceWfDir)) {
+  warn('source workflows/ dir not found at ../workflows — skipping router checks');
+} else {
+  const routerPath = path.join(sourceWfDir, 'ui-phase.md');
+  const cliBranchPath = path.join(sourceWfDir, 'ui-phase-cli.md');
+  const webStubPath = path.join(sourceWfDir, 'ui-phase-web.md');
+  const nativeStubPath = path.join(sourceWfDir, 'ui-phase-native.md');
+
+  check('source ui-phase.md (router) exists', fs.existsSync(routerPath));
+  check('source ui-phase-cli.md (cli branch) exists', fs.existsSync(cliBranchPath));
+  check('source ui-phase-web.md (stub) exists', fs.existsSync(webStubPath));
+  check('source ui-phase-native.md (stub) exists', fs.existsSync(nativeStubPath));
+
+  if (fs.existsSync(routerPath)) {
+    const r = fs.readFileSync(routerPath, 'utf8');
+    check('router declares Surface Dispatcher', r.includes('Surface Dispatcher'));
+    check('router documents --surface cli|web|native', r.includes('cli|web|native'));
+    check('router defaults SURFACE to cli', /`cli`|default:\s*`cli`/i.test(r));
+    check('router enforces explicit-only (no auto-routing)', /no auto-routing/i.test(r));
+    check('router handles invalid --surface with usage error', r.includes('Invalid --surface value'));
+    check('router sanity pre-check is warning-only', /warning only|warning-only|non-blocking/i.test(r));
+  }
+
+  if (fs.existsSync(cliBranchPath)) {
+    const c = fs.readFileSync(cliBranchPath, 'utf8');
+    check('cli branch does NOT re-parse --surface (vestigial row removed)',
+      !c.includes('| `--surface <name>` | `SURFACE` | auto-detect |'));
+    check('cli branch self-identifies as CLI surface branch', /CLI surface branch/i.test(c));
+  }
+
+  if (fs.existsSync(webStubPath)) {
+    const w = fs.readFileSync(webStubPath, 'utf8');
+    check('web stub marks Phase 40/M2.3 pending',
+      /Phase 40.*M2\.3/i.test(w) && /pending/i.test(w));
+  }
+
+  if (fs.existsSync(nativeStubPath)) {
+    const n = fs.readFileSync(nativeStubPath, 'utf8');
+    check('native stub marks v1 unsupported', /not supported in v1/i.test(n));
+    check('native stub references v2 candidate', /v2 candidate/i.test(n));
+  }
+}
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

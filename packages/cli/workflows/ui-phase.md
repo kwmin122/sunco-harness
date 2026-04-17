@@ -1,315 +1,101 @@
-# UI Phase Workflow
+# UI Phase Workflow — Surface Dispatcher
 
-Generate a UI design contract (UI-SPEC.md) for a phase that includes user-facing interface work. Detects the project's design system, spawns a sunco-ui-researcher agent to analyze patterns and component needs, then writes a structured UI-SPEC.md covering layout, components, interactions, and accessibility. Used by `/sunco:ui-phase`.
+Router for `/sunco:ui-phase`. Parses `--surface {cli|web|native}` and dispatches to the corresponding surface-specific workflow. Default surface is `cli` to preserve backward-compatible no-flag behavior.
 
----
-
-## Overview
-
-Six steps:
-
-1. **Initialize** — detect phase scope and identify UI surface areas
-2. **Detect design system** — find existing tokens, components, or style config
-3. **Spawn UI researcher** — gather patterns, component inventory, interaction model
-4. **Generate UI-SPEC.md** — layout, components, states, interactions, a11y
-5. **Present for review** — inline summary, ask for adjustments
-6. **Commit** — write file and commit
+> **Non-negotiable** (spec R4 — explicit-only triggers): stack detection below emits warnings only. It NEVER overrides an explicit `--surface` value, and NEVER auto-changes surface routing. The user, not the workflow, owns surface selection.
 
 ---
 
-## Step 1: Initialize
+## Step 1: Parse Arguments
 
 Parse `$ARGUMENTS`:
 
 | Token | Variable | Default |
 |-------|----------|---------|
 | First numeric token | `PHASE_ARG` | current phase from STATE.md |
-| `--surface <name>` | `SURFACE` | auto-detect |
+| `--surface <name>` or `--surface=<name>` | `SURFACE` | `cli` |
 
-Locate phase directory:
+Normalize `SURFACE` to lowercase. Accept exactly these values: `cli`, `web`, `native`.
+
+**Invalid value handling.** If `SURFACE` is set but not one of the accepted values, emit a usage error and exit without dispatch:
+
+```
+ERROR: Invalid --surface value: <received>
+Valid: cli, web, native
+Usage: /sunco:ui-phase [phase] [--surface {cli|web|native}]
+```
+
+**Repeated flag handling.** If `--surface` appears multiple times, use the last occurrence (standard flag semantics) and emit a single line to stderr:
+
+```
+⚠ --surface specified multiple times; using last value: <value>
+```
+
+**Missing flag handling.** If `--surface` is omitted, default to `cli` — identical to pre-dispatcher behavior. The CLI path (see `ui-phase-cli.md`) is byte-identical to the pre-Phase-36 `ui-phase.md` except for the removal of the vestigial `--surface` parsing row (router now owns surface selection).
+
+---
+
+## Step 2: Sanity Pre-check (warning only, non-blocking)
+
+Read `./package.json` if present. If absent, skip this step silently — no warning, no error.
+
+Detect surface-stack signals:
 
 ```bash
-PADDED=$(printf "%02d" "$PHASE_ARG")
-PHASE_DIR=$(ls -d .planning/phases/${PADDED}-* 2>/dev/null | head -1)
+WEB_HIT=$(grep -Eo '"(react|vue|svelte|next|astro|nuxt|remix|solid|qwik)"' ./package.json 2>/dev/null | head -1)
+CLI_HIT=$(grep -Eo '"(ink|blessed|terminal-kit|chalk|commander|meow)"' ./package.json 2>/dev/null | head -1)
 ```
 
-Read phase context:
+Emit a warning to stderr only when a mismatch is detected between detected stack and requested `--surface`:
 
-```bash
-cat "${PHASE_DIR}"/*-CONTEXT.md 2>/dev/null   # from /sunco:discuss
-cat .planning/ROADMAP.md | grep -A 20 "Phase ${PADDED}"
-cat .planning/REQUIREMENTS.md 2>/dev/null
+| Detected stack      | `--surface cli` | `--surface web` | `--surface native` |
+|---------------------|-----------------|-----------------|--------------------|
+| Web-stack only      | ⚠ warning       | (no warning)    | ⚠ warning          |
+| CLI-stack only      | (no warning)    | ⚠ warning       | ⚠ warning          |
+| Both / neither      | (no warning)    | (no warning)    | (no warning)       |
+
+**Warning format:**
+
+```
+⚠ SANITY: package.json suggests <detected> stack, but --surface <chosen> was requested.
+  Continuing with <chosen> as explicitly requested. (Explicit-only policy — no auto-routing.)
 ```
 
-**If no CONTEXT.md exists for this phase:**
-
-```
-No context found for phase XX.
-Run /sunco:discuss XX first to gather UI requirements.
-Or proceed anyway? (yes / run discuss first)
-```
-
-If proceeding anyway, derive UI scope from ROADMAP.md success criteria.
-
-Identify UI surfaces from phase scope:
-- CLI output / interactive prompts
-- Terminal UI components (Ink)
-- Configuration files the user edits
-- Documentation/help output
+The warning does **not** change the dispatch. The user's explicit flag always wins.
 
 ---
 
-## Step 2: Detect Design System
+## Step 3: Dispatch
 
-Scan the codebase for existing design patterns:
+Based on the resolved `SURFACE`:
 
-```bash
-# Ink component usage
-grep -r "import.*from 'ink'" src/ --include="*.ts" -l 2>/dev/null
+| `SURFACE` | Include file             | Status                                        |
+|-----------|--------------------------|-----------------------------------------------|
+| `cli`     | `ui-phase-cli.md`        | Active — original workflow (renamed in Phase 36/M1.2) |
+| `web`     | `ui-phase-web.md`        | Stub — implementation pending in Phase 40/M2.3 |
+| `native`  | `ui-phase-native.md`     | Stub — not supported in v1; candidate for v2  |
 
-# Chalk usage for colors
-grep -r "chalk\." src/ --include="*.ts" -l 2>/dev/null | head -5
+All surface branches receive the same `PHASE_ARG` resolution; the router does no additional phase parsing beyond Step 1.
 
-# Existing UI components
-ls src/core/ui/ 2>/dev/null || ls src/ui/ 2>/dev/null
-
-# Color/theme constants
-grep -r "color\|theme\|palette" src/ --include="*.ts" -l 2>/dev/null | head -5
-```
-
-Read found files to extract:
-- Existing color palette (chalk colors in use)
-- Existing box/border patterns (Ink Box usage)
-- Typography conventions (bold, dim, underline patterns)
-- Status indicator conventions (✓, ✗, ⚠, ◆ symbols)
-- Layout patterns (column widths, padding, indentation)
-
-If no design system found: use SUNCO's default conventions from CLAUDE.md.
+**Include semantics.** When dispatching, read the full content of the target workflow file from `packages/cli/workflows/` (or `~/.claude/sunco/workflows/` in installed runtime) and follow its instructions as if invoked directly.
 
 ---
 
-## Step 3: Spawn UI Researcher
+## Invariants (Phase 36/M1.2)
 
-Spawn a sunco-ui-researcher agent:
+These constraints preserve the router's surface boundary. Phase 37+ must not weaken them without re-entering a Gate decision:
 
-```
-Task(
-  prompt="
-Research UI requirements for Phase XX: [Phase Name].
-
-Context:
-  - Phase goal: [from ROADMAP.md]
-  - Success criteria: [from ROADMAP.md]
-  - User-facing requirements: [from REQUIREMENTS.md relevant REQ-IDs]
-
-Existing design system:
-  [paste detected colors, patterns, components]
-
-For each user-facing feature in this phase:
-
-1. What information does the user need to see?
-2. What interactions does the user need to perform?
-3. What states does the UI need to handle?
-   (loading, success, error, empty, partial)
-4. What are the accessibility requirements?
-   (screen reader, keyboard navigation, color contrast)
-5. What are the responsive/terminal-width constraints?
-
-Write back a structured component inventory:
-  - Component name
-  - Purpose
-  - Props/configuration
-  - States
-  - Example render output (ASCII art or markdown)
-",
-  subagent_type="sunco-ui-researcher",
-  description="UI research for Phase XX"
-)
-```
+1. **Default=cli preserves no-flag behavior.** `/sunco:ui-phase <phase>` with no flag executes `ui-phase-cli.md`, which is byte-identical to the pre-Phase-36 `ui-phase.md` except for removal of the vestigial `--surface` parsing row. Zero regression on the CLI path.
+2. **No auto-routing.** Stack detection (Step 2) emits warnings only. Surface choice is always explicit; the router never silently changes surface based on project shape.
+3. **Pure surface branches.** `ui-phase-cli.md`, `ui-phase-web.md`, `ui-phase-native.md` each implement a single surface and do **not** re-parse `--surface`. The router owns surface selection.
+4. **Rollback anchor.** Pre-Phase-36 stable state is `origin/main @ 6010039`. Rollback via `git revert` (new commit), not `git reset --hard` + force-push, because the stable state is already published.
 
 ---
 
-## Step 4: Generate UI-SPEC.md
+## Install sync note
 
-Using researcher output and design system findings, write the spec:
-
-```markdown
-# UI Spec — Phase XX: [Phase Name]
-
-Date: [ISO date]
-Surface: CLI / Terminal UI (Ink)
-Design system: Detected | Default SUNCO conventions
-
-## Overview
-
-[One paragraph: what UI is being built, what user problem it solves]
-
-## Design Tokens
-
-Colors (chalk):
-  primary:   chalk.cyan
-  success:   chalk.green
-  warning:   chalk.yellow
-  error:     chalk.red
-  muted:     chalk.dim
-  emphasis:  chalk.bold
-
-Borders:
-  section:   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  box:       ╔══╗ ║  ║ ╚══╝ (Ink Box component)
-
-Status indicators:
-  pass:      ✓ (chalk.green)
-  fail:      ✗ (chalk.red)
-  warning:   ⚠ (chalk.yellow)
-  progress:  ◆ (chalk.cyan)
-  pending:   ○ (chalk.dim)
-
-## Screen Layouts
-
-### [Screen 1 Name] — [when it appears]
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- SUNCO ► [COMMAND]  [Context]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-[Content area — 80 char width]
-  ◆ Step in progress...
-
-[Footer with next action]
-```
-
-Layout spec:
-  - Header: full width, ━ border, command name, context right-aligned
-  - Content: 2-space indent, 76 char max content width
-  - Footer: next action hint, muted
-
-### [Screen 2 Name]
-[same structure]
-
-## Components
-
-### [ComponentName]
-
-Purpose: [what it does]
-File:    src/core/ui/[component-name].tsx
-
-Props:
-  - `title: string` — section header
-  - `items: Item[]` — list items to render
-  - `status: 'loading' | 'complete' | 'error'`
-
-States:
-
-  loading:
-  ```
-  ◆ Loading skills...
-  ```
-
-  complete:
-  ```
-  Skills loaded (12)
-    • skill-loader    core/init
-    • skill-registry  core/lookup
-  ```
-
-  error:
-  ```
-  ✗ Failed to load skills: [error message]
-  ```
-
-  empty:
-  ```
-  No skills registered. Run /sunco:init first.
-  ```
-
-### [ComponentName 2]
-[same structure]
-
-## Interactions
-
-### [Interaction Name]
-
-Trigger: [user action or system event]
-Flow:
-  1. [Step 1 — what changes on screen]
-  2. [Step 2]
-  3. [Terminal state]
-
-Keyboard shortcuts:
-  q / Ctrl+C   — exit
-  Enter        — confirm
-  Arrow keys   — navigate options (if applicable)
-
-## Accessibility
-
-- All status indicators use both color AND symbol (never color alone)
-- Error messages include the error text, not just a color
-- All prompts include the available actions explicitly
-- Terminal width: graceful wrap at 80 chars; minimum functional at 40 chars
-
-## Open Questions
-
-- [Question for the developer to resolve during implementation]
-```
+Source-of-truth lives in `packages/cli/workflows/`. The installed runtime at `~/.claude/sunco/workflows/` is populated by `packages/cli/bin/install.cjs` via file copy (not symlink). After any change to this router or its surface branches, a re-run of `npx popcoru` (or `node packages/cli/bin/install.cjs`) is required to reflect changes in the installed runtime. Phase 36 does not mutate the installed runtime; that is explicit, user-driven.
 
 ---
 
-## Step 5: Present for Review
-
-Display summary inline:
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- SUNCO ► UI SPEC  Phase XX: [Phase Name]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-3 screens  |  4 components  |  2 open questions
-
-Components:
-  StatusHeader     — section progress header with phase/plan context
-  SkillList        — formatted skill inventory with status indicators
-  ProgressBar      — phase execution progress [████████░░] 48%
-  ErrorBlock       — error display with context and recovery hint
-
-Open questions:
-  1. Should the progress bar be animated or static?
-  2. Is keyboard navigation required for the skill picker?
-
-Looks good? (yes / adjust [describe change])
-```
-
-If "adjust": apply the correction inline, re-present the affected component. No re-spawn needed for small changes.
-
----
-
-## Step 6: Commit
-
-```bash
-git add "${PHASE_DIR}/UI-SPEC.md"
-git commit -m "docs: UI spec for phase ${PADDED} — [N] components"
-```
-
-```
-UI-SPEC.md committed.
-
-Next:
-  /sunco:plan XX    create execution plan (will reference UI-SPEC.md)
-  /sunco:ui-review  audit the spec against 6 pillars before building
-```
-
----
-
-## Success Criteria
-
-- [ ] Phase scope read from ROADMAP.md and CONTEXT.md
-- [ ] Existing design system detected (or defaults applied)
-- [ ] UI researcher spawned with full context
-- [ ] All user-facing features have screen layouts
-- [ ] All components have states (loading, success, error, empty)
-- [ ] Interactions documented with step-by-step flows
-- [ ] Accessibility requirements explicit (not just assumed)
-- [ ] Open questions listed — not silently assumed
-- [ ] UI-SPEC.md committed
-- [ ] User confirmed before commit
+*Router introduced in Phase 36/M1.2 (2026-04-18). Context: `.planning/phases/36-ui-dispatcher-skeleton/36-CONTEXT.md`. Spec: `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` §4 Phase 1.2. Gate 1 judges: Codex GREEN, Claude GREEN (A3 YELLOW → observable-behavior-equivalent accepted).*

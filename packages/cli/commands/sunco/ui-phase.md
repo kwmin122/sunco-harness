@@ -1,7 +1,7 @@
 ---
 name: sunco:ui-phase
 description: Generate a UI design contract (UI-SPEC.md) for a phase — layout wireframes, component list, interaction states, responsive breakpoints, and accessibility requirements.
-argument-hint: "<phase> [--design-system <name>]"
+argument-hint: "<phase> [--surface {cli|web|native}] [--design-system <name>]"
 allowed-tools:
   - Read
   - Bash
@@ -16,6 +16,7 @@ allowed-tools:
 - `<phase>` — Phase number. Required.
 
 **Flags:**
+- `--surface {cli|web|native}` — Target UI surface. Default: `cli`. `web` is a stub until Phase 40/M2.3; `native` is not supported in v1 (v2 candidate). Introduced in Phase 36/M1.2. Explicit-only — no auto-detection.
 - `--design-system <name>` — Explicitly specify design system (tailwind, css-modules, styled-components, chakra, shadcn, mui, none). If omitted, auto-detected.
 </context>
 

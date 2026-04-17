@@ -343,7 +343,7 @@ const DESCRIPTIONS_KO = {
   'test-gen.md':       'BDD 수락 기준에서 단위/E2E 테스트 자동 생성',
   'thread.md':         '영구 컨텍스트 스레드 — 세션 간 작업 맥락 유지',
   'todo.md':           '작업 추가, 목록, 완료 — .sun/todos.md에 경량 추적',
-  'ui-phase.md':       'UI 설계 계약서(UI-SPEC.md) 생성 — 레이아웃, 컴포넌트, 상호작용',
+  'ui-phase.md':       'UI 설계 계약서 dispatcher — --surface {cli|web|native}로 표면별 분기 (default: cli)',
   'ui-review.md':      '6축 시각 UI 감사 — 각 축 0-10 점수와 구체적 발견사항',
   'update.md':         'SUNCO 최신 버전으로 업데이트 — 변경사항 미리보기',
   'validate.md':       '테스트 커버리지 감사 및 구조화 보고서 생성',
