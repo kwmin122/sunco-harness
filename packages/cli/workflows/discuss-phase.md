@@ -1070,6 +1070,31 @@ Route to `confirm_creation` step (existing behavior — show manual next steps).
 
 </process>
 
+<!--
+  Domain-switch skeleton (Phase 37/M1.3 — R3 reconciliation)
+
+  Inert marker pairs reserving slots for domain-specific teach logic.
+  Phase 39/M2.2 fills FRONTEND; Phase 44/M3.3 fills BACKEND.
+
+  Invariants (R3 + R4):
+  - These markers do NOT trigger any runtime behavior in Phase 37.
+  - /sunco:discuss must produce byte-identical output before and after
+    this insertion when invoked against any phase (skeleton is inert).
+  - Teach behavior is triggered ONLY when the phase frontmatter declares
+    `domains: [frontend]` or `domains: [backend]`, OR the user invokes
+    `/sunco:discuss --domain frontend` / `--domain backend`.
+  - NO automatic domain detection. Sanity heuristics may warn but never
+    trigger teach. Explicit-only (R4).
+-->
+
+<!-- SUNCO:DOMAIN-FRONTEND-START -->
+Frontend teach logic will be populated in Phase 39/M2.2. Until then this section is inert — no teach questions, no `.planning/domains/frontend/DESIGN-CONTEXT.md` upsert, no automatic detection. Triggered only by explicit `domains: [frontend]` or `--domain frontend`.
+<!-- SUNCO:DOMAIN-FRONTEND-END -->
+
+<!-- SUNCO:DOMAIN-BACKEND-START -->
+Backend teach logic will be populated in Phase 44/M3.3. Until then this section is inert — no teach questions, no `.planning/domains/backend/DESIGN-CONTEXT.md` upsert, no automatic detection. Triggered only by explicit `domains: [backend]` or `--domain backend`.
+<!-- SUNCO:DOMAIN-BACKEND-END -->
+
 <success_criteria>
 - Phase validated against roadmap
 - Prior context loaded (PROJECT.md, REQUIREMENTS.md, STATE.md, prior CONTEXT.md files)

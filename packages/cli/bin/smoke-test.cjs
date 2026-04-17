@@ -354,6 +354,107 @@ if (!fs.existsSync(sourceWfDir)) {
   }
 }
 
+// 12. Backend Dispatcher (Phase 37/M1.3) — source-dir validation
+console.log(`\n${BOLD}12. Backend Dispatcher (source)${RESET}`);
+// Source-dir validation. Phase 37 does not mutate the installed runtime (Gate axis #6).
+if (!fs.existsSync(sourceWfDir)) {
+  warn('source workflows/ dir not found — skipping backend dispatcher checks');
+} else {
+  const backendPhasePath = path.join(sourceWfDir, 'backend-phase.md');
+  const backendReviewPath = path.join(sourceWfDir, 'backend-review.md');
+  const discussPhasePath = path.join(sourceWfDir, 'discuss-phase.md');
+  const sourceCmdsDir = path.resolve(__dirname, '..', 'commands', 'sunco');
+  const backendPhaseCmd = path.join(sourceCmdsDir, 'backend-phase.md');
+  const backendReviewCmd = path.join(sourceCmdsDir, 'backend-review.md');
+
+  // Presence: routers + 8 stubs + 2 command entries
+  check('source backend-phase.md (router) exists', fs.existsSync(backendPhasePath));
+  check('source backend-review.md (router) exists', fs.existsSync(backendReviewPath));
+  for (const surface of ['api', 'data', 'event', 'ops']) {
+    check(`source backend-phase-${surface}.md stub exists`,
+      fs.existsSync(path.join(sourceWfDir, `backend-phase-${surface}.md`)));
+    check(`source backend-review-${surface}.md stub exists`,
+      fs.existsSync(path.join(sourceWfDir, `backend-review-${surface}.md`)));
+  }
+  check('source commands/sunco/backend-phase.md exists', fs.existsSync(backendPhaseCmd));
+  check('source commands/sunco/backend-review.md exists', fs.existsSync(backendReviewCmd));
+
+  // Router content markers
+  if (fs.existsSync(backendPhasePath)) {
+    const bp = fs.readFileSync(backendPhasePath, 'utf8');
+    check('backend-phase router declares Surface Dispatcher', bp.includes('Surface Dispatcher'));
+    check('backend-phase router marks --surface REQUIRED (no default)',
+      /REQUIRED[^a-zA-Z]*no default|no default[^a-zA-Z]*REQUIRED/i.test(bp));
+    check('backend-phase router lists api|data|event|ops enum',
+      bp.includes('api') && bp.includes('data') && bp.includes('event') && bp.includes('ops'));
+    check('backend-phase router handles missing --surface with usage error',
+      bp.includes('ERROR: --surface is required'));
+    check('backend-phase router handles invalid value with usage error',
+      bp.includes('Invalid --surface value'));
+    check('backend-phase router enforces explicit-only',
+      /no auto-routing|explicit-only/i.test(bp));
+  }
+  if (fs.existsSync(backendReviewPath)) {
+    const br = fs.readFileSync(backendReviewPath, 'utf8');
+    check('backend-review router declares Surface Dispatcher', br.includes('Surface Dispatcher'));
+    check('backend-review router marks --surface REQUIRED (no default)',
+      /REQUIRED[^a-zA-Z]*no default|no default[^a-zA-Z]*REQUIRED/i.test(br));
+    check('backend-review router handles missing --surface with usage error',
+      br.includes('ERROR: --surface is required'));
+    check('backend-review router handles invalid value with usage error',
+      br.includes('Invalid --surface value'));
+  }
+
+  // Parallel-router parsing-block byte-level symmetry (Gate 37 A3 strong assertion)
+  if (fs.existsSync(backendPhasePath) && fs.existsSync(backendReviewPath)) {
+    const extractParsingBlock = (content) => {
+      const match = content.match(/<!-- SUNCO:PARSING-BLOCK-START -->([\s\S]*?)<!-- SUNCO:PARSING-BLOCK-END -->/);
+      return match ? match[1] : null;
+    };
+    const phaseBlock = extractParsingBlock(fs.readFileSync(backendPhasePath, 'utf8'));
+    const reviewBlock = extractParsingBlock(fs.readFileSync(backendReviewPath, 'utf8'));
+    check('backend-phase has SUNCO:PARSING-BLOCK markers', phaseBlock !== null);
+    check('backend-review has SUNCO:PARSING-BLOCK markers', reviewBlock !== null);
+    check('backend-phase and backend-review parsing blocks are byte-identical',
+      phaseBlock !== null && reviewBlock !== null && phaseBlock === reviewBlock);
+  }
+
+  // Stub populating-phase references
+  const phaseStubTargets = { api: 45, data: 45, event: 46, ops: 46 };
+  for (const [surface, targetPhase] of Object.entries(phaseStubTargets)) {
+    const p = path.join(sourceWfDir, `backend-phase-${surface}.md`);
+    if (fs.existsSync(p)) {
+      const c = fs.readFileSync(p, 'utf8');
+      check(`backend-phase-${surface} stub references Phase ${targetPhase}`,
+        c.includes(`Phase ${targetPhase}`));
+      check(`backend-phase-${surface} stub exits without dispatch`,
+        /Does \*\*not\*\* spawn|Does \*\*not\*\* write/i.test(c));
+    }
+  }
+  for (const surface of ['api', 'data', 'event', 'ops']) {
+    const p = path.join(sourceWfDir, `backend-review-${surface}.md`);
+    if (fs.existsSync(p)) {
+      const c = fs.readFileSync(p, 'utf8');
+      check(`backend-review-${surface} stub references Phase 47`, c.includes('Phase 47'));
+    }
+  }
+
+  // discuss-phase.md domain-switch skeleton (R3 reconciliation)
+  if (fs.existsSync(discussPhasePath)) {
+    const dp = fs.readFileSync(discussPhasePath, 'utf8');
+    check('discuss-phase has SUNCO:DOMAIN-FRONTEND marker pair',
+      dp.includes('SUNCO:DOMAIN-FRONTEND-START') && dp.includes('SUNCO:DOMAIN-FRONTEND-END'));
+    check('discuss-phase has SUNCO:DOMAIN-BACKEND marker pair',
+      dp.includes('SUNCO:DOMAIN-BACKEND-START') && dp.includes('SUNCO:DOMAIN-BACKEND-END'));
+    check('discuss-phase FRONTEND skeleton references Phase 39/M2.2',
+      /Phase 39.*M2\.2|M2\.2.*Phase 39/.test(dp));
+    check('discuss-phase BACKEND skeleton references Phase 44/M3.3',
+      /Phase 44.*M3\.3|M3\.3.*Phase 44/.test(dp));
+    check('discuss-phase domain skeletons are inert (explicit-only preserved)',
+      /inert|Triggered only/i.test(dp));
+  }
+}
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

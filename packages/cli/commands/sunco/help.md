@@ -230,6 +230,15 @@ Wave-based parallel execution. Mandatory blast radius check before start. Mandat
 
 ---
 
+## Backend Commands
+
+| Command | Description |
+|---------|-------------|
+| `/sunco:backend-phase` | Generate backend design contract (API/data/event/ops surfaces) — `--surface` required |
+| `/sunco:backend-review` | Retroactive audit of backend implementation (API/data/event/ops) — `--surface` required |
+
+---
+
 ## Model Profile Commands
 
 | Command | Description |

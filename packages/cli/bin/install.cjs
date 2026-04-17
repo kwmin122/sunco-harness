@@ -297,6 +297,8 @@ const DESCRIPTIONS_KO = {
   'assume.md':         '페이즈 실행 전 에이전트의 가정 사항을 미리 확인',
   'audit-uat.md':      '전체 페이즈의 UAT(사용자 수락 테스트) 현황 감사',
   'auto.md':           '전체 자율 파이프라인 — discuss→plan→execute→verify 자동 실행',
+  'backend-phase.md':  '백엔드 설계 계약서 dispatcher — --surface {api|data|event|ops}로 표면별 분기 (required, no default)',
+  'backend-review.md': '백엔드 구현 감사 dispatcher — --surface {api|data|event|ops}로 표면별 분기 (required, no default)',
   'backlog.md':        '아이디어 주차장 — 현재 마일스톤 밖의 아이디어 관리',
   'context.md':        '현재 페이즈의 결정사항, 차단요소, 다음 행동 표시',
   'debug.md':          '체계적 디버깅 — 상태 저장으로 컨텍스트 초기화 후에도 재개 가능',
