@@ -39,6 +39,7 @@ const SUN_DIR = path.join(os.homedir(), '.sun');
 const CONFIG_PATH = path.join(SUN_DIR, 'config.toml');
 const BUDGET_PATH = path.join(SUN_DIR, 'advisor-budget.json');
 const LOG_PATH = path.join(SUN_DIR, 'advisor.log');
+const QUEUE_PATH = path.join(SUN_DIR, 'advisor-queue.json');
 
 // ---------------------------------------------------------------------------
 // Minimal TOML-lite reader for [advisor] block
@@ -218,6 +219,59 @@ function buildInjection(bucket, signals, config) {
 // Main
 // ---------------------------------------------------------------------------
 
+function readQueue() {
+  try {
+    if (!fs.existsSync(QUEUE_PATH)) return { version: 1, items: [] };
+    const parsed = JSON.parse(fs.readFileSync(QUEUE_PATH, 'utf8'));
+    if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.items)) {
+      return { version: 1, items: [] };
+    }
+    return parsed;
+  } catch {
+    return { version: 1, items: [] };
+  }
+}
+
+function writeQueue(queue) {
+  try {
+    if (!fs.existsSync(SUN_DIR)) fs.mkdirSync(SUN_DIR, { recursive: true });
+    fs.writeFileSync(QUEUE_PATH, JSON.stringify(queue, null, 2) + '\n', 'utf8');
+  } catch {
+    /* best-effort */
+  }
+}
+
+function promoteOldestPending(queue) {
+  const pending = queue.items.find((i) => i.status === 'pending');
+  if (!pending) return null;
+  pending.status = 'surfaced';
+  pending.lastMessage = buildMessage(
+    pending.signals && pending.signals[0] && pending.signals.includes('touchesSecrets') ? 'blocker' : 'guarded',
+    pending.signals || [],
+  );
+  writeQueue(queue);
+  return pending;
+}
+
+function renderQueueInjection(item) {
+  const bucket = item.signals && item.signals.includes('touchesSecrets') ? 'blocker' : 'guarded';
+  const gateList = (item.requiredGates || [])
+    .map((g) => (g.scope ? `${g.gate}(${g.scope})` : g.gate))
+    .join(', ');
+  const files = (item.files || []).slice(0, 3).join(', ');
+  const lines = [
+    `Risk: unresolved edit queue — ${files}.`,
+    `Suggestion: run ${gateList || 'lint/test'} before new work.`,
+  ];
+  const attrs = [
+    'visibility="internal"',
+    `level="${bucket === 'blocker' ? 'guarded' : bucket}"`,
+    `confidence="high"`,
+    `source="post-action-queue"`,
+  ];
+  return `<sunco_advisor ${attrs.join(' ')}>\n${lines.join('\n')}\n</sunco_advisor>`;
+}
+
 function main() {
   try {
     const config = readAdvisorConfig();
@@ -228,6 +282,23 @@ function main() {
     if (prompt.trim().startsWith('/')) return; // slash commands bypass
     if (prompt.trim().length < 4) return; // noise guard
 
+    // 1. Promote a pending queue item if any. At most one per prompt
+    //    (maxPerPrompt=1 by policy).
+    const queue = readQueue();
+    const surfaced = promoteOldestPending(queue);
+
+    if (surfaced) {
+      const budget = readBudget();
+      if (budget.visibleCount < (config.max_visible_per_session || 5)) {
+        budget.visibleCount += 1;
+        writeBudget(budget);
+        appendLog({ event: 'queue-surfaced', id: surfaced.id });
+        process.stdout.write(renderQueueInjection(surfaced) + '\n');
+        return;
+      }
+    }
+
+    // 2. Fall through to prompt-based classification.
     const { bucket, signals } = classifyPrompt(prompt);
     if (bucket === 'silent') return;
 
@@ -262,5 +333,9 @@ module.exports = {
     shouldSurface,
     buildMessage,
     buildInjection,
+    readQueue,
+    writeQueue,
+    promoteOldestPending,
+    renderQueueInjection,
   },
 };

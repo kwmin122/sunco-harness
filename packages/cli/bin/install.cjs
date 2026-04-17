@@ -206,6 +206,11 @@ function patchSettings(targetDir, runtimeDir) {
     matcher: '',
     command: `node ${hooksBase}/sunco-context-monitor.cjs`
   });
+  // PostToolUse: advisor post-action queue (Write/Edit classifier → enqueue)
+  settings.hooks.PostToolUse.push({
+    matcher: 'Write|Edit|MultiEdit',
+    command: `node ${hooksBase}/sunco-advisor-postaction.cjs`
+  });
 
   // PreToolUse: prompt injection guard (advisory, Write/Edit tools)
   if (!Array.isArray(settings.hooks.PreToolUse)) settings.hooks.PreToolUse = [];

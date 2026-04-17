@@ -92,7 +92,7 @@ check('No prohibited paths in workflows', badPaths === 0, `${badPaths} files wit
 
 // 4. Hook files
 console.log('');
-const expectedHooks = ['sunco-check-update.cjs', 'sunco-statusline.cjs', 'sunco-context-monitor.cjs', 'sunco-prompt-guard.cjs', 'sunco-mode-router.cjs', 'sunco-advisor-ambient.cjs'];
+const expectedHooks = ['sunco-check-update.cjs', 'sunco-statusline.cjs', 'sunco-context-monitor.cjs', 'sunco-prompt-guard.cjs', 'sunco-mode-router.cjs', 'sunco-advisor-ambient.cjs', 'sunco-advisor-postaction.cjs'];
 const hooksDir = path.join(pkgRoot, 'hooks');
 for (const hook of expectedHooks) {
   check(`Hook: ${hook}`, fs.existsSync(path.join(hooksDir, hook)));
