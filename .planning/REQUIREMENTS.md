@@ -262,6 +262,44 @@ v1.3 work (Phase 22–34) was executed as internal consolidation / pivot absorpt
 
 ---
 
+## v1.4 Requirements — Impeccable Fusion
+
+Source spec: `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` (locked at commit `6e6761a`). Each requirement maps to exactly one phase in ROADMAP § v1.4.
+
+### Foundation (M1)
+
+- **IF-01**: Vendored Apache-2.0 Impeccable license/attribution skeleton — `packages/cli/references/impeccable/` with LICENSE/NOTICE.md/SUNCO-ATTRIBUTION.md; `packages/cli/references/backend-excellence/` with NOTICE.md (clean-room declaration); `packages/cli/schemas/` directory. Covered by Phase 35 (spec M1.1).
+- **IF-02**: UI dispatcher `/sunco:ui-phase [--surface cli|web|native]` with sanity pre-check warning (stderr-only, non-blocking) and explicit-only triggers. Default=cli for 0 regression. Internal: `ui-phase.md` (router), `ui-phase-{cli,web,native}.md`. Covered by Phase 36 (spec M1.2).
+- **IF-03**: Backend dispatcher `/sunco:backend-phase --surface {api|data|event|ops}` + symmetric `/sunco:backend-review` (no default; `--surface` required). Covered by Phase 37 (spec M1.3).
+
+### Frontend Fusion (M2)
+
+- **IF-04**: Impeccable vendoring via wrapper injection (not patchset) — `packages/cli/references/impeccable/source/` pristine, `packages/cli/references/impeccable/wrapper/` SUNCO-authored adapters (context-injector.mjs, detector-adapter.mjs). Done when wrapper e2e test passes. Covered by Phase 38 (spec M2.1).
+- **IF-05**: `discuss-phase.md` inline frontend teach questions — triggered only by `domains:[frontend]` in phase YAML or `--domain frontend` flag. Populates `.planning/domains/frontend/DESIGN-CONTEXT.md`. Covered by Phase 39 (spec M2.2).
+- **IF-06**: `ui-phase-web` workflow generates `UI-SPEC.md` with required `<!-- SUNCO:SPEC-BLOCK -->` YAML block (structured schema) + prose. DESIGN-CONTEXT.md required as input. Covered by Phase 40 (spec M2.3).
+- **IF-07**: `/sunco:ui-review --surface web` explicit wraps Impeccable detector + LLM critique → `IMPECCABLE-AUDIT.md` (raw findings) + `UI-REVIEW.md` (6-pillar wrapping). Default flagless invocation preserves cli behavior (0 regression). Covered by Phase 41 (spec M2.4).
+
+### Backend Excellence (M3)
+
+- **IF-08**: 8 clean-room backend reference documents (api-design, data-modeling, boundaries-and-architecture, reliability-and-failure-modes, security-and-permissions, performance-and-scale, observability-and-operations, migrations-and-compatibility), each ≥1500 words with ≥5 anti-patterns + code examples. Covered by Phase 42 (spec M3.1).
+- **IF-09**: Deterministic backend detector with 7 high-confidence rules (raw-sql-interpolation, missing-timeout, swallowed-catch, any-typed-body, missing-validation-public-route, non-reversible-migration, logged-secret) emitting JSON findings with severity/kind=deterministic/file/line/match/fix_hint. Covered by Phase 43 (spec M3.2).
+- **IF-10**: `discuss-phase.md` inline backend teach questions — triggered only by `domains:[backend]` or `--domain backend`. Populates `.planning/domains/backend/BACKEND-CONTEXT.md`. Covered by Phase 44 (spec M3.3).
+- **IF-11**: `backend-phase-api` + `backend-phase-data` workflows output `API-SPEC.md` + `DATA-SPEC.md` with SPEC-BLOCK structured YAML (endpoints, error_envelope, entities, indexes, migration_strategy). Covered by Phase 45 (spec M3.4).
+- **IF-12**: `backend-phase-event` + `backend-phase-ops` workflows output `EVENT-SPEC.md` + `OPS-SPEC.md` with SPEC-BLOCK YAML (events/DLQ/idempotency; deployment_topology/SLO/runbook). Covered by Phase 46 (spec M3.5).
+- **IF-13**: `backend-review --surface {api|data|event|ops}` executes deterministic detector subset + LLM review → `BACKEND-AUDIT.md` with surface sections and labeled findings (deterministic/heuristic/requires-human-confirmation). Covered by Phase 47 (spec M3.6).
+
+### Cross-Domain (M4)
+
+- **IF-14**: `CROSS-DOMAIN.md` auto-generation from UI-SPEC.md + API-SPEC.md SPEC-BLOCK extraction (grep + YAML parse, deterministic). Schema: `schemas/cross-domain.schema.json` with version field. Covered by Phase 48 (spec M4.1).
+- **IF-15**: Verify gate cross-domain layer with 4 checks (missing-endpoint HIGH, type-drift HIGH, error-state-mismatch MED, orphan-endpoint LOW) and finding-state lifecycle (open/resolved/dismissed-with-rationale); HIGH open = hard block, MED open = block (dismissable with ≥50-char rationale), LOW open = configurable. Covered by Phase 49 (spec M4.2).
+
+### Rollout Hardening (M5)
+
+- **IF-16**: Documentation and migration guide — `docs/impeccable-integration.md`, `docs/backend-excellence.md`, `docs/migration-v0.X.md`, README update with v1.4 usage. Covered by Phase 50 (spec M5.1).
+- **IF-17**: Dogfood sunco-harness itself — apply `backend-phase-api` to the CLI's own API surface; fixtures `test/fixtures/frontend-web-sample`, `backend-rest-sample`, `cross-domain-conflict`; CI integration (vitest). Covered by Phase 51 (spec M5.2).
+
+---
+
 ## v2 Requirements
 
 ### Extension Skills

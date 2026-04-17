@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.3
-milestone_name: Consolidation & Pivot Absorption
-status: closed
-stopped_at: "Phase 34 Codex Layer 6 Integration (completed 2026-04-13); Phase 23a/b/29/31 candidates preserved as historical"
+milestone: v1.4
+milestone_name: Impeccable Fusion
+status: initialized
+stopped_at: ""
 last_updated: "2026-04-18T00:00:00.000Z"
-last_activity: 2026-04-13
+last_activity: 2026-04-18
 progress:
   total_phases: 17
-  completed_phases: 13
-  total_plans: 67
-  completed_plans: 67
-  percent: 76
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,19 +21,19 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** v1.3 closed as of 2026-04-18; awaiting v1.4 Impeccable Fusion initialization (next commit)
+**Current focus:** v1.4 Impeccable Fusion — 17 phases (35–51) scaffolded; Phase 35 skeleton work next.
 
 ## Current Position
 
-Milestone: v1.3 (closed)
-Last completed work: Phase 34 Codex Layer 6 Integration (2026-04-13)
-Candidates preserved: Phase 23a, 23b, 29, 31 (historical, not backfilled)
-Status: Awaiting v1.4 initialization
-Last activity: 2026-04-13
+Milestone: v1.4 Impeccable Fusion (initialized)
+Current phase: 35 (spec alias M1.1) — File layout + attribution scaffolding
+Status: scaffolded; Phase 35 skeleton to be populated via `/sunco:discuss 35`
+Spec source: `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` (locked at `6e6761a`)
+Last activity: 2026-04-18
 
-Progress: [██████████] v1.3 completed work + candidates preserved as historical
+Progress: [░░░░░░░░░░] 0% (0/17 phases)
 
-Accounting note: Phase counts are an approximate v1.3 closeout snapshot; plan counts predate v1.3 and are retained from the prior state.
+Historical note: Previous milestones archived in-place — v1.2 Light Harness (complete, Phase 17–21) and v1.3 Consolidation & Pivot Absorption (closed, Phase 22–34 + candidates). See ROADMAP.md for full trajectory.
 
 ## Performance Metrics
 

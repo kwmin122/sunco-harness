@@ -1,6 +1,28 @@
 # SUN
 
-**Historical note (2026-04-18)**: This document's core content reflects the 2026-03-29 v1.1 operational resilience pivot snapshot. The project has since advanced through **v1.2 Light Harness** (Phase 17–21, completed 2026-04-06) and **v1.3 consolidation/pivot absorption** (Phase 22–34 advanced through 2026-04-13; completed work preserved, Phase 23a/b/29/31 candidates remain historical). **v1.4 Impeccable Fusion** initialization follows in a subsequent commit. Comprehensive PROJECT.md refresh is deferred to a dedicated cleanup task.
+**Historical note (2026-04-18)**: This document's core content reflects the 2026-03-29 v1.1 operational resilience pivot snapshot. The project has since advanced through **v1.2 Light Harness** (Phase 17–21, completed 2026-04-06) and **v1.3 consolidation/pivot absorption** (Phase 22–34 advanced through 2026-04-13; completed work preserved, Phase 23a/b/29/31 candidates remain historical). Comprehensive PROJECT.md refresh is deferred to a dedicated cleanup task.
+
+## v1.4 Impeccable Fusion (Current Milestone)
+
+**Initialized**: 2026-04-18
+**Theme**: External value delivery — craft-quality layer for downstream SUNCO-user projects.
+**Spec**: `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` (locked at commit `6e6761a`, 1146 lines, 4-round cross-model ping-pong + gate pass)
+
+**Direction**: SUNCO absorbs the Apache-2.0-licensed Impeccable design-craft skill pack as a vendored reference, and authors a clean-room Backend Excellence reference layer. Downstream projects get consistent design/backend craft enforcement via `/sunco:ui-phase --surface web` and `/sunco:backend-phase --surface {api|data|event|ops}` dispatchers, with cross-domain contract verification tying frontend and backend specs together.
+
+**Architecture principles (locked)**:
+1. SUNCO canonical; Impeccable/Backend = vendored adapters
+2. Explicit-only triggers (v1) — no auto surface detection or automatic teach-question firing
+3. Dispatcher pattern (umbrella command + internal surface-specific workflow)
+4. Finding-based verification (severity HIGH/MED/LOW × state open/resolved/dismissed-with-rationale; no FAIL/WARN)
+5. Impeccable = vendor (wrapper injection, no patches); Backend Excellence = clean-room
+6. Deterministic detector is high-confidence-only (7 rules v1)
+
+**Structure**: 17 phases across 5 milestones (M1 Foundation, M2 Frontend Fusion, M3 Backend Excellence, M4 Cross-Domain, M5 Rollout Hardening). Integer phases 35–51 with spec aliases M1.1–M5.2. See `ROADMAP.md` § v1.4 and `REQUIREMENTS.md` § v1.4 (IF-01 through IF-17).
+
+**Out of scope v1**: Native/mobile surface (stub only), `.impeccable.md` export command, auto surface detection, multi-backend merge, migration CLI (v2 candidates documented in spec §12).
+
+**Timeline**: 7 weeks (1 person) / 4 weeks (2 person). M2 and M3 parallelizable after M1.
 
 ## What This Is
 

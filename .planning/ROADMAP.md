@@ -464,4 +464,61 @@ v1.3 is closed as a consolidation milestone. Its absorption/pivot work (Phase 22
 
 **Note on internal drift**: The Milestones progress table above contains additional drift (e.g., Phase 22/25 marked "Not started" despite the Phase entry list showing completion dates). Comprehensive ROADMAP refresh is deferred to a dedicated cleanup task; this closeout note establishes the canonical v1.3 record.
 
+---
+
+## v1.4: Impeccable Fusion
+
+**Initialized**: 2026-04-18
+**Theme**: External value delivery — craft-quality layer for downstream SUNCO-user projects via vendored Impeccable + clean-room Backend Excellence.
+**Spec**: `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` (locked at commit `6e6761a`)
+
+### Structure
+
+17 phases across 5 milestones. Phase numbers use integer continuation (35–51) — compatible with existing `%02d` tool convention; spec aliases (M1.1–M5.2) preserved as cross-reference in phase CONTEXT.md and milestone headers below.
+
+### Milestone M1 — Foundation (Phases 35–37)
+
+- **Phase 35 (spec M1.1)**: File layout + attribution scaffolding — `packages/cli/references/{impeccable,backend-excellence}/` + `packages/cli/schemas/` + SUNCO-ATTRIBUTION.md + CHANGELOG entry. REQ: IF-01.
+- **Phase 36 (spec M1.2)**: UI dispatcher skeleton — `workflows/ui-phase.md` (router) + `ui-phase-{cli,web,native}.md` + sanity pre-check (stderr warning only). Default surface=cli for 0 regression. REQ: IF-02.
+- **Phase 37 (spec M1.3)**: Backend dispatcher skeleton — `workflows/backend-phase.md` + `backend-phase-{api,data,event,ops}.md` + `backend-review.md` router + 4 symmetric review surfaces. `--surface` required (no default). REQ: IF-03.
+
+### Milestone M2 — Frontend Fusion (Phases 38–41) [depends M1]
+
+- **Phase 38 (spec M2.1)**: Impeccable vendoring via wrapper injection pattern — `references/impeccable/source/` pristine; `references/impeccable/wrapper/` SUNCO-authored adapters. Done when wrapper e2e test passes. REQ: IF-04.
+- **Phase 39 (spec M2.2)**: `discuss-phase.md` frontend teach — inline teach questions for `domains:[frontend]` or `--domain frontend` only. Populates DESIGN-CONTEXT.md. REQ: IF-05.
+- **Phase 40 (spec M2.3)**: `ui-phase-web` workflow — generates UI-SPEC.md with SPEC-BLOCK YAML + prose; DESIGN-CONTEXT.md required. REQ: IF-06.
+- **Phase 41 (spec M2.4)**: `ui-review --surface web` WRAP — Impeccable detector + LLM critique → IMPECCABLE-AUDIT.md + UI-REVIEW.md. Explicit-only (no auto-default to web). REQ: IF-07.
+
+### Milestone M3 — Backend Excellence (Phases 42–47) [depends M1, parallel with M2]
+
+- **Phase 42 (spec M3.1)**: 8 clean-room backend reference documents (api-design, data-modeling, boundaries-and-architecture, reliability-and-failure-modes, security-and-permissions, performance-and-scale, observability-and-operations, migrations-and-compatibility) — each ≥1500 words with ≥5 anti-patterns. REQ: IF-08.
+- **Phase 43 (spec M3.2)**: Deterministic backend detector (7 high-confidence rules). JSON findings output. REQ: IF-09.
+- **Phase 44 (spec M3.3)**: `discuss-phase.md` backend teach — explicit-only trigger via `domains:[backend]` or `--domain backend`. Populates BACKEND-CONTEXT.md. REQ: IF-10.
+- **Phase 45 (spec M3.4)**: `backend-phase-api` + `backend-phase-data` with SPEC-BLOCK outputs. REQ: IF-11.
+- **Phase 46 (spec M3.5)**: `backend-phase-event` + `backend-phase-ops` with SPEC-BLOCK outputs. REQ: IF-12.
+- **Phase 47 (spec M3.6)**: `backend-review` 4 surfaces — detector subset + LLM review → BACKEND-AUDIT.md. REQ: IF-13.
+
+### Milestone M4 — Cross-Domain Integration (Phases 48–49) [depends M2+M3]
+
+- **Phase 48 (spec M4.1)**: `CROSS-DOMAIN.md` auto-generation from UI-SPEC + API-SPEC SPEC-BLOCK extraction (deterministic grep + YAML parse). `schemas/cross-domain.schema.json` with version field. REQ: IF-14.
+- **Phase 49 (spec M4.2)**: Verify gate cross-domain layer — 4 finding types with severity × state lifecycle (HIGH hard-block, MED block with dismiss, LOW configurable). REQ: IF-15.
+
+### Milestone M5 — Rollout Hardening (Phases 50–51) [depends M1–M4]
+
+- **Phase 50 (spec M5.1)**: Documentation + migration guide — `docs/impeccable-integration.md`, `docs/backend-excellence.md`, `docs/migration-v0.X.md`, README. REQ: IF-16.
+- **Phase 51 (spec M5.2)**: Dogfood sunco-harness itself + test fixtures + CI integration. REQ: IF-17.
+
+### Timeline
+
+7 weeks single-person / 4 weeks two-person parallel. M2 and M3 parallelizable after M1; spec R3 resolves `discuss-phase.md` merge-conflict risk via M1 Phase 37 stub landing domain-switch skeleton first.
+
+### Success criteria (Done for v1.4)
+
+See spec §14 "Done for v1". Key markers:
+1. `/sunco:ui-phase --surface cli` — 0 regression vs existing
+2. `/sunco:backend-phase --surface {api,data,event,ops}` — all 4 produce SPEC.md
+3. Cross-domain gate enforces with severity × state; proceed-gate blocks HIGH/MED open
+4. Dogfood sunco-harness finds ≥5 findings in its own API surface
+5. All COEXIST commands unchanged (0 regression)
+
 
