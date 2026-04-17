@@ -143,6 +143,7 @@ const expectedHooks = [
   'sunco-context-monitor.cjs',
   'sunco-prompt-guard.cjs',
   'sunco-mode-router.cjs',
+  'sunco-advisor-ambient.cjs',
 ];
 for (const hook of expectedHooks) {
   check(`hooks/${hook}`, fs.existsSync(path.join(hooksDir, hook)));

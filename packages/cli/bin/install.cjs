@@ -220,6 +220,11 @@ function patchSettings(targetDir, runtimeDir) {
     matcher: '',
     command: `node ${hooksBase}/sunco-mode-router.cjs`
   });
+  // UserPromptSubmit: ambient advisor (classifies user prompt, injects <sunco_advisor> XML block when risk signals fire)
+  settings.hooks.UserPromptSubmit.push({
+    matcher: '',
+    command: `node ${hooksBase}/sunco-advisor-ambient.cjs`
+  });
 
   // --- StatusLine ---
   const statusLineCmd = `node ${hooksBase}/sunco-statusline.cjs`;
