@@ -61,6 +61,28 @@ SUNCO treats Superpowers' 14 built-in skills as a behavioral reference and cover
 | finishing-a-development-branch | `/sunco:ship`, `/sunco:land`, `/sunco:pr-branch` |
 | writing-skills | `/sunco:new-skill` + `@sunco/core` `defineSkill` |
 
+### Ambient Advisor
+
+SUNCO ships an ambient advisor that watches your natural-language prompts and your file edits, then injects short `Risk: / Suggestion:` blocks when risk signals fire. No slash command to remember — the advisor is on by default on Claude Code; other runtimes get the same engine through `/sunco:advisor --json`.
+
+| Concern | Mechanism |
+|---|---|
+| Intervention levels | `silent | notice | guarded | blocker` (blocker → guarded unless `blocking=true`) |
+| Default model | Opus 4.7 thinking=high (reconfigure with `/sunco:advisor --reconfigure`) |
+| Auto-execution | Permanently disabled — `auto_execute_skills = false` is typed as a literal |
+| Noise budget | same key = 30 min dedupe, 5 visible per session, 1 block per prompt |
+| Config file | `~/.sun/config.toml` → `[advisor]` block |
+| Contract | `packages/cli/references/advisor-contract.md` |
+
+Manual surface:
+```
+/sunco:advisor "<task>"              # classify, print Risk/Suggestion
+/sunco:advisor "<task>" --verbose    # include reasons + gates + XML
+/sunco:advisor --reconfigure         # first-run picker (model/thinking)
+/sunco:advisor --last                # show last 10 decisions
+/sunco:advisor --json                # structured payload (Codex/Cursor/Antigravity)
+```
+
 ### gstack ↔ SUNCO Sprint Map
 
 gstack's Think → Plan → Build → Review → Test → Ship → Reflect sprint discipline maps one-to-one onto SUNCO's workflow surface:

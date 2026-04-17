@@ -104,6 +104,15 @@ Published artifacts:
   6 hooks              — Lifecycle hooks
 ```
 
+## v0.11.0 Highlights
+
+- **Ambient advisor** — `/sunco:advisor` skill + two Claude Code hooks (UserPromptSubmit injection + PostToolUse queue). Deterministic classifier surfaces short `Risk: / Suggestion:` blocks when risk signals fire. Never writes code, never auto-executes skills.
+- **First-run model picker** — Opus 4.7 / Sonnet 4.6 / Haiku 4.5 / Codex CLI / Custom, with GPT-5 and Gemini 2.5 Pro appearing only when detected. Persists to `~/.sun/config.toml`.
+- **4-level intervention** — silent / notice / guarded / blocker; blocker downgrades to guarded unless `blocking=true`.
+- **Queue state machine** — `pending → surfaced → acknowledged → resolved` with 2h TTL and dedupe via SHA1(bucket+file+signals).
+- **Noise budget** — 30-min dedupe per key, 5 visible per session, 1 block per prompt.
+- **991 workflow tests**, 89/89 contract lint, 85 slash commands, 8 hooks.
+
 ## v0.10.0 Highlights
 
 - **`/sunco:orchestrate`** — dynamic multi-agent router. Deterministic signal-based routing across 8 roles (explorer/librarian/oracle/developer/frontend/docs/verifier/debugger). No fixed pipeline. Clean-room reimplementation of OmO Sisyphus + gstack role discipline; no AGPL code vendored.

@@ -36,6 +36,16 @@ AI agents write code. Your job is setting up the field so they make fewer mistak
 - **Multi-model design pingpong** — Claude + Codex parallel design with merge
 - **Korean i18n** — 85 commands with Korean descriptions, interactive installer
 
+### New in v0.11.0
+
+- **Ambient advisor** — new `/sunco:advisor` skill + two Claude Code hooks (UserPromptSubmit injection + PostToolUse queue) that watch your natural-language prompts and edits, then surface short `Risk: / Suggestion:` blocks when risk signals fire. Zero slash commands to remember. Deterministic classifier (risk-classifier + advisor-policy + advisor-message), never writes code, never auto-executes skills. `auto_execute_skills = false` is a typed literal, not a flag.
+- **Advisor model picker** — first-run picker lets users choose Opus 4.7 (max/high/medium), Sonnet 4.6 (max/high), Haiku 4.5 (off), Codex CLI, or Custom. GPT-5 / Gemini 2.5 Pro appear only when their providers are detected. Config persists to `~/.sun/config.toml`.
+- **Intervention levels** — `silent / notice / guarded / blocker`. `blocker` downgrades to `guarded` by default (`blocking=false`); opt-in confirmation gates via config.
+- **Noise budget** — 30-min dedupe per suppression key, 5 visible blocks per session, 1 block per prompt, confidence floor at `medium` for user-visible surfaces.
+- **Queue state machine** — `pending → surfaced → acknowledged → resolved` (+ `expired` at 2h TTL). Stored at `~/.sun/advisor-queue.json` (schema v1).
+- **Runtime matrix** — Claude Code gets full ambient hooks; Codex / Cursor / Antigravity get the same deterministic engine through `/sunco:advisor --json`.
+- **991 workflow tests**, 89/89 contract lint, 85 slash commands (with `/sunco:advisor`), 8 hooks total.
+
 ### New in v0.10.0
 
 - **`/sunco:orchestrate`** — dynamic multi-agent router (explorer/librarian/oracle/developer/frontend/docs/verifier/debugger). Deterministic signal-based routing, no fixed pipeline, orchestrator never writes code. Clean-room reimplementation inspired by OmO's Sisyphus (AGPL-3.0, no code vendored) and gstack's role-based sprint discipline.
