@@ -192,6 +192,45 @@ if (fs.existsSync(helpWf)) {
   check('help maps OmO roles to SUNCO delegates', wf.includes('OmO') && wf.includes('Sisyphus') && wf.includes('/sunco:orchestrate'));
 }
 
+// Advisor contract (Phase 0)
+console.log('');
+const advisorContractRef = path.join(pkgRoot, 'references', 'advisor-contract.md');
+check('advisor contract doc exists', fs.existsSync(advisorContractRef));
+if (fs.existsSync(advisorContractRef)) {
+  const doc = fs.readFileSync(advisorContractRef, 'utf8');
+  check('advisor contract names intervention levels', doc.includes('Intervention levels') && doc.includes('silent') && doc.includes('notice') && doc.includes('guarded') && doc.includes('blocker'));
+  check('advisor contract names runtime matrix', doc.includes('Runtime matrix'));
+  check('advisor contract pins auto_execute_skills=false', doc.includes('auto_execute_skills = false'));
+}
+const advisorTypesPath = path.join(pkgRoot, '..', 'skills-workflow', 'src', 'shared', 'advisor-types.ts');
+check('advisor-types.ts exists', fs.existsSync(advisorTypesPath));
+if (fs.existsSync(advisorTypesPath)) {
+  const src = fs.readFileSync(advisorTypesPath, 'utf8');
+  const requiredExports = [
+    'AdvisorDecision',
+    'AdvisorConfig',
+    'DEFAULT_ADVISOR_CONFIG',
+    'DEFAULT_ADVISOR_MODEL_OPTIONS',
+    'DEFAULT_SUPPRESSION_POLICY',
+    'InterventionLevel',
+    'AdvisorModelOption',
+    'EMPTY_QUEUE',
+  ];
+  for (const sym of requiredExports) {
+    check(`advisor-types.ts exports ${sym}`, src.includes(sym));
+  }
+  // Permanent invariant: autoExecuteSkills is the literal false type.
+  check('AdvisorConfig.autoExecuteSkills pinned to false literal', /autoExecuteSkills:\s*false/.test(src));
+}
+const advisorMatrixPath = path.join(pkgRoot, '..', 'skills-workflow', 'src', 'shared', 'advisor-runtime-matrix.ts');
+check('advisor-runtime-matrix.ts exists', fs.existsSync(advisorMatrixPath));
+if (fs.existsSync(advisorMatrixPath)) {
+  const src = fs.readFileSync(advisorMatrixPath, 'utf8');
+  for (const r of ['claude', 'codex', 'cursor', 'antigravity']) {
+    check(`runtime matrix row: ${r}`, new RegExp(`runtime:\\s*'${r}'`).test(src));
+  }
+}
+
 // 7. README contract alignment
 console.log('');
 if (fs.existsSync(repoReadme)) {
