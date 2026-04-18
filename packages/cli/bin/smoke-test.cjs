@@ -1680,23 +1680,41 @@ for (const [relPath, expectedHash] of Object.entries(M2_ADJACENCY_HASHES)) {
     h === expectedHash ? '' : `got ${h.slice(0, 16)}..., expected ${expectedHash.slice(0, 16)}...`);
 }
 
-// 20l. Phase 43 detector source + Phase 42 reference docs + vendored source — still
-//      byte-identical via git diff --stat (runtime cheap, no hash-list maintenance).
+// 20l. Phase 43 detector source + Phase 42 reference docs + vendored source
+//      byte-identical via git diff --stat vs pre-Phase-45 baseline (de4c2b1).
+//
+// CI-resilient (post-push hotfix 2026-04-19): GitHub Actions actions/checkout@v4
+// defaults to fetch-depth:1 (shallow clone), which makes arbitrary historical
+// SHAs unreachable. Check for baseline reachability first and degrade to a
+// WARN (not FAIL) when running in a shallow clone. Primary coverage for frozen
+// surfaces is already provided by M2 adjacency-risk hash lock (20k, 3 files),
+// dedicated --test suites (injector 10/10, adapter 22/22, detector 17/17),
+// and Section 17/18 per-file quality checks — this strict diff is
+// belt-and-suspenders, not the sole guard.
 {
+  const repoRoot = path.resolve(__dirname, '..', '..', '..');
+  let baselineReachable = false;
   try {
-    const repoRoot = path.resolve(__dirname, '..', '..', '..');
-    const diffStat = execSync(
-      `git -C "${repoRoot}" diff --stat de4c2b1 -- packages/cli/references/backend-excellence/reference packages/cli/references/backend-excellence/NOTICE.md packages/cli/references/backend-excellence/src packages/cli/references/impeccable/source packages/cli/references/impeccable/src`,
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
-    );
-    check('Phase 42 ref docs + Phase 43 detector source + vendored Impeccable diff=0 vs de4c2b1 (A7)',
-      diffStat.trim() === '', diffStat.split('\n').slice(0, 3).join(' | '));
-  } catch (e) {
-    // git diff returns 1 when diff exists — but execSync throws only on non-zero
-    // from non-zero exit. A no-diff returns 0 with empty stdout. If git is missing
-    // or pre-commit this would fail; degrade to presence grep only.
-    check('Phase 42 ref docs + Phase 43 detector source + vendored Impeccable diff=0 vs de4c2b1 (A7)',
-      false, e.message.slice(0, 120));
+    execSync(`git -C "${repoRoot}" cat-file -e de4c2b1`,
+      { stdio: ['ignore', 'ignore', 'ignore'] });
+    baselineReachable = true;
+  } catch { /* shallow clone or missing SHA — will degrade below */ }
+
+  if (baselineReachable) {
+    try {
+      const diffStat = execSync(
+        `git -C "${repoRoot}" diff --stat de4c2b1 -- packages/cli/references/backend-excellence/reference packages/cli/references/backend-excellence/NOTICE.md packages/cli/references/backend-excellence/src packages/cli/references/impeccable/source packages/cli/references/impeccable/src`,
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+      );
+      check('Phase 42 ref docs + Phase 43 detector source + vendored Impeccable diff=0 vs de4c2b1 (A7)',
+        diffStat.trim() === '', diffStat.split('\n').slice(0, 3).join(' | '));
+    } catch (e) {
+      check('Phase 42 ref docs + Phase 43 detector source + vendored Impeccable diff=0 vs de4c2b1 (A7)',
+        false, e.message.slice(0, 120));
+    }
+  } else {
+    console.log(`  ${YELLOW}WARN${RESET} baseline de4c2b1 unreachable (likely shallow clone — fetch-depth:1); skipping strict git-diff check. Frozen coverage remains enforced via M2 adjacency-risk hashes (20k) + --test suites (injector/adapter/detector) + Section 17/18 per-file checks.`);
+    warnings++;
   }
 }
 
