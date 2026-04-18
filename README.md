@@ -275,7 +275,7 @@ Analyzing the error...
 
 **Claude Code** (`~/.claude/`):
 ```
-commands/sunco/           # 85 slash commands
+commands/sunco/           # 87 slash commands
 sunco/bin/                # 엔진 + sunco-tools.cjs
 sunco/workflows/          # 77 workflow files
 sunco/references/         # 16 reference documents
@@ -339,7 +339,7 @@ npx popcoru
  ███████║╚██████╔╝██║ ╚████║╚██████╗╚██████╔╝
  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝
 
- ✓ Installed commands/sunco (85 skills)
+ ✓ Installed commands/sunco (87 skills)
  ✓ Installed sunco engine
  ✓ Installed hooks
  ✓ Installed docs
