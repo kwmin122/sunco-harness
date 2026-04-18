@@ -11,7 +11,7 @@ SUNCO-authored reference library for backend engineering craft. Paralleling the 
 7. observability-and-operations
 8. migrations-and-compatibility
 
-**Status**: Skeleton only (Phase 35/M1.1, 2026-04-18). Reference documents land in Phase 42/M3.1. Deterministic detector rules land in Phase 43/M3.2.
+**Status**: Reference documents **populated** (Phase 42/M3.1, 2026-04-18). Deterministic detector implementation follows in Phase 43/M3.2 (`src/detect-backend-smells.mjs`, 7 high-confidence rules).
 
 ## Clean-room principle
 
@@ -19,11 +19,25 @@ Every document and rule in this directory is **original SUNCO authorship**. Stru
 
 See `NOTICE.md` for the full clean-room declaration.
 
-## Planned layout (populated in Phase 42 & 43)
+## Load strategy (reviewer/researcher agents)
+
+Agents should load only the references relevant to a phase's tagged subdomain, not all 8 at once. Suggested mappings (wired up in Phase 45–47):
+
+| Surface | Primary refs | Secondary refs |
+|---------|-------------|----------------|
+| `backend-phase-api` / `backend-review-api` | api-design, boundaries-and-architecture, security-and-permissions | performance-and-scale, observability-and-operations |
+| `backend-phase-data` / `backend-review-data` | data-modeling, migrations-and-compatibility | performance-and-scale, reliability-and-failure-modes |
+| `backend-phase-event` / `backend-review-event` | reliability-and-failure-modes, boundaries-and-architecture | performance-and-scale, observability-and-operations |
+| `backend-phase-ops` / `backend-review-ops` | observability-and-operations, reliability-and-failure-modes | security-and-permissions, migrations-and-compatibility |
+
+Rule of thumb: 2–3 primary + 2 secondary per invocation. Loading all 8 is only for cross-domain audits (Phase 48–49).
+
+## Layout
 
 ```
 backend-excellence/
 ├── NOTICE.md
+├── README.md
 ├── reference/
 │   ├── api-design.md
 │   ├── data-modeling.md
@@ -34,9 +48,11 @@ backend-excellence/
 │   ├── observability-and-operations.md
 │   └── migrations-and-compatibility.md
 └── src/
-    └── detect-backend-smells.mjs  # 7 high-confidence rules
+    └── detect-backend-smells.mjs  # Phase 43/M3.2 — not yet authored
 ```
 
-Each reference document: ≥1500 words, ≥5 anti-patterns with code examples, stated principles, review rubric, further-reading section.
+Each reference document is 1500–3000 words, with ≥5 anti-patterns (each: Smell / bad example / Why wrong / Fix / Detection label), ≥3 positive principles, a binary yes/no rubric, and ≥3 credible references.
+
+Every anti-pattern carries a `Detection:` label — `deterministic candidate` (Phase 43 detector scope), `heuristic` (partial static analysis, high false-positive), or `human-review only` — to scope Phase 43 detector authoring without re-reading prose.
 
 See `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` § Phase 3.1 & 3.2 for anti-pattern taxonomy and detector rule list.

@@ -929,6 +929,189 @@ if (fs.existsSync(vendoredDetectorPath)) {
     /^const ANTIPATTERNS =/m.test(vend) && /^function getAP\(id\)/m.test(vend));
 }
 
+// ─── Section 17 — Phase 42/M3.1 backend-excellence clean-room reference authoring ───
+//
+// Contract tested (Gate 42 axes A1-A6):
+//   A1 Clean-room boundary — no Impeccable source path refs, no .impeccable.md, no
+//      Impeccable-specific frontend term leakage (exact finite blacklist only)
+//   A2 Structure — 8 files at reference/<name>.md with 5 required section headers
+//   A3 Authorship + NOTICE — MIT statement + "populated in Phase 42" footer marker
+//   A5 Quality bar — spec §7 required kebab coverage (verbatim), ≥5 anti-patterns per
+//      file, per-anti-pattern Detection label, 1500-3000 word count
+//   A6 Provenance — reverse-R5 grep on reference/*.md
+// Sections 1-16 frozen; counts preserved.
+
+const backendExcellenceDir = path.resolve(__dirname, '..', 'references', 'backend-excellence');
+const backendRefDir = path.resolve(backendExcellenceDir, 'reference');
+const backendNoticePath = path.resolve(backendExcellenceDir, 'NOTICE.md');
+const backendReadmePath = path.resolve(backendExcellenceDir, 'README.md');
+const phase42ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '42-backend-reference-docs', '42-CONTEXT.md');
+
+// Spec §7 Phase 3.1 required anti-pattern kebab list per file (mandatory baseline).
+const BACKEND_REF_SPECS = [
+  { file: 'api-design.md', kebabs: [
+    'verb-endpoints', 'inconsistent-pluralization', 'leaky-enum', '200-with-error-body',
+    'untyped-any-response', 'no-pagination-on-list', 'overloaded-parameters'
+  ]},
+  { file: 'data-modeling.md', kebabs: [
+    'nullable-everything', 'boolean-flag-pileup', 'polymorphic-blob-column',
+    'timestamp-without-tz', 'string-id-ambiguity', 'missing-indexes-on-fk',
+    'soft-delete-tombstones'
+  ]},
+  { file: 'boundaries-and-architecture.md', kebabs: [
+    'god-route-handler', 'circular-module-deps', 'data-access-from-controller',
+    'domain-logic-in-transport', 'fat-shared-utils', 'feature-envy'
+  ]},
+  { file: 'reliability-and-failure-modes.md', kebabs: [
+    'missing-timeout', 'no-retry-backoff', 'sync-call-in-hot-path', 'silent-catch',
+    'cascading-failures', 'no-bulkhead', 'no-circuit-breaker-on-3rd-party'
+  ]},
+  { file: 'security-and-permissions.md', kebabs: [
+    'authz-after-fetch', 'raw-sql-interpolation', 'secret-in-log', 'any-typed-body',
+    'open-cors', 'missing-csrf', 'role-hardcoded'
+  ]},
+  { file: 'performance-and-scale.md', kebabs: [
+    'n-plus-one', 'unbounded-list', 'no-pagination', 'sync-loop-with-await',
+    'over-fetching', 'no-cache-layer', 'serial-io'
+  ]},
+  { file: 'observability-and-operations.md', kebabs: [
+    'no-request-id', 'log-without-level', 'metric-without-dimensions', 'pii-in-log',
+    'no-trace-propagation', 'error-without-context'
+  ]},
+  { file: 'migrations-and-compatibility.md', kebabs: [
+    'drop-column-in-same-release', 'non-reversible-migration', 'no-expand-contract',
+    'breaking-response-shape-no-version', 'no-backfill-plan'
+  ]}
+];
+
+// Exact-match blacklist: Impeccable-specific frontend phrases that must not appear
+// in backend refs. Finite, human-curated list — no broad industry terms.
+const IMPECCABLE_TERM_BLACKLIST = [
+  'side-tab', 'overused-font', 'gradient-text', 'dark-glow', 'icon-tile-stack'
+];
+
+const REQUIRED_HEADERS = ['## Overview', '## Anti-patterns', '## Principles', '## Rubric', '## References'];
+
+console.log(`\n${BOLD}17. backend-excellence clean-room refs (Phase 42/M3.1)${RESET}`);
+
+// 17a. reference/ subdir exists
+check('backend-excellence/reference/ subdirectory exists (Phase 42 scope)',
+  fs.existsSync(backendRefDir) && fs.statSync(backendRefDir).isDirectory());
+
+// 17b. Per-file: file exists + 5 required section headers present (A2)
+for (const spec of BACKEND_REF_SPECS) {
+  const p = path.resolve(backendRefDir, spec.file);
+  const exists = fs.existsSync(p);
+  check(`${spec.file} exists with all 5 required section headers (A2 structure)`,
+    exists && (() => {
+      const c = fs.readFileSync(p, 'utf8');
+      return REQUIRED_HEADERS.every(h => c.includes(`\n${h}\n`));
+    })());
+}
+
+// 17c. Per-file: spec §7 required kebab coverage — verbatim `### <kebab>` match (A5 spec-required)
+for (const spec of BACKEND_REF_SPECS) {
+  const p = path.resolve(backendRefDir, spec.file);
+  if (!fs.existsSync(p)) { check(`${spec.file} spec §7 kebab coverage (A5)`, false); continue; }
+  const c = fs.readFileSync(p, 'utf8');
+  const missing = spec.kebabs.filter(k => !new RegExp(`^### ${k.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}$`, 'm').test(c));
+  check(`${spec.file} includes spec §7 required anti-patterns verbatim (${spec.kebabs.length})`,
+    missing.length === 0, missing.length ? `missing: ${missing.join(', ')}` : '');
+}
+
+// 17d. Per-file quality bar: ≥5 anti-patterns, ≥3 principles, ≥3 refs,
+//       every anti-pattern carries a Detection: label, word count 1500-3000 (A5)
+for (const spec of BACKEND_REF_SPECS) {
+  const p = path.resolve(backendRefDir, spec.file);
+  if (!fs.existsSync(p)) { check(`${spec.file} quality bar (A5)`, false); continue; }
+  const c = fs.readFileSync(p, 'utf8');
+  const antiPatterns = (c.match(/^### /gm) || []).length;
+  const detectionLabels = (c.match(/^\*\*Detection:\*\*/gm) || []).length;
+  const principlesBlock = (c.match(/## Principles([\s\S]*?)(?=\n## )/) || [])[1] || '';
+  const principles = (principlesBlock.match(/^\d+\.\s+\*\*/gm) || []).length;
+  const refsBlock = (c.match(/## References([\s\S]*)$/) || [])[1] || '';
+  const refs = (refsBlock.match(/^-\s+/gm) || []).length;
+  const words = c.split(/\s+/).filter(Boolean).length;
+  const ok = antiPatterns >= 5 && detectionLabels === antiPatterns
+    && principles >= 3 && refs >= 3 && words >= 1500 && words <= 3000;
+  check(`${spec.file} quality bar: ≥5 anti-patterns w/ Detection labels, ≥3 principles, ≥3 refs, 1500-3000 words`,
+    ok, `ap=${antiPatterns} det=${detectionLabels} pr=${principles} refs=${refs} words=${words}`);
+}
+
+// 17e. Clean-room reverse-R5: no Impeccable source path strings or .impeccable.md inside reference/*.md (A1)
+{
+  let leak = [];
+  for (const spec of BACKEND_REF_SPECS) {
+    const p = path.resolve(backendRefDir, spec.file);
+    if (!fs.existsSync(p)) continue;
+    const c = fs.readFileSync(p, 'utf8');
+    if (c.includes('references/impeccable/source')) leak.push(`${spec.file}:impeccable-source-path`);
+    if (c.includes('.impeccable.md')) leak.push(`${spec.file}:.impeccable.md`);
+  }
+  check('reverse-R5: no Impeccable source paths or .impeccable.md inside backend reference/*.md (A1)',
+    leak.length === 0, leak.join(', '));
+}
+
+// 17f. Clean-room blacklist: exact-match Impeccable frontend-specific terms absent (A1)
+{
+  let hits = [];
+  for (const spec of BACKEND_REF_SPECS) {
+    const p = path.resolve(backendRefDir, spec.file);
+    if (!fs.existsSync(p)) continue;
+    const c = fs.readFileSync(p, 'utf8');
+    for (const term of IMPECCABLE_TERM_BLACKLIST) {
+      if (c.includes(term)) hits.push(`${spec.file}:${term}`);
+    }
+  }
+  check(`blacklist: Impeccable-specific frontend terms absent from backend refs (${IMPECCABLE_TERM_BLACKLIST.length} forbidden) (A1)`,
+    hits.length === 0, hits.join(', '));
+}
+
+// 17g. NOTICE.md — MIT statement + populated-in-Phase-42 marker (A3)
+if (fs.existsSync(backendNoticePath)) {
+  const notice = fs.readFileSync(backendNoticePath, 'utf8');
+  check('NOTICE.md declares MIT under project license (A3)',
+    /\bMIT\b/.test(notice) && /project license/i.test(notice));
+  check('NOTICE.md footer records "populated in Phase 42" status (A3)',
+    /populated in Phase 42/i.test(notice));
+  check('NOTICE.md asserts no content derived from Impeccable (A1)',
+    /no content derived/i.test(notice));
+} else {
+  check('NOTICE.md exists (A3)', false);
+}
+
+// 17h. README.md — populated status + Phase 43 one-liner (A3/forward-ref policy)
+if (fs.existsSync(backendReadmePath)) {
+  const readme = fs.readFileSync(backendReadmePath, 'utf8');
+  check('README.md status flipped to "populated" (Phase 42) (A3)',
+    /\*\*Status\*\*:.*populated/i.test(readme) && /Phase 42\/M3\.1/.test(readme));
+  check('README.md references Phase 43 for detector implementation (forward-ref one-liner only)',
+    /Phase 43\/M3\.2/.test(readme) && /detect-backend-smells\.mjs/.test(readme));
+  check('README.md includes load-strategy table (primary+secondary per surface) (A4)',
+    /Primary refs/i.test(readme) && /Secondary refs/i.test(readme)
+    && /backend-review-api|backend-phase-api/.test(readme));
+} else {
+  check('README.md exists (A3)', false);
+}
+
+// 17i. Phase 42 CONTEXT populated (not scaffold)
+if (fs.existsSync(phase42ContextPath)) {
+  const ctx = fs.readFileSync(phase42ContextPath, 'utf8');
+  check('Phase 42 CONTEXT.md records Gate 42 outcomes (not scaffold)',
+    /Gate 42/i.test(ctx) && /GREEN-CONDITIONAL/i.test(ctx) && /populated/i.test(ctx.toLowerCase()));
+} else {
+  check('Phase 42 CONTEXT.md exists', false);
+}
+
+// 17j. Phase 43 boundary (forward-ref policy): no src/ stub created in Phase 42
+{
+  const srcDir = path.resolve(backendExcellenceDir, 'src');
+  const detectorStub = path.resolve(srcDir, 'detect-backend-smells.mjs');
+  check('Phase 43 boundary: no src/detect-backend-smells.mjs stub created in Phase 42',
+    !fs.existsSync(detectorStub));
+}
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);
