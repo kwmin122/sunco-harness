@@ -1,7 +1,7 @@
 ---
 name: sunco:ui-review
-description: Retroactive 6-pillar visual UI audit of implemented frontend code. Scores each pillar 0-10 and produces a UI-REVIEW.md with specific findings.
-argument-hint: "<phase> [--dir <path>] [--strict]"
+description: Retroactive 6-pillar visual UI audit of implemented frontend code. Scores each pillar 0-10 and produces a UI-REVIEW.md with specific findings. `--surface web` layers on an Impeccable WRAP audit (Phase 41/M2.4) via the vendored detector.
+argument-hint: "<phase> [--dir <path>] [--strict] [--surface cli|web]"
 allowed-tools:
   - Read
   - Bash
@@ -18,6 +18,10 @@ allowed-tools:
 **Flags:**
 - `--dir <path>` — Audit a specific directory instead of a phase's files. Use for auditing a component library or a sub-tree.
 - `--strict` — Fail if any pillar scores below 7. Use before shipping.
+- `--surface cli|web` — Audit surface (Phase 41/M2.4).
+  - Omitted or `--surface cli` → **existing** 6-pillar audit behavior, byte-identical to pre-Phase-41 output (R1 regression guarantee).
+  - `--surface web` → 6-pillar audit **+** Impeccable detector scan via `references/impeccable/wrapper/detector-adapter.mjs`, dual output (`.planning/domains/frontend/IMPECCABLE-AUDIT.md` + phase `UI-REVIEW.md`).
+  - `--surface native` or any unknown value → **explicit error** (per R4 explicit-only triggers).
 </context>
 
 <objective>
@@ -30,6 +34,20 @@ Perform a retroactive visual and code-quality audit of implemented UI code acros
 </objective>
 
 <process>
+## Step 0: Surface dispatch (Phase 41/M2.4)
+
+Parse `--surface <value>` from arguments. Resolve:
+
+| Input | Route |
+|---|---|
+| no flag, or `--surface cli` | **CLI path** — run Steps 1-7 unchanged (byte-identical to pre-Phase-41). Skip the Impeccable WRAP step. |
+| `--surface web` | **Web path** — run Steps 1-7 as documented, then run Step 8 (Impeccable WRAP) and Step 9 (summary wrap). |
+| `--surface native` or any other value | **Error** — emit `Unsupported --surface: <value>. Supported: cli, web.` and exit non-zero. Do NOT fall through silently. |
+
+R1 regression guarantee: with no flag (or `--surface cli`) this command produces byte-identical output vs pre-Phase-41. The Phase 41 additions are scoped to `--surface web` only.
+
+---
+
 ## Step 1: Identify audit scope
 
 If phase number provided:
@@ -265,4 +283,98 @@ Report: .planning/phases/[N]-[name]/UI-REVIEW.md
 ```
 
 Tell user: "Fix critical issues and re-run `/sunco:ui-review [N]` to verify improvements."
+
+---
+
+## Step 8: Impeccable WRAP (`--surface web` only — Phase 41/M2.4)
+
+**Skip this step entirely when the flag is absent or `--surface cli`.** The CLI path ends at Step 7 (byte-identical regression guarantee).
+
+### 8a. Target resolution
+
+Conservative default: scan project root, excluding `.planning/`, `node_modules/`, `.git/`, and `packages/cli/references/impeccable/`. These defaults are enforced by `detector-adapter.mjs::DEFAULT_EXCLUDES` plus the detector's internal `SKIP_DIRS`.
+
+If `--dir <path>` was provided, use that path as the target (still subject to the default excludes). Never scan the vendored detector or installed runtime — if resolution would require that, abort and report the scope escalation.
+
+### 8b. Run the detector via wrapper
+
+```bash
+# Invoked programmatically from the adapter module; documented here for transparency.
+node - <<'EOF'
+import { runDetector, writeAuditReport, DetectorUnavailableError }
+  from './packages/cli/references/impeccable/wrapper/detector-adapter.mjs';
+
+const outPath = '.planning/domains/frontend/IMPECCABLE-AUDIT.md';
+let result;
+try {
+  result = runDetector(process.argv[2] || process.cwd());
+} catch (err) {
+  if (err instanceof DetectorUnavailableError) {
+    result = { status: 'unavailable', reason: err.reason };
+    process.stderr.write(`warn: detector unavailable — ${err.reason}. LLM critique still runs.\n`);
+  } else {
+    throw err;
+  }
+}
+writeAuditReport(result, outPath);
+EOF
+```
+
+Fallback contract (Gate 41 A3):
+
+| Detector outcome | Behavior | IMPECCABLE-AUDIT.md header |
+|---|---|---|
+| Exit 0 (clean) or 2 (findings) | Success — findings translated + severity derived | `detector_status: ok`, `reason: null` |
+| Node missing (ENOENT) | Warn + continue to Step 8c (LLM critique) | `detector_status: unavailable`, `reason: node-not-found` |
+| Spawn crash / other exec error | Warn + continue | `detector_status: unavailable`, `reason: detector-crash` |
+| Exit code ∉ {0, 2} | Warn + continue | `detector_status: unavailable`, `reason: detector-abnormal-exit` |
+| JSON parse failure | Warn + continue | `detector_status: unavailable`, `reason: json-parse-failed` |
+| Target not found | Warn + continue | `detector_status: unavailable`, `reason: target-not-found` |
+
+**All fallback paths exit 0. UI-REVIEW.md (from Step 5) must already exist — Step 8 appends to it in Step 9 regardless of detector status.**
+
+### 8c. Spawn `sunco-ui-reviewer` (LLM critique)
+
+```
+Task(
+  prompt="
+You are sunco-ui-reviewer. Read:
+  - .planning/phases/[N]-*/CONTEXT.md
+  - .planning/phases/[N]-*/UI-SPEC.md (if present)
+  - .planning/phases/[N]-*/UI-REVIEW.md (existing 6-pillar — DO NOT MODIFY)
+  - .planning/domains/frontend/IMPECCABLE-AUDIT.md (pre-written with detector status + findings)
+
+Produce:
+  - Append `## LLM Critique` section to IMPECCABLE-AUDIT.md
+  - Append `## Impeccable Summary Wrap (Phase 41 WRAP)` section to UI-REVIEW.md
+    (preserve all existing 6-pillar content — append only)
+
+See agents/sunco-ui-reviewer.md for the 3-stage protocol and output structure.
+",
+  subagent_type="sunco-ui-reviewer",
+  description="Impeccable critique Phase [N]"
+)
+```
+
+Category→severity derivation is done inside the adapter (not the agent). The agent consumes the already-normalized HIGH/MEDIUM/LOW findings.
+
+## Step 9: Summary wrap output (web path only)
+
+At this point both files exist:
+
+| File | Location | Produced by |
+|---|---|---|
+| `UI-REVIEW.md` | `.planning/phases/[N]-[name]/` | Step 5 (6-pillar) + Step 8c append (summary wrap) |
+| `IMPECCABLE-AUDIT.md` | `.planning/domains/frontend/` | Step 8b (detector status + findings) + Step 8c append (LLM critique) |
+
+Extend the Step 7 report with an Impeccable summary line:
+
+```
+Impeccable audit: [detector_status] — HIGH: N · MEDIUM: N · LOW: N
+  Detail: .planning/domains/frontend/IMPECCABLE-AUDIT.md
+```
+
+If `detector_status: unavailable`, print the reason and emphasize that LLM critique still ran.
+
+**R6 scope boundary:** Phase 41 reports severity + file:line + message only. Finding-lifecycle state (open/resolved/dismissed) is Phase 48/M4 scope — do not report it here.
 </process>

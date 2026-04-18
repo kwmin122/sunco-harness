@@ -4,9 +4,23 @@ Audit a phase's UI output against six quality pillars. Spawns a sunco-ui-auditor
 
 ---
 
+## Surface dispatch (Phase 41/M2.4)
+
+`/sunco:ui-review N` accepts an optional `--surface` flag. Routing:
+
+| Input | Route |
+|---|---|
+| no flag, or `--surface cli` | **CLI path** — Steps 1-4 below, unchanged. **Byte-identical** to pre-Phase-41 output (R1 regression guarantee). |
+| `--surface web` | **Web path** — Steps 1-4 below (6-pillar scoring kept intact), then the Impeccable WRAP steps in [§ Web path addendum](#web-path-addendum-phase-41m24). Dual output: `.planning/domains/frontend/IMPECCABLE-AUDIT.md` + phase `UI-REVIEW.md`. |
+| `--surface native` or any unknown value | **Error** — emit `Unsupported --surface: <value>. Supported: cli, web.` and exit non-zero. Do NOT fall through silently (R4 explicit-only triggers). |
+
+The sections below describe the CLI path. The web path reuses them verbatim and adds the addendum at the end.
+
+---
+
 ## Overview
 
-Four steps:
+Four steps (CLI path):
 
 1. **Initialize** — locate the phase and its UI artifacts
 2. **Spawn auditor** — evaluate against 6 pillars
@@ -226,3 +240,71 @@ Report: .planning/phases/XX-name/UI-REVIEW.md
 - [ ] UI-SPEC.md compliance checked (if spec exists)
 - [ ] Strengths noted (not only issues)
 - [ ] UI-REVIEW.md written and committed
+
+---
+
+## Web path addendum (Phase 41/M2.4)
+
+Only runs when the caller passed `--surface web`. CLI-path invocations (no flag or `--surface cli`) must skip this entire section — byte-identical regression guarantee (R1).
+
+### Step A — Run the vendored detector via wrapper
+
+Use the Phase 38 + Phase 41 adapter:
+
+```
+import { runDetector, writeAuditReport, DetectorUnavailableError }
+  from 'packages/cli/references/impeccable/wrapper/detector-adapter.mjs';
+```
+
+Invocation:
+
+```
+const out = '.planning/domains/frontend/IMPECCABLE-AUDIT.md';
+let r;
+try {
+  r = runDetector(projectRootOrSrc);          // target resolution + excludes applied inside
+} catch (err) {
+  if (err instanceof DetectorUnavailableError) {
+    r = { status: 'unavailable', reason: err.reason };
+  } else { throw err; }
+}
+writeAuditReport(r, out);
+```
+
+Target resolution (conservative — Gate 41 A3): project root minus `DEFAULT_EXCLUDES` (`.planning`, `node_modules`, `packages/cli/references/impeccable`) plus the detector's internal `SKIP_DIRS`. Never scan vendored references or installed runtime.
+
+Fallback contract — every failure produces an IMPECCABLE-AUDIT.md with explicit `detector_status` + `reason`. No silent success.
+
+| Reason | When |
+|---|---|
+| `node-not-found` | Node binary missing (ENOENT on spawn) |
+| `detector-crash` | Spawn threw or returned non-recoverable error |
+| `detector-abnormal-exit` | Exit code ∉ {0, 2} |
+| `json-parse-failed` | Detector output is not a valid JSON array |
+| `target-not-found` | Provided target path does not exist |
+
+All fallback paths: exit 0 upstream, continue to Step B (LLM critique). Detector failure never blocks the audit — it's additive value only.
+
+### Step B — Spawn `sunco-ui-reviewer` for LLM critique
+
+This is a different agent from `sunco-ui-auditor` (the one used in Steps 1-4 above). `sunco-ui-auditor` handles 6-pillar scoring; `sunco-ui-reviewer` layers Impeccable critique on top. See `packages/cli/agents/sunco-ui-reviewer.md` for the 3-stage protocol (ref-load → correlate → write).
+
+Outputs (append-only):
+
+- `.planning/domains/frontend/IMPECCABLE-AUDIT.md` gains a `## LLM Critique` section.
+- Phase `UI-REVIEW.md` gains a `## Impeccable Summary Wrap (Phase 41 WRAP)` section appended below the existing 6-pillar content. **Existing 6-pillar content is not modified.**
+
+### Step C — Report
+
+Extend the inline report (Section 4 above) with an Impeccable summary line:
+
+```
+Impeccable audit: [detector_status] — HIGH: N · MEDIUM: N · LOW: N
+  Detail: .planning/domains/frontend/IMPECCABLE-AUDIT.md
+```
+
+### R6 scope boundary (hard)
+
+Phase 41/M2.4 reports **severity (HIGH/MEDIUM/LOW) + file:line + message only**.
+
+Finding-lifecycle state (open / resolved / dismissed) is **Phase 48/M4** scope. Do NOT add state tracking, auto-fix diffs, or carry-over ledgers in Phase 41. If reviewers request that surface, escalate per Gate 41 triggers instead of inlining it here.

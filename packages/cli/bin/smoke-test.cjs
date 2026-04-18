@@ -543,7 +543,7 @@ if (!fs.existsSync(impRefDir)) {
         da.includes('export function normalizeFindings'));
       check('detector-adapter exports DetectorUnavailableError (G8 sentinel)',
         da.includes('export class DetectorUnavailableError'));
-      check('detector-adapter defers full integration to Phase 41/M2.4',
+      check('detector-adapter references Phase 41/M2.4 (integration ships here)',
         /Phase 41.*M2\.4/.test(da));
     }
     if (fs.existsSync(wReadme)) {
@@ -814,6 +814,119 @@ if (fs.existsSync(impeccableSkillPath)) {
     /Apache 2\.0/i.test(skill));
   check('vendored SKILL.md retains teach-mode section (upstream invariant)',
     /## Teach Mode/.test(skill));
+}
+
+// ─── Section 16 — Phase 41/M2.4 ui-review WRAP (explicit-only --surface web) ───
+//
+// Contract tested (Gate 41 axes A1-A6):
+//   A1 Surface flag policy — no-flag/cli = existing, web = WRAP, native/unknown = error
+//   A2 Agent split — sunco-ui-reviewer new (web), sunco-ui-auditor intact (cli)
+//   A3 Detector boundary — fallback reasons documented, target excludes conservative
+//   A4 Dual output — .planning/domains/frontend/IMPECCABLE-AUDIT.md + phase UI-REVIEW.md
+//   A5 Adapter API — runDetector + writeAuditReport exported
+//   A6 Regression — Sections 1-15 intact (count preserved at 184)
+// R6 scope boundary: severity + file:line + message only (no state lifecycle — M4 scope)
+
+const uiReviewCmdPath = path.resolve(__dirname, '..', 'commands', 'sunco', 'ui-review.md');
+const uiReviewWfPath = path.resolve(__dirname, '..', 'workflows', 'ui-review.md');
+const uiReviewerAgentPath = path.resolve(__dirname, '..', 'agents', 'sunco-ui-reviewer.md');
+const uiAuditorAgentPath = path.resolve(__dirname, '..', 'agents', 'sunco-ui-auditor.md');
+const detectorAdapterPath = path.resolve(__dirname, '..', 'references', 'impeccable', 'wrapper', 'detector-adapter.mjs');
+const vendoredDetectorPath = path.resolve(__dirname, '..', 'references', 'impeccable', 'src', 'detect-antipatterns.mjs');
+
+console.log(`\n${BOLD}16. ui-review WRAP (Phase 41/M2.4)${RESET}`);
+
+// 16a. Command-file surface dispatch (A1 + A4)
+if (fs.existsSync(uiReviewCmdPath)) {
+  const cmd = fs.readFileSync(uiReviewCmdPath, 'utf8');
+  check('ui-review command argument-hint includes --surface cli|web',
+    /argument-hint:.*--surface cli\|web/.test(cmd));
+  check('ui-review command documents Step 0 surface dispatch (Phase 41)',
+    /Step 0:.*Surface dispatch/i.test(cmd) && /Phase 41\/M2\.4/.test(cmd));
+  check('ui-review command errors on --surface native / unknown (R4 explicit-only)',
+    /Unsupported --surface/i.test(cmd) || /native.*Error|Error.*native/i.test(cmd));
+  check('ui-review command promises byte-identical regression for no-flag/cli path (R1)',
+    /byte-identical/i.test(cmd));
+  check('ui-review command Step 8 Impeccable WRAP writes to .planning/domains/frontend/IMPECCABLE-AUDIT.md',
+    /Step 8:.*Impeccable WRAP/i.test(cmd)
+    && /\.planning\/domains\/frontend\/IMPECCABLE-AUDIT\.md/.test(cmd));
+  check('ui-review command documents R6 scope boundary (Phase 48/M4)',
+    /R6 scope boundary/i.test(cmd) && /Phase 48\/M4/.test(cmd));
+}
+
+// 16b. Workflow-file surface dispatch (spec §6 L375 literal)
+if (fs.existsSync(uiReviewWfPath)) {
+  const wf = fs.readFileSync(uiReviewWfPath, 'utf8');
+  check('ui-review workflow documents Surface dispatch (Phase 41/M2.4)',
+    /Surface dispatch.*Phase 41\/M2\.4|Phase 41\/M2\.4.*Surface dispatch/i.test(wf));
+  check('ui-review workflow has Web path addendum referencing detector-adapter',
+    /Web path addendum/i.test(wf) && /detector-adapter\.mjs/.test(wf));
+  check('ui-review workflow documents native/unknown --surface → error',
+    /Unsupported --surface|native.*Error/i.test(wf));
+  check('ui-review workflow fallback table lists all six detector reasons',
+    /node-not-found/.test(wf) && /detector-crash/.test(wf)
+    && /detector-abnormal-exit/.test(wf) && /json-parse-failed/.test(wf)
+    && /target-not-found/.test(wf));
+  check('ui-review workflow R6 scope boundary defers state lifecycle to Phase 48/M4',
+    /R6 scope boundary/i.test(wf) && /Phase 48\/M4/.test(wf));
+}
+
+// 16c. sunco-ui-reviewer agent (A2 Option B — new agent, web-only)
+check('sunco-ui-reviewer agent file present (Phase 41/M2.4 new)',
+  fs.existsSync(uiReviewerAgentPath));
+if (fs.existsSync(uiReviewerAgentPath)) {
+  const rv = fs.readFileSync(uiReviewerAgentPath, 'utf8');
+  check('sunco-ui-reviewer frontmatter name is sunco-ui-reviewer (not auditor)',
+    /^name:\s*sunco-ui-reviewer\s*$/m.test(rv));
+  check('sunco-ui-reviewer dispatches only for --surface web (Phase 41)',
+    /--surface web/.test(rv) && /Phase 41\/M2\.4/.test(rv));
+  check('sunco-ui-reviewer enforces SDI-1 (no .impeccable.md writes)',
+    /SDI-1/.test(rv) && /\.impeccable\.md/.test(rv));
+  check('sunco-ui-reviewer preserves existing 6-pillar (append-only to UI-REVIEW.md)',
+    /append.*6-pillar|6-pillar.*intact|append-only/i.test(rv));
+  check('sunco-ui-reviewer documents R6 scope boundary (Phase 48/M4)',
+    /R6 scope boundary|Phase 48\/M4/i.test(rv));
+}
+
+// 16d. sunco-ui-auditor regression guard (A2 — must NOT be modified by Phase 41)
+if (fs.existsSync(uiAuditorAgentPath)) {
+  const aud = fs.readFileSync(uiAuditorAgentPath, 'utf8');
+  check('sunco-ui-auditor frontmatter name is sunco-ui-auditor (unchanged by Phase 41)',
+    /^name:\s*sunco-ui-auditor\s*$/m.test(aud));
+  check('sunco-ui-auditor remains CLI 6-pillar authority (no Phase 41 coupling)',
+    /6[\- ]pillar/i.test(aud) && !/Phase 41/.test(aud));
+}
+
+// 16e. detector-adapter Phase 41 API surface (A5)
+if (fs.existsSync(detectorAdapterPath)) {
+  const da = fs.readFileSync(detectorAdapterPath, 'utf8');
+  check('detector-adapter exports runDetector (Phase 41 runtime)',
+    /export\s+function\s+runDetector/.test(da));
+  check('detector-adapter exports writeAuditReport (Phase 41 output)',
+    /export\s+function\s+writeAuditReport/.test(da));
+  check('detector-adapter exports translateFinding (category→severity)',
+    /export\s+function\s+translateFinding/.test(da));
+  check('detector-adapter DEFAULT_EXCLUDES excludes SUNCO planning + vendored refs',
+    /DEFAULT_EXCLUDES/.test(da)
+    && /\.planning/.test(da)
+    && /packages\/cli\/references\/impeccable/.test(da));
+  check('detector-adapter maps category "slop" to HIGH severity (AI-tell priority)',
+    /slop.*['"]HIGH['"]|['"]HIGH['"].*slop/s.test(da) || /slop:\s*['"]HIGH['"]/.test(da));
+  check('detector-adapter DetectorUnavailableError exposes reason field (Gate 41 A3)',
+    /this\.reason\s*=\s*reason/.test(da));
+  check('detector-adapter documents R6 scope boundary (severity + file:line + message only)',
+    /R6/.test(da) && /severity/i.test(da) && /file:line/i.test(da));
+  check('detector-adapter defers finding-lifecycle state to Phase 48/M4',
+    /Phase 48\/M4/.test(da) && /(open\/resolved\/dismissed|state lifecycle)/i.test(da));
+}
+
+// 16f. Vendored detector pristine (R5 — must be untouched by Phase 41)
+if (fs.existsSync(vendoredDetectorPath)) {
+  const vend = fs.readFileSync(vendoredDetectorPath, 'utf8');
+  check('vendored detect-antipatterns.mjs retains Apache-2.0 SPDX header (R5 pristine)',
+    /SPDX-License-Identifier:\s*Apache-2\.0/.test(vend));
+  check('vendored detect-antipatterns.mjs retains ANTIPATTERNS + getAP helpers (upstream invariant)',
+    /^const ANTIPATTERNS =/m.test(vend) && /^function getAP\(id\)/m.test(vend));
 }
 
 // Summary
