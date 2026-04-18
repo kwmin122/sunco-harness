@@ -1,0 +1,3 @@
+# Intentional empty directory — used by smoke Section 18 to verify the detector
+# reports {findings: [], meta.files_scanned: 0} on an empty target. The .gitkeep
+# file itself has no scanned extension (.gitkeep / no dot) so the detector ignores it.

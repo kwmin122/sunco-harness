@@ -1104,12 +1104,188 @@ if (fs.existsSync(phase42ContextPath)) {
   check('Phase 42 CONTEXT.md exists', false);
 }
 
-// 17j. Phase 43 boundary (forward-ref policy): no src/ stub created in Phase 42
+// Note: Phase 42 Section 17j (forward-reference "no src/ stub created in Phase 42")
+// retired in Phase 43 — the detector now exists and is validated positively below
+// in Section 18. Removing 17j is a narrow Section-17 edit scoped to the forward-
+// reference check only; 17a-17i remain frozen (Gate 43 A7).
+
+// ─── Section 18 — Phase 43/M3.2 backend deterministic detector (fixture-only) ───
+//
+// Contract tested (Gate 43 axes A1-A7, fixture-only per condition 8):
+//   A1 Rule set lock — meta.rules_enabled.length === 7 and matches the 7 rule IDs
+//   A2/A3 Detection strategy + FP discipline — per-rule positive fixture fires,
+//         per-rule negative fixture silent; missing-validation-public-route spans
+//         ≥2 frameworks (Express + Fastify)
+//   A4 Output schema — findings[] + meta{files_scanned,duration_ms,rules_enabled,
+//         detector_version="1.0.0"}, valid JSON, --json on empty dir clean
+//   A5 Clean-room — no imports of eslint, sonarqube, semgrep, or LLM SDKs
+//   A6 Explicit-only — standalone CLI, --test mode runs fixture corpus, nonexistent
+//         target emits structured error and exits non-zero
+//   A7 Smoke fixture-only — no repo-wide scan; sections 1-17 (except retired 17j)
+//         unchanged.
+
+const backendDetectorPath = path.resolve(backendExcellenceDir, 'src', 'detect-backend-smells.mjs');
+const backendFixturesRoot = path.resolve(backendExcellenceDir, 'fixtures');
+const backendPosFixtures = path.resolve(backendFixturesRoot, 'positive');
+const backendNegFixtures = path.resolve(backendFixturesRoot, 'negative');
+const backendEmptyFixture = path.resolve(backendFixturesRoot, 'empty');
+const phase43ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '43-backend-detector-rules', '43-CONTEXT.md');
+
+const EXPECTED_RULES = [
+  'raw-sql-interpolation', 'missing-timeout', 'swallowed-catch', 'any-typed-body',
+  'missing-validation-public-route', 'non-reversible-migration', 'logged-secret',
+];
+
+console.log(`\n${BOLD}18. backend deterministic detector (Phase 43/M3.2)${RESET}`);
+
+// 18a. Detector file exists (A1 delivery)
+check('detect-backend-smells.mjs exists at src/ (A1 delivery)',
+  fs.existsSync(backendDetectorPath) && fs.statSync(backendDetectorPath).isFile());
+
+// 18b. --test mode exit 0 (A2/A3 — all fixtures classified correctly)
+let detectorTestStdout = '';
+let detectorTestExit = null;
+try {
+  detectorTestStdout = execSync(
+    `node "${backendDetectorPath}" --test`,
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+  );
+  detectorTestExit = 0;
+} catch (e) {
+  detectorTestStdout = (e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '');
+  detectorTestExit = typeof e.status === 'number' ? e.status : 1;
+}
+check('detector --test exits 0 (fixture corpus all-pass) (A3)',
+  detectorTestExit === 0, `exit=${detectorTestExit}`);
+
+// 18c. Per-rule positive fixture fires (A2 — each rule has ≥1 positive that triggers)
+for (const rule of EXPECTED_RULES) {
+  const re = new RegExp(`^PASS\\s+positive fixture fires ${rule.replace(/-/g, '\\-')}:`, 'm');
+  check(`rule '${rule}' has a positive fixture that fires (A2)`, re.test(detectorTestStdout));
+}
+
+// 18d. Per-rule negative fixture silent (A3 — zero known FPs on negative corpus)
+for (const rule of EXPECTED_RULES) {
+  const re = new RegExp(`^PASS\\s+negative fixture silent for ${rule.replace(/-/g, '\\-')}:`, 'm');
+  check(`rule '${rule}' has a negative fixture that stays silent (A3)`, re.test(detectorTestStdout));
+}
+
+// 18e. Framework spread for missing-validation-public-route (Gate 43 condition 5)
+check('missing-validation-public-route positive fixtures span ≥2 frameworks (Express + Fastify) (A3)',
+  /missing-validation-public-route framework spread.*\[.*express.*fastify.*\]|\[.*fastify.*express.*\]/i.test(detectorTestStdout));
+
+// 18f. --json on negative dir: valid JSON, findings empty, files_scanned > 0 (A4)
+try {
+  const out = execSync(
+    `node "${backendDetectorPath}" "${backendNegFixtures}" --json`,
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+  );
+  const parsed = JSON.parse(out);
+  check('--json on negative/ emits valid JSON with findings:[] (A4 + A3)',
+    Array.isArray(parsed.findings) && parsed.findings.length === 0
+    && parsed.meta && typeof parsed.meta.files_scanned === 'number' && parsed.meta.files_scanned > 0);
+  check('meta has all 4 required fields (A4 output schema)',
+    parsed.meta && 'files_scanned' in parsed.meta && 'duration_ms' in parsed.meta
+    && 'rules_enabled' in parsed.meta && 'detector_version' in parsed.meta);
+  check('meta.rules_enabled is the 7-rule locked set (A1)',
+    Array.isArray(parsed.meta.rules_enabled)
+    && parsed.meta.rules_enabled.length === 7
+    && EXPECTED_RULES.every(r => parsed.meta.rules_enabled.includes(r)));
+  check('meta.detector_version === "1.0.0" (A4)',
+    parsed.meta.detector_version === '1.0.0');
+} catch (e) {
+  // scan exits 0 here (no findings). If JSON parse throws, capture it as a failure.
+  check('--json on negative/ emits valid JSON with findings:[] (A4 + A3)', false,
+    e.status ? `exit=${e.status}: ${(e.stderr || e.stdout || '').toString().slice(0, 200)}` : e.message);
+  check('meta has all 4 required fields (A4 output schema)', false);
+  check('meta.rules_enabled is the 7-rule locked set (A1)', false);
+  check('meta.detector_version === "1.0.0" (A4)', false);
+}
+
+// 18g. --json on empty dir: files_scanned === 0, findings === []
+try {
+  const out = execSync(
+    `node "${backendDetectorPath}" "${backendEmptyFixture}" --json`,
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+  );
+  const parsed = JSON.parse(out);
+  check('--json on empty/ yields findings:[] and files_scanned:0 (A4 edge)',
+    parsed.findings.length === 0 && parsed.meta.files_scanned === 0);
+} catch (e) {
+  check('--json on empty/ yields findings:[] and files_scanned:0 (A4 edge)', false,
+    e.message);
+}
+
+// 18h. Nonexistent target: exit non-zero, structured error JSON (A6 edge)
 {
-  const srcDir = path.resolve(backendExcellenceDir, 'src');
-  const detectorStub = path.resolve(srcDir, 'detect-backend-smells.mjs');
-  check('Phase 43 boundary: no src/detect-backend-smells.mjs stub created in Phase 42',
-    !fs.existsSync(detectorStub));
+  let exit = null;
+  let out = '';
+  try {
+    out = execSync(
+      `node "${backendDetectorPath}" /nonexistent/path/xyz-${Date.now()} --json`,
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    exit = 0;
+  } catch (e) {
+    exit = typeof e.status === 'number' ? e.status : 1;
+    out = (e.stdout ? e.stdout.toString() : '');
+  }
+  let errorShape = false;
+  try {
+    const parsed = JSON.parse(out);
+    errorShape = parsed.error && typeof parsed.error.code === 'string' && typeof parsed.error.message === 'string';
+  } catch { /* not JSON, no shape */ }
+  check('nonexistent target → exit!==0 with structured error JSON (A6 edge)',
+    exit !== 0 && errorShape, `exit=${exit} out=${out.slice(0, 120)}`);
+}
+
+// 18i. --json on positive dir: findings > 0, all kind === "deterministic" (A4 contract)
+try {
+  const out = execSync(
+    `node "${backendDetectorPath}" "${backendPosFixtures}" --json`,
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+  );
+  // positive dir has findings → exit code 2 is expected; execSync throws, handle below
+  check('--json on positive/ yields findings (A4 reachability)', false,
+    'execSync returned 0 but findings expected');
+} catch (e) {
+  try {
+    const parsed = JSON.parse(e.stdout.toString());
+    const findings = parsed.findings || [];
+    check('--json on positive/ yields findings with kind=deterministic only (A4 contract)',
+      findings.length > 0 && findings.every(f => f.kind === 'deterministic'));
+    // Each finding has required fields
+    const requiredFields = ['rule', 'severity', 'kind', 'file', 'line', 'column', 'match', 'fix_hint'];
+    const anyMissing = findings.some(f => requiredFields.some(k => !(k in f)));
+    check('every finding has required 8 fields (rule/severity/kind/file/line/column/match/fix_hint) (A4)',
+      !anyMissing);
+  } catch (pe) {
+    check('--json on positive/ yields findings with kind=deterministic only (A4 contract)', false, pe.message);
+    check('every finding has required 8 fields (A4)', false);
+  }
+}
+
+// 18j. Clean-room imports: no eslint/sonarqube/semgrep/LLM SDK in detector source (A5)
+{
+  const src = fs.readFileSync(backendDetectorPath, 'utf8');
+  const forbidden = [
+    /\bfrom\s+['"]eslint['"]/, /\brequire\s*\(\s*['"]eslint['"]\s*\)/,
+    /\bfrom\s+['"]@sonarsource/, /\bfrom\s+['"]semgrep/,
+    /\bfrom\s+['"]@anthropic-ai/, /\bfrom\s+['"]openai['"]/, /\bfrom\s+['"]ai['"]/,
+  ];
+  const hits = forbidden.filter(r => r.test(src)).map(r => r.source);
+  check('detector has no imports from eslint/sonarqube/semgrep/LLM SDKs (A5 clean-room)',
+    hits.length === 0, hits.join(', '));
+}
+
+// 18k. Phase 43 CONTEXT populated with Gate 43 outcomes (not scaffold)
+if (fs.existsSync(phase43ContextPath)) {
+  const ctx = fs.readFileSync(phase43ContextPath, 'utf8');
+  check('Phase 43 CONTEXT.md records Gate 43 outcomes (not scaffold)',
+    /Gate 43/i.test(ctx) && /GREEN-CONDITIONAL/i.test(ctx) && /Populated/i.test(ctx));
+} else {
+  check('Phase 43 CONTEXT.md exists', false);
 }
 
 // Summary
