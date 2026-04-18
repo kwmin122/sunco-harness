@@ -638,10 +638,11 @@ if (!fs.existsSync(discussWfPath)) {
   check('FRONTEND marker enforces SDI-1 (SUNCO never writes .impeccable.md)',
     /SDI-1/.test(feBlock) && /SUNCO \*\*never writes\*\* `\.impeccable\.md`/.test(feBlock));
 
-  // BACKEND marker byte-identical to Phase 37 inert (Codex-required)
-  const backendInert = 'Backend teach logic will be populated in Phase 44/M3.3. Until then this section is inert';
-  check('BACKEND marker byte-identical to Phase 37 inert placeholder',
-    beBlock.includes(backendInert));
+  // Note: Phase 39 Section 14's "BACKEND marker byte-identical to Phase 37 inert
+  // placeholder" assertion is retired at Phase 44 — the marker is now actively
+  // populated. Section 19 (Phase 44/M3.3) owns the positive assertion that the
+  // BACKEND block is populated; FRONTEND byte-identity preservation moves to
+  // Section 19's SHA-256 hash check.
 
   // No-domain flow preservation
   check('FRONTEND marker documents no-domain flow byte-identical invariant',
@@ -1286,6 +1287,177 @@ if (fs.existsSync(phase43ContextPath)) {
     /Gate 43/i.test(ctx) && /GREEN-CONDITIONAL/i.test(ctx) && /Populated/i.test(ctx));
 } else {
   check('Phase 43 CONTEXT.md exists', false);
+}
+
+// ─── Section 19 — Phase 44/M3.3 discuss-phase backend teach populated ───
+//
+// Contract tested (Focused Gate 44 axes A1-A6):
+//   A1 Trigger policy — R4 explicit-only strings present, multi-language advisory
+//      grep (web-framework-only; DB/queue excluded per judge-convergent condition)
+//   A2 BACKEND-CONTEXT.md write contract — canonical path + 5-required + 1-optional
+//      (tech stack runtime) schema sections present
+//   A3 5 teach questions — spec §7 verbatim anchors present with bare-metal extension
+//   A4 Marker isolation — FRONTEND block SHA-256 byte-identical assertion (R3)
+//   A5 --skip-teach 2-mode matrix documented
+//   A6 Sections 1-18 frozen; router files byte-identical; surface stubs remain stubs
+//
+// Sections 1-18 frozen (274 checks); Section 19 adds ~14 below.
+
+const crypto = require('crypto');
+const discussPhaseMdPath = path.resolve(__dirname, '..', 'workflows', 'discuss-phase.md');
+const phase44ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '44-discuss-backend-teach', '44-CONTEXT.md');
+const backendRouterPaths = [
+  path.resolve(__dirname, '..', 'workflows', 'backend-phase.md'),
+  path.resolve(__dirname, '..', 'workflows', 'backend-review.md'),
+];
+const BACKEND_ROUTER_EXPECTED_HASHES = {
+  'backend-phase.md':  '7044b440539a4b48dc548f9235a6794dec9248f77dee7040cd3a0bc47415a355',
+  'backend-review.md': '33a2d4b473e60747d7583e67034283ccc75865a07bba2d76e0707807aece1481',
+};
+const FRONTEND_BLOCK_EXPECTED_HASH =
+  '0b723b2b632c9faf40ae30bd44b0cbf3872a5343be1a1fc0ddc94978062036ee';
+const SURFACE_STUB_FILES = [
+  'backend-phase-api.md', 'backend-phase-data.md',
+  'backend-phase-event.md', 'backend-phase-ops.md',
+  'backend-review-api.md', 'backend-review-data.md',
+  'backend-review-event.md', 'backend-review-ops.md',
+];
+const SURFACE_STUB_LINE_THRESHOLD = 50;
+const BACKEND_SCHEMA_REQUIRED_HEADERS = [
+  '## Domain', '## Traffic profile', '## Data sensitivity', '## SLO', '## Deployment model',
+];
+
+console.log(`\n${BOLD}19. discuss-phase backend teach populated (Phase 44/M3.3)${RESET}`);
+
+let discussPhaseContent = '';
+let backendBlock = '';
+let frontendBlock = '';
+if (fs.existsSync(discussPhaseMdPath)) {
+  discussPhaseContent = fs.readFileSync(discussPhaseMdPath, 'utf8');
+  const backendMatch = discussPhaseContent.match(
+    /<!-- SUNCO:DOMAIN-BACKEND-START -->([\s\S]*?)<!-- SUNCO:DOMAIN-BACKEND-END -->/
+  );
+  const frontendMatch = discussPhaseContent.match(
+    /<!-- SUNCO:DOMAIN-FRONTEND-START -->([\s\S]*?)<!-- SUNCO:DOMAIN-FRONTEND-END -->/
+  );
+  backendBlock = backendMatch ? backendMatch[1] : '';
+  frontendBlock = frontendMatch ? frontendMatch[1] : '';
+} else {
+  check('discuss-phase.md exists', false);
+}
+
+// 19a. BACKEND block populated (beyond inert 2-line default)
+check('BACKEND marker block populated (>3 lines; inert default was 1-line) (A1 delivery)',
+  backendBlock.split('\n').length > 3);
+
+// 19b. R4 trigger doc strings present
+check("BACKEND block declares R4 trigger: 'domains: [backend]' AND '--domain backend' (A1)",
+  /domains:\s*\[backend\]/.test(backendBlock) && /--domain backend/.test(backendBlock));
+
+// 19c. Multi-language advisory-warning + NO auto-activation (A1 condition 1 absorbed)
+check('BACKEND block documents multi-language advisory warning (Node/Py/Go/Rust web frameworks) (A1)',
+  /express|fastify|koa|@nestjs/.test(backendBlock)
+  && /(fastapi|django|flask)/i.test(backendBlock)
+  && /(gin-gonic\/gin|labstack\/echo|gofiber\/fiber|go-chi\/chi)/.test(backendBlock)
+  && /(axum|actix-web)/.test(backendBlock));
+check('BACKEND block explicitly states "NO auto-activation" or equivalent R4 discipline',
+  /NO auto-activation|never.*activate|advisory only/i.test(backendBlock));
+
+// 19d. All 5 spec-verbatim question anchors present in BACKEND block
+{
+  const reqs = ['Domain', 'Traffic profile', 'Data sensitivity', 'SLO', 'Deployment model'];
+  const missing = reqs.filter(q => !new RegExp(`\\*\\*${q.replace(/[-\\^$*+?.()|[\]{}]/g, '\\$&')}\\*\\*`).test(backendBlock));
+  check(`BACKEND block contains all 5 spec §7 teach question headings (A3)`,
+    missing.length === 0, missing.length ? `missing: ${missing.join(', ')}` : '');
+}
+
+// 19e. Deployment wording has bare-metal extension (A3 condition 3 absorbed)
+check("Deployment wording extended with 'bare-metal' per Gate 44 A3 condition",
+  /bare-VM\s*\/\s*bare-metal/i.test(backendBlock));
+
+// 19f. BACKEND-CONTEXT.md canonical path documented
+check('BACKEND-CONTEXT.md canonical path documented: .planning/domains/backend/BACKEND-CONTEXT.md (A2)',
+  /\.planning\/domains\/backend\/BACKEND-CONTEXT\.md/.test(backendBlock));
+
+// 19g. Schema block has 5 required section headers
+{
+  const missing = BACKEND_SCHEMA_REQUIRED_HEADERS.filter(h => !backendBlock.includes(h));
+  check(`BACKEND-CONTEXT.md schema has all 5 required section headers (A2)`,
+    missing.length === 0, missing.length ? `missing: ${missing.join(', ')}` : '');
+}
+
+// 19h. Optional Tech stack / runtime section documented (A2 condition 2 absorbed)
+check('Optional "## Tech stack / runtime (optional)" section documented in schema (A2 condition 2)',
+  /## Tech stack \/ runtime \(optional\)/.test(backendBlock));
+check('BACKEND block states tech-stack section is OMITTED if user skips (A2 condition 2)',
+  /omit|skip.*tech stack|not.*empty placeholder/i.test(backendBlock));
+
+// 19i. --skip-teach 2-mode matrix present (both rows)
+check('--skip-teach 2-mode matrix: existing BACKEND-CONTEXT.md preserves (A5)',
+  /--skip-teach.*existing.*BACKEND-CONTEXT\.md/i.test(backendBlock) && /[Pp]reserve/.test(backendBlock));
+check('--skip-teach 2-mode matrix: no BACKEND-CONTEXT.md warns + no-write (A5)',
+  /no.*BACKEND-CONTEXT\.md/i.test(backendBlock)
+  && /(warn|warning|stderr)/i.test(backendBlock)
+  && /not? write|do not write|no empty/i.test(backendBlock));
+
+// 19j. FRONTEND block SHA-256 byte-identical (R3 / A4)
+{
+  const h = crypto.createHash('sha256').update(frontendBlock, 'utf8').digest('hex');
+  check(`FRONTEND marker block byte-identical via SHA-256 (R3 / A4 hard assertion)`,
+    h === FRONTEND_BLOCK_EXPECTED_HASH,
+    h === FRONTEND_BLOCK_EXPECTED_HASH ? '' : `got ${h.slice(0, 16)}..., expected ${FRONTEND_BLOCK_EXPECTED_HASH.slice(0, 16)}...`);
+}
+
+// 19k. Backend detector NOT mentioned inside BACKEND block (Phase 47 wiring scope)
+check('Phase 43 detector (detect-backend-smells.mjs) is NOT referenced as an invocation target in BACKEND block',
+  !/detect-backend-smells\.mjs/.test(backendBlock) || /NOT invoked|not wired|Phase 47/i.test(backendBlock));
+
+// 19l. Router files byte-identical from Phase 37 (A6 condition 6 absorbed — router vs stub distinction)
+for (const routerPath of backendRouterPaths) {
+  const name = path.basename(routerPath);
+  if (!fs.existsSync(routerPath)) {
+    check(`router ${name} exists`, false);
+    continue;
+  }
+  const data = fs.readFileSync(routerPath);
+  const h = crypto.createHash('sha256').update(data).digest('hex');
+  const expected = BACKEND_ROUTER_EXPECTED_HASHES[name];
+  check(`router ${name} byte-identical from Phase 37 (SHA-256)`,
+    h === expected,
+    h === expected ? '' : `got ${h.slice(0, 16)}..., expected ${expected.slice(0, 16)}...`);
+}
+
+// 19m. Surface stubs remain stubs (line count ≤ threshold)
+{
+  let overThreshold = [];
+  let missingFiles = [];
+  for (const stubName of SURFACE_STUB_FILES) {
+    const p = path.resolve(__dirname, '..', 'workflows', stubName);
+    if (!fs.existsSync(p)) { missingFiles.push(stubName); continue; }
+    const lines = fs.readFileSync(p, 'utf8').split('\n').length;
+    if (lines > SURFACE_STUB_LINE_THRESHOLD) overThreshold.push(`${stubName}(${lines})`);
+  }
+  check(`all 8 backend-{phase,review}-{api,data,event,ops}.md surface stubs exist (A6)`,
+    missingFiles.length === 0, missingFiles.join(', '));
+  check(`all 8 surface stubs remain stubs (≤${SURFACE_STUB_LINE_THRESHOLD} lines each; Phase 45-47 activates) (A6)`,
+    overThreshold.length === 0, overThreshold.join(', '));
+}
+
+// 19n. Phase 37 R3 marker tag lines still present (4 tags, unchanged)
+check('R3 marker tag lines: FRONTEND-START/END + BACKEND-START/END (4 tags present)',
+  /<!-- SUNCO:DOMAIN-FRONTEND-START -->/.test(discussPhaseContent)
+  && /<!-- SUNCO:DOMAIN-FRONTEND-END -->/.test(discussPhaseContent)
+  && /<!-- SUNCO:DOMAIN-BACKEND-START -->/.test(discussPhaseContent)
+  && /<!-- SUNCO:DOMAIN-BACKEND-END -->/.test(discussPhaseContent));
+
+// 19o. Phase 44 CONTEXT populated (not scaffold)
+if (fs.existsSync(phase44ContextPath)) {
+  const ctx = fs.readFileSync(phase44ContextPath, 'utf8');
+  check('Phase 44 CONTEXT.md records Focused Gate 44 outcomes (not scaffold)',
+    /Focused Gate 44/i.test(ctx) && /GREEN-CONDITIONAL/i.test(ctx) && /Populated/i.test(ctx));
+} else {
+  check('Phase 44 CONTEXT.md exists', false);
 }
 
 // Summary

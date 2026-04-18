@@ -1156,7 +1156,100 @@ WEB_HIT=$(grep -Eo '"(react|vue|svelte|next|astro|nuxt|remix|solid|qwik)"' packa
 <!-- SUNCO:DOMAIN-FRONTEND-END -->
 
 <!-- SUNCO:DOMAIN-BACKEND-START -->
-Backend teach logic will be populated in Phase 44/M3.3. Until then this section is inert — no teach questions, no `.planning/domains/backend/DESIGN-CONTEXT.md` upsert, no automatic detection. Triggered only by explicit `domains: [backend]` or `--domain backend`.
+
+### Backend domain teach (Phase 44/M3.3 — active)
+
+**Triggered by** (R4 explicit-only):
+
+- Phase frontmatter declares `domains: [backend]`, OR
+- `/sunco:discuss --domain backend` CLI flag.
+
+Stack detection is **advisory only** — warnings never trigger teach. Grep covers web frameworks across common backend languages (DB/queue/ORM markers intentionally excluded to avoid false positives in hybrid / frontend-adjacent projects):
+
+```bash
+# Advisory — warning emitted only when neither trigger is set and a backend web framework is detected.
+# Web-framework-only by Focused Gate 44 A1 discipline (plan-verifier FP concern absorbed).
+NODE_HIT=$(grep -Eo '"(express|fastify|@fastify/[^"]+|koa|@koa/[^"]+|@nestjs/core|hono|polka|@hapi/hapi|restify)"' package.json 2>/dev/null | head -1)
+PY_HIT=$( (grep -Eo '\b(fastapi|django|flask)\b' pyproject.toml requirements.txt 2>/dev/null | head -1) )
+GO_HIT=$(grep -Eo '(gin-gonic/gin|labstack/echo|gofiber/fiber|go-chi/chi)' go.mod 2>/dev/null | head -1)
+RS_HIT=$(grep -Eo '\b(axum|actix-web)\b' Cargo.toml 2>/dev/null | head -1)
+# If any non-empty AND no domains:[backend] AND no --domain backend:
+#   stderr: "⚠ backend stack detected. Use --domain backend to activate backend teach."
+#   NO auto-activation (R4).
+```
+
+**When triggered**, ask these 5 teach questions inline (spec §7 Phase 3.3 verbatim; deployment wording extended with `bare-metal` per Focused Gate 44 A3):
+
+1. **Domain** — What kind of backend is this? (e-commerce / SaaS / content / internal / other)
+2. **Traffic profile** — QPS average, peak, and geographic distribution.
+3. **Data sensitivity** — What data classifications apply? (PII / payment / health / tier classification)
+4. **SLO** — Target p95 / p99 latency and availability (9s).
+5. **Deployment model** — serverless / k8s / bare-VM / bare-metal / edge.
+
+After question 5, optionally ask a **Tech stack / runtime follow-up** (Focused Gate 44 A2 — *not* a required 6th question; used only if the user wants to record it):
+
+- Language / runtime (e.g., Node 24 / Python 3.12 / Go 1.23 / Rust 1.80)
+- Frameworks (e.g., Express / Fastify / Django / Axum)
+- Primary datastore (e.g., Postgres / MySQL / MongoDB)
+- Queue / cache (e.g., Redis / SQS / Kafka / none)
+
+If the user skips the follow-up, **omit the entire `## Tech stack / runtime (optional)` section** from the written file (do not write an empty placeholder).
+
+**Upsert to `.planning/domains/backend/BACKEND-CONTEXT.md`** (SUNCO canonical path; mirrors the frontend `DESIGN-CONTEXT.md` pattern):
+
+- If the file is absent: write a new `BACKEND-CONTEXT.md` from the answers.
+- If the file is present: show a diff of new-vs-existing answers per field; user confirms overwrite per field (preserve prior answers by default).
+
+**`--skip-teach` modes** (Phase 44/M3.3 — 2-mode matrix; no backend seed format defined, so no seed-import mode per Focused Gate 44 A5):
+
+| Condition                                            | Behavior                                                                                              |
+|------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `--skip-teach` + existing `BACKEND-CONTEXT.md`       | Preserve the existing file; do NOT ask questions; proceed with downstream planning.                   |
+| `--skip-teach` + no `BACKEND-CONTEXT.md`             | Emit stderr warning "no context source available; skipping backend teach"; continue without file. Do NOT write an empty `BACKEND-CONTEXT.md`. |
+
+**`BACKEND-CONTEXT.md` schema** (fixed by Phase 44/M3.3; consumed by Phase 45–47 backend-researcher agents — schema changes require coordinated updates to both sides):
+
+```markdown
+# Backend Context
+
+**Source**: SUNCO /sunco:discuss --domain backend (Phase 44/M3.3)
+**Generated**: <ISO-8601 date>
+
+## Domain
+<answer — e-commerce / SaaS / content / internal / other>
+
+## Traffic profile
+- QPS avg: <answer>
+- QPS peak: <answer>
+- Geographic distribution: <answer>
+
+## Data sensitivity
+<answer — PII / payment / health / tier classification>
+
+## SLO
+- p95 latency: <answer>
+- p99 latency: <answer>
+- Availability: <answer — nines>
+
+## Deployment model
+<answer — serverless / k8s / bare-VM / bare-metal / edge>
+
+## Tech stack / runtime (optional)
+- Language/runtime: <answer>
+- Frameworks: <answer>
+- Primary datastore: <answer>
+- Queue/cache: <answer>
+```
+
+**Invariants (Phase 44/M3.3)**:
+
+- **R4 explicit-only**: no auto-trigger. Multi-language stack grep is warning-only and never activates teach.
+- **R3 clean separation**: the `<!-- SUNCO:DOMAIN-FRONTEND-START/END -->` pair remains byte-identical to its Phase 39/M2.2 active state (Focused Gate 44 A4; smoke Section 19 asserts SHA-256).
+- **No detector wire**: the Phase 43 backend detector (`packages/cli/references/backend-excellence/src/detect-backend-smells.mjs`) is NOT invoked from this workflow. Phase 47/M3.6 `backend-review-*` is the wiring point.
+- **Surface stubs untouched**: `backend-phase.md` / `backend-review.md` router files and the 8 `backend-{phase,review}-{api,data,event,ops}.md` surface stubs are not modified here (Phase 45–47 scope).
+- **No backend seed format**: `BACKEND-SEED.md` is not defined or reserved in v1.4. Users with pre-existing backend context must either answer the 5 questions or provide an existing `BACKEND-CONTEXT.md` and run with `--skip-teach`.
+- **No-domain flow preserved**: `/sunco:discuss <phase>` without `domains: [...]` YAML and without `--domain` flag produces byte-identical behavior vs pre-Phase-44 (inert path for both domain markers).
+
 <!-- SUNCO:DOMAIN-BACKEND-END -->
 
 <success_criteria>
