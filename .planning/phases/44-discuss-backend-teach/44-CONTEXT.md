@@ -78,14 +78,25 @@ If ANY hit AND no `domains: [backend]` AND no `--domain backend`, emit stderr wa
 ## Deployment model
 <answer — serverless / k8s / bare-VM / bare-metal / edge>
 
-## Tech stack / runtime (optional)
-- Language/runtime: <answer>
-- Frameworks: <answer>
-- Primary datastore: <answer>
-- Queue/cache: <answer>
+## Tech stack / runtime (auto-detected)
+- Language/runtime: <auto-detected or omitted>
+- Frameworks: <auto-detected or omitted>
 ```
 
-**Tech stack / runtime section policy (condition 2 absorbed):** Optional follow-up under Deployment model question — NOT a 6th required teach question (preserves spec §7 5-question lock per plan-verifier). Asked as a follow-up only if user wants to fill it. **If user does not provide answers, the entire `## Tech stack / runtime (optional)` section is omitted from the written file** (not written as empty placeholder). Phase 45–47 backend-researcher agents that need this data can either (a) read it if present or (b) auto-detect from repo (package.json / pyproject.toml / go.mod / Dockerfile).
+The `Tech stack / runtime` section is **optional at write time**: include only if repo inspection yielded matches. Omitted entirely when no match — no empty placeholder, no user prompt.
+
+**Tech stack / runtime section policy (condition 2, post-judge revision 2026-04-19):** auto-detected from repo files (package.json / pyproject.toml / requirements.txt / go.mod / Cargo.toml / Dockerfile), **NOT a user-facing follow-up question**. Teach remains locked at **exactly 5 questions** per spec §7 Phase 3.3 and escalate trigger 11.
+
+**Revision rationale:** initial Phase 44 commit (`67a23f1`) implemented tech-stack as an "optional 6th prompt". Post-commit two-judge re-review flagged this as trigger-11 boundary violation — plan-verifier's position: an optional user-prompt is still a question, so the 5-question lock is effectively broken. Resolved by moving tech-stack capture from user-prompt to auto-detection (plan-verifier's explicitly-named acceptable path: "package.json / Dockerfile 자동 감지 → output 메타데이터로 기록 (prompt 없음) = impl lane OK"). Spec §7 5-question lock preserved; Phase 45–47 agents still receive tech-stack data when present; section omitted entirely if no repo match.
+
+Auto-detect sources (Phase 44 scope — agent reads repo root):
+- `package.json` → language=Node + framework matches from the A1 advisory set
+- `pyproject.toml` / `requirements.txt` → language=Python + framework matches
+- `go.mod` → language=Go + framework matches
+- `Cargo.toml` → language=Rust + framework matches
+- `Dockerfile` base image → runtime hint (optional)
+
+Phase 44 does NOT auto-detect `Primary datastore` or `Queue/cache` — those live in higher-level config (`database.yml`, `docker-compose.yml`, infrastructure manifests) and are Phase 45–47 researcher scope. The Phase 44 schema captures the 2 auto-detectable fields (`Language/runtime`, `Frameworks`) only.
 
 **Upsert behavior (Phase 39 mirror):**
 - Absent: write new BACKEND-CONTEXT.md from answers
@@ -173,7 +184,7 @@ Two independent judges (Codex backend-review + plan-verifier) both returned GREE
 **Conditions absorbed (6):**
 
 1. **A1 advisory grep**: Web frameworks only (plan-verifier's FP concern respected — DB/queue excluded), multi-language (Codex's non-Node concern respected — Python/Go/Rust framework keywords added). Hybrid resolution.
-2. **A2 tech stack**: Optional structured follow-up under Deployment model, NOT 6th required question. Section omitted entirely if user doesn't fill (not empty-placeholder). Hybrid resolution preserving spec §7 5-question lock while giving Phase 45–47 agents the data if available.
+2. **A2 tech stack (v1 → v2 post-judge)**: Initial absorption chose "optional follow-up prompt". Post-commit two-judge re-review flagged plan-verifier concern: a prompt — even optional — is a 6th question (escalate trigger 11 boundary). Revised to **auto-detected from repo files**, no user prompt, spec §7 5-question lock strictly preserved. Section omitted when no repo match. Recorded in follow-up commit referencing `67a23f1` (initial) as superseded by the post-judge fix.
 3. **A3 deployment wording**: "bare-VM / bare-metal" parenthetical only, no new question (both judges agree).
 4. **A4 hash check**: FRONTEND block SHA-256 assertion accepted (plan-verifier positive, Codex positive).
 5. **A5 seed mode**: rejected unanimously (both judges), no BACKEND-SEED.md slot.

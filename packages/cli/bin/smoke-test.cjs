@@ -1323,7 +1323,12 @@ const SURFACE_STUB_FILES = [
   'backend-review-api.md', 'backend-review-data.md',
   'backend-review-event.md', 'backend-review-ops.md',
 ];
-const SURFACE_STUB_LINE_THRESHOLD = 50;
+// Post-judge revision 2026-04-19 (Codex): raised from 50 to 200.
+// 50 would trigger spurious failures once Phase 45-47 populates stubs with
+// incremental content; 200 gives enough headroom for interim partial populate
+// while still catching a fully-activated stub (Phase 45-47 deliverables are
+// expected to produce 1000+ line files).
+const SURFACE_STUB_LINE_THRESHOLD = 200;
 const BACKEND_SCHEMA_REQUIRED_HEADERS = [
   '## Domain', '## Traffic profile', '## Data sensitivity', '## SLO', '## Deployment model',
 ];
@@ -1387,11 +1392,16 @@ check('BACKEND-CONTEXT.md canonical path documented: .planning/domains/backend/B
     missing.length === 0, missing.length ? `missing: ${missing.join(', ')}` : '');
 }
 
-// 19h. Optional Tech stack / runtime section documented (A2 condition 2 absorbed)
-check('Optional "## Tech stack / runtime (optional)" section documented in schema (A2 condition 2)',
-  /## Tech stack \/ runtime \(optional\)/.test(backendBlock));
-check('BACKEND block states tech-stack section is OMITTED if user skips (A2 condition 2)',
-  /omit|skip.*tech stack|not.*empty placeholder/i.test(backendBlock));
+// 19h. Tech stack / runtime = auto-detected, NOT a 6th teach question
+//      (A2 condition 2 post-judge revision 2026-04-19 — plan-verifier flagged
+//       user-prompt version as Escalate trigger 11 "Q6 added"; auto-detect
+//       path is impl lane + compliant).
+check('BACKEND block labels Tech stack / runtime as auto-detected (NOT a user question) (A2 post-judge)',
+  /Tech stack \/ runtime.*auto-detect|auto-detected.*Tech stack \/ runtime|NOT a user question|## Tech stack \/ runtime \(auto-detected\)/i.test(backendBlock));
+check('BACKEND block reaffirms teach is locked at exactly 5 questions (A3 / trigger 11)',
+  /exactly 5 questions|locked at.*5|5 questions.*locked/i.test(backendBlock));
+check('BACKEND block states auto-detected section is OMITTED when no repo match (A2)',
+  /omit|no.*placeholder|no.*prompt/i.test(backendBlock));
 
 // 19i. --skip-teach 2-mode matrix present (both rows)
 check('--skip-teach 2-mode matrix: existing BACKEND-CONTEXT.md preserves (A5)',

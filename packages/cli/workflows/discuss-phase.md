@@ -1186,14 +1186,15 @@ RS_HIT=$(grep -Eo '\b(axum|actix-web)\b' Cargo.toml 2>/dev/null | head -1)
 4. **SLO** — Target p95 / p99 latency and availability (9s).
 5. **Deployment model** — serverless / k8s / bare-VM / bare-metal / edge.
 
-After question 5, optionally ask a **Tech stack / runtime follow-up** (Focused Gate 44 A2 — *not* a required 6th question; used only if the user wants to record it):
+**Tech stack / runtime — auto-detected, NOT a user question** (Focused Gate 44 A2 post-judge revision, 2026-04-19): teach is locked at **exactly 5 questions** (spec §7 Phase 3.3, escalate trigger 11 — "Question 6+ added"). Tech-stack metadata is captured by **repo inspection**, not a 6th prompt. When the teach run detects any of the following in the project root, it records the matches under `## Tech stack / runtime (auto-detected)` in the written file:
 
-- Language / runtime (e.g., Node 24 / Python 3.12 / Go 1.23 / Rust 1.80)
-- Frameworks (e.g., Express / Fastify / Django / Axum)
-- Primary datastore (e.g., Postgres / MySQL / MongoDB)
-- Queue / cache (e.g., Redis / SQS / Kafka / none)
+- `package.json` → `language=Node` + framework matches from the A1 advisory set
+- `pyproject.toml` / `requirements.txt` → `language=Python` + framework matches
+- `go.mod` → `language=Go` + framework matches
+- `Cargo.toml` → `language=Rust` + framework matches
+- `Dockerfile` base image → `runtime` hint (optional)
 
-If the user skips the follow-up, **omit the entire `## Tech stack / runtime (optional)` section** from the written file (do not write an empty placeholder).
+If none of the repo files yield a match, the entire `## Tech stack / runtime (auto-detected)` section is **omitted** from the written file (no empty placeholder, no prompt to user). Phase 45–47 backend-researcher agents are free to re-inspect the repo directly if they need richer detail than what the teach run captured.
 
 **Upsert to `.planning/domains/backend/BACKEND-CONTEXT.md`** (SUNCO canonical path; mirrors the frontend `DESIGN-CONTEXT.md` pattern):
 
@@ -1234,12 +1235,12 @@ If the user skips the follow-up, **omit the entire `## Tech stack / runtime (opt
 ## Deployment model
 <answer — serverless / k8s / bare-VM / bare-metal / edge>
 
-## Tech stack / runtime (optional)
-- Language/runtime: <answer>
-- Frameworks: <answer>
-- Primary datastore: <answer>
-- Queue/cache: <answer>
+## Tech stack / runtime (auto-detected)
+- Language/runtime: <auto-detected>
+- Frameworks: <auto-detected>
 ```
+
+The `Tech stack / runtime` section is optional at write time: include it only if repo inspection yielded matches. Primary datastore and queue/cache are NOT auto-detected in Phase 44 (would require parsing config files like `database.yml`, `docker-compose.yml`, etc. — Phase 45–47 researcher scope).
 
 **Invariants (Phase 44/M3.3)**:
 
