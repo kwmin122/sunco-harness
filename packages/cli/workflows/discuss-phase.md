@@ -1088,7 +1088,71 @@ Route to `confirm_creation` step (existing behavior — show manual next steps).
 -->
 
 <!-- SUNCO:DOMAIN-FRONTEND-START -->
-Frontend teach logic will be populated in Phase 39/M2.2. Until then this section is inert — no teach questions, no `.planning/domains/frontend/DESIGN-CONTEXT.md` upsert, no automatic detection. Triggered only by explicit `domains: [frontend]` or `--domain frontend`.
+
+### Frontend domain teach (Phase 39/M2.2 — active)
+
+**Triggered by** (R4 explicit-only):
+
+- Phase frontmatter declares `domains: [frontend]`, OR
+- `/sunco:discuss --domain frontend` CLI flag.
+
+Stack detection is **advisory only** — warnings never trigger teach:
+
+```bash
+# Advisory — warning emitted only when neither trigger is set and web stack detected.
+WEB_HIT=$(grep -Eo '"(react|vue|svelte|next|astro|nuxt|remix|solid|qwik)"' package.json 2>/dev/null | head -1)
+# If WEB_HIT non-empty AND no domains:[frontend] AND no --domain frontend:
+#   stderr: "⚠ package.json suggests web stack. Use --domain frontend to activate frontend teach."
+#   NO auto-activation (R4).
+```
+
+**When triggered**, ask these 3 teach questions inline (aligned to vendored Impeccable `SKILL.md` **Required context** — verified Phase 38/M2.1 at pinned SHA `00d485659af82982aef0328d0419c49a2716d123`, file `packages/cli/references/impeccable/source/skills/impeccable/SKILL.md` lines 31–34):
+
+1. **Target audience** — Who uses this product and in what context? (persona + skill level)
+2. **Primary use cases** — What jobs are they trying to get done? (top 3)
+3. **Brand personality / tone** — How should the interface feel? (3–5 adjectives; avoid flat defaults like "modern" / "elegant")
+
+**Upsert to `.planning/domains/frontend/DESIGN-CONTEXT.md`** (SUNCO canonical — see Session-derived invariant SDI-1):
+
+- If the file is absent and there is no `.impeccable.md` seed: write a new `DESIGN-CONTEXT.md` from the answers.
+- If the file is present: show a diff of new-vs-existing answers per field; user confirms overwrite per field (preserve prior answers by default).
+- If `.impeccable.md` exists at the project root and `--skip-teach` is passed: import `.impeccable.md` content as a seed into `DESIGN-CONTEXT.md`. Legacy-import path only; SUNCO **never writes** `.impeccable.md`.
+
+**`--skip-teach` modes** (Phase 39/M2.2 — 3-mode matrix):
+
+| Condition                                                           | Behavior                                                                                   |
+|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `--skip-teach` + existing `DESIGN-CONTEXT.md`                       | Preserve the existing file; do NOT ask questions; proceed with downstream planning.        |
+| `--skip-teach` + `.impeccable.md` present + no `DESIGN-CONTEXT.md`  | Import `.impeccable.md` content as seed → write `DESIGN-CONTEXT.md`.                       |
+| `--skip-teach` + neither present                                    | Emit warning "no context source available; skipping frontend teach"; continue without file. Do NOT write an empty `DESIGN-CONTEXT.md`. |
+
+**`DESIGN-CONTEXT.md` schema** (fixed by Phase 39/M2.2; consumed by `packages/cli/references/impeccable/wrapper/context-injector.mjs` sections parser from Phase 40/M2.3 onwards — schema changes require coordinated updates to both sides):
+
+```markdown
+# Design Context
+
+**Source**: SUNCO /sunco:discuss --domain frontend (Phase 39/M2.2)
+**Generated**: <ISO-8601 date>
+
+## Target audience
+<answer>
+
+## Primary use cases
+1. <answer-1>
+2. <answer-2>
+3. <answer-3>
+
+## Brand personality / tone
+<answer — 3-5 adjectives>
+```
+
+**Invariants (Phase 39/M2.2)**:
+
+- **R4 explicit-only**: no auto-trigger. Stack grep is warning-only and never activates teach.
+- **SDI-1 canonical**: NO `.impeccable.md` write paths in SUNCO. Legacy `.impeccable.md` read-only for seed import.
+- **Backend marker untouched**: the `<!-- SUNCO:DOMAIN-BACKEND-START/END -->` pair remains byte-identical to its Phase 37/M1.3 inert state.
+- **No-domain flow preserved**: `/sunco:discuss <phase>` without `domains: [...]` YAML and without `--domain` flag produces byte-identical behavior vs pre-Phase-39 (inert path for both domain markers).
+
 <!-- SUNCO:DOMAIN-FRONTEND-END -->
 
 <!-- SUNCO:DOMAIN-BACKEND-START -->

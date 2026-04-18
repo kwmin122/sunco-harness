@@ -1,7 +1,7 @@
 ---
 name: sunco:discuss
 description: Extract decisions and clarify gray areas for a phase before planning. Reads ROADMAP.md, asks focused questions (max 5-7), writes CONTEXT.md. Use --auto to skip questions and pick recommended defaults.
-argument-hint: "<phase> [--auto] [--batch] [--mode discuss|assumptions] [--cross-model]"
+argument-hint: "<phase> [--domain frontend|backend] [--skip-teach] [--auto] [--batch] [--mode discuss|assumptions] [--cross-model]"
 allowed-tools:
   - Read
   - Bash
@@ -18,6 +18,8 @@ allowed-tools:
 - `<phase>` — Phase number (e.g., `1`, `2`). Required.
 
 **Flags:**
+- `--domain frontend|backend` — Activate domain-specific teach. Triggers the frontend domain block (Phase 39/M2.2, active) or backend domain block (Phase 44/M3.3, still inert placeholder). Explicit-only per R4 — no automatic detection. Phase frontmatter `domains: [frontend]` / `[backend]` is an equivalent trigger.
+- `--skip-teach` — Skip domain teach questions. Used for imports (`.impeccable.md` seed → `DESIGN-CONTEXT.md`) or re-runs. 3 modes: (a) with existing `DESIGN-CONTEXT.md` → preserve; (b) with `.impeccable.md` + no `DESIGN-CONTEXT.md` → import seed; (c) with neither → no-op warning. SUNCO never writes `.impeccable.md` (SDI-1).
 - `--auto` — Skip all interactive questions. Pick the recommended option for every gray area. Auto-advance to `/sunco:plan [N]` after writing CONTEXT.md.
 - `--batch` — Ask all questions together in a single grouped prompt.
 - `--mode assumptions` — Read codebase first, surface what the agent would assume and do. No questions asked.

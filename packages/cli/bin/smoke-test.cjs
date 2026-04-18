@@ -578,6 +578,113 @@ if (!fs.existsSync(impRefDir)) {
   }
 }
 
+// 14. Frontend Teach (Phase 39/M2.2) — discuss-phase FRONTEND marker populated
+console.log(`\n${BOLD}14. Frontend Teach (discuss-phase FRONTEND marker)${RESET}`);
+const discussWfPath = path.resolve(__dirname, '..', 'workflows', 'discuss-phase.md');
+const discussCmdPath = path.resolve(__dirname, '..', 'commands', 'sunco', 'discuss.md');
+
+if (!fs.existsSync(discussWfPath)) {
+  warn('workflows/discuss-phase.md not found — skipping frontend teach checks');
+} else {
+  const dp = fs.readFileSync(discussWfPath, 'utf8');
+  const feMatch = dp.match(/<!-- SUNCO:DOMAIN-FRONTEND-START -->([\s\S]*?)<!-- SUNCO:DOMAIN-FRONTEND-END -->/);
+  const feBlock = feMatch ? feMatch[1] : '';
+  const beMatch = dp.match(/<!-- SUNCO:DOMAIN-BACKEND-START -->([\s\S]*?)<!-- SUNCO:DOMAIN-BACKEND-END -->/);
+  const beBlock = beMatch ? beMatch[1] : '';
+
+  // FRONTEND marker populated (no longer inert)
+  check('FRONTEND marker block found', feBlock.length > 0);
+  check('FRONTEND marker is no longer Phase 37 inert placeholder',
+    !/Frontend teach logic will be populated in Phase 39\/M2\.2\. Until then this section is inert/.test(feBlock));
+  check('FRONTEND marker declares Phase 39/M2.2 active',
+    /Phase 39\/M2\.2 — active/i.test(feBlock));
+
+  // R4 explicit-only
+  check('FRONTEND marker enforces R4 explicit-only (no auto-activation)',
+    /R4 explicit-only/i.test(feBlock) && /NO auto-activation/i.test(feBlock));
+
+  // 3 teach questions (Impeccable SKILL.md required context)
+  check('FRONTEND marker includes Target audience question', /Target audience/i.test(feBlock));
+  check('FRONTEND marker includes Primary use cases question', /Primary use cases/i.test(feBlock));
+  check('FRONTEND marker includes Brand personality question', /Brand personality/i.test(feBlock));
+
+  // Cross-reference to vendored SKILL.md pinned SHA (Phase 38 link)
+  check('FRONTEND marker references pinned SHA 00d4856 (SKILL.md alignment)',
+    /00d485659af82982aef0328d0419c49a2716d123/.test(feBlock));
+
+  // DESIGN-CONTEXT.md schema
+  check('FRONTEND marker specifies DESIGN-CONTEXT.md canonical path',
+    feBlock.includes('.planning/domains/frontend/DESIGN-CONTEXT.md'));
+  check('schema includes # Design Context', feBlock.includes('# Design Context'));
+  check('schema includes ## Target audience section', feBlock.includes('## Target audience'));
+  check('schema includes ## Primary use cases section', feBlock.includes('## Primary use cases'));
+  check('schema includes ## Brand personality / tone section', feBlock.includes('## Brand personality / tone'));
+
+  // Schema coordination with Phase 38 wrapper (Phase 40 consumer)
+  check('FRONTEND marker references context-injector.mjs (Phase 40 coordination)',
+    feBlock.includes('context-injector.mjs') && /Phase 40\/M2\.3/i.test(feBlock));
+
+  // --skip-teach 3-mode matrix
+  check('--skip-teach mode (a): existing DESIGN-CONTEXT.md preserved',
+    /Preserve the existing file/i.test(feBlock));
+  check('--skip-teach mode (b): .impeccable.md seed import',
+    /Import `?\.?impeccable\.md`? content as (a )?seed/i.test(feBlock));
+  check('--skip-teach mode (c): no-op warning (no empty file write)',
+    /no context source available/i.test(feBlock) && /Do NOT write an empty/i.test(feBlock));
+
+  // SDI-1 canonical invariant
+  check('FRONTEND marker enforces SDI-1 (SUNCO never writes .impeccable.md)',
+    /SDI-1/.test(feBlock) && /SUNCO \*\*never writes\*\* `\.impeccable\.md`/.test(feBlock));
+
+  // BACKEND marker byte-identical to Phase 37 inert (Codex-required)
+  const backendInert = 'Backend teach logic will be populated in Phase 44/M3.3. Until then this section is inert';
+  check('BACKEND marker byte-identical to Phase 37 inert placeholder',
+    beBlock.includes(backendInert));
+
+  // No-domain flow preservation
+  check('FRONTEND marker documents no-domain flow byte-identical invariant',
+    /No-domain flow preserved/i.test(feBlock));
+}
+
+// commands/sunco/discuss.md frontmatter + flag docs
+if (fs.existsSync(discussCmdPath)) {
+  const dc = fs.readFileSync(discussCmdPath, 'utf8');
+  check('discuss.md argument-hint includes --domain frontend|backend',
+    /argument-hint:.*--domain frontend\|backend/.test(dc));
+  check('discuss.md argument-hint includes --skip-teach',
+    /argument-hint:.*--skip-teach/.test(dc));
+  check('discuss.md flags section documents --domain',
+    /`--domain frontend\|backend`/.test(dc));
+  check('discuss.md flags section documents --skip-teach + SDI-1',
+    /`--skip-teach`/.test(dc) && /SUNCO never writes `\.impeccable\.md`/.test(dc));
+}
+
+// SDI-1 enforcement across SUNCO source workflows/commands: no .impeccable.md write paths
+const allWfDir = path.resolve(__dirname, '..', 'workflows');
+const allCmdDir = path.resolve(__dirname, '..', 'commands', 'sunco');
+// SDI-1 enforcement: scan for ACTUAL code-level write paths only (not natural-language prose).
+// Matches: writeFileSync('...impeccable.md...') | echo/cat/tee redirect | fs.writeFile with .impeccable.md target.
+let impeccableWriteFound = false;
+let impeccableWriteWhere = '';
+const codeWriteRegex = /writeFileSync\(\s*[`'"][^`'"]*\.impeccable\.md|>\s*\.impeccable\.md\b|tee\s+\.impeccable\.md\b|fs\.writeFile\(\s*[`'"][^`'"]*\.impeccable\.md/i;
+for (const dir of [allWfDir, allCmdDir]) {
+  if (!fs.existsSync(dir)) continue;
+  for (const f of fs.readdirSync(dir).filter(n => n.endsWith('.md'))) {
+    const c = fs.readFileSync(path.join(dir, f), 'utf8');
+    if (codeWriteRegex.test(c)) {
+      impeccableWriteFound = true;
+      impeccableWriteWhere = path.join(path.basename(dir), f);
+      break;
+    }
+  }
+  if (impeccableWriteFound) break;
+}
+check(
+  'No .impeccable.md code-level write path in SUNCO workflows/commands (SDI-1)',
+  !impeccableWriteFound,
+  impeccableWriteFound ? `match in ${impeccableWriteWhere}` : undefined
+);
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);
