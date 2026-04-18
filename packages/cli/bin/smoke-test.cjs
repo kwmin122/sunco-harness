@@ -421,16 +421,23 @@ if (!fs.existsSync(sourceWfDir)) {
       phaseBlock !== null && reviewBlock !== null && phaseBlock === reviewBlock);
   }
 
-  // Stub populating-phase references
+  // Stub populating-phase references.
+  // Phase 37 forward-ref: backend-phase-{api,data} target Phase 45 (activated),
+  // backend-phase-{event,ops} target Phase 46 (still stub). Phase 45 retired the
+  // "stub exits without dispatch" check for api/data; only event/ops retain it
+  // (Section 20 owns the positive assertion that api/data are now active).
+  const activeBackendPhaseSurfaces = new Set(['api', 'data']);
   const phaseStubTargets = { api: 45, data: 45, event: 46, ops: 46 };
   for (const [surface, targetPhase] of Object.entries(phaseStubTargets)) {
     const p = path.join(sourceWfDir, `backend-phase-${surface}.md`);
     if (fs.existsSync(p)) {
       const c = fs.readFileSync(p, 'utf8');
-      check(`backend-phase-${surface} stub references Phase ${targetPhase}`,
+      check(`backend-phase-${surface} references Phase ${targetPhase}`,
         c.includes(`Phase ${targetPhase}`));
-      check(`backend-phase-${surface} stub exits without dispatch`,
-        /Does \*\*not\*\* spawn|Does \*\*not\*\* write/i.test(c));
+      if (!activeBackendPhaseSurfaces.has(surface)) {
+        check(`backend-phase-${surface} stub exits without dispatch`,
+          /Does \*\*not\*\* spawn|Does \*\*not\*\* write/i.test(c));
+      }
     }
   }
   for (const surface of ['api', 'data', 'event', 'ops']) {
@@ -1317,8 +1324,11 @@ const BACKEND_ROUTER_EXPECTED_HASHES = {
 };
 const FRONTEND_BLOCK_EXPECTED_HASH =
   '0b723b2b632c9faf40ae30bd44b0cbf3872a5343be1a1fc0ddc94978062036ee';
+// Phase 45 activated backend-phase-{api,data}; they are no longer stubs. Section
+// 20 asserts their populated state. This list now covers only the remaining 6
+// stubs (2 event/ops from Phase 46, 4 review from Phase 47). Activation of any
+// of these 6 triggers their respective phase gate and a similar retire here.
 const SURFACE_STUB_FILES = [
-  'backend-phase-api.md', 'backend-phase-data.md',
   'backend-phase-event.md', 'backend-phase-ops.md',
   'backend-review-api.md', 'backend-review-data.md',
   'backend-review-event.md', 'backend-review-ops.md',
@@ -1448,9 +1458,9 @@ for (const routerPath of backendRouterPaths) {
     const lines = fs.readFileSync(p, 'utf8').split('\n').length;
     if (lines > SURFACE_STUB_LINE_THRESHOLD) overThreshold.push(`${stubName}(${lines})`);
   }
-  check(`all 8 backend-{phase,review}-{api,data,event,ops}.md surface stubs exist (A6)`,
+  check(`remaining backend stubs exist (${SURFACE_STUB_FILES.length} after Phase 45 activated api/data) (A6)`,
     missingFiles.length === 0, missingFiles.join(', '));
-  check(`all 8 surface stubs remain stubs (≤${SURFACE_STUB_LINE_THRESHOLD} lines each; Phase 45-47 activates) (A6)`,
+  check(`remaining ${SURFACE_STUB_FILES.length} stubs ≤${SURFACE_STUB_LINE_THRESHOLD} lines (Phase 46/47 activates) (A6)`,
     overThreshold.length === 0, overThreshold.join(', '));
 }
 
@@ -1469,6 +1479,247 @@ if (fs.existsSync(phase44ContextPath)) {
 } else {
   check('Phase 44 CONTEXT.md exists', false);
 }
+
+// ─── Section 20 — Phase 45/M3.4 backend-phase-api + backend-phase-data ───
+//
+// Contract tested (Focused+ Gate 45 axes A1-A7):
+//   A1 Workflow populate — both files populated with 6-step behavioral structure
+//      (Phase 37 stub 28 lines -> >200 lines), hard-stop on BACKEND-CONTEXT.md
+//      absent, BACKEND-CONTEXT canonical path + 5 required + 1 optional section
+//      names present
+//   A2 sunco-backend-researcher agent — 1 agent, 3-stage protocol, --surface
+//      api|data routing, 30k token ceiling, Phase 43 detector + Phase 47 review
+//      forbidden
+//   A3 Reference loading set — spec §7 verbatim required refs per surface
+//      (api=4, data=2) present in both the workflow prompts and the agent spec
+//   A4 SPEC.md output format — structure documented in agent + workflows
+//      (covered via A1 + A2 assertions; no runtime verification in smoke)
+//   A5 JSON schemas — api-spec + data-spec exist, draft-07, additionalProperties,
+//      version const:1 (BS1), required fields + anti_pattern_watchlist minItems:3
+//   A6 BACKEND-CONTEXT.md consumer contract — both workflows + agent reference
+//      the same Phase 44 canonical path + same 5-required + 1-optional section
+//      names (drift protection per Codex condition)
+//   A7 Frozen invariant preservation — M2 adjacency-risk hash lock (3 files),
+//      Phase 44 locks propagate (FRONTEND SHA-256 + router SHA-256), Phase 42
+//      ref docs + Phase 43 detector source + vendored Impeccable source diff=0,
+//      Phase 46 + Phase 47 stubs remain stubs (inherited from Section 19
+//      threshold check)
+
+const apiWorkflowPath = path.resolve(__dirname, '..', 'workflows', 'backend-phase-api.md');
+const dataWorkflowPath = path.resolve(__dirname, '..', 'workflows', 'backend-phase-data.md');
+const backendResearcherPath = path.resolve(__dirname, '..', 'agents', 'sunco-backend-researcher.md');
+const apiSchemaPath = path.resolve(__dirname, '..', 'schemas', 'api-spec.schema.json');
+const dataSchemaPath = path.resolve(__dirname, '..', 'schemas', 'data-spec.schema.json');
+const phase45ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '45-backend-phase-api-data', '45-CONTEXT.md');
+
+const API_REQUIRED_REFS = [
+  'api-design.md', 'boundaries-and-architecture.md',
+  'reliability-and-failure-modes.md', 'security-and-permissions.md',
+];
+const DATA_REQUIRED_REFS = [
+  'data-modeling.md', 'migrations-and-compatibility.md',
+];
+
+const BACKEND_CTX_REQUIRED_SECTIONS = [
+  '## Domain', '## Traffic profile', '## Data sensitivity', '## SLO', '## Deployment model',
+];
+const BACKEND_CTX_OPTIONAL_SECTION = '## Tech stack / runtime (auto-detected)';
+const BACKEND_CTX_CANONICAL_PATH = '.planning/domains/backend/BACKEND-CONTEXT.md';
+
+// M2 adjacency-risk hash lock (Focused+ Gate 45 A7 compromise — captured pre-Phase-45
+// at HEAD=de4c2b1 2026-04-19). Files in sibling directories to Phase 45 authorship;
+// wrappers (context-injector/detector-adapter) covered by existing --test runs and
+// path-distance from Phase 45 edits.
+const M2_ADJACENCY_HASHES = {
+  'packages/cli/agents/sunco-ui-researcher-web.md':
+    'e3328dcb855a3454398acd08472f4d9f27d1e9cddb1613ccf02442adf762f64a',
+  'packages/cli/schemas/ui-spec.schema.json':
+    'b691a28d7e9e5ad7f0fbaf045c25faaa61dbdcfd85aacf51638ec21fa3b95321',
+  'packages/cli/workflows/ui-phase-web.md':
+    'd77b30e96783a38d3915383563c8e5304f8ebe12bd2cb4447c5398a205f4a205',
+};
+
+console.log(`\n${BOLD}20. backend-phase-api + backend-phase-data workflows (Phase 45/M3.4)${RESET}`);
+
+let apiWorkflowContent = '';
+let dataWorkflowContent = '';
+let researcherContent = '';
+if (fs.existsSync(apiWorkflowPath)) apiWorkflowContent = fs.readFileSync(apiWorkflowPath, 'utf8');
+if (fs.existsSync(dataWorkflowPath)) dataWorkflowContent = fs.readFileSync(dataWorkflowPath, 'utf8');
+if (fs.existsSync(backendResearcherPath)) researcherContent = fs.readFileSync(backendResearcherPath, 'utf8');
+
+// 20a. Both workflows populated (>200 lines, beyond Phase 37 stub 28 lines)
+check('backend-phase-api.md populated (>200 lines; Phase 37 stub was 28) (A1)',
+  apiWorkflowContent.split('\n').length > 200);
+check('backend-phase-data.md populated (>200 lines) (A1)',
+  dataWorkflowContent.split('\n').length > 200);
+
+// 20b. 6-step markers in both workflows (Codex condition: markers + path, not line-count alone)
+for (const [label, content] of [['api', apiWorkflowContent], ['data', dataWorkflowContent]]) {
+  const hasAllSteps = [1, 2, 3, 4, 5, 6].every(n =>
+    new RegExp(`^## Step ${n}:`, 'm').test(content));
+  check(`backend-phase-${label}.md has all 6 Step headers (A1 structure)`, hasAllSteps);
+}
+
+// 20c. Step 1 hard-stop on BACKEND-CONTEXT.md absent (both workflows)
+for (const [label, content] of [['api', apiWorkflowContent], ['data', dataWorkflowContent]]) {
+  check(`backend-phase-${label}.md Step 1 hard-stops on BACKEND-CONTEXT.md absent (exit 1)`,
+    /BACKEND-CONTEXT\.md/.test(content) && /exit 1/.test(content)
+    && /\/sunco:discuss.*--domain backend/.test(content));
+}
+
+// 20d. Both workflows reference the Phase 44 canonical path
+check('both workflows reference BACKEND-CONTEXT.md canonical path (A6 consistency)',
+  apiWorkflowContent.includes(BACKEND_CTX_CANONICAL_PATH)
+  && dataWorkflowContent.includes(BACKEND_CTX_CANONICAL_PATH)
+  && researcherContent.includes(BACKEND_CTX_CANONICAL_PATH));
+
+// 20e. Both workflows + agent reference same Phase 44 section names (drift protection)
+for (const sec of BACKEND_CTX_REQUIRED_SECTIONS) {
+  const inAll = apiWorkflowContent.includes(sec)
+    && dataWorkflowContent.includes(sec)
+    && researcherContent.includes(sec);
+  check(`Phase 44 section '${sec}' referenced in both workflows + agent (A6 drift protection)`, inAll);
+}
+check(`Phase 44 optional section '${BACKEND_CTX_OPTIONAL_SECTION}' referenced in both workflows + agent`,
+  apiWorkflowContent.includes(BACKEND_CTX_OPTIONAL_SECTION)
+  && dataWorkflowContent.includes(BACKEND_CTX_OPTIONAL_SECTION)
+  && researcherContent.includes(BACKEND_CTX_OPTIONAL_SECTION));
+
+// 20f. sunco-backend-researcher agent exists + 3-stage protocol
+check('sunco-backend-researcher.md exists (A2)', fs.existsSync(backendResearcherPath));
+check('agent documents 3-stage protocol (Stage 1/2/3 headers)',
+  /Stage 1/.test(researcherContent) && /Stage 2/.test(researcherContent) && /Stage 3/.test(researcherContent));
+check('agent declares --surface api|data routing (A2 dispatcher)',
+  /--surface/.test(researcherContent) && /\bapi\b/.test(researcherContent) && /\bdata\b/.test(researcherContent));
+check('agent documents 30k token ceiling + per-stage budget (A2 budget)',
+  /30k/.test(researcherContent) && /8k/.test(researcherContent) && /4k/.test(researcherContent) && /15k/.test(researcherContent));
+
+// 20g. Agent forbids Phase 43 detector + Phase 47 wire
+check('agent forbids Phase 43 detector invocation (detect-backend-smells.mjs) (A2 hard guard)',
+  /detect-backend-smells\.mjs/.test(researcherContent) && /MUST NOT/.test(researcherContent));
+check('agent forbids Phase 47 backend-review wire (forward-ref discipline)',
+  /(backend-review|Phase 47)/i.test(researcherContent) && /MUST NOT.*backend-review|Phase 47.*scope/i.test(researcherContent));
+
+// 20h. A3 ref-set compliance — workflows reference spec-required ref subset per surface
+for (const ref of API_REQUIRED_REFS) {
+  check(`backend-phase-api.md references spec-required '${ref}' (A3)`,
+    apiWorkflowContent.includes(ref));
+}
+for (const ref of DATA_REQUIRED_REFS) {
+  check(`backend-phase-data.md references spec-required '${ref}' (A3)`,
+    dataWorkflowContent.includes(ref));
+}
+
+// 20i. api-spec.schema.json validation (A5)
+if (fs.existsSync(apiSchemaPath)) {
+  let apiSchema;
+  try { apiSchema = JSON.parse(fs.readFileSync(apiSchemaPath, 'utf8')); }
+  catch { apiSchema = null; }
+  check('api-spec.schema.json parses as valid JSON (A5)', apiSchema !== null);
+  if (apiSchema) {
+    check('api-spec.schema.json is draft-07 + additionalProperties:true (A5 lenient)',
+      apiSchema.$schema === 'http://json-schema.org/draft-07/schema#'
+      && apiSchema.additionalProperties === true);
+    const apiRequired = new Set(apiSchema.required || []);
+    const expected = ['version', 'endpoints', 'error_envelope', 'versioning_strategy',
+                      'auth_requirements', 'anti_pattern_watchlist'];
+    const missing = expected.filter(k => !apiRequired.has(k));
+    check(`api-spec.schema.json required = 6 fields (version/endpoints/error_envelope/versioning_strategy/auth_requirements/anti_pattern_watchlist) (A5)`,
+      missing.length === 0, missing.join(', '));
+    check('api-spec.schema.json version.const === 1 (BS1)',
+      apiSchema.properties?.version?.const === 1);
+    check('api-spec.schema.json anti_pattern_watchlist.minItems === 3',
+      apiSchema.properties?.anti_pattern_watchlist?.minItems === 3);
+    check('api-spec.schema.json endpoints.minItems === 1',
+      apiSchema.properties?.endpoints?.minItems === 1);
+  }
+} else {
+  check('api-spec.schema.json exists (A5)', false);
+}
+
+// 20j. data-spec.schema.json validation (A5)
+if (fs.existsSync(dataSchemaPath)) {
+  let dataSchema;
+  try { dataSchema = JSON.parse(fs.readFileSync(dataSchemaPath, 'utf8')); }
+  catch { dataSchema = null; }
+  check('data-spec.schema.json parses as valid JSON (A5)', dataSchema !== null);
+  if (dataSchema) {
+    check('data-spec.schema.json is draft-07 + additionalProperties:true (A5 lenient)',
+      dataSchema.$schema === 'http://json-schema.org/draft-07/schema#'
+      && dataSchema.additionalProperties === true);
+    const dataRequired = new Set(dataSchema.required || []);
+    const expected = ['version', 'entities', 'migration_strategy', 'anti_pattern_watchlist'];
+    const missing = expected.filter(k => !dataRequired.has(k));
+    check(`data-spec.schema.json required = 4 fields (version/entities/migration_strategy/anti_pattern_watchlist) (A5)`,
+      missing.length === 0, missing.join(', '));
+    check('data-spec.schema.json version.const === 1 (BS1)',
+      dataSchema.properties?.version?.const === 1);
+    check('data-spec.schema.json anti_pattern_watchlist.minItems === 3',
+      dataSchema.properties?.anti_pattern_watchlist?.minItems === 3);
+    check('data-spec.schema.json entities.minItems === 1',
+      dataSchema.properties?.entities?.minItems === 1);
+  }
+} else {
+  check('data-spec.schema.json exists (A5)', false);
+}
+
+// 20k. M2 adjacency-risk hash lock (Focused+ Gate 45 A7 compromise)
+for (const [relPath, expectedHash] of Object.entries(M2_ADJACENCY_HASHES)) {
+  const absPath = path.resolve(__dirname, '..', '..', '..', relPath);
+  if (!fs.existsSync(absPath)) {
+    check(`M2 adjacency-risk file exists: ${relPath}`, false);
+    continue;
+  }
+  const data = fs.readFileSync(absPath);
+  const h = crypto.createHash('sha256').update(data).digest('hex');
+  const name = path.basename(relPath);
+  check(`M2 adjacency-risk byte-identical: ${name} (A7 compromise)`,
+    h === expectedHash,
+    h === expectedHash ? '' : `got ${h.slice(0, 16)}..., expected ${expectedHash.slice(0, 16)}...`);
+}
+
+// 20l. Phase 43 detector source + Phase 42 reference docs + vendored source — still
+//      byte-identical via git diff --stat (runtime cheap, no hash-list maintenance).
+{
+  try {
+    const repoRoot = path.resolve(__dirname, '..', '..', '..');
+    const diffStat = execSync(
+      `git -C "${repoRoot}" diff --stat de4c2b1 -- packages/cli/references/backend-excellence/reference packages/cli/references/backend-excellence/NOTICE.md packages/cli/references/backend-excellence/src packages/cli/references/impeccable/source packages/cli/references/impeccable/src`,
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    check('Phase 42 ref docs + Phase 43 detector source + vendored Impeccable diff=0 vs de4c2b1 (A7)',
+      diffStat.trim() === '', diffStat.split('\n').slice(0, 3).join(' | '));
+  } catch (e) {
+    // git diff returns 1 when diff exists — but execSync throws only on non-zero
+    // from non-zero exit. A no-diff returns 0 with empty stdout. If git is missing
+    // or pre-commit this would fail; degrade to presence grep only.
+    check('Phase 42 ref docs + Phase 43 detector source + vendored Impeccable diff=0 vs de4c2b1 (A7)',
+      false, e.message.slice(0, 120));
+  }
+}
+
+// 20m. Phase 45 CONTEXT populated (not scaffold)
+if (fs.existsSync(phase45ContextPath)) {
+  const ctx = fs.readFileSync(phase45ContextPath, 'utf8');
+  check('Phase 45 CONTEXT.md records Focused+ Gate 45 outcomes (not scaffold)',
+    /Focused\+? Gate 45/i.test(ctx) && /GREEN-CONDITIONAL/i.test(ctx) && /Populated/i.test(ctx));
+} else {
+  check('Phase 45 CONTEXT.md exists', false);
+}
+
+// 20n. Phase 46 stubs (event + ops) remain stubs (1-line sanity — main coverage is
+//      Section 19 SURFACE_STUB_LINE_THRESHOLD check; here we just reaffirm that
+//      Phase 45 did not leak into Phase 46 scope).
+check('Phase 46 event + ops stubs remain ≤200 lines (inherited threshold; 1-line sanity in Section 20)',
+  (() => {
+    const event = path.resolve(__dirname, '..', 'workflows', 'backend-phase-event.md');
+    const ops = path.resolve(__dirname, '..', 'workflows', 'backend-phase-ops.md');
+    const eventLines = fs.existsSync(event) ? fs.readFileSync(event, 'utf8').split('\n').length : 9999;
+    const opsLines = fs.existsSync(ops) ? fs.readFileSync(ops, 'utf8').split('\n').length : 9999;
+    return eventLines <= 200 && opsLines <= 200;
+  })());
 
 // Summary
 console.log(`\n${'─'.repeat(50)}`);

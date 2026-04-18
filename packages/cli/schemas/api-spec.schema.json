@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sunco-harness.local/packages/cli/schemas/api-spec.schema.json",
+  "title": "SUNCO API-SPEC SPEC-BLOCK",
+  "description": "Schema for the YAML SPEC-BLOCK fenced inside API-SPEC.md produced by backend-phase-api (Phase 45/M3.4). Per spec R2 (SUNCO:SPEC-BLOCK deterministic extraction) and BS1 (schema versioning). Lenient additive: listed fields required, additionalProperties permitted so downstream phases (Phase 47 backend-review-api) may extend without schema bump.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "version",
+    "endpoints",
+    "error_envelope",
+    "versioning_strategy",
+    "auth_requirements",
+    "anti_pattern_watchlist"
+  ],
+  "properties": {
+    "version": {
+      "description": "Schema version per BS1. Constant 1 for Phase 45 output. Future schema bumps increment this and ship coordinated schema migrations.",
+      "const": 1
+    },
+    "endpoints": {
+      "description": "Endpoint inventory. At least one endpoint per API surface.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["method", "path"],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+          },
+          "path": { "type": "string" },
+          "request_schema": {
+            "description": "Request body/query/params schema. Inline TS-like type, JSON Schema ref, or prose when the shape is genuinely open.",
+            "oneOf": [
+              { "type": "string" },
+              { "type": "object", "additionalProperties": true },
+              { "type": "null" }
+            ]
+          },
+          "response_schema": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "object", "additionalProperties": true }
+            ]
+          },
+          "errors": {
+            "description": "Expected error responses with code + http status.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["code", "http"],
+              "properties": {
+                "code": { "type": "string" },
+                "http": { "type": "integer", "minimum": 400, "maximum": 599 }
+              }
+            }
+          },
+          "auth": {
+            "description": "Authentication requirement for this endpoint.",
+            "type": "string",
+            "enum": ["required", "optional", "none"]
+          },
+          "idempotency": {
+            "description": "Idempotency semantics.",
+            "type": "string",
+            "enum": ["idempotent", "non-idempotent"]
+          }
+        }
+      }
+    },
+    "error_envelope": {
+      "description": "Shared error response shape across endpoints.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "versioning_strategy": {
+      "description": "API versioning approach.",
+      "type": "string",
+      "enum": ["url-major", "header", "none"]
+    },
+    "auth_requirements": {
+      "description": "Overall auth strategy (bearer/session/API key, scopes, refresh model).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "rate_limiting": {
+      "description": "Rate-limiting policy (optional; omitted when no limits are enforced).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true },
+        { "type": "null" }
+      ]
+    },
+    "anti_pattern_watchlist": {
+      "description": "Phase 42 backend-excellence anti-patterns this API surface must avoid. Done-when (Phase 45) requires at least 3 entries, each citing a Phase 42 reference file (e.g., api-design.md / security-and-permissions.md).",
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["pattern"],
+            "properties": {
+              "pattern": { "type": "string" },
+              "source": {
+                "type": "string",
+                "description": "Phase 42 reference file (e.g., 'api-design.md', 'security-and-permissions.md')."
+              },
+              "why": { "type": "string" }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
