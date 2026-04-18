@@ -24,3 +24,6 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Vendored upstream clones (Phase 38/M2.1+ — local staging, not committed)
+tmp/

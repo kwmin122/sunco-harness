@@ -455,6 +455,129 @@ if (!fs.existsSync(sourceWfDir)) {
   }
 }
 
+// 13. Impeccable Vendoring (Phase 38/M2.1) — source-dir + pristine invariant
+console.log(`\n${BOLD}13. Impeccable Vendoring (source + pristine)${RESET}`);
+const impRefDir = path.resolve(__dirname, '..', 'references', 'impeccable');
+if (!fs.existsSync(impRefDir)) {
+  warn('references/impeccable/ not found — skipping vendoring checks');
+} else {
+  const impSourceDir = path.join(impRefDir, 'source');
+  const impSrcDir = path.join(impRefDir, 'src');
+  const impWrapperDir = path.join(impRefDir, 'wrapper');
+  const installCjsPath = path.resolve(__dirname, 'install.cjs');
+
+  // Presence
+  check('LICENSE present', fs.existsSync(path.join(impRefDir, 'LICENSE')));
+  check('NOTICE.md present', fs.existsSync(path.join(impRefDir, 'NOTICE.md')));
+  check('UPSTREAM.md present', fs.existsSync(path.join(impRefDir, 'UPSTREAM.md')));
+  check('SUNCO-ATTRIBUTION.md present', fs.existsSync(path.join(impRefDir, 'SUNCO-ATTRIBUTION.md')));
+  check('README.md present', fs.existsSync(path.join(impRefDir, 'README.md')));
+  check('source/ dir present', fs.existsSync(impSourceDir));
+  check('src/ dir present', fs.existsSync(impSrcDir));
+  check('wrapper/ dir present', fs.existsSync(impWrapperDir));
+
+  // License/NOTICE content
+  if (fs.existsSync(path.join(impRefDir, 'LICENSE'))) {
+    const lic = fs.readFileSync(path.join(impRefDir, 'LICENSE'), 'utf8');
+    check('LICENSE contains "Apache License"', lic.includes('Apache License'));
+    check('LICENSE contains "Copyright 2025 Paul Bakaus"', lic.includes('Copyright 2025 Paul Bakaus'));
+  }
+  if (fs.existsSync(path.join(impRefDir, 'NOTICE.md'))) {
+    const notice = fs.readFileSync(path.join(impRefDir, 'NOTICE.md'), 'utf8');
+    check('NOTICE.md contains Anthropic attribution', notice.includes('Anthropic'));
+  }
+
+  // UPSTREAM.md content
+  if (fs.existsSync(path.join(impRefDir, 'UPSTREAM.md'))) {
+    const up = fs.readFileSync(path.join(impRefDir, 'UPSTREAM.md'), 'utf8');
+    check('UPSTREAM.md records pinned commit SHA',
+      /00d485659af82982aef0328d0419c49a2716d123/.test(up));
+    check('UPSTREAM.md documents browser detector exclusion',
+      up.includes('detect-antipatterns-browser'));
+    check('UPSTREAM.md includes pristine diff check command',
+      up.includes('diff -r tmp/impeccable-upstream'));
+  }
+
+  // source/skills structure (upstream has 18 skills)
+  if (fs.existsSync(impSourceDir)) {
+    const skillsDir = path.join(impSourceDir, 'skills');
+    const skillsCount = fs.existsSync(skillsDir)
+      ? fs.readdirSync(skillsDir).filter(n => fs.statSync(path.join(skillsDir, n)).isDirectory()).length
+      : 0;
+    check(`source/skills/ populated with >=18 skills (found ${skillsCount})`, skillsCount >= 18);
+  }
+
+  // src/ structure
+  if (fs.existsSync(impSrcDir)) {
+    const detector = path.join(impSrcDir, 'detect-antipatterns.mjs');
+    check('src/detect-antipatterns.mjs present', fs.existsSync(detector));
+    if (fs.existsSync(detector)) {
+      const det = fs.readFileSync(detector, 'utf8');
+      check('detector preserves Apache-2.0 SPDX header',
+        det.includes('SPDX-License-Identifier: Apache-2.0') || det.includes('Apache-2.0'));
+    }
+    check('browser detector NOT vendored (spec scope)',
+      !fs.existsSync(path.join(impSrcDir, 'detect-antipatterns-browser.js')));
+  }
+
+  // Wrapper presence + contract markers
+  if (fs.existsSync(impWrapperDir)) {
+    const ctxInjector = path.join(impWrapperDir, 'context-injector.mjs');
+    const detAdapter = path.join(impWrapperDir, 'detector-adapter.mjs');
+    const wReadme = path.join(impWrapperDir, 'README.md');
+    check('wrapper/context-injector.mjs present', fs.existsSync(ctxInjector));
+    check('wrapper/detector-adapter.mjs present', fs.existsSync(detAdapter));
+    check('wrapper/README.md present', fs.existsSync(wReadme));
+    if (fs.existsSync(ctxInjector)) {
+      const ci = fs.readFileSync(ctxInjector, 'utf8');
+      check('context-injector exports loadDesignContext',
+        ci.includes('export function loadDesignContext'));
+      check('context-injector supports --test flag',
+        ci.includes("'--test'") || ci.includes('"--test"'));
+    }
+    if (fs.existsSync(detAdapter)) {
+      const da = fs.readFileSync(detAdapter, 'utf8');
+      check('detector-adapter exports normalizeFindings',
+        da.includes('export function normalizeFindings'));
+      check('detector-adapter exports DetectorUnavailableError (G8 sentinel)',
+        da.includes('export class DetectorUnavailableError'));
+      check('detector-adapter defers full integration to Phase 41/M2.4',
+        /Phase 41.*M2\.4/.test(da));
+    }
+    if (fs.existsSync(wReadme)) {
+      const rd = fs.readFileSync(wReadme, 'utf8');
+      check('wrapper/README documents pristine invariant', /pristine/i.test(rd));
+      check('wrapper/README documents fallback policy', /Fallback policy|fallback/i.test(rd));
+      check('wrapper/README includes diff -r invariant command', rd.includes('diff -r'));
+    }
+  }
+
+  // Pristine invariant — known upstream literals preserved (Codex-required assertions)
+  const cleanupScript = path.join(impSourceDir, 'skills', 'impeccable', 'scripts', 'cleanup-deprecated.mjs');
+  if (fs.existsSync(cleanupScript)) {
+    const content = fs.readFileSync(cleanupScript, 'utf8');
+    check('vendored cleanup-deprecated.mjs preserves ".claude/skills" literal (pristine, G4)',
+      content.includes('.claude/skills'));
+  }
+  const impSkillMd = path.join(impSourceDir, 'skills', 'impeccable', 'SKILL.md');
+  if (fs.existsSync(impSkillMd)) {
+    const content = fs.readFileSync(impSkillMd, 'utf8');
+    check('vendored impeccable SKILL.md preserves ".impeccable.md" literal (pristine, G4)',
+      content.includes('.impeccable.md'));
+  }
+
+  // install.cjs G7 no-replacement copy paths (Codex-required assertions)
+  if (fs.existsSync(installCjsPath)) {
+    const ic = fs.readFileSync(installCjsPath, 'utf8');
+    check('install.cjs has no-replacement path for references/impeccable/source (G7)',
+      ic.includes('srcVendoredSource') && ic.includes("'references', 'impeccable', 'source'"));
+    check('install.cjs has no-replacement path for references/impeccable/src (G7)',
+      ic.includes('srcVendoredSrc') && ic.includes("'references', 'impeccable', 'src'"));
+    check('install.cjs G7 uses copyDirRecursive (not copyDirWithReplacement)',
+      /copyDirRecursive\(srcVendoredSource/.test(ic) && /copyDirRecursive\(srcVendoredSrc/.test(ic));
+  }
+}
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

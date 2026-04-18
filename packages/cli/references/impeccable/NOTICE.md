@@ -1,9 +1,17 @@
-# NOTICE — Impeccable vendored integration
+# Notice
 
-This file will contain the Apache-2.0 `NOTICE` text from the Impeccable upstream project, preserved verbatim, upon vendoring in **Phase 38/M2.1**.
+Impeccable
+Copyright 2025-2026 Paul Bakaus
 
-Until then, this file is a placeholder scaffolded as part of **Phase 35/M1.1** (2026-04-18).
+## Anthropic frontend-design Skill
 
-For SUNCO-specific modification records and compliance checklist, see `SUNCO-ATTRIBUTION.md` in this directory.
+The `impeccable` skill in this project builds on Anthropic's original frontend-design skill.
 
-For the integration architecture (wrapper injection, no patches), see `README.md` in this directory.
+**Original work:** https://github.com/anthropics/skills/tree/main/skills/frontend-design
+**Original license:** Apache License 2.0
+**Copyright:** 2025 Anthropic, PBC
+
+This project extends the original with:
+- 7 domain-specific reference files (typography, color-and-contrast, spatial-design, motion-design, interaction-design, responsive-design, ux-writing)
+- 18 steering commands
+- Expanded patterns and anti-patterns

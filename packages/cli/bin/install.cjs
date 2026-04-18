@@ -623,6 +623,26 @@ function install(targetDir, runtimeDir) {
   const agCopied  = copyDirWithReplacement(srcAgents, destAgents, runtimeDir);
   const wfCopied  = copyDirWithReplacement(srcWorkflows, destWorkflows, runtimeDir);
   const refCopied = copyDirWithReplacement(srcReferences, destReferences, runtimeDir);
+
+  // Phase 38/M2.1 (Gate 2 G7 / G4 pristine invariant) — preserve byte-identity of vendored
+  // Impeccable source + detector across non-Claude runtime installs. Upstream contains
+  // strings like ".claude/skills" (in source/skills/impeccable/scripts/cleanup-deprecated.mjs)
+  // and ".impeccable.md" (in SKILL.md files) that MUST NOT be rewritten by
+  // copyDirWithReplacement's ".claude/" → "{runtimeDir}/" substitution.
+  // Re-copy these two subdirs with no replacement to satisfy spec R5 (wrapper-not-patch).
+  const srcVendoredSource = path.join(pkgRoot, 'references', 'impeccable', 'source');
+  const destVendoredSource = path.join(targetDir, 'sunco', 'references', 'impeccable', 'source');
+  const srcVendoredSrc = path.join(pkgRoot, 'references', 'impeccable', 'src');
+  const destVendoredSrc = path.join(targetDir, 'sunco', 'references', 'impeccable', 'src');
+  if (fs.existsSync(srcVendoredSource)) {
+    removeDirIfExists(destVendoredSource);
+    copyDirRecursive(srcVendoredSource, destVendoredSource);
+  }
+  if (fs.existsSync(srcVendoredSrc)) {
+    removeDirIfExists(destVendoredSrc);
+    copyDirRecursive(srcVendoredSrc, destVendoredSrc);
+  }
+
   const tplCopied = copyDirWithReplacement(srcTemplates, destTemplates, runtimeDir);
 
   // Register agents globally at ~/.claude/agents/ (Claude Code discovers agents here)
