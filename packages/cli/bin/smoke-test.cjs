@@ -343,8 +343,10 @@ if (!fs.existsSync(sourceWfDir)) {
 
   if (fs.existsSync(webStubPath)) {
     const w = fs.readFileSync(webStubPath, 'utf8');
-    check('web stub marks Phase 40/M2.3 pending',
-      /Phase 40.*M2\.3/i.test(w) && /pending/i.test(w));
+    // Phase 40/M2.3 replaced the Phase 36 stub with behavioral workflow (2026-04-18).
+    // The Phase 36-era "pending" marker is superseded; verify the web branch is now implemented.
+    check('web branch implemented in Phase 40/M2.3 (no longer stub)',
+      /Phase 40.*M2\.3/i.test(w) && /Six steps:|^## Step 1:/m.test(w) && !/is not yet implemented/i.test(w));
   }
 
   if (fs.existsSync(nativeStubPath)) {
@@ -684,6 +686,135 @@ check(
   !impeccableWriteFound,
   impeccableWriteFound ? `match in ${impeccableWriteWhere}` : undefined
 );
+
+// 15. UI-phase-web behavioral workflow (Phase 40/M2.3) — deliverables + invariants
+console.log(`\n${BOLD}15. UI-phase-web Behavioral Workflow (Phase 40/M2.3)${RESET}`);
+const uiWebWfPath = path.resolve(__dirname, '..', 'workflows', 'ui-phase-web.md');
+const uiWebAgentPath = path.resolve(__dirname, '..', 'agents', 'sunco-ui-researcher-web.md');
+const uiSpecSchemaPath = path.resolve(__dirname, '..', 'schemas', 'ui-spec.schema.json');
+const uiCliWfPath = path.resolve(__dirname, '..', 'workflows', 'ui-phase-cli.md');
+const uiNativeWfPath = path.resolve(__dirname, '..', 'workflows', 'ui-phase-native.md');
+const uiRouterWfPath = path.resolve(__dirname, '..', 'workflows', 'ui-phase.md');
+const injectorPath = path.resolve(__dirname, '..', 'references', 'impeccable', 'wrapper', 'context-injector.mjs');
+const impeccableSkillPath = path.resolve(__dirname, '..', 'references', 'impeccable', 'source', 'skills', 'impeccable', 'SKILL.md');
+
+// 15a. Deliverables exist
+check('ui-phase-web.md exists', fs.existsSync(uiWebWfPath));
+check('sunco-ui-researcher-web.md agent exists', fs.existsSync(uiWebAgentPath));
+check('ui-spec.schema.json exists', fs.existsSync(uiSpecSchemaPath));
+
+// 15b. ui-phase-web.md is NO LONGER the Phase 36 stub
+if (fs.existsSync(uiWebWfPath)) {
+  const wfw = fs.readFileSync(uiWebWfPath, 'utf8');
+  check('ui-phase-web.md no longer contains Phase 36 "not yet implemented" stub text',
+    !/is not yet implemented/i.test(wfw));
+  check('ui-phase-web.md no longer contains Phase 36 "Stub introduced" trailer',
+    !/Stub introduced in Phase 36/i.test(wfw));
+  check('ui-phase-web.md declares 6-step behavioral workflow',
+    /Six steps:/i.test(wfw) || /^## Step 1:/m.test(wfw));
+  check('ui-phase-web.md Step 1 hard-stops on missing DESIGN-CONTEXT.md',
+    /DESIGN-CONTEXT\.md/.test(wfw) && /exit 1|hard.?stop/i.test(wfw));
+  check('ui-phase-web.md spawns sunco-ui-researcher-web agent (not cli researcher)',
+    /sunco-ui-researcher-web/.test(wfw));
+  check('ui-phase-web.md invokes loadDesignContext via wrapper',
+    /context-injector\.mjs/.test(wfw) && /loadDesignContext/.test(wfw));
+  check('ui-phase-web.md requires SUNCO:SPEC-BLOCK markers (R2)',
+    /SUNCO:SPEC-BLOCK-START/.test(wfw) && /SUNCO:SPEC-BLOCK-END/.test(wfw));
+  check('ui-phase-web.md validates against ui-spec.schema.json (Step 5)',
+    /ui-spec\.schema\.json/.test(wfw));
+  check('ui-phase-web.md enforces SDI-1 (no teach/extract, no .impeccable.md write)',
+    /SDI-1/.test(wfw) && /teach/i.test(wfw) && /extract/i.test(wfw));
+  check('ui-phase-web.md cites spec §6 Phase 2.3',
+    /Phase 2\.3/i.test(wfw) || /M2\.3/.test(wfw));
+}
+
+// 15c. sunco-ui-researcher-web agent contract
+if (fs.existsSync(uiWebAgentPath)) {
+  const agent = fs.readFileSync(uiWebAgentPath, 'utf8');
+  check('agent frontmatter name is sunco-ui-researcher-web',
+    /^name:\s*sunco-ui-researcher-web\s*$/m.test(agent));
+  check('agent declares 3-stage research (ref-load → outline → write)',
+    /3-stage/.test(agent) && /ref-load/.test(agent) && /outline/.test(agent) && /write/.test(agent.toLowerCase()));
+  check('agent declares 30k token ceiling',
+    /30k/.test(agent));
+  check('agent references all 7 Impeccable references',
+    /typography\.md/.test(agent) && /color-and-contrast\.md/.test(agent)
+    && /spatial-design\.md/.test(agent) && /motion-design\.md/.test(agent)
+    && /interaction-design\.md/.test(agent) && /responsive-design\.md/.test(agent)
+    && /ux-writing\.md/.test(agent));
+  check('agent enforces SDI-1 (no .impeccable.md write, no teach/extract invocation)',
+    /SDI-1/.test(agent) && /teach/i.test(agent) && /extract/i.test(agent));
+  check('agent requires SUNCO:SPEC-BLOCK markers in output (R2)',
+    /SUNCO:SPEC-BLOCK-START/.test(agent));
+}
+
+// 15d. ui-spec.schema.json structural
+if (fs.existsSync(uiSpecSchemaPath)) {
+  let schema = null;
+  try { schema = JSON.parse(fs.readFileSync(uiSpecSchemaPath, 'utf8')); } catch (_) {}
+  check('ui-spec.schema.json parses as valid JSON', schema !== null);
+  if (schema) {
+    const required = Array.isArray(schema.required) ? schema.required : [];
+    const expected = ['layout','components','states','interactions','a11y','responsive',
+      'motion','copy','anti_pattern_watchlist','design_system_tokens_used',
+      'endpoints_consumed','error_states_handled'];
+    const missing = expected.filter(k => !required.includes(k));
+    check('schema required list contains all 12 SPEC-BLOCK fields',
+      missing.length === 0, missing.length ? `missing: ${missing.join(', ')}` : undefined);
+    check('schema anti_pattern_watchlist enforces minItems >= 3 (Done-when Phase 40)',
+      schema.properties && schema.properties.anti_pattern_watchlist
+      && schema.properties.anti_pattern_watchlist.minItems >= 3);
+    check('schema is lenient additive (additionalProperties: true)',
+      schema.additionalProperties === true);
+  }
+}
+
+// 15e. Router regression guard — cli and native paths NOT modified to reference web agent
+if (fs.existsSync(uiCliWfPath)) {
+  const wfc = fs.readFileSync(uiCliWfPath, 'utf8');
+  check('ui-phase-cli.md still dispatches to sunco-ui-researcher (not -web)',
+    /subagent_type="sunco-ui-researcher"/.test(wfc) && !/sunco-ui-researcher-web/.test(wfc));
+  check('ui-phase-cli.md remains CLI-surface-only (no web deliverable references)',
+    !/ui-spec\.schema\.json/.test(wfc) && !/SUNCO:SPEC-BLOCK/.test(wfc));
+}
+if (fs.existsSync(uiNativeWfPath)) {
+  const wfn = fs.readFileSync(uiNativeWfPath, 'utf8');
+  check('ui-phase-native.md remains Phase 36 stub (not supported in v1 — Phase 40 untouched)',
+    /not supported in v1/i.test(wfn));
+}
+
+// 15f. ui-phase.md router unchanged — no default surface routing change (R1 explicit-only)
+if (fs.existsSync(uiRouterWfPath)) {
+  const router = fs.readFileSync(uiRouterWfPath, 'utf8');
+  check('ui-phase.md router still lists --surface cli|web|native dispatch',
+    /--surface/.test(router) && /web/.test(router));
+}
+
+// 15g. Context-injector sections parser populated (Phase 40 A2=α)
+if (fs.existsSync(injectorPath)) {
+  const inj = fs.readFileSync(injectorPath, 'utf8');
+  check('context-injector.mjs version bumped to 1.0 (Phase 40, no longer skeleton)',
+    /version:\s*['"]1\.0['"]/.test(inj) && !/version:\s*['"]1\.0-skeleton['"]/.test(inj));
+  check('context-injector.mjs populated_in references Phase 40/M2.3',
+    /populated_in:\s*['"]Phase 40\/M2\.3['"]/.test(inj));
+  check('context-injector.mjs exports parseSections for Phase 40 consumers',
+    /export\s+function\s+parseSections/.test(inj));
+  check('context-injector.mjs strict-matches canonical Phase 39 headings',
+    /Target audience/.test(inj) && /Primary use cases/.test(inj) && /Brand personality \/ tone/.test(inj));
+}
+
+// 15h. Pristine guard — vendored Impeccable SKILL.md untouched (R5 + Gate 2 G4)
+if (fs.existsSync(impeccableSkillPath)) {
+  const skill = fs.readFileSync(impeccableSkillPath, 'utf8');
+  check('vendored SKILL.md frontmatter name is impeccable (not renamed)',
+    /^name:\s*impeccable\s*$/m.test(skill));
+  check('vendored SKILL.md has NO SUNCO: marker injection (pristine per R5)',
+    !/SUNCO:/.test(skill));
+  check('vendored SKILL.md preserves Apache-2.0 license header',
+    /Apache 2\.0/i.test(skill));
+  check('vendored SKILL.md retains teach-mode section (upstream invariant)',
+    /## Teach Mode/.test(skill));
+}
 
 // Summary
 console.log(`\n${'─'.repeat(50)}`);

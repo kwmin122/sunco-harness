@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sunco-harness.local/packages/cli/schemas/ui-spec.schema.json",
+  "title": "SUNCO UI-SPEC SPEC-BLOCK",
+  "description": "Schema for the YAML SPEC-BLOCK fenced inside UI-SPEC.md produced by ui-phase-web (Phase 40/M2.3). Per spec R2 (SUNCO:SPEC-BLOCK deterministic extraction). Lenient additive: all 12 fields required, additionalProperties permitted so downstream phases (Phase 41 ui-review) may extend without schema bump.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "layout",
+    "components",
+    "states",
+    "interactions",
+    "a11y",
+    "responsive",
+    "motion",
+    "copy",
+    "anti_pattern_watchlist",
+    "design_system_tokens_used",
+    "endpoints_consumed",
+    "error_states_handled"
+  ],
+  "properties": {
+    "layout": {
+      "description": "High-level layout intent: structure, grid, page regions. Prose or structured; lenient.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true },
+        { "type": "array", "items": {} }
+      ]
+    },
+    "components": {
+      "description": "Component inventory with purpose and core props/variants.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "purpose": { "type": "string" },
+          "variants": { "type": "array", "items": { "type": "string" } },
+          "props": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "states": {
+      "description": "Screen/component states (default, loading, empty, error, success, etc.).",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "object", "additionalProperties": true }
+        ]
+      }
+    },
+    "interactions": {
+      "description": "Key user interactions and flows.",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "object", "additionalProperties": true }
+        ]
+      }
+    },
+    "a11y": {
+      "description": "Accessibility requirements (WCAG level, keyboard nav, ARIA, reduced motion).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "responsive": {
+      "description": "Responsive breakpoints and behavior per range.",
+      "oneOf": [
+        { "type": "object", "additionalProperties": true },
+        { "type": "array", "items": {} }
+      ]
+    },
+    "motion": {
+      "description": "Motion and animation guidance (entrances, exits, feedback, reduced-motion).",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "copy": {
+      "description": "UX writing guidelines — tone, voice, key messages, empty/error copy.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true },
+        { "type": "array", "items": {} }
+      ]
+    },
+    "anti_pattern_watchlist": {
+      "description": "Impeccable anti-patterns the implementation must avoid. Done-when (Phase 40) requires at least 3 entries.",
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["pattern"],
+            "properties": {
+              "pattern": { "type": "string" },
+              "source": { "type": "string", "description": "Impeccable reference file (e.g., 'typography.md')." },
+              "why": { "type": "string" }
+            }
+          }
+        ]
+      }
+    },
+    "design_system_tokens_used": {
+      "description": "Design-system tokens consumed (color, space, radius, typography scale, motion).",
+      "oneOf": [
+        { "type": "object", "additionalProperties": true },
+        { "type": "array", "items": {} }
+      ]
+    },
+    "endpoints_consumed": {
+      "description": "API endpoints the UI reads from or writes to.",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "object", "additionalProperties": true }
+        ]
+      }
+    },
+    "error_states_handled": {
+      "description": "Enumerated error conditions the UI handles (network, auth, validation, not-found, etc.).",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "object", "additionalProperties": true }
+        ]
+      }
+    }
+  }
+}
