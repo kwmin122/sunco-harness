@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sunco-harness.local/packages/cli/schemas/finding.schema.json",
+  "title": "SUNCO Backend-Review Finding (BACKEND-AUDIT.md entry)",
+  "description": "Schema for a single backend-review finding emitted into .planning/domains/backend/BACKEND-AUDIT.md by the 4 backend-review surface workflows (Phase 47/M3.6). audit_version: 1 corresponds to state enum = [\"open\"] single-value. Phase 49/M4.2 expands this schema to audit_version: 2 with finding-lifecycle states (resolved / dismissed-with-rationale) and transition semantics — those states MUST NOT appear as active enum values at audit_version: 1. Lenient additive (additionalProperties:true) so Phase 49 + Phase 48 cross-domain extensions may add fields without a version bump for unrelated changes.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "rule",
+    "severity",
+    "kind",
+    "file",
+    "line",
+    "state"
+  ],
+  "properties": {
+    "rule": {
+      "description": "Rule identifier. For deterministic findings, one of Phase 43 detector's 7 rule IDs (raw-sql-interpolation, missing-timeout, swallowed-catch, any-typed-body, missing-validation-public-route, non-reversible-migration, logged-secret). For heuristic / requires-human-confirmation findings, reviewer-agent-authored rule slug (e.g., 'slo-projection-drift', 'idempotency-gap').",
+      "type": "string",
+      "minLength": 1
+    },
+    "severity": {
+      "description": "R6 severity vocabulary. No FAIL/WARN/PASS — those belong to gate layers, not finding labels.",
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"]
+    },
+    "kind": {
+      "description": "Spec §7 Phase 3.6 finding classification. deterministic = Phase 43 detector output only (workflow Step 2 sole producer). heuristic = LLM reasoning with partial static evidence. requires-human-confirmation = LLM reasoning with no static evidence, needs human verification.",
+      "type": "string",
+      "enum": ["deterministic", "heuristic", "requires-human-confirmation"]
+    },
+    "file": {
+      "description": "Repository-relative path of the file the finding points to. Use '-' when the finding is not file-local (e.g., cross-cutting operational concern).",
+      "type": "string",
+      "minLength": 1
+    },
+    "line": {
+      "description": "1-based line number within file. Use 0 when not line-local.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "column": {
+      "description": "1-based column number within line. Optional.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "match": {
+      "description": "Short excerpt (≤1 line) that triggered the finding. Optional for non-code-local findings.",
+      "type": "string"
+    },
+    "fix_hint": {
+      "description": "1-sentence remediation hint.",
+      "type": "string"
+    },
+    "source": {
+      "description": "Provenance marker: 'detector' for Phase 43 output, a Phase 42 reference filename (e.g., 'api-design.md') for heuristic findings citing a reference doc, or 'spec-projection' for findings derived from spec/contract comparison (e.g., BACKEND-CONTEXT SLO vs OPS-SPEC slo drift).",
+      "type": "string"
+    },
+    "state": {
+      "description": "Finding lifecycle state. At audit_version: 1 (Phase 47) this enum is single-value ['open']. Phase 49/M4.2 introduces audit_version: 2 with 'resolved' and 'dismissed' states + transition semantics managed by the verify gate and proceed-gate. Emitting any value other than 'open' at audit_version: 1 is a spec violation.",
+      "type": "string",
+      "enum": ["open"]
+    }
+  }
+}

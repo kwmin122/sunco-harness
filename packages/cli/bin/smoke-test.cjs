@@ -441,13 +441,9 @@ if (!fs.existsSync(sourceWfDir)) {
       }
     }
   }
-  for (const surface of ['api', 'data', 'event', 'ops']) {
-    const p = path.join(sourceWfDir, `backend-review-${surface}.md`);
-    if (fs.existsSync(p)) {
-      const c = fs.readFileSync(p, 'utf8');
-      check(`backend-review-${surface} stub references Phase 47`, c.includes('Phase 47'));
-    }
-  }
+  // Phase 47/M3.6 retired the "backend-review-<surface> stub references Phase
+  // 47" loop — all 4 review surfaces are now populated behavioral workflows.
+  // Section 22 owns substantive assertions on backend-review-{api,data,event,ops}.md.
 
   // discuss-phase.md domain-switch skeleton (R3 reconciliation)
   if (fs.existsSync(discussPhasePath)) {
@@ -1325,21 +1321,11 @@ const BACKEND_ROUTER_EXPECTED_HASHES = {
 };
 const FRONTEND_BLOCK_EXPECTED_HASH =
   '0b723b2b632c9faf40ae30bd44b0cbf3872a5343be1a1fc0ddc94978062036ee';
-// Phase 45 activated backend-phase-{api,data} and Phase 46 activated
-// backend-phase-{event,ops}; they are no longer stubs. Sections 20 + 21 assert
-// their populated state. This list now covers only the remaining 4 review
-// stubs (all from Phase 47). Activation of any of these 4 triggers Phase 47
-// gate and a similar retire here.
-const SURFACE_STUB_FILES = [
-  'backend-review-api.md', 'backend-review-data.md',
-  'backend-review-event.md', 'backend-review-ops.md',
-];
-// Post-judge revision 2026-04-19 (Codex): raised from 50 to 200.
-// 50 would trigger spurious failures once Phase 45-47 populates stubs with
-// incremental content; 200 gives enough headroom for interim partial populate
-// while still catching a fully-activated stub (Phase 45-47 deliverables are
-// expected to produce 1000+ line files).
-const SURFACE_STUB_LINE_THRESHOLD = 200;
+// Phase 47/M3.6 retirement: SURFACE_STUB_FILES + SURFACE_STUB_LINE_THRESHOLD
+// removed. Phase 42-47 stub cycle complete — all 4 backend-phase-* (Phase 45/
+// 46) and all 4 backend-review-* (Phase 47) surfaces are now populated
+// behavioral workflows. Section 22 owns positive assertions on the 4 review
+// surfaces; Sections 20 + 21 own the phase-* assertions.
 const BACKEND_SCHEMA_REQUIRED_HEADERS = [
   '## Domain', '## Traffic profile', '## Data sensitivity', '## SLO', '## Deployment model',
 ];
@@ -1449,21 +1435,9 @@ for (const routerPath of backendRouterPaths) {
     h === expected ? '' : `got ${h.slice(0, 16)}..., expected ${expected.slice(0, 16)}...`);
 }
 
-// 19m. Surface stubs remain stubs (line count ≤ threshold)
-{
-  let overThreshold = [];
-  let missingFiles = [];
-  for (const stubName of SURFACE_STUB_FILES) {
-    const p = path.resolve(__dirname, '..', 'workflows', stubName);
-    if (!fs.existsSync(p)) { missingFiles.push(stubName); continue; }
-    const lines = fs.readFileSync(p, 'utf8').split('\n').length;
-    if (lines > SURFACE_STUB_LINE_THRESHOLD) overThreshold.push(`${stubName}(${lines})`);
-  }
-  check(`remaining backend stubs exist (${SURFACE_STUB_FILES.length} after Phase 45 activated api/data) (A6)`,
-    missingFiles.length === 0, missingFiles.join(', '));
-  check(`remaining ${SURFACE_STUB_FILES.length} stubs ≤${SURFACE_STUB_LINE_THRESHOLD} lines (Phase 46/47 activates) (A6)`,
-    overThreshold.length === 0, overThreshold.join(', '));
-}
+// 19m. Retired in Phase 47/M3.6 — the 4 backend-review-* surfaces are now
+//      populated behavioral workflows (Section 22 asserts their populated
+//      state). Phase 42-47 stub cycle complete; no remaining stubs to threshold.
 
 // 19n. Phase 37 R3 marker tag lines still present (4 tags, unchanged)
 check('R3 marker tag lines: FRONTEND-START/END + BACKEND-START/END (4 tags present)',
@@ -1977,9 +1951,320 @@ if (fs.existsSync(phase46ContextPath)) {
   check('Phase 46 CONTEXT.md exists', false);
 }
 
-// 21l. Phase 47 stubs (review-{api,data,event,ops}) remain stubs — inherited via
-//      Section 19 SURFACE_STUB_FILES (which was reduced 6→4 at Phase 46 to only
-//      cover the 4 review stubs). No separate assertion here; Section 19 carries it.
+// 21l. Retired in Phase 47/M3.6 — backend-review-* are now populated
+//      behavioral workflows; Section 22 owns positive assertions.
+
+// ─── Section 22 — Phase 47/M3.6 backend-review 4 surfaces ───
+//
+// Contract tested (Focused+ Gate 47 axes A1-A9, 4 Codex conditions absorbed +
+// 3 plan-verifier trigger recommendations confirmed present):
+//   A1 4 workflow populate — stub 28 → behavioral 5-step (Step markers +
+//      SPEC.md path + surface-specific rule subset or SKIP marker for event)
+//   A2 Phase 43 detector wire — post-process rule filter (workflow level;
+//      detector `--rules` flag forbidden per §13 7-rule lock); event surface
+//      explicit SKIP per spec §7 "no deterministic rules v1"
+//   A3 Surface-specific SPEC.md hard-stop at Step 1 — exit 1 + "Run
+//      /sunco:backend-phase" guide + spec_version marker grep
+//   A4 sunco-backend-reviewer singular NEW — 2-stage (context-load → review-
+//      emit), 30k ceiling, hard guards
+//   A5 BACKEND-AUDIT.md output contract — section-level replace per invocation
+//      (Codex C2 wording); 4-section skeleton; <!-- audit_version: 1 --> marker;
+//      per-section <!-- surface_source: {...} --> metadata
+//   A6 Finding labels severity × state boundary — 3 kinds enum, 3 severities
+//      R6 enum, state enum single-value ["open"]; Codex C4 negative-grep
+//      scope limit (active state enum context only, guard prose allowed)
+//   A7 SLO dual-source — BACKEND-CONTEXT source of truth + OPS-SPEC projection
+//      language in backend-review-ops.md
+//   A8 Smoke self (this section) — Codex C3 broad-freeze wording retired;
+//      hash-lock scope unchanged (3-file M2 + FRONTEND marker + routers);
+//      Phase 42/43/45/46 verified via content-marker grep (not hash)
+//   A9 Frozen invariants preserved; BS2 formally deferred to M4+
+
+const reviewApiPath = path.resolve(__dirname, '..', 'workflows', 'backend-review-api.md');
+const reviewDataPath = path.resolve(__dirname, '..', 'workflows', 'backend-review-data.md');
+const reviewEventPath = path.resolve(__dirname, '..', 'workflows', 'backend-review-event.md');
+const reviewOpsPath = path.resolve(__dirname, '..', 'workflows', 'backend-review-ops.md');
+const reviewerAgentPath = path.resolve(__dirname, '..', 'agents', 'sunco-backend-reviewer.md');
+const findingSchemaPath = path.resolve(__dirname, '..', 'schemas', 'finding.schema.json');
+const phase47ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '47-backend-review-four-surfaces', '47-CONTEXT.md');
+
+const REVIEW_WORKFLOWS = [
+  ['api', reviewApiPath, 'API-SPEC.md', '## API findings'],
+  ['data', reviewDataPath, 'DATA-SPEC.md', '## Data findings'],
+  ['event', reviewEventPath, 'EVENT-SPEC.md', '## Event findings'],
+  ['ops', reviewOpsPath, 'OPS-SPEC.md', '## Ops findings'],
+];
+
+const API_REVIEW_RULES = [
+  'raw-sql-interpolation', 'any-typed-body',
+  'missing-validation-public-route', 'logged-secret',
+];
+const DATA_REVIEW_RULES = ['non-reversible-migration'];
+const OPS_REVIEW_RULES = ['missing-timeout', 'swallowed-catch', 'logged-secret'];
+
+console.log(`\n${BOLD}22. backend-review 4 surfaces (Phase 47/M3.6)${RESET}`);
+
+// 22a. All 4 workflows populated (>200 lines, beyond Phase 37 stub 28 lines)
+for (const [surface, p] of REVIEW_WORKFLOWS) {
+  if (fs.existsSync(p)) {
+    const lines = fs.readFileSync(p, 'utf8').split('\n').length;
+    check(`backend-review-${surface}.md populated (>200 lines, was 28 stub) (A1)`,
+      lines > 200);
+  } else {
+    check(`backend-review-${surface}.md exists`, false);
+  }
+}
+
+// 22b. 5-Step markers + SPEC.md path (Phase 47 pattern: 5-step, not 6-step)
+for (const [surface, p, outPath] of REVIEW_WORKFLOWS) {
+  if (fs.existsSync(p)) {
+    const body = fs.readFileSync(p, 'utf8');
+    const steps = ['Step 1:', 'Step 2:', 'Step 3:', 'Step 4:', 'Step 5:'];
+    check(`backend-review-${surface}.md has all 5 Step markers (A1)`,
+      steps.every(s => body.includes(s)));
+    check(`backend-review-${surface}.md references ${outPath} (SPEC hard-stop; A3)`,
+      body.includes(outPath));
+    check(`backend-review-${surface}.md has "Run /sunco:backend-phase" guide (A3)`,
+      /Run \/sunco:backend-phase/.test(body));
+    check(`backend-review-${surface}.md checks <!-- spec_version: 1 --> marker (A3)`,
+      body.includes('<!-- spec_version: 1 -->'));
+  }
+}
+
+// 22c. api workflow has 4-rule subset (A2)
+if (fs.existsSync(reviewApiPath)) {
+  const body = fs.readFileSync(reviewApiPath, 'utf8');
+  for (const rule of API_REVIEW_RULES) {
+    check(`backend-review-api.md Step 2 references ${rule} (A2)`,
+      body.includes(rule));
+  }
+}
+
+// 22d. data workflow has 1-rule subset (A2)
+if (fs.existsSync(reviewDataPath)) {
+  const body = fs.readFileSync(reviewDataPath, 'utf8');
+  for (const rule of DATA_REVIEW_RULES) {
+    check(`backend-review-data.md Step 2 references ${rule} (A2)`,
+      body.includes(rule));
+  }
+}
+
+// 22e. event workflow Step 2 SKIPPED (A2 — spec §7 "no deterministic rules v1")
+if (fs.existsSync(reviewEventPath)) {
+  const body = fs.readFileSync(reviewEventPath, 'utf8');
+  check('backend-review-event.md Step 2 explicitly SKIPS detector (spec §7 Phase 3.6) (A2)',
+    /SKIP/i.test(body)
+    && /no deterministic rules v1|pure review/i.test(body)
+    && /EVENT_FINDINGS\s*=\s*"\[\]"/.test(body));
+  check('backend-review-event.md does NOT invoke detect-backend-smells.mjs in Step 2 code',
+    !/node\s+"?\$?DETECTOR"?\s+--json/.test(body));
+}
+
+// 22f. ops workflow has 3-rule subset (A2)
+if (fs.existsSync(reviewOpsPath)) {
+  const body = fs.readFileSync(reviewOpsPath, 'utf8');
+  for (const rule of OPS_REVIEW_RULES) {
+    check(`backend-review-ops.md Step 2 references ${rule} (A2)`,
+      body.includes(rule));
+  }
+}
+
+// 22g. All 4 workflows spawn sunco-backend-reviewer (A4)
+for (const [surface, p] of REVIEW_WORKFLOWS) {
+  if (fs.existsSync(p)) {
+    const body = fs.readFileSync(p, 'utf8');
+    check(`backend-review-${surface}.md spawns sunco-backend-reviewer (A4)`,
+      body.includes('sunco-backend-reviewer'));
+  }
+}
+
+// 22h. All 4 workflows write BACKEND-AUDIT.md + surface section label (A5)
+for (const [surface, p, , sectionLabel] of REVIEW_WORKFLOWS) {
+  if (fs.existsSync(p)) {
+    const body = fs.readFileSync(p, 'utf8');
+    check(`backend-review-${surface}.md writes .planning/domains/backend/BACKEND-AUDIT.md (A5)`,
+      body.includes('.planning/domains/backend/BACKEND-AUDIT.md'));
+    check(`backend-review-${surface}.md references section header "${sectionLabel}" (A5)`,
+      body.includes(sectionLabel));
+  }
+}
+
+// 22i. Section-level replace wording (Codex C2 absorb — A5)
+for (const [surface, p] of REVIEW_WORKFLOWS) {
+  if (fs.existsSync(p)) {
+    const body = fs.readFileSync(p, 'utf8');
+    check(`backend-review-${surface}.md documents section-level replace per invocation (C2 absorb; A5)`,
+      /section-level replace/i.test(body) && /byte-for-byte/i.test(body));
+  }
+}
+
+// 22j. <!-- audit_version: 1 --> marker template + 4-section skeleton referenced (A5)
+for (const [surface, p] of REVIEW_WORKFLOWS) {
+  if (fs.existsSync(p)) {
+    const body = fs.readFileSync(p, 'utf8');
+    check(`backend-review-${surface}.md template has <!-- audit_version: 1 --> marker (A5 / BS1)`,
+      body.includes('<!-- audit_version: 1 -->'));
+    const has4Sections = body.includes('## API findings')
+      && body.includes('## Data findings')
+      && body.includes('## Event findings')
+      && body.includes('## Ops findings');
+    check(`backend-review-${surface}.md template references all 4 surface section headers (A5)`,
+      has4Sections);
+  }
+}
+
+// 22k. sunco-backend-reviewer agent exists + 4-surface routing table (A4)
+if (fs.existsSync(reviewerAgentPath)) {
+  const body = fs.readFileSync(reviewerAgentPath, 'utf8');
+  check('sunco-backend-reviewer.md exists (A4)', true);
+  check('sunco-backend-reviewer.md routing table includes api row',
+    /`api`\s*\|[^|]*api-design\.md/.test(body));
+  check('sunco-backend-reviewer.md routing table includes data row',
+    /`data`\s*\|[^|]*data-modeling\.md/.test(body));
+  check('sunco-backend-reviewer.md routing table includes event row (detector SKIPPED)',
+    /`event`\s*\|[^|]*reliability-and-failure-modes\.md/.test(body)
+    && /no deterministic rules v1|detector SKIPPED/i.test(body));
+  check('sunco-backend-reviewer.md routing table includes ops row',
+    /`ops`\s*\|[^|]*observability-and-operations\.md/.test(body));
+  check('sunco-backend-reviewer.md documents 30k token ceiling + 2-stage markers (A4)',
+    /30k/.test(body) && /Stage 1/.test(body) && /Stage 2/.test(body));
+  // 22l. Hard guards (Codex + plan-verifier convergent).
+  //      Agent file has a "You MUST NOT:" bullet list; slice that block and
+  //      check forbidden items appear inside it. Using indexOf + slice avoids
+  //      dotall regex (which behaves inconsistently across Node versions).
+  const mustNotIdx = body.indexOf('You MUST NOT:');
+  const mustNotBlock = mustNotIdx >= 0 ? body.slice(mustNotIdx, mustNotIdx + 4000) : '';
+  check('sunco-backend-reviewer.md MUST NOT emit kind: deterministic (agent hard guard; A4)',
+    mustNotBlock.length > 0 && /kind:\s*deterministic/i.test(mustNotBlock));
+  check('sunco-backend-reviewer.md MUST NOT write SPEC / BACKEND-CONTEXT / BACKEND-AUDIT (agent hard guard; A4)',
+    mustNotBlock.length > 0
+    && /SPEC\.md|<SURFACE>-SPEC/.test(mustNotBlock)
+    && /BACKEND-CONTEXT/.test(mustNotBlock)
+    && /BACKEND-AUDIT/.test(mustNotBlock));
+  check('sunco-backend-reviewer.md MUST NOT emit cross-domain findings (Phase 48 boundary; A4)',
+    /MUST NOT.*cross-domain|Phase 48.*scope/i.test(body));
+  check('sunco-backend-reviewer.md MUST NOT emit state: resolved|dismissed (Phase 49 boundary; A4 / A6)',
+    /MUST NOT.*state.*resolved|MUST NOT.*resolved.*dismissed|Phase 49.*lifecycle/i.test(body));
+  check('sunco-backend-reviewer.md MUST NOT re-invoke Phase 43 detector (orchestrator Step 2 exclusive; A2)',
+    /MUST NOT.*re-invoke.*detector|orchestrator.*Step 2|Phase 43 detector.*exclusive/i.test(body));
+  check('sunco-backend-reviewer.md MUST NOT emit aggregate summary (Phase 48 boundary; A4)',
+    /MUST NOT.*aggregate|no "HIGH.*N"|no.*cross-surface/i.test(body));
+} else {
+  check('sunco-backend-reviewer.md exists (A4)', false);
+}
+
+// 22m. finding.schema.json exists + structure (A6)
+if (fs.existsSync(findingSchemaPath)) {
+  let schema;
+  try { schema = JSON.parse(fs.readFileSync(findingSchemaPath, 'utf8')); }
+  catch (e) { check('finding.schema.json parses as JSON', false); schema = null; }
+  if (schema) {
+    check('finding.schema.json is draft-07 (A6)',
+      schema.$schema === 'http://json-schema.org/draft-07/schema#');
+    check('finding.schema.json additionalProperties:true (lenient-additive; A6)',
+      schema.additionalProperties === true);
+    const FINDING_REQUIRED = ['rule', 'severity', 'kind', 'file', 'line', 'state'];
+    check('finding.schema.json required fields (rule/severity/kind/file/line/state) (A6)',
+      Array.isArray(schema.required) && FINDING_REQUIRED.every(f => schema.required.includes(f)));
+    check('finding.schema.json kind enum = 3 values (deterministic/heuristic/requires-human-confirmation) (A6)',
+      schema.properties && schema.properties.kind &&
+      Array.isArray(schema.properties.kind.enum) &&
+      ['deterministic', 'heuristic', 'requires-human-confirmation']
+        .every(k => schema.properties.kind.enum.includes(k)));
+    check('finding.schema.json severity enum = 3 R6 values (HIGH/MEDIUM/LOW) (A6)',
+      schema.properties && schema.properties.severity &&
+      Array.isArray(schema.properties.severity.enum) &&
+      ['HIGH', 'MEDIUM', 'LOW'].every(s => schema.properties.severity.enum.includes(s))
+      && schema.properties.severity.enum.length === 3);
+    // 22n. state enum = ["open"] single-value strict (A6 — Codex C4 + Option a)
+    check('finding.schema.json state enum = ["open"] single-value at audit_version: 1 (A6 / C4)',
+      schema.properties && schema.properties.state &&
+      Array.isArray(schema.properties.state.enum) &&
+      schema.properties.state.enum.length === 1 &&
+      schema.properties.state.enum[0] === 'open');
+    // 22o. Phase 49 expansion path documented in description (A6 — Codex spec feedback)
+    check('finding.schema.json description documents Phase 49 audit_version: 2 expansion path (A6)',
+      /audit_version:\s*2|Phase 49.*lifecycle|resolved.*dismissed.*Phase 49/i.test(schema.description || ''));
+  }
+} else {
+  check('finding.schema.json exists', false);
+}
+
+// 22p. No resolved/dismissed as active state enum (Codex C4 — scoped negative grep).
+//      Check: finding.schema.json state enum does NOT contain "resolved" or "dismissed".
+//      Prose mentions in guards/docs/escalate triggers are permitted.
+if (fs.existsSync(findingSchemaPath)) {
+  let schema;
+  try { schema = JSON.parse(fs.readFileSync(findingSchemaPath, 'utf8')); } catch { schema = null; }
+  if (schema && schema.properties && schema.properties.state) {
+    const stateEnum = schema.properties.state.enum || [];
+    check('no resolved/dismissed active state enum in finding.schema.json (Codex C4 scoped)',
+      !stateEnum.includes('resolved') && !stateEnum.includes('dismissed'));
+  }
+}
+// 22q. No resolved/dismissed as YAML state value in workflow emit templates
+//      (scoped: only lines matching `state:\s*(resolved|dismissed)`, not bare word).
+for (const [surface, p] of REVIEW_WORKFLOWS) {
+  if (fs.existsSync(p)) {
+    const body = fs.readFileSync(p, 'utf8');
+    const hasActiveResolved = /^\s+state:\s*resolved/m.test(body);
+    const hasActiveDismissed = /^\s+state:\s*dismissed/m.test(body);
+    check(`backend-review-${surface}.md emits no "state: resolved" active value (Codex C4; Phase 49 boundary)`,
+      !hasActiveResolved);
+    check(`backend-review-${surface}.md emits no "state: dismissed" active value (Codex C4; Phase 49 boundary)`,
+      !hasActiveDismissed);
+  }
+}
+
+// 22r. SLO dual-source language in backend-review-ops.md (A7 — Phase 46 carry)
+if (fs.existsSync(reviewOpsPath)) {
+  const body = fs.readFileSync(reviewOpsPath, 'utf8');
+  check('backend-review-ops.md references BACKEND-CONTEXT SLO as source of truth (A7)',
+    /source of truth/i.test(body) && /BACKEND-CONTEXT/.test(body));
+  check('backend-review-ops.md references OPS-SPEC slo as projection (A7)',
+    /projection/i.test(body) && /OPS-SPEC/.test(body));
+  check('backend-review-ops.md documents slo-projection-drift rule (heuristic finding; A7)',
+    /slo-projection-drift/.test(body));
+  check('backend-review-ops.md forbids overwriting either BACKEND-CONTEXT or OPS-SPEC (A7)',
+    /do not overwrite|MUST NOT.*overwrite|neither file/i.test(body));
+}
+
+// 22s. Phase 43 detector content-marker unchanged (Codex C3 — content grep, NOT file hash)
+{
+  const detectorPath = path.resolve(__dirname, '..', 'references', 'backend-excellence', 'src', 'detect-backend-smells.mjs');
+  if (fs.existsSync(detectorPath)) {
+    const body = fs.readFileSync(detectorPath, 'utf8');
+    const rules = ['raw-sql-interpolation', 'missing-timeout', 'swallowed-catch',
+      'any-typed-body', 'missing-validation-public-route', 'non-reversible-migration',
+      'logged-secret'];
+    check('Phase 43 detector content-marker: 7 rule names present (§13 lock; C3 content grep)',
+      rules.every(r => body.includes(r)));
+    check('Phase 43 detector content-marker: DETECTOR_VERSION = "1.0.0" (C3 content grep)',
+      /DETECTOR_VERSION\s*=\s*['"]1\.0\.0['"]/.test(body));
+    check('Phase 43 detector content-marker: RULES_ENABLED array present (C3 content grep)',
+      /RULES_ENABLED\s*=\s*Object\.freeze\(\s*\[/.test(body));
+  } else {
+    check('Phase 43 detector source exists', false);
+  }
+}
+
+// 22t. FRONTEND marker SHA-256 propagates (R3; Phase 44 lock — already in Section 19j,
+//      but Phase 47 re-asserts for M3 closing defense-in-depth).
+//      This check is functionally identical to 19j; if 19j fails this also fails.
+//      Phase 47 inherits via Section 19 success; no duplicate hash computation here.
+
+// 22u. Router SHA-256 propagates (Phase 37/44 lock) — inherited via Section 19l.
+//      Same rationale as 22t.
+
+// 22v. Phase 47 CONTEXT populated (not scaffold)
+if (fs.existsSync(phase47ContextPath)) {
+  const ctx = fs.readFileSync(phase47ContextPath, 'utf8');
+  check('Phase 47 CONTEXT.md populated with Gate 47 outcomes (Focused+ Gate 47 + GREEN-CONDITIONAL + Populated)',
+    /Focused\+? Gate 47/i.test(ctx) && /GREEN-CONDITIONAL/i.test(ctx) && /Populated/i.test(ctx));
+} else {
+  check('Phase 47 CONTEXT.md exists', false);
+}
 
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
