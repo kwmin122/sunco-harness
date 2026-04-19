@@ -2739,6 +2739,176 @@ if (fs.existsSync(crossDomainSchemaPath)) {
     && /Phase 48\/M4\.1/.test(schemaMd));
 }
 
+// ─── Section 25 — Phase 50/M5.1 documentation + migration guide ─────────────
+//
+// Contract tested (spec §9 Phase 5.1 deliverables + user-provided 10-axis scope;
+// docs-only phase, zero code behavior change):
+//   D1 4 docs exist under packages/cli/docs/ (impeccable-integration /
+//      backend-excellence / cross-domain / migration-v1.4)
+//   D2 Each doc covers its mandated topic markers (grep-based, not semantic)
+//   D3 README.md has v1.4 Highlights section above v0.11.0 with 4 doc links
+//   D4 package.json files[] includes "docs/" (tarball ships docs dir)
+//   D5 Spec §8 L685 amendment plan debt CLOSED (rationale in cross-domain.md)
+//   D6 Regression: Sections 1-24 unchanged; Phase 48/49 assets unchanged;
+//      schemas/workflows/agents/commands/references/hooks unchanged
+
+const s25DocsDir = path.resolve(__dirname, '..', 'docs');
+const s25ImpeccableDoc = path.resolve(s25DocsDir, 'impeccable-integration.md');
+const s25BackendDoc = path.resolve(s25DocsDir, 'backend-excellence.md');
+const s25CrossDomainDoc = path.resolve(s25DocsDir, 'cross-domain.md');
+const s25MigrationDoc = path.resolve(s25DocsDir, 'migration-v1.4.md');
+const s25ReadmePath = path.resolve(__dirname, '..', 'README.md');
+const s25PackageJsonPath = path.resolve(__dirname, '..', 'package.json');
+const s25Phase50ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '50-documentation-migration', '50-CONTEXT.md');
+
+console.log(`\n${BOLD}25. documentation + migration guide (Phase 50/M5.1)${RESET}`);
+
+// 25a. 4 docs exist
+check('docs/impeccable-integration.md exists (D1)', fs.existsSync(s25ImpeccableDoc));
+check('docs/backend-excellence.md exists (D1)', fs.existsSync(s25BackendDoc));
+check('docs/cross-domain.md exists (D1 — 4th doc, scope-justified)', fs.existsSync(s25CrossDomainDoc));
+check('docs/migration-v1.4.md exists (D1)', fs.existsSync(s25MigrationDoc));
+
+// 25b. impeccable-integration.md must-cover markers (D2)
+if (fs.existsSync(s25ImpeccableDoc)) {
+  const md = fs.readFileSync(s25ImpeccableDoc, 'utf8');
+  check('impeccable-integration.md covers --surface web (D2)',
+    /--surface web/.test(md));
+  check('impeccable-integration.md covers DESIGN-CONTEXT.md (D2)',
+    /DESIGN-CONTEXT\.md/.test(md));
+  check('impeccable-integration.md covers IMPECCABLE-AUDIT + UI-REVIEW (D2)',
+    /IMPECCABLE-AUDIT\.md/.test(md) && /UI-REVIEW\.md/.test(md));
+  check('impeccable-integration.md documents vendored wrapper (D2)',
+    /vendored|wrapper/i.test(md));
+}
+
+// 25c. backend-excellence.md must-cover markers (D2)
+if (fs.existsSync(s25BackendDoc)) {
+  const md = fs.readFileSync(s25BackendDoc, 'utf8');
+  check('backend-excellence.md covers 8 reference docs (D2)',
+    /api-design\.md/.test(md) && /data-modeling\.md/.test(md)
+    && /boundaries-and-architecture\.md/.test(md) && /reliability-and-failure-modes\.md/.test(md)
+    && /security-and-permissions\.md/.test(md) && /performance-and-scale\.md/.test(md)
+    && /observability-and-operations\.md/.test(md) && /migrations-and-compatibility\.md/.test(md));
+  check('backend-excellence.md covers 7 detector rules (D2)',
+    /raw-sql-interpolation/.test(md) && /missing-timeout/.test(md)
+    && /swallowed-catch/.test(md) && /any-typed-body/.test(md)
+    && /missing-validation-public-route/.test(md) && /non-reversible-migration/.test(md)
+    && /logged-secret/.test(md));
+  check('backend-excellence.md covers BACKEND-CONTEXT teach flow (D2)',
+    /BACKEND-CONTEXT\.md/.test(md) && /--domain backend/.test(md));
+  check('backend-excellence.md covers 4 backend-phase surfaces (D2)',
+    /--surface api/.test(md) && /--surface data/.test(md)
+    && /--surface event/.test(md) && /--surface ops/.test(md));
+  check('backend-excellence.md documents audit_version:1 discipline (D2)',
+    /audit_version:\s*1/.test(md));
+}
+
+// 25d. cross-domain.md must-cover markers (D2 + D5 L685 closure)
+if (fs.existsSync(s25CrossDomainDoc)) {
+  const md = fs.readFileSync(s25CrossDomainDoc, 'utf8');
+  check('cross-domain.md covers CROSS-DOMAIN.md + CROSS-DOMAIN-FINDINGS.md distinction (D2)',
+    /CROSS-DOMAIN\.md/.test(md) && /CROSS-DOMAIN-FINDINGS\.md/.test(md));
+  check('cross-domain.md covers 4 check types with severity (D2)',
+    /missing-endpoint[\s\S]{0,80}HIGH/i.test(md)
+    && /type-drift[\s\S]{0,80}HIGH/i.test(md)
+    && /error-state-mismatch[\s\S]{0,80}MED/i.test(md)
+    && /orphan-endpoint[\s\S]{0,80}LOW/i.test(md));
+  check('cross-domain.md covers audit_version:2 lifecycle (D2)',
+    /audit_version:\s*2/.test(md));
+  check('cross-domain.md covers 3-region structure (D2)',
+    /3-region|three[\s-]region/i.test(md)
+    && /LIFECYCLE-START/.test(md) && /FINDINGS-BLOCK-START/.test(md));
+  check('cross-domain.md covers --allow-low-open flag (D2)',
+    /--allow-low-open/.test(md));
+  check('cross-domain.md covers HIGH hard-block (D2)',
+    /HIGH[\s\S]{0,120}HARD BLOCK|HARD BLOCK[\s\S]{0,80}HIGH/i.test(md));
+  check('cross-domain.md closes spec §8 L685 amendment debt (D5)',
+    /§8[\s\S]{0,60}L685|line 685|L685[\s\S]{0,60}agent/i.test(md)
+    && /Deterministic[-\s]First/i.test(md)
+    && /architecture\.md/.test(md));
+  check('cross-domain.md documents future heuristic extension slot (D2)',
+    /future heuristic|heuristic extension|extension slot/i.test(md));
+}
+
+// 25e. migration-v1.4.md must-cover markers (D2 + D5 yaml rationale)
+if (fs.existsSync(s25MigrationDoc)) {
+  const md = fs.readFileSync(s25MigrationDoc, 'utf8');
+  check('migration-v1.4.md covers non-breaking adoption path (D2)',
+    /non-breaking|no action required|zero regression/i.test(md));
+  check('migration-v1.4.md covers yaml direct dependency rationale (D2)',
+    /yaml[\s\S]{0,200}direct dep|direct depend[\s\S]{0,200}yaml/i.test(md));
+  check('migration-v1.4.md covers --surface flag semantics (D2)',
+    /--surface[\s\S]{0,80}cli|default[\s\S]{0,80}cli/i.test(md));
+  check('migration-v1.4.md covers /sunco:proceed-gate policy (D2)',
+    /sunco:proceed-gate/.test(md) && /HIGH[\s\S]{0,60}BLOCK/i.test(md));
+  check('migration-v1.4.md links to 3 track docs (D2)',
+    /impeccable-integration\.md/.test(md)
+    && /backend-excellence\.md/.test(md)
+    && /cross-domain\.md/.test(md));
+}
+
+// 25f. README.md v1.4 Highlights section + 4 doc links (D3)
+if (fs.existsSync(s25ReadmePath)) {
+  const readme = fs.readFileSync(s25ReadmePath, 'utf8');
+  check('README.md has v1.4 Highlights section (D3)',
+    /##\s+v1\.4 Highlights/.test(readme));
+  check('README.md v1.4 section placed above v0.11.0 (D3)',
+    readme.indexOf('## v1.4 Highlights') < readme.indexOf('## v0.11.0 Highlights'));
+  check('README.md links all 4 docs (D3)',
+    /docs\/impeccable-integration\.md/.test(readme)
+    && /docs\/backend-excellence\.md/.test(readme)
+    && /docs\/cross-domain\.md/.test(readme)
+    && /docs\/migration-v1\.4\.md/.test(readme));
+}
+
+// 25g. package.json files[] includes docs/ (D4)
+if (fs.existsSync(s25PackageJsonPath)) {
+  let pkg = null;
+  try { pkg = JSON.parse(fs.readFileSync(s25PackageJsonPath, 'utf8')); } catch {}
+  if (pkg) {
+    check('packages/cli/package.json files[] includes "docs/" (D4 tarball contract)',
+      Array.isArray(pkg.files) && pkg.files.includes('docs/'));
+  }
+}
+
+// 25h. Phase 50 CONTEXT populated
+if (fs.existsSync(s25Phase50ContextPath)) {
+  const ctx = fs.readFileSync(s25Phase50ContextPath, 'utf8');
+  check('Phase 50 CONTEXT.md populated with Gate 50 outcomes + 10-axis disposition',
+    /Gate 50|Phase 50[\s\S]{0,200}docs phase/i.test(ctx)
+    && /Populated/i.test(ctx)
+    && /docs phase/i.test(ctx)
+    && /4 docs/i.test(ctx));
+  check('Phase 50 CONTEXT.md documents L685 amendment plan-debt closure',
+    /L685[\s\S]{0,200}CLOS|CLOS[\s\S]{0,80}L685/i.test(ctx));
+}
+
+// 25i. Regression: docs are the ONLY new files under packages/cli/
+// Smoke runs in-repo, so we assert docs/ exists + contains exactly the 4 expected docs
+if (fs.existsSync(s25DocsDir)) {
+  const docsFiles = fs.readdirSync(s25DocsDir).filter(f => f.endsWith('.md'));
+  const expected = [
+    'impeccable-integration.md',
+    'backend-excellence.md',
+    'cross-domain.md',
+    'migration-v1.4.md',
+  ];
+  const unexpected = docsFiles.filter(f => !expected.includes(f));
+  check('docs/ contains exactly the 4 expected Phase 50 docs (D6 scope discipline)',
+    unexpected.length === 0 && expected.every(f => docsFiles.includes(f)));
+}
+
+// 25j. Regression: Phase 49 artifacts unchanged (content-grep, not hash; since
+// smoke-test.cjs is being modified in Phase 50, we assert key content markers
+// survived rather than computing a diff against HEAD~1 which would be unreliable).
+if (fs.existsSync(findingSchemaPath)) {
+  const schema = JSON.parse(fs.readFileSync(findingSchemaPath, 'utf8'));
+  check('Phase 49 finding.schema.json lifecycle oneOf unchanged (D6)',
+    Array.isArray(schema.oneOf) && schema.oneOf.length === 3);
+}
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

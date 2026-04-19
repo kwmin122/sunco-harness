@@ -104,6 +104,24 @@ Published artifacts:
   6 hooks              — Lifecycle hooks
 ```
 
+## v1.4 Highlights — Impeccable Fusion
+
+Five-milestone track: Frontend Web Fusion (M2), Backend Excellence (M3), Cross-Domain Integration (M4), Rollout Hardening (M5), on top of the M1 Foundation. **Zero regression** to v0.11.x — every new capability is opt-in via `--surface` flags.
+
+- **`/sunco:ui-phase --surface web`** — vendored Impeccable skill wrapper; `/sunco:ui-review --surface web` produces IMPECCABLE-AUDIT.md + 6-pillar UI-REVIEW.md
+- **`/sunco:backend-phase --surface {api|data|event|ops}`** — 4 surface-specific workflows producing API/DATA/EVENT/OPS-SPEC.md with SPEC-BLOCK YAML
+- **`/sunco:backend-review --surface {api|data|event|ops}`** — 7 deterministic detector rules + LLM review → BACKEND-AUDIT.md
+- **Cross-domain verify-gate** — 4 check types (missing-endpoint HIGH / type-drift HIGH / error-state-mismatch MED / orphan-endpoint LOW) emitted to CROSS-DOMAIN-FINDINGS.md
+- **`/sunco:proceed-gate --allow-low-open`** — severity × state policy (HIGH hard-block / MED dismissible with ≥50-char rationale / LOW with flag)
+- **Finding lifecycle (audit_version:2)** — state enum expanded to open/resolved/dismissed-with-rationale; HIGH+dismissed structurally rejected
+- **`yaml` promoted to direct dependency** — runtime SPEC-BLOCK parsing reliability
+
+**Docs (this release):**
+- [Impeccable Integration](docs/impeccable-integration.md) — M2 frontend-web surface
+- [Backend Excellence](docs/backend-excellence.md) — M3 backend track (8 refs + 7 rules + 4 surfaces)
+- [Cross-Domain Integration](docs/cross-domain.md) — M4 UI ↔ API contract + proceed-gate policy
+- [Migration v1.4](docs/migration-v1.4.md) — non-breaking adoption path from v0.11.x
+
 ## v0.11.0 Highlights
 
 - **Ambient advisor** — `/sunco:advisor` skill + two Claude Code hooks (UserPromptSubmit injection + PostToolUse queue). Deterministic classifier surfaces short `Risk: / Suggestion:` blocks when risk signals fire. Never writes code, never auto-executes skills.
