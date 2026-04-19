@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sunco-harness.local/packages/cli/schemas/cross-domain.schema.json",
+  "title": "SUNCO CROSS-DOMAIN CROSS-DOMAIN-BLOCK",
+  "description": "Schema for the YAML block fenced inside the <!-- SUNCO:CROSS-DOMAIN-BLOCK-START --> … <!-- SUNCO:CROSS-DOMAIN-BLOCK-END --> region of .planning/domains/contracts/CROSS-DOMAIN.md produced by cross-domain-sync (Phase 48/M4.1). Deterministic, no-LLM generation: UI-SPEC.md + API-SPEC.md SPEC-BLOCK extraction, set-intersection + type-shape comparison, template serialization. Per spec §8 Phase 4.1. BS1 discipline: version const: 1, additionalProperties: true so Phase 49/M4.2 verify-gate cross-domain layer (missing-endpoint, type-drift, error-state-mismatch, orphan-endpoint findings) and later phases may extend without a schema bump. generated_from.sha is the source file content SHA-256 (NOT a git commit SHA) so regeneration is idempotent across commits without a working copy change. minItems: 0 per projected array — Phase 48 is a generator, Phase 49 verify-gate judges emptiness/coverage.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "version",
+    "generated_from",
+    "endpoints_consumed",
+    "endpoints_defined",
+    "error_mappings",
+    "type_contracts"
+  ],
+  "properties": {
+    "version": {
+      "description": "Schema version per BS1. Constant 1 for Phase 48 output. Future schema bumps increment this and ship coordinated migrations, same discipline as api/data/event/ops/ui schemas.",
+      "const": 1
+    },
+    "generated_from": {
+      "description": "Provenance of the generated block. One entry per source SPEC file actually consumed by this generation (minimum: UI-SPEC.md + API-SPEC.md when both are required). Ordered by read order.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["spec", "sha"],
+        "properties": {
+          "spec": {
+            "description": "Repository-relative path to the source SPEC.md file (e.g., '.planning/domains/frontend/UI-SPEC.md'). Full path, not basename.",
+            "type": "string",
+            "minLength": 1
+          },
+          "sha": {
+            "description": "SHA-256 of the source file's raw bytes at read time. Lowercase hex, 64 chars. Not a git commit SHA — content hash so regeneration is idempotent across commits without file change.",
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "endpoints_consumed": {
+      "description": "Endpoints the UI surface declares it consumes. Projected from UI-SPEC.md SPEC-BLOCK endpoints_consumed. minItems: 0 — a UI may consume zero endpoints (pure static content); coverage judgment is Phase 49 verify-gate scope.",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["ui_ref", "method", "path"],
+        "properties": {
+          "ui_ref": {
+            "description": "UI component or view name that consumes this endpoint (e.g., 'UserDashboard').",
+            "type": "string",
+            "minLength": 1
+          },
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "endpoints_defined": {
+      "description": "Endpoints the API surface defines. Projected from API-SPEC.md SPEC-BLOCK endpoints. minItems: 0 — emptiness is Phase 49 scope (orphan-endpoint finding applies in reverse direction).",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["method", "path", "owner_spec"],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner_spec": {
+            "description": "Full repository-relative path of the SPEC.md that defines this endpoint (e.g., '.planning/domains/backend/API-SPEC.md'). Full path, not basename.",
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "error_mappings": {
+      "description": "Cross-projection of API error envelope codes against UI error_states_handled. Each entry pairs an API-declared error code with the UI state that handles it (or 'fallback' when no explicit handler is declared and the UI falls back to a generic state). minItems: 0 — Phase 48 projects what the two specs declare; Phase 49 error-state-mismatch finding is the coverage judge.",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["api_code", "ui_state", "fallback"],
+        "properties": {
+          "api_code": {
+            "description": "API error code from API-SPEC.md SPEC-BLOCK error_envelope or endpoints[].errors[].code (e.g., 'AUTH_EXPIRED').",
+            "type": "string",
+            "minLength": 1
+          },
+          "ui_state": {
+            "description": "UI state name from UI-SPEC.md SPEC-BLOCK error_states_handled that handles this code (e.g., 'relogin-prompt'). Empty string when no explicit handler and only fallback applies.",
+            "type": "string"
+          },
+          "fallback": {
+            "description": "UI fallback state name when no explicit mapping exists (e.g., 'generic-error'). Projected from UI-SPEC.md error_states_handled convention; empty string when UI spec has no declared fallback.",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "type_contracts": {
+      "description": "Type-shape matches between UI-consumed field paths and API-defined field paths. Projected from UI-SPEC.md type references (where present) against API-SPEC.md endpoints[].response_schema. Phase 48 records structural declaration pairs; Phase 49 type-drift finding is the correctness judge.",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["field_path", "ui_type", "api_type", "match"],
+        "properties": {
+          "field_path": {
+            "description": "Dotted field path (e.g., 'User.email', 'Order.items[].sku').",
+            "type": "string",
+            "minLength": 1
+          },
+          "ui_type": {
+            "description": "Type as declared by UI-SPEC.md. Empty string when UI spec does not declare an explicit type at this path.",
+            "type": "string"
+          },
+          "api_type": {
+            "description": "Type as declared by API-SPEC.md. Empty string when API spec does not declare an explicit type at this path.",
+            "type": "string"
+          },
+          "match": {
+            "description": "true when ui_type and api_type are equal (case-sensitive) and both non-empty. false when either is empty or when strings differ. Phase 48 is a structural matcher, not a type-system-aware matcher — Phase 49 heuristic review handles nuance (nullability, unions, aliases).",
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

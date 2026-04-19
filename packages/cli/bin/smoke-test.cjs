@@ -2273,6 +2273,209 @@ if (fs.existsSync(phase47ContextPath)) {
   check('Phase 47 CONTEXT.md exists', false);
 }
 
+// ─── Section 23 — Phase 48/M4.1 cross-domain CROSS-DOMAIN.md auto-generation ───
+//
+// Contract tested (Full Gate 48 axes G1-G8, 3 Codex critical absorbed + 5 axis
+// conditions + 2 plan-verifier conditions — see Phase 48 CONTEXT absorption table):
+//   G1 cross-domain.schema.json draft-07 + version const:1 + 6 required fields +
+//      generated_from.sha SHA-256 pattern + minItems:0 per projection array
+//   G2 extract-spec-block.mjs pure-stdlib module (no new npm dep; C2) with --test
+//      self-run (≥22 checks) and no AI SDK / no subagent (G6)
+//   G3 .planning/domains/contracts/CROSS-DOMAIN.md output + START/END paired markers
+//      + <!-- cross_domain_version: 1 --> BS1 parity marker
+//   G4 UI+API hard-required default / DATA/EVENT/OPS optional / required_specs
+//      CONTEXT.md override hard-stops listed paths (C4 absorb: generator hard-stop,
+//      not read-only)
+//   G5 Summary-only BACKEND-AUDIT rollup (open-count × severity × 4 surfaces);
+//      no lifecycle tokens in generated block (C5 escalate trigger)
+//   G6 No LLM / no subagent / no AI SDK imports / no HTTP — invariant explicit
+//   G7 Smoke Section 23 content-marker grep (no git diff --stat HEAD~1); negative
+//      grep scope limited to active output (schema / workflow generation template /
+//      module source) per Codex C6 absorb — gate prose / escalate trigger language
+//      permitted to mention lifecycle tokens for documentation
+//   G8 Frozen Phase 35-47 outputs (read-only), finding.schema state enum unchanged,
+//      no sunco-cross-domain-* agent created, Phase 44 BACKEND-CONTEXT untouched
+//      (C8 explicit lock — workflow neither reads nor writes BACKEND-CONTEXT)
+
+const crossDomainSchemaPath = path.resolve(__dirname, '..', 'schemas', 'cross-domain.schema.json');
+const crossDomainSyncPath = path.resolve(__dirname, '..', 'workflows', 'cross-domain-sync.md');
+const crossDomainExtractorPath = path.resolve(__dirname, '..', 'references', 'cross-domain', 'src', 'extract-spec-block.mjs');
+const phase48ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '48-cross-domain-auto-generation', '48-CONTEXT.md');
+
+console.log(`\n${BOLD}23. cross-domain CROSS-DOMAIN.md auto-generation (Phase 48/M4.1)${RESET}`);
+
+// 23a. cross-domain.schema.json exists + draft-07 + additionalProperties:true (G1)
+if (fs.existsSync(crossDomainSchemaPath)) {
+  let xdSchema;
+  try { xdSchema = JSON.parse(fs.readFileSync(crossDomainSchemaPath, 'utf8')); }
+  catch (e) { check('cross-domain.schema.json parses as JSON (G1)', false); xdSchema = null; }
+  if (xdSchema) {
+    check('cross-domain.schema.json draft-07 (G1)',
+      xdSchema.$schema === 'http://json-schema.org/draft-07/schema#');
+    check('cross-domain.schema.json additionalProperties:true (G1 lenient-additive)',
+      xdSchema.additionalProperties === true);
+    // 23b. 6 required fields
+    const XD_REQUIRED = ['version', 'generated_from', 'endpoints_consumed',
+                         'endpoints_defined', 'error_mappings', 'type_contracts'];
+    check('cross-domain.schema.json required fields (6 total per spec §8 Phase 4.1) (G1)',
+      Array.isArray(xdSchema.required) && XD_REQUIRED.every(f => xdSchema.required.includes(f))
+      && xdSchema.required.length === 6);
+    // 23c. version const:1 BS1
+    check('cross-domain.schema.json version const:1 (G1 BS1 parity)',
+      xdSchema.properties && xdSchema.properties.version && xdSchema.properties.version.const === 1);
+    // 23d. generated_from.sha SHA-256 pattern (C3 content hash, not git SHA)
+    const gfItems = xdSchema.properties && xdSchema.properties.generated_from
+      && xdSchema.properties.generated_from.items;
+    check('cross-domain.schema.json generated_from.sha SHA-256 hex pattern (C3)',
+      gfItems && gfItems.properties && gfItems.properties.sha
+      && gfItems.properties.sha.pattern === '^[0-9a-f]{64}$');
+    check('cross-domain.schema.json generated_from required [spec, sha] (C3)',
+      gfItems && Array.isArray(gfItems.required)
+      && gfItems.required.includes('spec') && gfItems.required.includes('sha'));
+    // 23e. method enum matches api-spec (G1 enum alignment)
+    const epItems = xdSchema.properties && xdSchema.properties.endpoints_defined
+      && xdSchema.properties.endpoints_defined.items;
+    const API_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+    check('cross-domain.schema.json endpoints_defined.method enum = api-spec 7 methods (G1)',
+      epItems && epItems.properties && epItems.properties.method
+      && Array.isArray(epItems.properties.method.enum)
+      && API_METHODS.every(m => epItems.properties.method.enum.includes(m))
+      && epItems.properties.method.enum.length === 7);
+    // 23f. minItems:0 on projection arrays (G1 generator scope)
+    const EC_ARR = xdSchema.properties && xdSchema.properties.endpoints_consumed;
+    check('cross-domain.schema.json endpoints_consumed minItems:0 (G1 generator — Phase 49 judges coverage)',
+      EC_ARR && EC_ARR.minItems === 0);
+  }
+} else {
+  check('cross-domain.schema.json exists (G1)', false);
+}
+
+// 23g. cross-domain-sync.md exists + populated (not stub)
+if (fs.existsSync(crossDomainSyncPath)) {
+  const lines = fs.readFileSync(crossDomainSyncPath, 'utf8').split('\n').length;
+  check('cross-domain-sync.md populated (>100 lines; no stub) (G2/G3)', lines > 100);
+  const body = fs.readFileSync(crossDomainSyncPath, 'utf8');
+  // 23h. Internal workflow banner (C7)
+  check('cross-domain-sync.md declares internal workflow — no slash command in Phase 48 (C7)',
+    /Internal workflow/i.test(body) && /No slash command in Phase 48/i.test(body));
+  // 23i. Phase 49 wiring reference (C7)
+  check('cross-domain-sync.md references Phase 49 verify gate as future public surface (C7)',
+    /Phase 49/.test(body) && /verify/i.test(body));
+  // 23j. UI + API hard-required default (G4)
+  check('cross-domain-sync.md declares UI-SPEC + API-SPEC hard-required default (G4)',
+    /UI-SPEC/.test(body) && /API-SPEC/.test(body) && /required/i.test(body) && /hard-stop/i.test(body));
+  // 23k. DATA/EVENT/OPS optional (G4)
+  check('cross-domain-sync.md declares DATA/EVENT/OPS optional-parsed-if-present (G4)',
+    /DATA-SPEC/.test(body) && /EVENT-SPEC/.test(body) && /OPS-SPEC/.test(body)
+    && /optional/i.test(body) && /silent skip/i.test(body));
+  // 23l. required_specs override semantics (C4 — generator hard-stop)
+  check('cross-domain-sync.md honors required_specs CONTEXT.md override as generator hard-stop (C4)',
+    /required_specs/.test(body) && /override/i.test(body)
+    && /hard-stop/i.test(body));
+  // 23m. Output path
+  check('cross-domain-sync.md writes .planning/domains/contracts/CROSS-DOMAIN.md (G3 — spec §8 line 665)',
+    /\.planning\/domains\/contracts\/CROSS-DOMAIN\.md/.test(body));
+  // 23n. Hard invariants (G6)
+  check('cross-domain-sync.md declares no-LLM / no-subagent / no-AI-SDK hard invariant (G6)',
+    /no[- ]?LLM|no[- ]?subagent|Task\(.*subagent_type/i.test(body)
+    && /(ai|anthropic|openai)/i.test(body));
+  // 23o. Escalate trigger for lifecycle tokens (C5)
+  check('cross-domain-sync.md documents lifecycle-token escalate trigger (resolved/dismissed/audit_version:2 in generated output = RED) (C5)',
+    /lifecycle token/i.test(body)
+    && /resolved/.test(body) && /dismissed/.test(body)
+    && /audit_version/.test(body));
+  // 23p. Paired START/END markers for CROSS-DOMAIN-BLOCK (G3)
+  check('cross-domain-sync.md uses SUNCO:CROSS-DOMAIN-BLOCK-START/END paired markers (G3)',
+    body.includes('<!-- SUNCO:CROSS-DOMAIN-BLOCK-START -->')
+    && body.includes('<!-- SUNCO:CROSS-DOMAIN-BLOCK-END -->'));
+  // 23q. OPEN-FINDINGS-SUMMARY markers (G5)
+  check('cross-domain-sync.md uses SUNCO:OPEN-FINDINGS-SUMMARY-START/END paired markers (G5)',
+    body.includes('<!-- SUNCO:OPEN-FINDINGS-SUMMARY-START -->')
+    && body.includes('<!-- SUNCO:OPEN-FINDINGS-SUMMARY-END -->'));
+  // 23r. cross_domain_version: 1 BS1 parity marker (G3)
+  check('cross-domain-sync.md documents <!-- cross_domain_version: 1 --> top marker (G3 BS1 parity)',
+    /cross_domain_version:\s*1/.test(body));
+  // 23s. Phase 44 BACKEND-CONTEXT neither read nor written (C8)
+  check('cross-domain-sync.md does NOT read or write BACKEND-CONTEXT.md (C8 Phase 44 lock)',
+    !/BACKEND-CONTEXT\.md/i.test(body) || /MUST NOT.*BACKEND-CONTEXT/.test(body));
+  // 23t. Summary-only BACKEND-AUDIT rollup without lifecycle tokens (G5)
+  check('cross-domain-sync.md declares summary-only BACKEND-AUDIT rollup (G5)',
+    /summary[- ]?only/i.test(body) && /BACKEND-AUDIT/.test(body));
+} else {
+  check('cross-domain-sync.md exists (G2/G3)', false);
+}
+
+// 23u. extract-spec-block.mjs exists + --test passes (≥22 checks per design)
+if (fs.existsSync(crossDomainExtractorPath)) {
+  const body = fs.readFileSync(crossDomainExtractorPath, 'utf8');
+  check('extract-spec-block.mjs ESM module exists (G2)', body.length > 0);
+  // 23v. No AI SDK / subagent imports in module source (G6 — active source negative grep)
+  check('extract-spec-block.mjs has no AI SDK imports (G6 active-source negative grep)',
+    !/from\s+['"](ai|@anthropic-ai\/sdk|openai|anthropic)['"]/.test(body)
+    && !/require\(['"](ai|@anthropic-ai\/sdk|openai|anthropic)['"]\)/.test(body));
+  check('extract-spec-block.mjs has no subagent Task spawn (G6)',
+    !/subagent_type|Task\s*\(\s*\{/.test(body));
+  // 23w. No static top-level import of `yaml` — only dynamic require at runtime (C2 matches Phase 45)
+  check('extract-spec-block.mjs has no static top-level import of yaml (C2 matches Phase 45 dynamic require)',
+    !/^import\s+.*\s+from\s+['"]yaml['"]/m.test(body)
+    && !/^(const|let|var)\s+yaml\s*=\s*require\(['"]yaml['"]\)/m.test(body));
+  // 23x. SHA-256 via node:crypto (C3 content hash)
+  check('extract-spec-block.mjs computes SHA-256 via node:crypto (C3 content hash, not git SHA)',
+    /createHash\s*\(\s*['"]sha256['"]\)/.test(body) && /node:crypto/.test(body));
+  // 23y. --test path + self-test count
+  try {
+    const { execSync } = require('node:child_process');
+    const out = execSync(`node "${crossDomainExtractorPath}" --test`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const m = out.match(/(\d+)\s+passed,\s+(\d+)\s+failed/);
+    const passedCount = m ? parseInt(m[1], 10) : 0;
+    const failedCount = m ? parseInt(m[2], 10) : -1;
+    check('extract-spec-block.mjs --test passes ≥22 checks, 0 failed (G2 self-test)',
+      passedCount >= 22 && failedCount === 0);
+  } catch (e) {
+    check('extract-spec-block.mjs --test passes ≥22 checks, 0 failed (G2 self-test)', false);
+  }
+} else {
+  check('extract-spec-block.mjs exists (G2)', false);
+}
+
+// 23z. No sunco-cross-domain-* agent file exists in Phase 48 (G8 glob negative)
+{
+  const agentsDir = path.resolve(__dirname, '..', 'agents');
+  let agentFiles = [];
+  try { agentFiles = fs.readdirSync(agentsDir); } catch {}
+  const hasCrossDomainAgent = agentFiles.some((f) => /^sunco-cross-domain/i.test(f));
+  check('no sunco-cross-domain-* agent created in Phase 48 (G8 Phase 49 boundary)', !hasCrossDomainAgent);
+}
+
+// 23aa. cross-domain.schema.json has no lifecycle tokens in schema body (C6 active-output scope)
+if (fs.existsSync(crossDomainSchemaPath)) {
+  const raw = fs.readFileSync(crossDomainSchemaPath, 'utf8');
+  // Schema may mention "Phase 49" in its description for traceability; that's permitted.
+  // What's forbidden is `resolved` / `dismissed` / `audit_version: 2` as enum values or
+  // property definitions in cross-domain's own schema (Phase 49 scope).
+  let xdSchema;
+  try { xdSchema = JSON.parse(raw); } catch { xdSchema = null; }
+  const props = xdSchema && xdSchema.properties ? xdSchema.properties : {};
+  const hasActiveLifecycleProp = 'resolved' in props || 'dismissed' in props
+    || ('state' in props && Array.isArray(props.state?.enum)
+        && (props.state.enum.includes('resolved') || props.state.enum.includes('dismissed')));
+  check('cross-domain.schema.json has no active lifecycle properties/enums (C6 scoped negative)',
+    !hasActiveLifecycleProp);
+}
+
+// 23ab. Phase 48 CONTEXT populated with Gate 48 outcomes
+if (fs.existsSync(phase48ContextPath)) {
+  const ctx = fs.readFileSync(phase48ContextPath, 'utf8');
+  check('Phase 48 CONTEXT.md populated with Full Gate 48 outcomes + absorption table',
+    /Full Gate 48|Gate 48/i.test(ctx)
+    && (/GREEN-CONDITIONAL|GREEN/.test(ctx))
+    && /absorb/i.test(ctx)
+    && /Populated/i.test(ctx));
+} else {
+  check('Phase 48 CONTEXT.md populated with Full Gate 48 outcomes + absorption table', false);
+}
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);
