@@ -1506,11 +1506,18 @@ const BACKEND_CTX_CANONICAL_PATH = '.planning/domains/backend/BACKEND-CONTEXT.md
 // at HEAD=de4c2b1 2026-04-19). Files in sibling directories to Phase 45 authorship;
 // wrappers (context-injector/detector-adapter) covered by existing --test runs and
 // path-distance from Phase 45 edits.
+//
+// Post-Phase-47 update (2026-04-19): ui-spec.schema.json hash intentionally
+// updated after Phase 40 BS1 version field backfill — the field was registered
+// plan debt since Phase 40 and scheduled for pre-M4 closure per plan-verifier
+// Gate 47 timing flag. Other two files (researcher + workflow) unchanged:
+// their "12 fields" prose refers to the Phase 40 content fields and remains
+// accurate; BS1 version is a meta-field (schema-level), not a content field.
 const M2_ADJACENCY_HASHES = {
   'packages/cli/agents/sunco-ui-researcher-web.md':
     'e3328dcb855a3454398acd08472f4d9f27d1e9cddb1613ccf02442adf762f64a',
   'packages/cli/schemas/ui-spec.schema.json':
-    'b691a28d7e9e5ad7f0fbaf045c25faaa61dbdcfd85aacf51638ec21fa3b95321',
+    '46c67a6058f7ffe734e52dd141d759d7a21eadf562c6786a90bb926ac1e6c764',
   'packages/cli/workflows/ui-phase-web.md':
     'd77b30e96783a38d3915383563c8e5304f8ebe12bd2cb4447c5398a205f4a205',
 };

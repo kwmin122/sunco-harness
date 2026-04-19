@@ -2,10 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://sunco-harness.local/packages/cli/schemas/ui-spec.schema.json",
   "title": "SUNCO UI-SPEC SPEC-BLOCK",
-  "description": "Schema for the YAML SPEC-BLOCK fenced inside UI-SPEC.md produced by ui-phase-web (Phase 40/M2.3). Per spec R2 (SUNCO:SPEC-BLOCK deterministic extraction). Lenient additive: all 12 fields required, additionalProperties permitted so downstream phases (Phase 41 ui-review) may extend without schema bump.",
+  "description": "Schema for the YAML SPEC-BLOCK fenced inside UI-SPEC.md produced by ui-phase-web (Phase 40/M2.3). Per spec R2 (SUNCO:SPEC-BLOCK deterministic extraction) and §12 BS1 (schema versioning — version: 1 const). Lenient additive: the 12 Phase-40 content fields are required plus the BS1 version meta-field (13 required total); additionalProperties permitted so downstream phases (Phase 41 ui-review, Phase 48 cross-domain) may extend without a schema bump. BS1 version field backfilled post-Phase-47 (2026-04-19) to align with api/data/event/ops schemas shipped in Phase 45/46.",
   "type": "object",
   "additionalProperties": true,
   "required": [
+    "version",
     "layout",
     "components",
     "states",
@@ -20,6 +21,10 @@
     "error_states_handled"
   ],
   "properties": {
+    "version": {
+      "description": "Schema version per §12 BS1. Constant 1 for Phase 40 output. Future schema bumps increment this and ship coordinated schema migrations (same discipline as api/data/event/ops schemas).",
+      "const": 1
+    },
     "layout": {
       "description": "High-level layout intent: structure, grid, page regions. Prose or structured; lenient.",
       "oneOf": [
