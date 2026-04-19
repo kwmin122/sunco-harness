@@ -1,0 +1,73 @@
+/* Phase 51 frontend-web-sample fixture — intentionally antipattern-dense.
+ * Target: ≥7 Impeccable rules fire.
+ */
+
+/* single-font — one font for everything */
+* {
+  font-family: "Helvetica", sans-serif;
+}
+
+/* pure-black-white — pure #000 background / #FFF text */
+body {
+  background-color: #000000;
+  color: #FFFFFF;
+  margin: 0;
+  padding: 2px; /* cramped-padding */
+  font-size: 10px; /* tiny-text */
+  line-height: 1.1; /* tight-leading */
+  text-align: center; /* everything-centered */
+}
+
+/* flat-type-hierarchy — all headings near-equal size */
+h1 { font-size: 16px; font-weight: 400; }
+h2 { font-size: 15px; font-weight: 400; }
+h3 { font-size: 14px; font-weight: 400; }
+
+/* gradient-text — background-clip text with linear-gradient */
+.gradient-title {
+  background: linear-gradient(90deg, #ff00ff, #00ffff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* all-caps-body — text-transform uppercase applied broadly */
+.caps-body {
+  text-transform: uppercase;
+  letter-spacing: 0.2em; /* wide-tracking */
+  font-size: 10px; /* tiny-text reinforced */
+}
+
+/* everything-centered / centered-column */
+.centered-column {
+  margin: 0 auto;
+  text-align: center;
+  padding: 2px; /* cramped-padding reinforced */
+}
+
+/* dark-glow — dark bg + glowing box-shadow on cards */
+.card {
+  background-color: #111111;
+  box-shadow: 0 0 24px 6px rgba(0, 255, 255, 0.7);
+  border-radius: 8px;
+  margin: 4px;
+  padding: 2px;
+}
+
+/* bounce-easing — overshoot cubic-bezier on interactive elements */
+.bouncy-btn {
+  background-color: #000000;
+  color: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  padding: 2px 4px;
+  transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+.bouncy-btn:hover {
+  transform: scale(1.1);
+}
+
+/* hero reinforced cramped */
+.hero {
+  padding: 2px;
+}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Phase 51 antipattern-dense fixture</title>
+  <style>
+    /* single-font + overused-font baseline */
+    * { font-family: "Helvetica", sans-serif; }
+
+    /* pure-black-white + tiny-text + tight-leading + everything-centered */
+    body {
+      background-color: #000000;
+      color: #FFFFFF;
+      margin: 0;
+      padding: 2px;
+      font-size: 10px;
+      line-height: 1.1;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    /* flat-type-hierarchy — h1/h2/h3 near-equal */
+    h1 { font-size: 16px; font-weight: 400; }
+    h2 { font-size: 15px; font-weight: 400; }
+    h3 { font-size: 14px; font-weight: 400; }
+
+    /* gradient-text */
+    .gradient-title {
+      background: linear-gradient(90deg, #ff00ff, #00ffff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    /* dark-glow cards */
+    .card {
+      background-color: #111111;
+      box-shadow: 0 0 24px 6px rgba(0, 255, 255, 0.7);
+      border-radius: 8px;
+      margin: 4px;
+      padding: 2px;
+      color: #FFFFFF;
+    }
+
+    /* justified-text */
+    .body-copy {
+      text-align: justify;
+      font-size: 10px;
+      line-height: 1.1;
+      padding: 2px;
+      text-transform: uppercase;
+    }
+
+    /* bounce-easing */
+    .bouncy-btn {
+      background-color: #000000;
+      color: #FFFFFF;
+      border: 1px solid #FFFFFF;
+      padding: 2px 4px;
+      font-size: 10px;
+      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    .bouncy-btn:hover { transform: scale(1.1); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="gradient-title">Welcome to the demo</h1>
+    <h3 class="gradient-title">Skipped heading two — h1 to h3 directly</h3>
+    <p class="body-copy" style="font-size: 10px; line-height: 1.1; padding: 2px; text-transform: uppercase;">
+      THIS IS BODY COPY RENDERED IN ALL CAPS WITH TINY TEXT AND CRAMPED PADDING INSIDE A VERY DENSE LAYOUT WHERE EVERY LINE IS PACKED AGAINST THE NEXT WITHOUT BREATHING ROOM
+    </p>
+  </header>
+
+  <main>
+    <section class="card" style="padding: 2px;">
+      <h3 class="gradient-title">Feature one</h3>
+      <p class="body-copy" style="font-size: 10px; line-height: 1.1; padding: 2px; text-transform: uppercase;">
+        DESCRIPTION TEXT CRAMPED INTO SMALL PADDING AREA WITH NO ROOM FOR THE EYE TO REST ON THE CONTENT BEING PRESENTED IN THIS FEATURE BLOCK
+      </p>
+      <div class="card" style="padding: 2px; background-color: #222222; box-shadow: 0 0 12px 5px rgba(255,0,255,0.6);">
+        <p class="body-copy" style="font-size: 10px;">NESTED CARD BODY COPY WITH TIGHT LAYOUT AND ALL CAPS TREATMENT</p>
+      </div>
+      <button class="bouncy-btn">Action</button>
+    </section>
+
+    <section class="card" style="padding: 2px;">
+      <h3 class="gradient-title">Feature two</h3>
+      <p class="body-copy" style="font-size: 10px; line-height: 1.1; padding: 2px; text-transform: uppercase;">
+        ANOTHER CRAMPED FEATURE BLOCK WITH UPPERCASE BODY TEXT OF SUFFICIENT LENGTH TO TRIGGER THE ALL-CAPS BODY ANTIPATTERN DETECTOR RULE
+      </p>
+      <button class="bouncy-btn">Action</button>
+    </section>
+
+    <section class="card" style="padding: 2px;">
+      <h3 class="gradient-title">Feature three</h3>
+      <p class="body-copy" style="font-size: 10px; line-height: 1.1; padding: 2px; text-transform: uppercase;">
+        THIRD CRAMPED FEATURE TEXT BLOCK WITH THE SAME PATTERN REPEATING AGAIN IN UPPERCASE LETTERS WITH TINY FONT SIZE
+      </p>
+      <button class="bouncy-btn">Action</button>
+    </section>
+  </main>
+
+  <footer>
+    <p class="body-copy" style="font-size: 10px; text-transform: uppercase;">TINY FOOTER NOTE ALSO RENDERED IN ALL CAPS AT TEN PIXEL FONT SIZE</p>
+  </footer>
+</body>
+</html>

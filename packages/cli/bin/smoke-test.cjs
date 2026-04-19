@@ -2909,6 +2909,117 @@ if (fs.existsSync(findingSchemaPath)) {
     Array.isArray(schema.oneOf) && schema.oneOf.length === 3);
 }
 
+// ─── Section 26 — Phase 51/M5.2 dogfood + test coverage ──────────────────────
+//
+// Contract tested (spec §9 Phase 5.2 deliverables + Gate 51 v2 10+1 axes):
+//   T1 5 fixture directories exist under test/fixtures/ with required seed files
+//      (spec §9 L782-786 + Gate 51 G2 fixture set + G6/G7 separation)
+//   T2 5 vitest test runners exist under packages/skills-workflow/src/shared/__tests__/
+//      with phase51- prefix (Gate 51 G2 runner location; Path-A auto-pickup)
+//   T3 Phase 51 dogfood artifacts exist: API-SPEC.md / BACKEND-AUDIT.md /
+//      DOGFOOD-RUNTIME.md (G4 measurement-only closure + G5 bounded scope)
+//   T4 51-CONTEXT.md populated with Gate 51 v2 decisions (G1-G11 + divergent resolutions)
+//   T5 BS3 recovery snapshot branch `sunco-pre-dogfood` exists at Phase 50 HEAD
+//      (G11 — skipped in CI where branch may not propagate; soft-asserted locally)
+//   T6 Regression: Sections 1-25 unchanged; Phase 48/49/50 assets intact
+
+const s26Phase51Dir = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '51-dogfood-test-coverage');
+const s26FixtureRoot = path.resolve(__dirname, '..', '..', '..', 'test', 'fixtures');
+const s26TestRoot = path.resolve(__dirname, '..', '..', 'skills-workflow', 'src', 'shared', '__tests__');
+
+console.log(`\n${BOLD}26. dogfood + test coverage (Phase 51/M5.2)${RESET}`);
+
+// 26a. 5 fixture directories + required seed files (T1)
+const s26Fixtures = [
+  { dir: 'backend-rest-sample', must: ['README.md', 'positive/raw-sql-interpolation.ts', 'negative/raw-sql-interpolation.ts', 'positive/migrations/001-drop-legacy.sql'] },
+  { dir: 'frontend-web-sample', must: ['README.md', 'index.html', 'styles.css'] },
+  { dir: 'cross-domain-conflict', must: ['README.md', 'UI-SPEC.md', 'API-SPEC.md'] },
+  { dir: 'proceed-gate-lifecycle', must: ['README.md', 'BACKEND-AUDIT.md', 'CROSS-DOMAIN-FINDINGS.md'] },
+  { dir: 'ui-review-regression', must: ['README.md', 'EXPECTED-CLI-SURFACE.md'] },
+];
+for (const fx of s26Fixtures) {
+  const dir = path.join(s26FixtureRoot, fx.dir);
+  check(`test/fixtures/${fx.dir}/ directory exists (T1)`, fs.existsSync(dir));
+  for (const file of fx.must) {
+    const full = path.join(dir, file);
+    check(`test/fixtures/${fx.dir}/${file} exists (T1)`, fs.existsSync(full));
+  }
+}
+
+// 26b. 5 vitest test runners (T2)
+const s26TestFiles = [
+  'phase51-backend-rest.test.ts',
+  'phase51-frontend-web.test.ts',
+  'phase51-cross-domain-conflict.test.ts',
+  'phase51-proceed-gate-lifecycle.test.ts',
+  'phase51-ui-review-regression.test.ts',
+];
+for (const tf of s26TestFiles) {
+  const full = path.join(s26TestRoot, tf);
+  check(`packages/skills-workflow/src/shared/__tests__/${tf} exists (T2)`, fs.existsSync(full));
+}
+
+// 26c. 3 dogfood artifacts + 51-CONTEXT.md populated (T3, T4)
+const s26ApiSpec = path.join(s26Phase51Dir, 'API-SPEC.md');
+const s26BackendAudit = path.join(s26Phase51Dir, 'BACKEND-AUDIT.md');
+const s26DogfoodRuntime = path.join(s26Phase51Dir, 'DOGFOOD-RUNTIME.md');
+const s26Context = path.join(s26Phase51Dir, '51-CONTEXT.md');
+
+check('Phase 51 API-SPEC.md exists (T3 dogfood artifact)', fs.existsSync(s26ApiSpec));
+check('Phase 51 BACKEND-AUDIT.md exists (T3 dogfood artifact)', fs.existsSync(s26BackendAudit));
+check('Phase 51 DOGFOOD-RUNTIME.md exists (T3 BS2 measurement-only closure)', fs.existsSync(s26DogfoodRuntime));
+
+if (fs.existsSync(s26ApiSpec)) {
+  const api = fs.readFileSync(s26ApiSpec, 'utf8');
+  check('API-SPEC.md contains CLI API mapping disclaimer (G1)',
+    /CLI API mapping disclaimer/i.test(api) && /slash-command/i.test(api));
+  check('API-SPEC.md declares /sunco/proceed-gate endpoint (G5 bounded)',
+    /\/sunco\/proceed-gate/.test(api));
+  check('API-SPEC.md carries SPEC-BLOCK with version 1 (BS1)',
+    /SUNCO:SPEC-BLOCK-START[\s\S]*version:\s*1[\s\S]*SUNCO:SPEC-BLOCK-END/.test(api));
+}
+
+if (fs.existsSync(s26BackendAudit)) {
+  const audit = fs.readFileSync(s26BackendAudit, 'utf8');
+  const severityCount = (audit.match(/severity:\s*(HIGH|MEDIUM|LOW)/g) || []).length;
+  check('BACKEND-AUDIT.md carries ≥5 findings processed (spec §9 L793)', severityCount >= 5);
+  check('BACKEND-AUDIT.md audit_version:1 declared',
+    /audit_version:\s*1/.test(audit));
+  check('BACKEND-AUDIT.md uses Phase 47 surface-section format',
+    /## API findings/.test(audit));
+}
+
+if (fs.existsSync(s26DogfoodRuntime)) {
+  const runtime = fs.readFileSync(s26DogfoodRuntime, 'utf8');
+  check('DOGFOOD-RUNTIME.md records measurement-only BS2 closure (G4)',
+    /token_count:\s*unavailable/i.test(runtime) || /token_count:\s*\d+/.test(runtime));
+  check('DOGFOOD-RUNTIME.md references sunco-pre-dogfood branch snapshot (G11)',
+    /sunco-pre-dogfood/.test(runtime));
+}
+
+if (fs.existsSync(s26Context)) {
+  const ctx = fs.readFileSync(s26Context, 'utf8');
+  check('51-CONTEXT.md populated with Gate 51 v2 decisions (T4)',
+    /Gate 51 v2/.test(ctx) && /G1[\s\S]{0,400}G11/.test(ctx));
+  check('51-CONTEXT.md records BS3 preflight anchor (G11)',
+    /sunco-pre-dogfood/.test(ctx) && /3ac0ee9/.test(ctx));
+  check('51-CONTEXT.md records out-of-scope hard-lock (G9)',
+    /out-of-scope/i.test(ctx) && /Phase 35-50/.test(ctx));
+}
+
+// 26d. Regression: Phase 48/49/50 assets unchanged content-markers (T6)
+if (fs.existsSync(findingSchemaPath)) {
+  const schema = JSON.parse(fs.readFileSync(findingSchemaPath, 'utf8'));
+  check('Phase 49 finding.schema.json oneOf unchanged through Phase 51 (T6)',
+    Array.isArray(schema.oneOf) && schema.oneOf.length === 3);
+}
+if (fs.existsSync(s25CrossDomainDoc)) {
+  const md = fs.readFileSync(s25CrossDomainDoc, 'utf8');
+  check('Phase 50 cross-domain.md L685 amendment closure intact (T6)',
+    /L685|line 685/i.test(md));
+}
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);
