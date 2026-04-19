@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sunco-harness.local/packages/cli/schemas/ops-spec.schema.json",
+  "title": "SUNCO OPS-SPEC SPEC-BLOCK",
+  "description": "Schema for the YAML SPEC-BLOCK fenced inside OPS-SPEC.md produced by backend-phase-ops (Phase 46/M3.5). Per spec R2 (SUNCO:SPEC-BLOCK deterministic extraction) and BS1 (schema versioning). Lenient additive: listed fields required, additionalProperties permitted so downstream phases (Phase 47 backend-review-ops) may extend without schema bump. slo field is a structural projection of BACKEND-CONTEXT.md SLO section, NOT a verbatim duplicate — BACKEND-CONTEXT remains the source of truth for SLO intent.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "version",
+    "deployment_topology",
+    "observability",
+    "slo",
+    "anti_pattern_watchlist"
+  ],
+  "properties": {
+    "version": {
+      "description": "Schema version per BS1. Constant 1 for Phase 46 output. Future schema bumps increment this and ship coordinated schema migrations.",
+      "const": 1
+    },
+    "deployment_topology": {
+      "description": "Deployment shape — single-region / multi-region (active-active or active-passive) / edge; rollout strategy (blue-green / canary / rolling); oncall topology. Object form preferred; string form acceptable for simple shapes.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "observability": {
+      "description": "Observability posture across logs, metrics, and traces. Sub-objects required: logs, metrics, traces. Optional alerts array with per-alert name + threshold.",
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["logs", "metrics", "traces"],
+      "properties": {
+        "logs": {
+          "description": "Log structure + level policy + retention.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object", "additionalProperties": true }
+          ]
+        },
+        "metrics": {
+          "description": "Required dimensions + SLI list + aggregation windows.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object", "additionalProperties": true }
+          ]
+        },
+        "traces": {
+          "description": "Propagation format + sampling policy.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object", "additionalProperties": true }
+          ]
+        },
+        "alerts": {
+          "description": "Alert inventory. Each alert has a name + threshold expression; runbook pointer optional (top-level runbook[] carries the action text).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["name", "threshold"],
+            "properties": {
+              "name": { "type": "string" },
+              "threshold": { "type": "string" },
+              "runbook_ref": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "runbook": {
+      "description": "Optional runbook entries — alert → action mapping. Each entry has alert (matching observability.alerts[].name) + action (prose instruction).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["alert", "action"],
+        "properties": {
+          "alert": { "type": "string" },
+          "action": { "type": "string" }
+        }
+      }
+    },
+    "slo": {
+      "description": "Structural projection of BACKEND-CONTEXT SLO section. availability as n-nines string (e.g., '99.9%'); latency_p95_ms as integer milliseconds. MUST NOT verbatim-duplicate BACKEND-CONTEXT prose — projection only; BACKEND-CONTEXT remains source of truth.",
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["availability", "latency_p95_ms"],
+      "properties": {
+        "availability": {
+          "description": "Availability target as n-nines string (e.g., '99.9%', '99.95%', '99.99%').",
+          "type": "string"
+        },
+        "latency_p95_ms": {
+          "description": "p95 latency budget in milliseconds.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "latency_p99_ms": {
+          "description": "Optional p99 latency budget in milliseconds.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "error_budget_policy": {
+      "description": "Optional error-budget policy — burn rate threshold, freeze criteria, alerting pointer. Prose acceptable.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true },
+        { "type": "null" }
+      ]
+    },
+    "anti_pattern_watchlist": {
+      "description": "Phase 42 backend-excellence anti-patterns this ops surface must avoid. Done-when (Phase 46) requires at least 3 entries, each citing a Phase 42 reference file (e.g., observability-and-operations.md / reliability-and-failure-modes.md). Prefer anti-patterns labeled 'Detection: deterministic candidate' that Phase 43 detector covers (missing-timeout, swallowed-catch, logged-secret).",
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["pattern"],
+            "properties": {
+              "pattern": { "type": "string" },
+              "source": {
+                "type": "string",
+                "description": "Phase 42 reference file (e.g., 'observability-and-operations.md', 'reliability-and-failure-modes.md')."
+              },
+              "why": { "type": "string" }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

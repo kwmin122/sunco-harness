@@ -1,28 +1,374 @@
-# Backend Phase Workflow — Event Surface (stub)
+# Backend Phase Workflow — EVENT Surface
 
-**Status:** Implementation pending in Phase 46/M3.5.
-
-This stub is dispatched by `backend-phase.md` (router) when the user invokes `/sunco:backend-phase --surface event`. The full event-surface workflow — design contract for event schemas, pub/sub contracts, delivery semantics, eventing topology — will be authored in Phase 46/M3.5 alongside `backend-phase-ops.md`.
+Generate an eventing-surface design contract (EVENT-SPEC.md) for a phase that includes backend event/pub-sub work. Loads 2 clean-room Phase 42 backend-excellence references per Phase 42 README load-strategy table (reliability-and-failure-modes, boundaries-and-architecture — spec §7 Phase 3.5 is silent on ref list, README is the local authority), spawns the `sunco-backend-researcher` agent with `--surface event` for 3-stage research, then writes EVENT-SPEC.md with a deterministic `<!-- SUNCO:SPEC-BLOCK -->` fenced YAML block that validates against `packages/cli/schemas/event-spec.schema.json`. Used by `/sunco:backend-phase --surface event` (Phase 46/M3.5+).
 
 ---
 
-## Behavior in Phase 37/M1.3 (skeleton)
+## Overview
 
-When invoked via `/sunco:backend-phase --surface event`:
+Six steps (mirrors Phase 40 ui-phase-web + Phase 45 backend-phase-api/data structure):
 
-- Emits the stub message below.
-- Does **not** write any artifact.
-- Does **not** spawn any agent.
-- Exits cleanly.
+1. **Require BACKEND-CONTEXT.md** — hard-stop if backend context hasn't been gathered
+2. **Read phase context + backend context** — CONTEXT.md + BACKEND-CONTEXT.md (inline bash, no loader module in v1)
+3. **Spawn sunco-backend-researcher --surface event** — 3-stage research (ref-load → outline → write), 2 Phase 42 refs, 30k token ceiling
+4. **Write EVENT-SPEC.md** — prose sections + `<!-- SUNCO:SPEC-BLOCK -->` YAML (R2)
+5. **Validate SPEC-BLOCK** — schema structural check + ≥3 anti-patterns + `version: 1` (BS1) + per-event ordering/delivery enums
+6. **Present for review + commit**
 
-**Message to user:**
+> This workflow is the **EVENT surface branch** dispatched by `backend-phase.md` (Phase 37 router). Surface selection (`--surface api|data|event|ops`) is handled upstream. Phase 45 activated api+data; Phase 46 activates event+ops; Phase 47 wires `backend-review-*` for SPEC consumption.
+
+---
+
+## Step 1: Require BACKEND-CONTEXT.md
+
+The EVENT surface cannot proceed without gathered backend context. Event-contract decisions depend critically on `Domain` (what the system coordinates), `Traffic profile` (fan-out scale, ordering requirements at peak), and `Deployment model` (single-region vs multi-region affects delivery semantics) from Phase 44's teach. BACKEND-CONTEXT.md captures 5 required sections plus an optional auto-detected `Tech stack / runtime` section.
+
+Parse `$ARGUMENTS`:
+
+| Token | Variable | Default |
+|-------|----------|---------|
+| First numeric token | `PHASE_ARG` | current phase from STATE.md |
+
+Check for the canonical backend context:
+
+```bash
+CONTEXT_FILE=".planning/domains/backend/BACKEND-CONTEXT.md"
+if [ ! -f "$CONTEXT_FILE" ]; then
+  echo "✗ No backend context found at $CONTEXT_FILE"
+  echo ""
+  echo "Run /sunco:discuss ${PHASE_ARG} --domain backend first to gather:"
+  echo "  - Domain (e-commerce / SaaS / content / internal / other)"
+  echo "  - Traffic profile (QPS avg, peak, geographic distribution)"
+  echo "  - Data sensitivity (PII / payment / health / tier classification)"
+  echo "  - SLO (p95/p99 latency, availability 9s)"
+  echo "  - Deployment model (serverless / k8s / bare-VM / bare-metal / edge)"
+  echo ""
+  echo "Event contracts cannot be inferred from code — ordering, delivery"
+  echo "guarantees, and DLQ posture come from stated intent."
+  exit 1
+fi
+```
+
+**Hard stop rule (Phase 44 lock):** This workflow MUST NOT invoke the backend teach mode. The canonical capture path is `/sunco:discuss --domain backend` which writes `.planning/domains/backend/BACKEND-CONTEXT.md`. This workflow is a read-only consumer.
+
+---
+
+## Step 2: Read Phase Context + Backend Context
+
+Locate phase directory:
+
+```bash
+PADDED=$(printf "%02d" "$PHASE_ARG")
+PHASE_DIR=$(ls -d .planning/phases/${PADDED}-* 2>/dev/null | head -1)
+```
+
+Read phase CONTEXT:
+
+```bash
+cat "${PHASE_DIR}"/*-CONTEXT.md
+cat .planning/ROADMAP.md | grep -A 20 "Phase ${PADDED}"
+cat .planning/REQUIREMENTS.md 2>/dev/null
+```
+
+Read backend context via inline bash (no loader module in v1 — Phase 47 scope when structured reading is needed for review-agent wire-up):
+
+```bash
+BACKEND_CTX_FILE=".planning/domains/backend/BACKEND-CONTEXT.md"
+
+# Extract each section by header. Must match Phase 44 schema section names
+# exactly — drift = spec violation.
+sed -n '/^## Domain$/,/^## /p' "$BACKEND_CTX_FILE" | sed '$d'
+sed -n '/^## Traffic profile$/,/^## /p' "$BACKEND_CTX_FILE" | sed '$d'
+sed -n '/^## Data sensitivity$/,/^## /p' "$BACKEND_CTX_FILE" | sed '$d'
+sed -n '/^## SLO$/,/^## /p' "$BACKEND_CTX_FILE" | sed '$d'
+sed -n '/^## Deployment model$/,/^## /p' "$BACKEND_CTX_FILE" | sed '$d'
+
+# Optional (Phase 44 auto-detected; may be absent if repo yielded no match):
+sed -n '/^## Tech stack \/ runtime (auto-detected)$/,$p' "$BACKEND_CTX_FILE"
+```
+
+These 5 required sections + 1 optional are passed to the researcher as prose blocks. No structured parsing at this layer — the researcher reads them as plain-text prompt context. `Domain` + `Deployment model` are the highest-leverage sections for event-contract decisions; the researcher prioritizes them when choosing ordering guarantees and DLQ destination.
+
+---
+
+## Step 3: Spawn sunco-backend-researcher
+
+Spawn the backend researcher with `--surface event` routing and the README-authoritative ref subset:
 
 ```
-⚠ /sunco:backend-phase --surface event is not yet implemented.
-  Event-surface backend contracts ship in Phase 46/M3.5 (Impeccable Fusion v1.4).
-  Until then, use /sunco:discuss <phase> for general phase scoping.
+Task(
+  prompt="
+Produce EVENT-SPEC.md for Phase XX — [Phase Name]. Surface: event.
+
+Phase context:
+  [paste ${PHASE_DIR}/*-CONTEXT.md content]
+
+Phase goal (from ROADMAP.md):
+  [paste phase section]
+
+Backend context (Phase 44 — canonical):
+  ## Domain
+    [section — event coordination scope]
+  ## Traffic profile
+    [section — fan-out scale, peak QPS]
+  ## Data sensitivity
+    [section]
+  ## SLO
+    [section]
+  ## Deployment model
+    [section — single vs multi region affects delivery]
+  ## Tech stack / runtime (auto-detected)
+    [section — may be 'absent' if Phase 44 teach run yielded no repo match]
+
+Required reference subset (Phase 42 README load-strategy — 2 files):
+  packages/cli/references/backend-excellence/reference/reliability-and-failure-modes.md
+  packages/cli/references/backend-excellence/reference/boundaries-and-architecture.md
+
+Optional secondary refs (README — read only if Stage 1 budget permits ≤8k cap):
+  packages/cli/references/backend-excellence/reference/performance-and-scale.md
+  packages/cli/references/backend-excellence/reference/observability-and-operations.md
+
+Note: spec §7 Phase 3.5 is silent on ref list (unlike Phase 45 api/data which were
+spec-verbatim). Phase 42 README load-strategy table is the local authority chosen at
+Focused+ Gate 46. README is a living document; future phases may revise the event row
+only after Gate re-justification.
+
+Research protocol: 3-stage (ref-load → outline → write).
+Token ceiling: 30k total (8k / 4k / 15k per stage + 3k buffer).
+
+Required output: .planning/phases/[N]-*/EVENT-SPEC.md containing:
+  - <!-- spec_version: 1 --> top-of-file marker
+  - Prose sections: Event Intent, Events Inventory, Ordering & Delivery
+    Semantics, Idempotency & Keys, Dead-Letter Strategy, Anti-pattern Watchlist
+  - <!-- SUNCO:SPEC-BLOCK-START --> fenced ```yaml ... ``` block validating
+    against packages/cli/schemas/event-spec.schema.json
+  - SPEC-BLOCK required fields: version (const:1), events[] (each with name +
+    producer + consumers + ordering enum + delivery_guarantee enum; optional
+    schema + retention), dead_letter_strategy, idempotency_keys,
+    anti_pattern_watchlist (minItems:3, each citing a Phase 42 reference file
+    in source:)
+
+Hard guards:
+  - MUST NOT invoke Phase 43 detector (detect-backend-smells.mjs).
+    Phase 46 is contract authoring only; detector wires in Phase 47.
+  - MUST NOT wire into /sunco:backend-review (Phase 47 scope).
+  - MUST NOT modify BACKEND-CONTEXT.md (read-only consumer).
+  - MUST NOT modify Phase 42 reference/*.md (frozen per Phase 43
+    Escalate #5).
+  - MUST NOT include endpoint request/response schemas — those belong in
+    API-SPEC.md. Event `schema:` fields describe event payload bodies only.
+  ",
+  subagent_type="sunco-backend-researcher",
+  description="Backend EVENT research for Phase XX"
+)
+```
+
+The agent handles its own token budgeting per stage. On overrun it drops secondary refs first; REQUIRED refs cannot be dropped. (Event surface has only 2 required refs so the pressure is lower than API surface's 4.)
+
+---
+
+## Step 4: Write EVENT-SPEC.md
+
+The researcher writes `${PHASE_DIR}/EVENT-SPEC.md` directly. The orchestrator does not rewrite the body; it only performs validation in Step 5.
+
+Expected structure (produced by the agent — see `agents/sunco-backend-researcher.md`):
+
+```markdown
+<!-- spec_version: 1 -->
+
+# EVENT-SPEC — Phase XX [phase-name]
+
+## Event Intent
+[1 paragraph — what this eventing surface coordinates, shaped by Domain + Deployment model]
+
+## Events Inventory
+[prose overview — event name + producer + consumer set per bullet; full per-event detail in SPEC-BLOCK]
+
+## Ordering & Delivery Semantics
+[prose — strict vs best-effort ordering per event family; at-least-once is
+ default for distributed systems, exactly-once only with transactional outbox
+ or idempotent consumers]
+
+## Idempotency & Keys
+[prose — where idempotency keys come from (producer-assigned UUID, request
+ ID, content hash), TTL stance, consumer-side dedup strategy]
+
+## Dead-Letter Strategy
+[prose — DLQ destination per event family, max retry count, reprocess posture
+ (manual vs automated), observability on DLQ depth]
+
+## Anti-pattern Watchlist
+[3-7 anti-patterns, each with Phase 42 reference citation + 1-sentence why]
+
+<!-- SUNCO:SPEC-BLOCK-START -->
+```yaml
+version: 1
+events:
+  - name: UserSignedUp
+    producer: auth-service
+    consumers: [email-service, analytics-service]
+    schema: "{user_id: uuid, email: string, signed_up_at: timestamptz}"
+    ordering: best-effort
+    delivery_guarantee: at-least-once
+    retention: 7d
+dead_letter_strategy:
+  destination: dlq.user-events
+  max_retries: 5
+  backoff: exponential
+idempotency_keys:
+  source: producer-assigned-uuid
+  ttl: 24h
+  dedup_scope: per-consumer
+anti_pattern_watchlist:
+  - pattern: silent-event-drop
+    source: reliability-and-failure-modes.md
+    why: Events must route to DLQ on consumer failure, never be silently dropped.
+  - pattern: ...
+  - pattern: ...
+```
+<!-- SUNCO:SPEC-BLOCK-END -->
 ```
 
 ---
 
-*Stub introduced in Phase 37/M1.3 (2026-04-18). Replaced by full implementation in Phase 46/M3.5. See `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` §4 Phase 3.5 for populating deliverables.*
+## Step 5: Validate SPEC-BLOCK
+
+Extract the YAML body between the marker comments and validate against the schema:
+
+```bash
+EVENT_SPEC="${PHASE_DIR}/EVENT-SPEC.md"
+SCHEMA="packages/cli/schemas/event-spec.schema.json"
+
+# Extract YAML body
+awk '/<!-- SUNCO:SPEC-BLOCK-START -->/,/<!-- SUNCO:SPEC-BLOCK-END -->/' "$EVENT_SPEC" \
+  | awk '/^```yaml$/,/^```$/' \
+  | sed '1d;$d' \
+  > /tmp/event-spec-block.yaml
+
+# Structural check (Phase 40/45 precedent: full ajv validator wired Phase 48+).
+# For Phase 46, enforce required-field + minItems + const version + per-event enums.
+node -e "
+  const yaml = require('yaml');
+  const fs = require('fs');
+  const schema = JSON.parse(fs.readFileSync('$SCHEMA', 'utf8'));
+  const body = yaml.parse(fs.readFileSync('/tmp/event-spec-block.yaml', 'utf8'));
+
+  if (body.version !== 1) {
+    console.error('FAIL version must be 1, got', body.version);
+    process.exit(1);
+  }
+  for (const k of schema.required) {
+    if (!(k in body)) { console.error('FAIL missing field:', k); process.exit(1); }
+  }
+  if (!Array.isArray(body.events) || body.events.length < 1) {
+    console.error('FAIL events needs >= 1 entry');
+    process.exit(1);
+  }
+  const ORDERING = ['strict', 'best-effort', 'none'];
+  const DELIVERY = ['at-least-once', 'at-most-once', 'exactly-once'];
+  for (const e of body.events) {
+    if (!e.name) { console.error('FAIL event missing name'); process.exit(1); }
+    if (!e.producer) { console.error('FAIL event', e.name, 'missing producer'); process.exit(1); }
+    if (!Array.isArray(e.consumers)) {
+      console.error('FAIL event', e.name, 'consumers must be array'); process.exit(1);
+    }
+    if (!ORDERING.includes(e.ordering)) {
+      console.error('FAIL event', e.name, 'ordering must be', ORDERING.join('|'), 'got', e.ordering);
+      process.exit(1);
+    }
+    if (!DELIVERY.includes(e.delivery_guarantee)) {
+      console.error('FAIL event', e.name, 'delivery_guarantee must be', DELIVERY.join('|'), 'got', e.delivery_guarantee);
+      process.exit(1);
+    }
+  }
+  if (!Array.isArray(body.anti_pattern_watchlist) || body.anti_pattern_watchlist.length < 3) {
+    console.error('FAIL anti_pattern_watchlist needs >= 3 entries, got',
+      (body.anti_pattern_watchlist || []).length);
+    process.exit(1);
+  }
+  console.log('✓ SPEC-BLOCK valid: version=1, all required fields,',
+    body.events.length, 'events,',
+    body.anti_pattern_watchlist.length, 'anti-patterns');
+"
+```
+
+On failure: surface the error and ask the researcher to revise (re-run Stage 3 only). Do NOT proceed to Step 6 with an invalid SPEC-BLOCK.
+
+Full `ajv` validator wire-up is deferred to Phase 48+ — structural check is sufficient for Phase 46 done-when.
+
+---
+
+## Step 6: Present for Review + Commit
+
+Display summary inline:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SUNCO ► BACKEND SPEC (event)  Phase XX: [Phase Name]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+N events  |  M anti-patterns watched  |  version: 1
+
+Phase 42 references consulted (README authority, spec §7 silent):
+  reliability-and-failure-modes · boundaries-and-architecture
+  (+ secondary: performance-and-scale, observability-and-operations
+   — if loaded under budget)
+
+Token usage: ~XXk / 30k ceiling
+
+SPEC-BLOCK: ✓ 5/5 required fields, ≥3 anti-patterns, version=1 (BS1)
+Per-event: ordering ∈ {strict|best-effort|none}, delivery_guarantee ∈ {at-least-once|at-most-once|exactly-once}
+
+Looks good? (yes / adjust [describe change])
+```
+
+On "yes":
+
+```bash
+git add "${PHASE_DIR}/EVENT-SPEC.md"
+git commit -m "docs: EVENT spec for phase ${PADDED} — N events, K anti-patterns"
+```
+
+On "adjust": re-run Step 3 Stage 3 (Write) only with the adjustment hint. Re-run Stage 2 only if the adjustment invalidates the outline.
+
+---
+
+## Success Criteria
+
+- [ ] `.planning/domains/backend/BACKEND-CONTEXT.md` exists at Step 1 (hard-stop otherwise)
+- [ ] Backend context read via inline bash; all 5 required sections extracted (Tech stack / runtime optional)
+- [ ] `sunco-backend-researcher` agent spawned with `--surface event` + full phase + backend context
+- [ ] 2 required Phase 42 refs loaded in Stage 1 (reliability-and-failure-modes, boundaries-and-architecture)
+- [ ] 3-stage research executed; token budget stayed under 30k
+- [ ] EVENT-SPEC.md written to `${PHASE_DIR}/EVENT-SPEC.md`
+- [ ] `<!-- spec_version: 1 -->` top-of-file marker present (§12 BS1)
+- [ ] SPEC-BLOCK contains all 5 required fields (version + events + dead_letter_strategy + idempotency_keys + anti_pattern_watchlist)
+- [ ] Each event has `name` + `producer` + `consumers` (array) + `ordering` enum + `delivery_guarantee` enum
+- [ ] `anti_pattern_watchlist` has ≥3 entries, each citing a Phase 42 reference
+- [ ] `version: 1` in SPEC-BLOCK YAML (BS1)
+- [ ] Schema structural validation passes (Step 5)
+- [ ] Phase 42 reference docs unchanged (diff=0; Phase 43 Escalate #5)
+- [ ] Phase 43 detector not invoked (Phase 47 wire point)
+- [ ] BACKEND-CONTEXT.md not written by this workflow (read-only consumer; Phase 44 lock)
+- [ ] Vendored Impeccable source unchanged (R5)
+- [ ] User confirmed before commit
+
+---
+
+## Out-of-scope guardrails
+
+Phase 46 / this workflow MUST NOT:
+- Invoke the Phase 43 backend detector (`detect-backend-smells.mjs`) — Phase 47/M3.6 scope
+- Wire into `/sunco:backend-review` or any `backend-review-*` workflow (Phase 47 scope)
+- Modify `packages/cli/references/backend-excellence/reference/**` (Phase 43 Escalate #5 still active)
+- Modify `BACKEND-CONTEXT.md` or its schema (Phase 44 lock)
+- Modify `discuss-phase.md` (FRONTEND or BACKEND block)
+- Modify `backend-phase-ops.md` logic (sibling surface — shared scaffold but authored in parallel)
+- Modify Phase 45 `backend-phase-api.md` / `backend-phase-data.md` / `api-spec.schema.json` / `data-spec.schema.json` (Phase 45 locked)
+- Activate any `backend-review-*.md` stubs (Phase 47)
+- Touch `~/.claude/sunco` runtime files
+- Produce or consume `.impeccable.md` (SDI-1 continuation)
+- Include endpoint request/response schemas — those live in API-SPEC.md (Phase 45)
+- Backfill Phase 40 `ui-spec.schema.json` BS1 version field (registered plan debt)
+
+*Phase 37/M1.3 introduced the stub; Phase 46/M3.5 replaces it with this behavioral workflow. See `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` §7 Phase 3.5.*

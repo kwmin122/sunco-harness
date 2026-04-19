@@ -423,10 +423,11 @@ if (!fs.existsSync(sourceWfDir)) {
 
   // Stub populating-phase references.
   // Phase 37 forward-ref: backend-phase-{api,data} target Phase 45 (activated),
-  // backend-phase-{event,ops} target Phase 46 (still stub). Phase 45 retired the
-  // "stub exits without dispatch" check for api/data; only event/ops retain it
-  // (Section 20 owns the positive assertion that api/data are now active).
-  const activeBackendPhaseSurfaces = new Set(['api', 'data']);
+  // backend-phase-{event,ops} target Phase 46 (activated). Phase 45 retired the
+  // "stub exits without dispatch" check for api/data; Phase 46 retires it for
+  // event/ops. All 4 are now active — Sections 20 + 21 own the positive
+  // assertions.
+  const activeBackendPhaseSurfaces = new Set(['api', 'data', 'event', 'ops']);
   const phaseStubTargets = { api: 45, data: 45, event: 46, ops: 46 };
   for (const [surface, targetPhase] of Object.entries(phaseStubTargets)) {
     const p = path.join(sourceWfDir, `backend-phase-${surface}.md`);
@@ -1324,12 +1325,12 @@ const BACKEND_ROUTER_EXPECTED_HASHES = {
 };
 const FRONTEND_BLOCK_EXPECTED_HASH =
   '0b723b2b632c9faf40ae30bd44b0cbf3872a5343be1a1fc0ddc94978062036ee';
-// Phase 45 activated backend-phase-{api,data}; they are no longer stubs. Section
-// 20 asserts their populated state. This list now covers only the remaining 6
-// stubs (2 event/ops from Phase 46, 4 review from Phase 47). Activation of any
-// of these 6 triggers their respective phase gate and a similar retire here.
+// Phase 45 activated backend-phase-{api,data} and Phase 46 activated
+// backend-phase-{event,ops}; they are no longer stubs. Sections 20 + 21 assert
+// their populated state. This list now covers only the remaining 4 review
+// stubs (all from Phase 47). Activation of any of these 4 triggers Phase 47
+// gate and a similar retire here.
 const SURFACE_STUB_FILES = [
-  'backend-phase-event.md', 'backend-phase-ops.md',
   'backend-review-api.md', 'backend-review-data.md',
   'backend-review-event.md', 'backend-review-ops.md',
 ];
@@ -1727,17 +1728,258 @@ if (fs.existsSync(phase45ContextPath)) {
   check('Phase 45 CONTEXT.md exists', false);
 }
 
-// 20n. Phase 46 stubs (event + ops) remain stubs (1-line sanity — main coverage is
-//      Section 19 SURFACE_STUB_LINE_THRESHOLD check; here we just reaffirm that
-//      Phase 45 did not leak into Phase 46 scope).
-check('Phase 46 event + ops stubs remain ≤200 lines (inherited threshold; 1-line sanity in Section 20)',
-  (() => {
-    const event = path.resolve(__dirname, '..', 'workflows', 'backend-phase-event.md');
-    const ops = path.resolve(__dirname, '..', 'workflows', 'backend-phase-ops.md');
-    const eventLines = fs.existsSync(event) ? fs.readFileSync(event, 'utf8').split('\n').length : 9999;
-    const opsLines = fs.existsSync(ops) ? fs.readFileSync(ops, 'utf8').split('\n').length : 9999;
-    return eventLines <= 200 && opsLines <= 200;
-  })());
+// 20n. Retired in Phase 46/M3.5 — event + ops stubs are now populated behavioral
+//      workflows (Section 21 asserts their populated state). The Phase 43 17j +
+//      Phase 44 14 + Phase 45 stub-exit retirement pattern continues.
+
+// ─── Section 21 — Phase 46/M3.5 backend-phase-event + backend-phase-ops ───
+//
+// Contract tested (Focused+ Gate 46 axes A1-A7, conditions absorbed):
+//   A1 Workflow populate — both files populated with 6-step behavioral structure
+//      (Phase 37 stub 28 lines -> >200 lines), hard-stop on BACKEND-CONTEXT.md
+//      absent, Phase 44 canonical path + 5 required + 1 optional section names
+//   A2 sunco-backend-researcher agent extension — 4-surface routing (api/data/
+//      event/ops), 30k token ceiling preserved, Phase 43/47 guards preserved
+//   A3 Reference loading set — Phase 42 README authority (spec §7 silent) —
+//      event=reliability+boundaries primary, ops=observability+reliability primary
+//   A4 SPEC.md output format — structure documented in agent + workflows
+//      (covered via A1 + A2 assertions; no runtime verification in smoke)
+//   A5 JSON schemas — event-spec + ops-spec exist, draft-07, additionalProperties,
+//      version const:1 (BS1), required fields + per-event enums (event) +
+//      observability sub-structure (ops) + slo {availability, latency_p95_ms} (ops)
+//      + anti_pattern_watchlist minItems:3 (both)
+//   A6 BACKEND-CONTEXT.md consumer contract — 4 workflows + 1 agent reference
+//      same canonical path + same 5-required + 1-optional section names
+//   A7 Frozen invariant preservation — NO history-dependent diff (Codex Gate 46
+//      condition 1: HEAD~1 forbidden); current-tree content assertions + SHA-256
+//      only. M2 adjacency-risk 3-file hash preserved (Phase 45 scope — no
+//      expansion). Phase 45 backend files covered via content-marker grep, not
+//      history diff. Phase 42 reference/*.md + Phase 43 detector + vendored
+//      Impeccable source current-tree existence + marker presence.
+
+const eventWorkflowPath = path.resolve(__dirname, '..', 'workflows', 'backend-phase-event.md');
+const opsWorkflowPath = path.resolve(__dirname, '..', 'workflows', 'backend-phase-ops.md');
+const eventSchemaPath = path.resolve(__dirname, '..', 'schemas', 'event-spec.schema.json');
+const opsSchemaPath = path.resolve(__dirname, '..', 'schemas', 'ops-spec.schema.json');
+const phase46ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '46-backend-phase-event-ops', '46-CONTEXT.md');
+
+const EVENT_REQUIRED_REFS = [
+  'reliability-and-failure-modes.md', 'boundaries-and-architecture.md',
+];
+const OPS_REQUIRED_REFS = [
+  'observability-and-operations.md', 'reliability-and-failure-modes.md',
+];
+
+// 21a. Both workflows populated (>200 lines, beyond Phase 37 stub 28 lines)
+for (const [label, p] of [['event', eventWorkflowPath], ['ops', opsWorkflowPath]]) {
+  if (fs.existsSync(p)) {
+    const lines = fs.readFileSync(p, 'utf8').split('\n').length;
+    check(`backend-phase-${label}.md populated (>200 lines, was 28 stub)`,
+      lines > 200);
+  } else {
+    check(`backend-phase-${label}.md exists`, false);
+  }
+}
+
+// 21b. 6-step markers in both workflows + correct output path (markers + path, not line-count alone)
+for (const [label, p, outPath] of [
+  ['event', eventWorkflowPath, 'EVENT-SPEC.md'],
+  ['ops', opsWorkflowPath, 'OPS-SPEC.md'],
+]) {
+  if (fs.existsSync(p)) {
+    const body = fs.readFileSync(p, 'utf8');
+    const steps = ['Step 1:', 'Step 2:', 'Step 3:', 'Step 4:', 'Step 5:', 'Step 6:'];
+    check(`backend-phase-${label}.md has all 6 Step markers`,
+      steps.every(s => body.includes(s)));
+    check(`backend-phase-${label}.md writes ${outPath} (path assertion)`,
+      body.includes(outPath));
+  }
+}
+
+// 21c. Step 1 hard-stop on BACKEND-CONTEXT.md absent (both workflows)
+for (const [label, p] of [['event', eventWorkflowPath], ['ops', opsWorkflowPath]]) {
+  check(`backend-phase-${label}.md Step 1 hard-stops on BACKEND-CONTEXT.md absent (exit 1)`,
+    fs.existsSync(p) && /if \[ ! -f "\$CONTEXT_FILE" \]/.test(fs.readFileSync(p, 'utf8'))
+    && /exit 1/.test(fs.readFileSync(p, 'utf8')));
+}
+
+// 21d. Both workflows reference the Phase 44 canonical path
+const BACKEND_CTX_PATH = '.planning/domains/backend/BACKEND-CONTEXT.md';
+for (const [label, p] of [['event', eventWorkflowPath], ['ops', opsWorkflowPath]]) {
+  check(`backend-phase-${label}.md references Phase 44 canonical path`,
+    fs.existsSync(p) && fs.readFileSync(p, 'utf8').includes(BACKEND_CTX_PATH));
+}
+
+// 21e. Both workflows + agent reference same Phase 44 section names (drift protection)
+const PHASE44_REQUIRED_SECTIONS = ['## Domain', '## Traffic profile',
+  '## Data sensitivity', '## SLO', '## Deployment model'];
+const PHASE44_OPTIONAL_SECTION = '## Tech stack / runtime (auto-detected)';
+for (const [label, p] of [['event', eventWorkflowPath], ['ops', opsWorkflowPath]]) {
+  if (fs.existsSync(p)) {
+    const body = fs.readFileSync(p, 'utf8');
+    check(`backend-phase-${label}.md references all 5 required Phase 44 section names`,
+      PHASE44_REQUIRED_SECTIONS.every(s => body.includes(s)));
+    check(`backend-phase-${label}.md references optional Phase 44 Tech stack section`,
+      body.includes(PHASE44_OPTIONAL_SECTION));
+  }
+}
+
+// 21f. sunco-backend-researcher agent expanded with 4-surface routing
+if (fs.existsSync(backendResearcherPath)) {
+  const body = fs.readFileSync(backendResearcherPath, 'utf8');
+  check('sunco-backend-researcher.md surface routing table includes api row',
+    /`api`\s*\|[^|]*api-design\.md/.test(body));
+  check('sunco-backend-researcher.md surface routing table includes data row',
+    /`data`\s*\|[^|]*data-modeling\.md/.test(body));
+  check('sunco-backend-researcher.md surface routing table includes event row',
+    /`event`\s*\|[^|]*reliability-and-failure-modes\.md[^|]*boundaries-and-architecture\.md/.test(body));
+  check('sunco-backend-researcher.md surface routing table includes ops row',
+    /`ops`\s*\|[^|]*observability-and-operations\.md[^|]*reliability-and-failure-modes\.md/.test(body));
+  check('sunco-backend-researcher.md 30k token ceiling preserved (Phase 45 → 46 unchanged)',
+    /30k/.test(body) && /8k.*4k.*15k|8k\s*.*\s*4k\s*.*\s*15k/s.test(body));
+  check('sunco-backend-researcher.md still forbids Phase 43 detector invocation',
+    /MUST NOT/.test(body) && /detect-backend-smells\.mjs/.test(body));
+  check('sunco-backend-researcher.md still forbids Phase 47 review wire',
+    /MUST NOT/.test(body) && /backend-review/.test(body));
+  check('sunco-backend-researcher.md documents OPS-SPEC slo structural-projection rule',
+    /structural projection/i.test(body) && /slo/i.test(body));
+} else {
+  check('sunco-backend-researcher.md exists', false);
+}
+
+// 21g. A3 ref-set compliance — workflows reference README-authoritative primary refs
+for (const ref of EVENT_REQUIRED_REFS) {
+  check(`backend-phase-event.md Stage 1 references ${ref}`,
+    fs.existsSync(eventWorkflowPath) && fs.readFileSync(eventWorkflowPath, 'utf8').includes(ref));
+}
+for (const ref of OPS_REQUIRED_REFS) {
+  check(`backend-phase-ops.md Stage 1 references ${ref}`,
+    fs.existsSync(opsWorkflowPath) && fs.readFileSync(opsWorkflowPath, 'utf8').includes(ref));
+}
+
+// 21h. event-spec.schema.json validation (A5)
+if (fs.existsSync(eventSchemaPath)) {
+  let eventSchema;
+  try { eventSchema = JSON.parse(fs.readFileSync(eventSchemaPath, 'utf8')); }
+  catch (e) { check('event-spec.schema.json parses as JSON', false); eventSchema = null; }
+  if (eventSchema) {
+    check('event-spec.schema.json is draft-07',
+      eventSchema.$schema === 'http://json-schema.org/draft-07/schema#');
+    check('event-spec.schema.json additionalProperties:true (lenient-additive)',
+      eventSchema.additionalProperties === true);
+    const EVENT_REQUIRED = ['version', 'events', 'dead_letter_strategy',
+      'idempotency_keys', 'anti_pattern_watchlist'];
+    check('event-spec.schema.json required = 5 fields (version + events + dead_letter_strategy + idempotency_keys + anti_pattern_watchlist)',
+      Array.isArray(eventSchema.required) && EVENT_REQUIRED.every(f => eventSchema.required.includes(f)));
+    check('event-spec.schema.json version is const:1 (BS1)',
+      eventSchema.properties && eventSchema.properties.version &&
+      eventSchema.properties.version.const === 1);
+    check('event-spec.schema.json anti_pattern_watchlist minItems:3',
+      eventSchema.properties && eventSchema.properties.anti_pattern_watchlist &&
+      eventSchema.properties.anti_pattern_watchlist.minItems === 3);
+    check('event-spec.schema.json events[].ordering enum = strict|best-effort|none',
+      eventSchema.properties && eventSchema.properties.events &&
+      eventSchema.properties.events.items &&
+      eventSchema.properties.events.items.properties &&
+      eventSchema.properties.events.items.properties.ordering &&
+      Array.isArray(eventSchema.properties.events.items.properties.ordering.enum) &&
+      ['strict', 'best-effort', 'none'].every(v =>
+        eventSchema.properties.events.items.properties.ordering.enum.includes(v)));
+    check('event-spec.schema.json events[].delivery_guarantee enum = at-least-once|at-most-once|exactly-once',
+      eventSchema.properties && eventSchema.properties.events &&
+      eventSchema.properties.events.items &&
+      eventSchema.properties.events.items.properties &&
+      eventSchema.properties.events.items.properties.delivery_guarantee &&
+      Array.isArray(eventSchema.properties.events.items.properties.delivery_guarantee.enum) &&
+      ['at-least-once', 'at-most-once', 'exactly-once'].every(v =>
+        eventSchema.properties.events.items.properties.delivery_guarantee.enum.includes(v)));
+  }
+} else {
+  check('event-spec.schema.json exists', false);
+}
+
+// 21i. ops-spec.schema.json validation (A5)
+if (fs.existsSync(opsSchemaPath)) {
+  let opsSchema;
+  try { opsSchema = JSON.parse(fs.readFileSync(opsSchemaPath, 'utf8')); }
+  catch (e) { check('ops-spec.schema.json parses as JSON', false); opsSchema = null; }
+  if (opsSchema) {
+    check('ops-spec.schema.json is draft-07',
+      opsSchema.$schema === 'http://json-schema.org/draft-07/schema#');
+    check('ops-spec.schema.json additionalProperties:true (lenient-additive)',
+      opsSchema.additionalProperties === true);
+    const OPS_REQUIRED = ['version', 'deployment_topology', 'observability',
+      'slo', 'anti_pattern_watchlist'];
+    check('ops-spec.schema.json required = 5 fields (version + deployment_topology + observability + slo + anti_pattern_watchlist)',
+      Array.isArray(opsSchema.required) && OPS_REQUIRED.every(f => opsSchema.required.includes(f)));
+    check('ops-spec.schema.json version is const:1 (BS1)',
+      opsSchema.properties && opsSchema.properties.version &&
+      opsSchema.properties.version.const === 1);
+    check('ops-spec.schema.json anti_pattern_watchlist minItems:3',
+      opsSchema.properties && opsSchema.properties.anti_pattern_watchlist &&
+      opsSchema.properties.anti_pattern_watchlist.minItems === 3);
+    check('ops-spec.schema.json observability sub-structure requires logs + metrics + traces',
+      opsSchema.properties && opsSchema.properties.observability &&
+      Array.isArray(opsSchema.properties.observability.required) &&
+      ['logs', 'metrics', 'traces'].every(f =>
+        opsSchema.properties.observability.required.includes(f)));
+    check('ops-spec.schema.json slo requires availability + latency_p95_ms',
+      opsSchema.properties && opsSchema.properties.slo &&
+      Array.isArray(opsSchema.properties.slo.required) &&
+      ['availability', 'latency_p95_ms'].every(f =>
+        opsSchema.properties.slo.required.includes(f)));
+  }
+} else {
+  check('ops-spec.schema.json exists', false);
+}
+
+// 21j. Phase 45 backend files content-marker grep (NO history diff; Codex Gate 46 condition 1)
+//      Verifies Phase 45 files still carry their substantive markers — substantive
+//      edits would remove/alter these and trip the check, while trivial edits pass.
+if (fs.existsSync(apiWorkflowPath)) {
+  const body = fs.readFileSync(apiWorkflowPath, 'utf8');
+  check('Phase 45 backend-phase-api.md retains 6-step + API-SPEC.md markers (content-grep, no HEAD~1)',
+    ['Step 1:', 'Step 6:', 'API-SPEC.md', '--surface api', 'sunco-backend-researcher']
+      .every(m => body.includes(m)));
+}
+if (fs.existsSync(dataWorkflowPath)) {
+  const body = fs.readFileSync(dataWorkflowPath, 'utf8');
+  check('Phase 45 backend-phase-data.md retains 6-step + DATA-SPEC.md markers (content-grep, no HEAD~1)',
+    ['Step 1:', 'Step 6:', 'DATA-SPEC.md', '--surface data', 'sunco-backend-researcher']
+      .every(m => body.includes(m)));
+}
+if (fs.existsSync(apiSchemaPath)) {
+  try {
+    const s = JSON.parse(fs.readFileSync(apiSchemaPath, 'utf8'));
+    check('Phase 45 api-spec.schema.json retains version:1 + endpoints + anti_pattern_watchlist (content, no HEAD~1)',
+      s.properties && s.properties.version && s.properties.version.const === 1 &&
+      Array.isArray(s.required) && s.required.includes('endpoints') &&
+      s.required.includes('anti_pattern_watchlist'));
+  } catch (e) { check('Phase 45 api-spec.schema.json parses', false); }
+}
+if (fs.existsSync(dataSchemaPath)) {
+  try {
+    const s = JSON.parse(fs.readFileSync(dataSchemaPath, 'utf8'));
+    check('Phase 45 data-spec.schema.json retains version:1 + entities + migration_strategy (content, no HEAD~1)',
+      s.properties && s.properties.version && s.properties.version.const === 1 &&
+      Array.isArray(s.required) && s.required.includes('entities') &&
+      s.required.includes('migration_strategy'));
+  } catch (e) { check('Phase 45 data-spec.schema.json parses', false); }
+}
+
+// 21k. Phase 46 CONTEXT populated (not scaffold)
+if (fs.existsSync(phase46ContextPath)) {
+  const ctx = fs.readFileSync(phase46ContextPath, 'utf8');
+  check('Phase 46 CONTEXT.md populated with Gate 46 outcomes (GREEN-CONDITIONAL + Populated + Focused+ Gate 46)',
+    /Focused\+? Gate 46/i.test(ctx) && /GREEN-CONDITIONAL/i.test(ctx) && /Populated/i.test(ctx));
+} else {
+  check('Phase 46 CONTEXT.md exists', false);
+}
+
+// 21l. Phase 47 stubs (review-{api,data,event,ops}) remain stubs — inherited via
+//      Section 19 SURFACE_STUB_FILES (which was reduced 6→4 at Phase 46 to only
+//      cover the 4 review stubs). No separate assertion here; Section 19 carries it.
 
 // Summary
 console.log(`\n${'─'.repeat(50)}`);

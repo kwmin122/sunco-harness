@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sunco-harness.local/packages/cli/schemas/event-spec.schema.json",
+  "title": "SUNCO EVENT-SPEC SPEC-BLOCK",
+  "description": "Schema for the YAML SPEC-BLOCK fenced inside EVENT-SPEC.md produced by backend-phase-event (Phase 46/M3.5). Per spec R2 (SUNCO:SPEC-BLOCK deterministic extraction) and BS1 (schema versioning). Lenient additive: listed fields required, additionalProperties permitted so downstream phases (Phase 47 backend-review-event) may extend without schema bump.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "version",
+    "events",
+    "dead_letter_strategy",
+    "idempotency_keys",
+    "anti_pattern_watchlist"
+  ],
+  "properties": {
+    "version": {
+      "description": "Schema version per BS1. Constant 1 for Phase 46 output. Future schema bumps increment this and ship coordinated schema migrations.",
+      "const": 1
+    },
+    "events": {
+      "description": "Event inventory. At least one event per eventing surface.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name", "producer", "consumers", "ordering", "delivery_guarantee"],
+        "properties": {
+          "name": { "type": "string" },
+          "producer": { "type": "string" },
+          "consumers": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "schema": {
+            "description": "Event payload body schema. Inline TS-like type, JSON Schema ref, or prose. Describes payload only — NOT HTTP request/response (that lives in API-SPEC).",
+            "oneOf": [
+              { "type": "string" },
+              { "type": "object", "additionalProperties": true },
+              { "type": "null" }
+            ]
+          },
+          "ordering": {
+            "description": "Ordering guarantee for this event family.",
+            "type": "string",
+            "enum": ["strict", "best-effort", "none"]
+          },
+          "delivery_guarantee": {
+            "description": "Delivery semantics for this event family. at-least-once is the distributed-system default; exactly-once requires transactional outbox or idempotent consumers.",
+            "type": "string",
+            "enum": ["at-least-once", "at-most-once", "exactly-once"]
+          },
+          "retention": {
+            "description": "Retention window for undelivered/replayable events. Accepts duration strings (e.g., '7d', 'forever') or null when not applicable.",
+            "oneOf": [
+              { "type": "string" },
+              { "type": "null" }
+            ]
+          }
+        }
+      }
+    },
+    "dead_letter_strategy": {
+      "description": "Dead-letter queue destination + retry/reprocess posture. Object form preferred (destination + max_retries + backoff + reprocess); string form acceptable when the strategy fits a single sentence.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "idempotency_keys": {
+      "description": "Idempotency key provenance + TTL + dedup scope. Object form preferred; string/array acceptable when the strategy is simple.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "additionalProperties": true },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+    "anti_pattern_watchlist": {
+      "description": "Phase 42 backend-excellence anti-patterns this event surface must avoid. Done-when (Phase 46) requires at least 3 entries, each citing a Phase 42 reference file (e.g., reliability-and-failure-modes.md / boundaries-and-architecture.md). Note: spec §7 Phase 3.6 states 'no deterministic rules v1' for the event surface — entries here are heuristic or human-review candidates.",
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["pattern"],
+            "properties": {
+              "pattern": { "type": "string" },
+              "source": {
+                "type": "string",
+                "description": "Phase 42 reference file (e.g., 'reliability-and-failure-modes.md', 'boundaries-and-architecture.md')."
+              },
+              "why": { "type": "string" }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
