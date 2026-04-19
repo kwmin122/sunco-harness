@@ -106,6 +106,8 @@ Published artifacts:
 
 ## v1.4 Highlights — Impeccable Fusion
 
+*Shipped 2026-04-20 as `popcoru@0.12.0`. See [CHANGELOG](https://github.com/kwmin122/sunco-harness/blob/v0.12.0/CHANGELOG.md#0120--2026-04-20--sunco-v14-impeccable-fusion) for full release notes.*
+
 Five-milestone track: Frontend Web Fusion (M2), Backend Excellence (M3), Cross-Domain Integration (M4), Rollout Hardening (M5), on top of the M1 Foundation. **Zero regression** to v0.11.x — every new capability is opt-in via `--surface` flags.
 
 - **`/sunco:ui-phase --surface web`** — vendored Impeccable skill wrapper; `/sunco:ui-review --surface web` produces IMPECCABLE-AUDIT.md + 6-pillar UI-REVIEW.md
