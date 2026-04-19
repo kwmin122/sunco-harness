@@ -41,6 +41,13 @@ export const OPEN_FINDINGS_SUMMARY_START = '<!-- SUNCO:OPEN-FINDINGS-SUMMARY-STA
 export const OPEN_FINDINGS_SUMMARY_END = '<!-- SUNCO:OPEN-FINDINGS-SUMMARY-END -->';
 export const VERSION_MARKER = '<!-- cross_domain_version: 1 -->';
 
+// Phase 49/M4.2 CROSS-DOMAIN-FINDINGS.md markers (separate file from Phase 48 CROSS-DOMAIN.md).
+export const CROSS_DOMAIN_FINDINGS_BLOCK_START = '<!-- SUNCO:CROSS-DOMAIN-FINDINGS-BLOCK-START -->';
+export const CROSS_DOMAIN_FINDINGS_BLOCK_END = '<!-- SUNCO:CROSS-DOMAIN-FINDINGS-BLOCK-END -->';
+export const CROSS_DOMAIN_LIFECYCLE_START = '<!-- SUNCO:CROSS-DOMAIN-LIFECYCLE-START -->';
+export const CROSS_DOMAIN_LIFECYCLE_END = '<!-- SUNCO:CROSS-DOMAIN-LIFECYCLE-END -->';
+export const FINDINGS_VERSION_MARKER = '<!-- findings_version: 1 -->';
+
 export const SPEC_KIND_REQUIRED_FIELDS = Object.freeze({
   ui: ['version', 'layout', 'components', 'states', 'interactions', 'a11y', 'responsive',
        'motion', 'copy', 'anti_pattern_watchlist', 'design_system_tokens_used',
@@ -504,6 +511,363 @@ export function renderMarkdown({ crossDomainBlock, findingsCounts }, priorConten
   return { content, changed };
 }
 
+// ─── Phase 49/M4.2 extensions ──────────────────────────────────────────────
+// Extension-only: all existing exports above IMMUTABLE (Phase 48 1a508ba lock).
+// Phase 49 adds cross-domain findings generation, staleness detection, lifecycle
+// override parsing, findings-markdown rendering, required_specs + domains CONTEXT
+// parsing. All deterministic (no LLM, no subagent, no HTTP) — charter G7 option (a).
+
+// Emits 4 check-type findings from a generated CROSS-DOMAIN block:
+//   - missing-endpoint HIGH (UI consumes; API undefined)
+//   - orphan-endpoint  LOW  (API defines; UI never consumes)
+//   - type-drift       HIGH (type_contracts[].match === false)
+//   - error-state-mismatch MEDIUM (error_mappings[].ui_state === '')
+// Deterministic ordering: rule asc, file asc, line asc, match asc. All findings
+// carry state='open', kind='deterministic', source='cross-domain'. Phase 49 is the
+// sole cross-domain findings writer — lifecycle transitions are expressed via
+// human-edited overrides[] joined by rule:file:line id.
+export function generateCrossDomainFindings({ crossDomainBlock }) {
+  if (!crossDomainBlock || typeof crossDomainBlock !== 'object') {
+    throw new Error('generateCrossDomainFindings: crossDomainBlock required');
+  }
+  const endpoints_consumed = Array.isArray(crossDomainBlock.endpoints_consumed) ? crossDomainBlock.endpoints_consumed : [];
+  const endpoints_defined = Array.isArray(crossDomainBlock.endpoints_defined) ? crossDomainBlock.endpoints_defined : [];
+  const error_mappings = Array.isArray(crossDomainBlock.error_mappings) ? crossDomainBlock.error_mappings : [];
+  const type_contracts = Array.isArray(crossDomainBlock.type_contracts) ? crossDomainBlock.type_contracts : [];
+  const generated_from = Array.isArray(crossDomainBlock.generated_from) ? crossDomainBlock.generated_from : [];
+
+  const uiSpecPath = (generated_from.find(e => typeof e?.spec === 'string' && /UI-SPEC\.md$/.test(e.spec)) || {}).spec || '-';
+  const apiSpecPath = (generated_from.find(e => typeof e?.spec === 'string' && /API-SPEC\.md$/.test(e.spec)) || {}).spec || '-';
+
+  const definedKeys = new Set(endpoints_defined.map(e => `${e.method} ${e.path}`));
+  const consumedKeys = new Set(endpoints_consumed.map(e => `${e.method} ${e.path}`));
+
+  const findings = [];
+
+  for (const ep of endpoints_consumed) {
+    const key = `${ep.method} ${ep.path}`;
+    if (!definedKeys.has(key)) {
+      findings.push({
+        rule: 'missing-endpoint',
+        severity: 'HIGH',
+        kind: 'deterministic',
+        file: uiSpecPath,
+        line: 0,
+        state: 'open',
+        source: 'cross-domain',
+        match: key,
+        fix_hint: `API does not define ${key} consumed by ${ep.ui_ref || 'UI'}; either add endpoint to API-SPEC.md or remove consumption from UI-SPEC.md.`,
+      });
+    }
+  }
+
+  for (const ep of endpoints_defined) {
+    const key = `${ep.method} ${ep.path}`;
+    if (!consumedKeys.has(key)) {
+      findings.push({
+        rule: 'orphan-endpoint',
+        severity: 'LOW',
+        kind: 'deterministic',
+        file: apiSpecPath,
+        line: 0,
+        state: 'open',
+        source: 'cross-domain',
+        match: key,
+        fix_hint: `API defines ${key} but no UI consumer declares it; either remove from API-SPEC.md or add consumption in UI-SPEC.md.`,
+      });
+    }
+  }
+
+  for (const tc of type_contracts) {
+    if (tc && tc.match === false) {
+      findings.push({
+        rule: 'type-drift',
+        severity: 'HIGH',
+        kind: 'deterministic',
+        file: uiSpecPath,
+        line: 0,
+        state: 'open',
+        source: 'cross-domain',
+        match: tc.field_path || '',
+        fix_hint: `UI type '${tc.ui_type || ''}' does not match API type '${tc.api_type || ''}' at ${tc.field_path || ''}; align type declarations in UI-SPEC.md and API-SPEC.md.`,
+      });
+    }
+  }
+
+  for (const em of error_mappings) {
+    if (em && (em.ui_state === '' || em.ui_state == null)) {
+      findings.push({
+        rule: 'error-state-mismatch',
+        severity: 'MEDIUM',
+        kind: 'deterministic',
+        file: uiSpecPath,
+        line: 0,
+        state: 'open',
+        source: 'cross-domain',
+        match: em.api_code || '',
+        fix_hint: `UI does not explicitly handle API error code '${em.api_code || ''}'; relies on fallback '${em.fallback || 'none'}'. Add explicit UI state or accept fallback.`,
+      });
+    }
+  }
+
+  findings.sort((a, b) => {
+    if (a.rule !== b.rule) return a.rule < b.rule ? -1 : 1;
+    if (a.file !== b.file) return a.file < b.file ? -1 : 1;
+    if (a.line !== b.line) return a.line - b.line;
+    const ma = a.match || '';
+    const mb = b.match || '';
+    return ma < mb ? -1 : ma > mb ? 1 : 0;
+  });
+
+  return { findings };
+}
+
+// Tolerant generated_from SHA extractor. Returns Map<specPath, sha256Hex>.
+// Does not require a YAML library — parses the serialized output the module itself emits.
+function extractGeneratedFromShaMap(crossDomainContent) {
+  const shaMap = new Map();
+  if (typeof crossDomainContent !== 'string') return shaMap;
+  const gStart = crossDomainContent.indexOf(CROSS_DOMAIN_BLOCK_START);
+  const gEnd = crossDomainContent.indexOf(CROSS_DOMAIN_BLOCK_END);
+  if (gStart === -1 || gEnd === -1 || gEnd <= gStart) return shaMap;
+  const body = crossDomainContent.slice(gStart, gEnd);
+  // Scan for "    - spec: X\n      sha: Y" pairs (our serializer's emission form).
+  const lines = body.split('\n');
+  let pendingSpec = null;
+  for (const line of lines) {
+    const specM = line.match(/^\s*-\s*spec:\s*(.+?)\s*$/);
+    if (specM) {
+      pendingSpec = specM[1].replace(/^["']|["']$/g, '');
+      continue;
+    }
+    const shaM = line.match(/^\s*sha:\s*([0-9a-f]{64})\s*$/);
+    if (shaM && pendingSpec) {
+      shaMap.set(pendingSpec, shaM[1]);
+      pendingSpec = null;
+    }
+  }
+  return shaMap;
+}
+
+// Returns true if CROSS-DOMAIN.md is absent, malformed, or any tracked spec SHA
+// has drifted from its current file content. Missing tracked-spec entry for an
+// explicitly required path also counts as stale (signals config change).
+export function isCrossDomainStale(crossDomainPath, requiredSpecPaths = []) {
+  if (!existsSync(crossDomainPath)) return true;
+  const content = readFileSync(crossDomainPath, 'utf8');
+  const shaMap = extractGeneratedFromShaMap(content);
+  if (shaMap.size === 0) return true;
+  for (const required of requiredSpecPaths) {
+    if (!shaMap.has(required)) return true;
+  }
+  for (const [path, prevSha] of shaMap) {
+    if (!existsSync(path)) return true;
+    const currentSha = sha256(readFileSync(path));
+    if (currentSha !== prevSha) return true;
+  }
+  return false;
+}
+
+// Extracts overrides[] from the CROSS-DOMAIN-LIFECYCLE YAML block.
+// Tolerant parser — expects the same subset our serializer emits:
+//   overrides:
+//     - id: <rule>:<file>:<line>
+//       state: resolved | dismissed-with-rationale
+//       resolved_commit: <hex>            # optional
+//       dismissed_rationale: "<text>"     # optional
+// Returns { overrides: [...] } with each override as a flat object.
+export function parseLifecycleOverrides(findingsMarkdown) {
+  if (typeof findingsMarkdown !== 'string') return { overrides: [] };
+  const lStart = findingsMarkdown.indexOf(CROSS_DOMAIN_LIFECYCLE_START);
+  const lEnd = findingsMarkdown.indexOf(CROSS_DOMAIN_LIFECYCLE_END);
+  if (lStart === -1 || lEnd === -1 || lEnd <= lStart) return { overrides: [] };
+  const region = findingsMarkdown.slice(lStart + CROSS_DOMAIN_LIFECYCLE_START.length, lEnd);
+  const fenceOpen = region.indexOf('```yaml');
+  if (fenceOpen === -1) return { overrides: [] };
+  const afterOpen = region.indexOf('\n', fenceOpen);
+  if (afterOpen === -1) return { overrides: [] };
+  const fenceClose = region.indexOf('\n```', afterOpen);
+  if (fenceClose === -1) return { overrides: [] };
+  const yamlText = region.slice(afterOpen + 1, fenceClose + 1);
+
+  const overrides = [];
+  let current = null;
+  for (const rawLine of yamlText.split('\n')) {
+    const line = rawLine.replace(/\r$/, '');
+    const itemM = line.match(/^\s*-\s*id:\s*(.+)$/);
+    if (itemM) {
+      if (current) overrides.push(current);
+      current = { id: itemM[1].trim().replace(/^["']|["']$/g, '') };
+      continue;
+    }
+    if (current) {
+      const kvM = line.match(/^\s+([a-z_]+):\s*(.+)$/);
+      if (kvM) current[kvM[1]] = kvM[2].trim().replace(/^["']|["']$/g, '');
+    }
+  }
+  if (current) overrides.push(current);
+  return { overrides };
+}
+
+function serializeFindingsYaml(findings) {
+  const list = Array.isArray(findings) ? findings : [];
+  if (list.length === 0) return 'findings: []';
+  const lines = ['findings:'];
+  const orderedKeys = ['rule', 'severity', 'kind', 'file', 'line', 'state', 'source', 'match', 'fix_hint', 'resolved_commit', 'dismissed_rationale'];
+  for (const f of list) {
+    let first = true;
+    for (const k of orderedKeys) {
+      if (!(k in f)) continue;
+      const v = f[k];
+      const rendered = serializeYamlValue(v, 6);
+      if (first) {
+        lines.push(`  - ${k}: ${rendered.startsWith('\n') ? rendered.trimStart() : rendered}`);
+        first = false;
+      } else {
+        lines.push(`    ${k}: ${rendered.startsWith('\n') ? rendered.trimStart() : rendered}`);
+      }
+    }
+  }
+  return lines.join('\n');
+}
+
+function serializeOverridesYaml(overrides) {
+  const list = Array.isArray(overrides) ? overrides : [];
+  if (list.length === 0) return 'overrides: []';
+  const lines = ['overrides:'];
+  for (const o of list) {
+    const keys = Object.keys(o);
+    if (keys.length === 0) continue;
+    let first = true;
+    for (const k of keys) {
+      const v = o[k];
+      const rendered = serializeYamlValue(v, 6);
+      if (first) {
+        lines.push(`  - ${k}: ${rendered.startsWith('\n') ? rendered.trimStart() : rendered}`);
+        first = false;
+      } else {
+        lines.push(`    ${k}: ${rendered.startsWith('\n') ? rendered.trimStart() : rendered}`);
+      }
+    }
+  }
+  return lines.join('\n');
+}
+
+const DEFAULT_FINDINGS_PROLOGUE = [
+  FINDINGS_VERSION_MARKER,
+  '# CROSS-DOMAIN-FINDINGS.md',
+  '',
+  'Auto-generated by Phase 49 verify-gate cross-domain layer. Findings block below is overwritten on regeneration (deterministic ordering). Lifecycle overrides region is human-editable and preserved across regenerations. Prose below the lifecycle region is preserved byte-for-byte.',
+  '',
+].join('\n');
+
+// Renders the 3-region CROSS-DOMAIN-FINDINGS.md:
+//   (1) prologue (preserved byte-for-byte if existing; default inserted otherwise)
+//   (2) findings YAML block (overwrite — deterministic auto-gen)
+//   (3) lifecycle overrides YAML block (preserved byte-for-byte when existing and
+//       no new overrides passed in; overwritten only when overrides arg provided)
+//   (4) prose below lifecycle (preserved byte-for-byte)
+// Passing overrides=undefined preserves existing lifecycle; passing [] overwrites
+// with an empty override list (initial generation).
+export function renderFindingsMarkdown({ findings, overrides }, priorContent = null) {
+  let prologue = null;
+  let existingLifecycleRegion = null;
+  let prose = '';
+
+  if (typeof priorContent === 'string' && priorContent.length) {
+    const fStart = priorContent.indexOf(CROSS_DOMAIN_FINDINGS_BLOCK_START);
+    const fEnd = priorContent.indexOf(CROSS_DOMAIN_FINDINGS_BLOCK_END);
+    const lStart = priorContent.indexOf(CROSS_DOMAIN_LIFECYCLE_START);
+    const lEnd = priorContent.indexOf(CROSS_DOMAIN_LIFECYCLE_END);
+    if (fStart !== -1 && fEnd !== -1 && fEnd > fStart) {
+      prologue = priorContent.slice(0, fStart);
+      const afterFindings = fEnd + CROSS_DOMAIN_FINDINGS_BLOCK_END.length;
+      if (lStart !== -1 && lEnd !== -1 && lEnd > lStart && lStart >= afterFindings) {
+        existingLifecycleRegion = priorContent.slice(lStart, lEnd + CROSS_DOMAIN_LIFECYCLE_END.length);
+        prose = priorContent.slice(lEnd + CROSS_DOMAIN_LIFECYCLE_END.length);
+      } else {
+        prose = priorContent.slice(afterFindings);
+      }
+    }
+  }
+
+  if (prologue === null) prologue = DEFAULT_FINDINGS_PROLOGUE;
+  if (!prologue.endsWith('\n')) prologue = prologue + '\n';
+
+  const findingsRegion = [
+    CROSS_DOMAIN_FINDINGS_BLOCK_START,
+    '```yaml',
+    serializeFindingsYaml(findings),
+    '```',
+    CROSS_DOMAIN_FINDINGS_BLOCK_END,
+  ].join('\n');
+
+  let lifecycleRegion;
+  if (overrides === undefined && existingLifecycleRegion) {
+    lifecycleRegion = existingLifecycleRegion;
+  } else {
+    lifecycleRegion = [
+      CROSS_DOMAIN_LIFECYCLE_START,
+      '```yaml',
+      serializeOverridesYaml(overrides ?? []),
+      '```',
+      CROSS_DOMAIN_LIFECYCLE_END,
+    ].join('\n');
+  }
+
+  const proseOut = (prose && prose.trim().length) ? prose : '\n';
+  const content = `${prologue}${findingsRegion}\n\n${lifecycleRegion}${proseOut.startsWith('\n') ? proseOut : '\n' + proseOut}`;
+  const changed = priorContent !== content;
+  return { content, changed };
+}
+
+// Parses required_specs list from a CONTEXT.md. Tolerant — matches both inline
+// array (`required_specs: [path1, path2]`) and list-form (`required_specs:\n  - path\n  - path`).
+// Returns deduplicated string[] of .planning/domains/**/*-SPEC.md paths. Empty
+// array when required_specs is absent or malformed.
+export function readRequiredSpecs(contextMarkdown) {
+  if (typeof contextMarkdown !== 'string') return [];
+  const idx = contextMarkdown.indexOf('required_specs:');
+  if (idx === -1) return [];
+  const tail = contextMarkdown.slice(idx);
+  // Stop at next top-level key (line starting without leading whitespace) or end.
+  const stopMatch = tail.slice('required_specs:'.length).match(/\n[^\s\-]/);
+  const block = stopMatch ? tail.slice(0, 'required_specs:'.length + stopMatch.index) : tail;
+  const paths = [...block.matchAll(/(\.planning\/domains\/[a-z]+\/[A-Z-]+\.md)/g)].map(x => x[1]);
+  return [...new Set(paths)];
+}
+
+// Parses `domains:` list from CONTEXT.md frontmatter or body. Returns string[] of
+// lowercased domain names. Supports inline (`domains: [frontend, backend]`) and
+// list-form (`domains:\n  - frontend\n  - backend`). Empty array when absent.
+export function readDomainsField(contextMarkdown) {
+  if (typeof contextMarkdown !== 'string') return [];
+  const inline = contextMarkdown.match(/^\s*domains:\s*\[([^\]]*)\]/m);
+  if (inline) {
+    return inline[1].split(',')
+      .map(s => s.trim().replace(/^["']|["']$/g, '').toLowerCase())
+      .filter(Boolean);
+  }
+  const block = contextMarkdown.match(/^\s*domains:\s*\n((?:\s*-\s*\S+\s*\n?)+)/m);
+  if (block) {
+    return [...block[1].matchAll(/-\s*(\S+)/g)].map(x => x[1].toLowerCase().replace(/^["']|["']$/g, ''));
+  }
+  return [];
+}
+
+// Gate-predicate helper: should the verify-gate cross-domain layer fire for this phase?
+// Fires when domains includes BOTH frontend AND backend, OR when required_specs includes
+// both UI-SPEC and API-SPEC paths. Single-domain or no-domain phases skip the layer
+// (spec §8 line 731 non-regression guarantee).
+export function shouldTriggerCrossDomainLayer(contextMarkdown) {
+  const domains = readDomainsField(contextMarkdown);
+  if (domains.includes('frontend') && domains.includes('backend')) return true;
+  const specs = readRequiredSpecs(contextMarkdown);
+  const hasUi = specs.some(p => /UI-SPEC\.md$/.test(p));
+  const hasApi = specs.some(p => /API-SPEC\.md$/.test(p));
+  return hasUi && hasApi;
+}
+
 // ─── CLI entry ─────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
@@ -715,6 +1079,136 @@ async function runSelfTests() {
   const r2 = renderMarkdown({ crossDomainBlock: gen.crossDomainBlock, findingsCounts: counts }, existing);
   ok('T22 renderMarkdown preserves hand-authored prologue',
     r2.content.startsWith(customPrologue));
+
+  // ─── Phase 49/M4.2 extensions self-tests (T23-T33) ────────────────────────
+
+  // Build a Phase 49 fixture cross-domain block with INTENTIONAL 4-check-type mismatches:
+  //   - missing-endpoint: UI consumes GET /orders, API does not define it
+  //   - orphan-endpoint: API defines POST /users/me/orphan, UI does not consume it
+  //   - type-drift: User.email ui_type='string' api_type='number' (match=false)
+  //   - error-state-mismatch: API code UNKNOWN_ERR with empty ui_state
+  const p49Fixture = {
+    version: 1,
+    generated_from: [
+      { spec: '.planning/domains/frontend/UI-SPEC.md', sha: 'a'.repeat(64) },
+      { spec: '.planning/domains/backend/API-SPEC.md', sha: 'b'.repeat(64) },
+    ],
+    endpoints_consumed: [
+      { ui_ref: 'OrderList', method: 'GET', path: '/orders' },
+      { ui_ref: 'UserDashboard', method: 'GET', path: '/users/me' },
+    ],
+    endpoints_defined: [
+      { method: 'GET', path: '/users/me', owner_spec: '.planning/domains/backend/API-SPEC.md' },
+      { method: 'POST', path: '/users/me/orphan', owner_spec: '.planning/domains/backend/API-SPEC.md' },
+    ],
+    error_mappings: [
+      { api_code: 'AUTH_EXPIRED', ui_state: 'relogin-prompt', fallback: 'generic-error' },
+      { api_code: 'UNKNOWN_ERR', ui_state: '', fallback: 'generic-error' },
+    ],
+    type_contracts: [
+      { field_path: 'User.email', ui_type: 'string', api_type: 'number', match: false },
+      { field_path: 'User.id', ui_type: 'string', api_type: 'string', match: true },
+    ],
+  };
+
+  // T23 — generateCrossDomainFindings emits all 4 check types with correct severity
+  const f49 = generateCrossDomainFindings({ crossDomainBlock: p49Fixture });
+  const findByRule = (rule) => f49.findings.filter(x => x.rule === rule);
+  ok('T23 generateCrossDomainFindings emits 4 check types with correct severity',
+    findByRule('missing-endpoint').length === 1 && findByRule('missing-endpoint')[0].severity === 'HIGH' &&
+    findByRule('orphan-endpoint').length === 1 && findByRule('orphan-endpoint')[0].severity === 'LOW' &&
+    findByRule('type-drift').length === 1 && findByRule('type-drift')[0].severity === 'HIGH' &&
+    findByRule('error-state-mismatch').length === 1 && findByRule('error-state-mismatch')[0].severity === 'MEDIUM');
+
+  // T24 — all findings carry state='open', kind='deterministic', source='cross-domain'
+  ok('T24 cross-domain findings carry state=open + kind=deterministic + source=cross-domain',
+    f49.findings.every(f => f.state === 'open' && f.kind === 'deterministic' && f.source === 'cross-domain'));
+
+  // T25 — deterministic ordering (rule asc, then file asc, then line asc, then match asc)
+  const ruleOrder = f49.findings.map(f => f.rule);
+  const sortedRuleOrder = [...ruleOrder].sort();
+  ok('T25 findings are deterministically ordered by rule',
+    JSON.stringify(ruleOrder) === JSON.stringify(sortedRuleOrder));
+
+  // T26 — file_ref routes by check type (consumer→UI-SPEC, definer→API-SPEC)
+  ok('T26 file_ref routes by check type',
+    findByRule('missing-endpoint')[0].file === '.planning/domains/frontend/UI-SPEC.md' &&
+    findByRule('orphan-endpoint')[0].file === '.planning/domains/backend/API-SPEC.md' &&
+    findByRule('type-drift')[0].file === '.planning/domains/frontend/UI-SPEC.md' &&
+    findByRule('error-state-mismatch')[0].file === '.planning/domains/frontend/UI-SPEC.md');
+
+  // T27 — renderFindingsMarkdown emits 3-region structure with FINDINGS_VERSION_MARKER
+  const r49 = renderFindingsMarkdown({ findings: f49.findings, overrides: [] }, null);
+  ok('T27 renderFindingsMarkdown 3-region structure + findings_version marker',
+    r49.content.includes(FINDINGS_VERSION_MARKER) &&
+    r49.content.includes(CROSS_DOMAIN_FINDINGS_BLOCK_START) &&
+    r49.content.includes(CROSS_DOMAIN_FINDINGS_BLOCK_END) &&
+    r49.content.includes(CROSS_DOMAIN_LIFECYCLE_START) &&
+    r49.content.includes(CROSS_DOMAIN_LIFECYCLE_END));
+
+  // T28 — lifecycle block preserved byte-for-byte when overrides=undefined
+  const customLifecycle = CROSS_DOMAIN_LIFECYCLE_START + '\n```yaml\noverrides:\n  - id: type-drift:.planning/domains/frontend/UI-SPEC.md:0\n    state: resolved\n    resolved_commit: abc1234\n```\n' + CROSS_DOMAIN_LIFECYCLE_END;
+  const customFindingsMd = FINDINGS_VERSION_MARKER + '\n# CROSS-DOMAIN-FINDINGS.md\n\nHAND PROLOGUE DO NOT TOUCH\n\n' +
+    CROSS_DOMAIN_FINDINGS_BLOCK_START + '\n```yaml\nfindings: []\n```\n' + CROSS_DOMAIN_FINDINGS_BLOCK_END + '\n\n' +
+    customLifecycle + '\nHAND PROSE BELOW LIFECYCLE\n';
+  const r49b = renderFindingsMarkdown({ findings: f49.findings }, customFindingsMd);
+  ok('T28 lifecycle region preserved when overrides=undefined',
+    r49b.content.includes('resolved_commit: abc1234') && r49b.content.includes('HAND PROSE BELOW LIFECYCLE') && r49b.content.startsWith(FINDINGS_VERSION_MARKER + '\n# CROSS-DOMAIN-FINDINGS.md\n\nHAND PROLOGUE DO NOT TOUCH'));
+
+  // T29 — parseLifecycleOverrides extracts overrides[] from YAML block
+  const parsedOverrides = parseLifecycleOverrides(customFindingsMd);
+  ok('T29 parseLifecycleOverrides extracts overrides with id + state + resolved_commit',
+    parsedOverrides.overrides.length === 1 &&
+    parsedOverrides.overrides[0].id === 'type-drift:.planning/domains/frontend/UI-SPEC.md:0' &&
+    parsedOverrides.overrides[0].state === 'resolved' &&
+    parsedOverrides.overrides[0].resolved_commit === 'abc1234');
+
+  // T30 — readRequiredSpecs parses inline list-form required_specs
+  const ctxWithSpecs = [
+    '# Phase 05 — User dashboard',
+    '',
+    'required_specs:',
+    '  - .planning/domains/frontend/UI-SPEC.md',
+    '  - .planning/domains/backend/API-SPEC.md',
+    '',
+    '## Decisions',
+  ].join('\n');
+  const specs = readRequiredSpecs(ctxWithSpecs);
+  ok('T30 readRequiredSpecs extracts both UI-SPEC and API-SPEC paths',
+    specs.includes('.planning/domains/frontend/UI-SPEC.md') &&
+    specs.includes('.planning/domains/backend/API-SPEC.md') &&
+    specs.length === 2);
+
+  // T31 — readDomainsField parses inline and block forms
+  const ctxInline = '# Phase\n\ndomains: [frontend, backend]\n\n## Decisions';
+  const ctxBlock = '# Phase\n\ndomains:\n  - frontend\n  - backend\n\n## Decisions';
+  const inlineDoms = readDomainsField(ctxInline);
+  const blockDoms = readDomainsField(ctxBlock);
+  ok('T31 readDomainsField parses inline + block forms',
+    inlineDoms.includes('frontend') && inlineDoms.includes('backend') &&
+    blockDoms.includes('frontend') && blockDoms.includes('backend'));
+
+  // T32 — shouldTriggerCrossDomainLayer: BOTH frontend + backend required
+  ok('T32 shouldTriggerCrossDomainLayer fires on domains+specs, skips single-domain',
+    shouldTriggerCrossDomainLayer(ctxInline) === true &&
+    shouldTriggerCrossDomainLayer(ctxWithSpecs) === true &&
+    shouldTriggerCrossDomainLayer('# Phase\n\ndomains: [backend]\n') === false &&
+    shouldTriggerCrossDomainLayer('# Phase\n\nno domains here\n') === false);
+
+  // T33 — isCrossDomainStale detects fresh vs stale
+  const uiP = path.join(tmpDir, 'UI-SPEC.md');
+  const apiP = path.join(tmpDir, 'API-SPEC.md');
+  // uiP/apiP already written at T10. Generate a fresh CROSS-DOMAIN.md tracking them.
+  const freshGen = generateCrossDomain({ ui, api });
+  const freshCd = renderMarkdown({ crossDomainBlock: freshGen.crossDomainBlock, findingsCounts: null }, null).content;
+  const cdPath = path.join(tmpDir, 'CROSS-DOMAIN.md');
+  fs.writeFileSync(cdPath, freshCd);
+  const freshStale = isCrossDomainStale(cdPath, [uiP, apiP]);
+  // Now mutate UI-SPEC to force stale
+  fs.writeFileSync(uiP, fs.readFileSync(uiP, 'utf8') + '\n<!-- mutated -->\n');
+  const staleStale = isCrossDomainStale(cdPath, [uiP, apiP]);
+  ok('T33 isCrossDomainStale: fresh=false, SHA-drift=true',
+    freshStale === false && staleStale === true);
 
   try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
 

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://sunco-harness.local/packages/cli/schemas/finding.schema.json",
-  "title": "SUNCO Backend-Review Finding (BACKEND-AUDIT.md entry)",
-  "description": "Schema for a single backend-review finding emitted into .planning/domains/backend/BACKEND-AUDIT.md by the 4 backend-review surface workflows (Phase 47/M3.6). audit_version: 1 corresponds to state enum = [\"open\"] single-value. Phase 49/M4.2 expands this schema to audit_version: 2 with finding-lifecycle states (resolved / dismissed-with-rationale) and transition semantics — those states MUST NOT appear as active enum values at audit_version: 1. Lenient additive (additionalProperties:true) so Phase 49 + Phase 48 cross-domain extensions may add fields without a version bump for unrelated changes.",
+  "title": "SUNCO Finding (BACKEND-AUDIT.md + CROSS-DOMAIN-FINDINGS.md entry)",
+  "description": "Schema for a single finding emitted by (a) the 4 backend-review surface workflows (Phase 47/M3.6; BACKEND-AUDIT.md writer; audit_version: 1 top-of-file marker; emits state='open' only — Phase 47 agent hard-guard preserved), and (b) the Phase 49/M4.2 verify-gate cross-domain layer (CROSS-DOMAIN-FINDINGS.md writer; findings_version: 1 top-of-file marker; emits state='open' initially, lifecycle transitions via human-edited overrides). audit_version / findings_version are top-of-file markers (BACKEND-AUDIT.md / CROSS-DOMAIN-FINDINGS.md respectively) — NOT schema properties, per BS1 marker-pattern parity with cross_domain_version:1. Lifecycle (resolved / dismissed-with-rationale) is schema-level at Phase 49 via the oneOf branches below. HIGH severity + dismissed-with-rationale is schema-level hard-blocked (4th oneOf branch enforces severity != HIGH for dismissal); spec §8 line 710 literal. `resolved_commit` is required when state=resolved (7-40 hex chars, short or full git SHA). `dismissed_rationale` is required when state=dismissed-with-rationale (minLength 50, spec line 701 R6 lock). Lenient additive (additionalProperties:true) so future phases may extend without a schema bump.",
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -15,7 +15,7 @@
   ],
   "properties": {
     "rule": {
-      "description": "Rule identifier. For deterministic findings, one of Phase 43 detector's 7 rule IDs (raw-sql-interpolation, missing-timeout, swallowed-catch, any-typed-body, missing-validation-public-route, non-reversible-migration, logged-secret). For heuristic / requires-human-confirmation findings, reviewer-agent-authored rule slug (e.g., 'slo-projection-drift', 'idempotency-gap').",
+      "description": "Rule identifier. For deterministic backend findings, one of Phase 43 detector's 7 rule IDs (raw-sql-interpolation, missing-timeout, swallowed-catch, any-typed-body, missing-validation-public-route, non-reversible-migration, logged-secret). For deterministic cross-domain findings (Phase 49), one of: missing-endpoint, type-drift, error-state-mismatch, orphan-endpoint, spec-not-produced. For heuristic / requires-human-confirmation findings, reviewer-agent-authored rule slug (e.g., 'slo-projection-drift', 'idempotency-gap', 'type-alias-unresolved').",
       "type": "string",
       "minLength": 1
     },
@@ -25,17 +25,17 @@
       "enum": ["HIGH", "MEDIUM", "LOW"]
     },
     "kind": {
-      "description": "Spec §7 Phase 3.6 finding classification. deterministic = Phase 43 detector output only (workflow Step 2 sole producer). heuristic = LLM reasoning with partial static evidence. requires-human-confirmation = LLM reasoning with no static evidence, needs human verification.",
+      "description": "Spec §7 Phase 3.6 + §8 Phase 4.2 finding classification. deterministic = Phase 43 detector output or Phase 49 cross-domain set-algebra/boolean/string-empty scan (no LLM). heuristic = LLM reasoning with partial static evidence (Phase 49 future extension slot — not populated at Phase 49 v1). requires-human-confirmation = LLM reasoning with no static evidence.",
       "type": "string",
       "enum": ["deterministic", "heuristic", "requires-human-confirmation"]
     },
     "file": {
-      "description": "Repository-relative path of the file the finding points to. Use '-' when the finding is not file-local (e.g., cross-cutting operational concern).",
+      "description": "Repository-relative path of the file the finding points to. Use '-' when the finding is not file-local (e.g., cross-cutting operational concern). Cross-domain findings use the SPEC.md path (UI-SPEC.md for consumer-side checks, API-SPEC.md for definer-side checks).",
       "type": "string",
       "minLength": 1
     },
     "line": {
-      "description": "1-based line number within file. Use 0 when not line-local.",
+      "description": "1-based line number within file. Use 0 when not line-local (cross-domain findings are SPEC-level, not line-local — line: 0 is the norm).",
       "type": "integer",
       "minimum": 0
     },
@@ -53,13 +53,46 @@
       "type": "string"
     },
     "source": {
-      "description": "Provenance marker: 'detector' for Phase 43 output, a Phase 42 reference filename (e.g., 'api-design.md') for heuristic findings citing a reference doc, or 'spec-projection' for findings derived from spec/contract comparison (e.g., BACKEND-CONTEXT SLO vs OPS-SPEC slo drift).",
+      "description": "Provenance marker: 'detector' for Phase 43 output, a Phase 42 reference filename (e.g., 'api-design.md') for heuristic findings citing a reference doc, 'spec-projection' for backend findings derived from spec/contract comparison, or 'cross-domain' for Phase 49 cross-domain layer output.",
       "type": "string"
     },
     "state": {
-      "description": "Finding lifecycle state. At audit_version: 1 (Phase 47) this enum is single-value ['open']. Phase 49/M4.2 introduces audit_version: 2 with 'resolved' and 'dismissed' states + transition semantics managed by the verify gate and proceed-gate. Emitting any value other than 'open' at audit_version: 1 is a spec violation.",
+      "description": "Finding lifecycle state. Phase 47 BACKEND-AUDIT.md writers (4 surface workflows) emit state='open' only — the sunco-backend-reviewer agent hard-guard forbids emitting 'resolved' or 'dismissed-with-rationale' at audit_version:1 (guard preserved; writer-side discipline). Phase 49/M4.2 verify-gate cross-domain layer writes CROSS-DOMAIN-FINDINGS.md auto-generated findings as state='open'; lifecycle transitions to 'resolved' (requires resolved_commit) or 'dismissed-with-rationale' (requires dismissed_rationale ≥50 chars, forbidden when severity=HIGH) are expressed via human-edited overrides[] in the CROSS-DOMAIN-LIFECYCLE region, joined by rule:file:line id. The three state literals are spelled exactly: open, resolved, dismissed-with-rationale (no 'dismissed' shorthand).",
       "type": "string",
-      "enum": ["open"]
+      "enum": ["open", "resolved", "dismissed-with-rationale"]
+    },
+    "resolved_commit": {
+      "description": "Required when state=resolved (enforced by oneOf branch). Git commit SHA (short 7+ hex or full 40 hex) at which the finding was resolved. Not a merge-commit SHA — the resolve-point commit. Pattern: ^[0-9a-f]{7,40}$.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "dismissed_rationale": {
+      "description": "Required when state=dismissed-with-rationale (enforced by oneOf branch). Written explanation justifying why the finding is dismissed rather than resolved. Must be at least 50 characters (R6 lock, spec §8 line 701). HIGH severity findings MUST NOT be dismissed-with-rationale — the 4th oneOf branch structurally rejects that combination (spec §8 line 710 'HARD BLOCK, cannot be dismissed' literal reading).",
+      "type": "string",
+      "minLength": 50
     }
-  }
+  },
+  "oneOf": [
+    {
+      "description": "Lifecycle branch: state=open. No resolved_commit or dismissed_rationale required.",
+      "properties": {
+        "state": { "const": "open" }
+      }
+    },
+    {
+      "description": "Lifecycle branch: state=resolved. resolved_commit required (git SHA 7-40 hex).",
+      "properties": {
+        "state": { "const": "resolved" }
+      },
+      "required": ["resolved_commit"]
+    },
+    {
+      "description": "Lifecycle branch: state=dismissed-with-rationale + severity in {MEDIUM, LOW}. dismissed_rationale required (≥50 chars). HIGH severity is structurally excluded: a finding with state=dismissed-with-rationale AND severity=HIGH matches zero branches (state differs from open/resolved; severity fails this branch's enum), so oneOf fails and the finding is rejected — implementing spec §8 line 710 'HARD BLOCK, cannot be dismissed' at the schema layer.",
+      "properties": {
+        "state": { "const": "dismissed-with-rationale" },
+        "severity": { "enum": ["MEDIUM", "LOW"] }
+      },
+      "required": ["dismissed_rationale"]
+    }
+  ]
 }

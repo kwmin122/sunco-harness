@@ -282,6 +282,93 @@ Note: This does not block overall verification.
 
 ---
 
+## Cross-Domain Gate (Phase 49/M4.2 — additive layer)
+
+**Trigger condition:** Phase's `${N}-CONTEXT.md` declares `domains: [frontend, backend]` **OR** `required_specs` explicitly lists both `UI-SPEC.md` and `API-SPEC.md` paths. Single-domain phases and no-SPEC phases skip this gate — spec §8 line 731 non-regression guarantee (Layers 1-7 above retain their existing behavior verbatim).
+
+**Purpose:** Emit 4 deterministic check-type findings from the Phase 48 CROSS-DOMAIN.md projection into `.planning/domains/contracts/CROSS-DOMAIN-FINDINGS.md` for downstream `/sunco:proceed-gate` severity × state policy enforcement.
+
+**Deterministic-only** (charter A6-i): no LLM, no subagent, no HTTP. All 4 checks are set-algebra / boolean / string-empty operations on the CROSS-DOMAIN.md projection output. No `sunco-cross-domain-*` agent is spawned (Phase 49 deferred spec §8 L685 literal per architecture.md Deterministic-First principle; future heuristic extension slot documented in `.planning/phases/49-verify-gate-cross-domain/49-CONTEXT.md`).
+
+### Step C1: Decide whether to fire the gate
+
+```bash
+CONTEXT_MD="$PHASE_DIR/${PADDED}-CONTEXT.md"
+FIRE=$(node --input-type=module -e "
+  import { readFileSync } from 'node:fs';
+  import { shouldTriggerCrossDomainLayer } from './packages/cli/references/cross-domain/src/extract-spec-block.mjs';
+  try {
+    const md = readFileSync('$CONTEXT_MD', 'utf8');
+    console.log(shouldTriggerCrossDomainLayer(md) ? '1' : '0');
+  } catch { console.log('0'); }
+")
+
+if [ "$FIRE" != "1" ]; then
+  echo "Cross-domain gate: SKIPPED (phase does not declare frontend+backend domains or both UI+API specs)"
+  # Existing VERIFICATION.md-only flow continues unchanged.
+fi
+```
+
+### Step C2: Ensure CROSS-DOMAIN.md is fresh
+
+If CROSS-DOMAIN.md is absent or its tracked `generated_from[].sha` has drifted from the current UI-SPEC/API-SPEC byte SHAs, regenerate via `workflows/cross-domain-sync.md` Phase 48 pipeline. The deterministic generator is idempotent — same inputs → same output.
+
+```bash
+UI_SPEC=".planning/domains/frontend/UI-SPEC.md"
+API_SPEC=".planning/domains/backend/API-SPEC.md"
+CROSS_DOMAIN=".planning/domains/contracts/CROSS-DOMAIN.md"
+
+STALE=$(node --input-type=module -e "
+  import { isCrossDomainStale } from './packages/cli/references/cross-domain/src/extract-spec-block.mjs';
+  console.log(isCrossDomainStale('$CROSS_DOMAIN', ['$UI_SPEC', '$API_SPEC']) ? '1' : '0');
+")
+
+if [ "$STALE" = "1" ]; then
+  # Invoke Phase 48 cross-domain-sync.md pipeline to regenerate CROSS-DOMAIN.md.
+  # See workflows/cross-domain-sync.md for the 7-step generator pipeline.
+  echo "CROSS-DOMAIN.md stale — regenerating via cross-domain-sync pipeline."
+fi
+```
+
+### Step C3: Emit 4 deterministic findings
+
+Delegates to `generateCrossDomainFindings` in `packages/cli/references/cross-domain/src/extract-spec-block.mjs`:
+
+- `missing-endpoint` — severity=HIGH (UI consumes; API undefined)
+- `type-drift` — severity=HIGH (`type_contracts[].match === false`)
+- `error-state-mismatch` — severity=MEDIUM (`error_mappings[].ui_state === ''`)
+- `orphan-endpoint` — severity=LOW (API defines; UI never consumes)
+
+Deterministic ordering: rule asc, file asc, line asc, match asc. All findings carry `state: open`, `kind: deterministic`, `source: cross-domain`. `file` = UI-SPEC.md (for consumer-side checks: missing-endpoint/type-drift/error-state-mismatch) or API-SPEC.md (for definer-side: orphan-endpoint). `line: 0` (SPEC-level, not line-local).
+
+```bash
+node --input-type=module -e "
+  import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+  import {
+    extractSpecBlock, generateCrossDomain, generateCrossDomainFindings,
+    renderFindingsMarkdown,
+  } from './packages/cli/references/cross-domain/src/extract-spec-block.mjs';
+  const ui = await extractSpecBlock('$UI_SPEC', 'ui');
+  const api = await extractSpecBlock('$API_SPEC', 'api');
+  const { crossDomainBlock } = generateCrossDomain({ ui, api });
+  const { findings } = generateCrossDomainFindings({ crossDomainBlock });
+  const OUT = '.planning/domains/contracts/CROSS-DOMAIN-FINDINGS.md';
+  const prior = existsSync(OUT) ? readFileSync(OUT, 'utf8') : null;
+  // overrides=undefined preserves existing human-edited lifecycle region byte-for-byte
+  const { content } = renderFindingsMarkdown({ findings }, prior);
+  writeFileSync(OUT, content);
+  console.log('✎ wrote ' + OUT + ' (' + findings.length + ' findings)');
+"
+```
+
+### Step C4: Record in VERIFICATION.md + route to proceed-gate
+
+Cross-domain layer findings do NOT directly pass/fail the verify output. Instead, `/sunco:proceed-gate` consumes `CROSS-DOMAIN-FINDINGS.md` downstream and applies the severity × state policy (HIGH+open → HARD BLOCK; MED+open → dismissible; LOW+open → `--allow-low-open` override). VERIFICATION.md records a summary line per finding count (HIGH/MEDIUM/LOW × open/resolved/dismissed) but the verdict lives in proceed-gate.
+
+**Cross-Domain Gate result:** PASS (always, at verify layer — blocking decisions belong to proceed-gate). The layer's purpose is to produce CROSS-DOMAIN-FINDINGS.md for the next stage.
+
+---
+
 ## Layer 7: Human Eval Gate (skip with --skip-human-eval or --auto)
 
 Final human sign-off. Presents a summary of all 6 automated layers' results and asks the user for approval.

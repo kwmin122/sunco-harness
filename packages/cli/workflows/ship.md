@@ -46,7 +46,7 @@ Specify a phase explicitly: /sunco:ship <phase-number>
 
 ## Step 2: Verification Pre-Check
 
-Determine whether the phase has been verified.
+Determine whether the phase has been verified. For phases that fire the Phase 49/M4.2 cross-domain gate (phases declaring `domains: [frontend, backend]` or listing both UI-SPEC + API-SPEC in `required_specs`), `/sunco:proceed-gate` additionally consumes `.planning/domains/contracts/CROSS-DOMAIN-FINDINGS.md` and applies the HIGH/MEDIUM/LOW severity × state policy (HIGH+open hard-blocks; MED+open dismissible with rationale; LOW+open requires `--allow-low-open`). **Existing ship verification behavior preserved for non-cross-domain phases** — single-domain and no-SPEC phases see no behavior change (CROSS-DOMAIN-FINDINGS.md is absent and the cross-domain gate is not invoked).
 
 ### Check for VERIFICATION.md
 

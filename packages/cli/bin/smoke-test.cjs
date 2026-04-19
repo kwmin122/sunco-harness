@@ -2184,12 +2184,17 @@ if (fs.existsSync(findingSchemaPath)) {
       Array.isArray(schema.properties.severity.enum) &&
       ['HIGH', 'MEDIUM', 'LOW'].every(s => schema.properties.severity.enum.includes(s))
       && schema.properties.severity.enum.length === 3);
-    // 22n. state enum = ["open"] single-value strict (A6 — Codex C4 + Option a)
-    check('finding.schema.json state enum = ["open"] single-value at audit_version: 1 (A6 / C4)',
+    // 22n. state enum expanded to 3 lifecycle values at Phase 49/M4.2 (A1).
+    // Phase 47 audit_version:1 writer discipline (state='open' only) is enforced at
+    // agent-level (sunco-backend-reviewer.md hard-guard), not schema-level. Section
+    // 24 check 24i verifies the agent guard is preserved.
+    check('finding.schema.json state enum = [open, resolved, dismissed-with-rationale] (Phase 49/M4.2 A1)',
       schema.properties && schema.properties.state &&
       Array.isArray(schema.properties.state.enum) &&
-      schema.properties.state.enum.length === 1 &&
-      schema.properties.state.enum[0] === 'open');
+      schema.properties.state.enum.length === 3 &&
+      schema.properties.state.enum.includes('open') &&
+      schema.properties.state.enum.includes('resolved') &&
+      schema.properties.state.enum.includes('dismissed-with-rationale'));
     // 22o. Phase 49 expansion path documented in description (A6 — Codex spec feedback)
     check('finding.schema.json description documents Phase 49 audit_version: 2 expansion path (A6)',
       /audit_version:\s*2|Phase 49.*lifecycle|resolved.*dismissed.*Phase 49/i.test(schema.description || ''));
@@ -2206,8 +2211,10 @@ if (fs.existsSync(findingSchemaPath)) {
   try { schema = JSON.parse(fs.readFileSync(findingSchemaPath, 'utf8')); } catch { schema = null; }
   if (schema && schema.properties && schema.properties.state) {
     const stateEnum = schema.properties.state.enum || [];
-    check('no resolved/dismissed active state enum in finding.schema.json (Codex C4 scoped)',
-      !stateEnum.includes('resolved') && !stateEnum.includes('dismissed'));
+    // Phase 49/M4.2 A1: state enum expanded. 'dismissed' shorthand (without -with-rationale
+    // suffix) MUST NOT appear — only the full 'dismissed-with-rationale' literal.
+    check('finding.schema.json does NOT include dismissed shorthand (Phase 49 A1 literal-only)',
+      !stateEnum.includes('dismissed'));
   }
 }
 // 22q. No resolved/dismissed as YAML state value in workflow emit templates
@@ -2474,6 +2481,262 @@ if (fs.existsSync(phase48ContextPath)) {
     && /Populated/i.test(ctx));
 } else {
   check('Phase 48 CONTEXT.md populated with Full Gate 48 outcomes + absorption table', false);
+}
+
+// ─── Section 24 — Phase 49/M4.2 verify-gate cross-domain layer + finding lifecycle ───
+//
+// Contract tested (Gate 49 convergent GREEN-CONDITIONAL → GREEN, 8 conditions absorbed
+// A1-A8; see `.planning/phases/49-verify-gate-cross-domain/49-CONTEXT.md`):
+//   A1 finding.schema.json state enum expanded to [open, resolved, dismissed-with-rationale]
+//      + oneOf lifecycle branches (3; HIGH+dismissed structurally rejected via zero match)
+//      + resolved_commit ^[0-9a-f]{7,40}$ pattern + dismissed_rationale minLength:50
+//      + audit_version remains top-of-file marker (NOT schema property)
+//   A2 Raw method+path set-key; no path-parameter normalization (Phase 48 projection parity)
+//   A3 extract-spec-block.mjs exports readDomainsField + readRequiredSpecs +
+//      shouldTriggerCrossDomainLayer; domains=[frontend,backend] OR required_specs pair
+//      triggers cross-domain layer; single-domain skips
+//   A4 commands/sunco/proceed-gate.md inline extension (NOT new workflow file) —
+//      cross-domain findings consumption + HIGH/MED/LOW severity policy +
+//      --allow-low-open flag; ship.md wording corrected (non-cross-domain preserved)
+//   A5 CROSS_DOMAIN_FINDINGS_BLOCK + CROSS_DOMAIN_LIFECYCLE markers + findings_version:1
+//      top marker; 3-region structure (findings auto-gen / lifecycle overrides YAML /
+//      prose preserve); renderFindingsMarkdown + parseLifecycleOverrides exports
+//   A6 Deterministic-only (G7 option a); no sunco-cross-domain-* agent file; charter
+//      citation in 49-CONTEXT.md; Phase 50 spec §8 L685 amendment debt registered;
+//      future heuristic extension slot documented
+//   A7 yaml direct dep in packages/cli/package.json; package-lock updated
+//   A8 /sunco:proceed-gate extension (no new command file); no /sunco:cross-domain-check;
+//      install.cjs unchanged
+// Regression: Phase 48 assets extension-only (existing exports IMMUTABLE);
+// Phase 47 sunco-backend-reviewer state hard-guard preserved.
+
+const proceedGateCmdPath = path.resolve(__dirname, '..', 'commands', 'sunco', 'proceed-gate.md');
+const verifyPhasePath = path.resolve(__dirname, '..', 'workflows', 'verify-phase.md');
+const shipPath = path.resolve(__dirname, '..', 'workflows', 'ship.md');
+const cliPackageJsonPath = path.resolve(__dirname, '..', 'package.json');
+const phase49ContextPath = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases',
+  '49-verify-gate-cross-domain', '49-CONTEXT.md');
+const s24CliAgentsDir = path.resolve(__dirname, '..', 'agents');
+const s24CommandsDir = path.resolve(__dirname, '..', 'commands', 'sunco');
+const s24WorkflowsDir = path.resolve(__dirname, '..', 'workflows');
+
+console.log(`\n${BOLD}24. verify-gate cross-domain layer + finding lifecycle (Phase 49/M4.2)${RESET}`);
+
+// 24a. finding.schema.json state enum expanded to 3 lifecycle values (A1)
+let findingSchema = null;
+try { findingSchema = JSON.parse(fs.readFileSync(findingSchemaPath, 'utf8')); } catch {}
+if (findingSchema) {
+  const stateEnum = findingSchema.properties?.state?.enum ?? [];
+  check('finding.schema.json state enum = [open, resolved, dismissed-with-rationale] (A1 no shorthand)',
+    Array.isArray(stateEnum) && stateEnum.length === 3
+    && stateEnum.includes('open')
+    && stateEnum.includes('resolved')
+    && stateEnum.includes('dismissed-with-rationale'));
+  // 24b. dismissed (shorthand) NOT in enum
+  check('finding.schema.json state enum does NOT include dismissed shorthand (A1 literal)',
+    !stateEnum.includes('dismissed'));
+  // 24c. resolved_commit pattern ^[0-9a-f]{7,40}$
+  check('finding.schema.json resolved_commit pattern ^[0-9a-f]{7,40}$ (A1)',
+    findingSchema.properties?.resolved_commit?.pattern === '^[0-9a-f]{7,40}$');
+  // 24d. dismissed_rationale minLength:50
+  check('finding.schema.json dismissed_rationale minLength:50 (A1 R6 lock)',
+    findingSchema.properties?.dismissed_rationale?.minLength === 50);
+  // 24e. oneOf with 3 lifecycle branches (HIGH+dismissed structurally rejected via zero match)
+  check('finding.schema.json oneOf has 3 lifecycle branches (A1/A2 HIGH hard-block via zero-match)',
+    Array.isArray(findingSchema.oneOf) && findingSchema.oneOf.length === 3);
+  // 24f. oneOf includes dismissed branch with severity in [MEDIUM, LOW] (HIGH exclusion)
+  const dismissedBranch = findingSchema.oneOf.find(b =>
+    b.properties?.state?.const === 'dismissed-with-rationale');
+  const severityEnum = dismissedBranch?.properties?.severity?.enum ?? [];
+  check('finding.schema.json dismissed branch restricts severity to [MEDIUM, LOW] (A1 HIGH hard-block)',
+    severityEnum.length === 2 && severityEnum.includes('MEDIUM') && severityEnum.includes('LOW')
+    && !severityEnum.includes('HIGH'));
+  // 24g. audit_version NOT a schema property (A1 top-of-file marker only)
+  check('finding.schema.json does NOT define audit_version as schema property (A1 marker-only)',
+    !('audit_version' in (findingSchema.properties ?? {})));
+  // 24h. additionalProperties:true preserved (lenient-additive)
+  check('finding.schema.json additionalProperties:true preserved (A1 lenient-additive)',
+    findingSchema.additionalProperties === true);
+} else {
+  check('finding.schema.json parses as JSON (A1)', false);
+}
+
+// 24i. Phase 47 state=open single-value guard rooted in sunco-backend-reviewer.md preserved
+if (fs.existsSync(reviewerAgentPath)) {
+  const agentMd = fs.readFileSync(reviewerAgentPath, 'utf8');
+  // Phase 47 hard-guard: reviewer MUST NOT emit resolved / dismissed at audit_version:1
+  check('sunco-backend-reviewer.md state hard-guard preserved (Phase 47 audit_version:1 discipline)',
+    /audit_version:\s*1/.test(agentMd)
+    && /MUST NOT|must not|never/.test(agentMd)
+    && /resolved|dismissed/.test(agentMd));
+} else {
+  check('sunco-backend-reviewer.md exists (Phase 47 preserved)', false);
+}
+
+// 24j. extract-spec-block.mjs exports Phase 49 extensions (A3/A5)
+const extractorSrc = fs.existsSync(crossDomainExtractorPath)
+  ? fs.readFileSync(crossDomainExtractorPath, 'utf8') : '';
+check('extract-spec-block.mjs exports generateCrossDomainFindings (A3)',
+  /export\s+function\s+generateCrossDomainFindings\b/.test(extractorSrc));
+check('extract-spec-block.mjs exports isCrossDomainStale (A3)',
+  /export\s+function\s+isCrossDomainStale\b/.test(extractorSrc));
+check('extract-spec-block.mjs exports parseLifecycleOverrides (A5)',
+  /export\s+function\s+parseLifecycleOverrides\b/.test(extractorSrc));
+check('extract-spec-block.mjs exports renderFindingsMarkdown (A5)',
+  /export\s+function\s+renderFindingsMarkdown\b/.test(extractorSrc));
+check('extract-spec-block.mjs exports readRequiredSpecs (A3)',
+  /export\s+function\s+readRequiredSpecs\b/.test(extractorSrc));
+check('extract-spec-block.mjs exports readDomainsField (A3)',
+  /export\s+function\s+readDomainsField\b/.test(extractorSrc));
+check('extract-spec-block.mjs exports shouldTriggerCrossDomainLayer (A3)',
+  /export\s+function\s+shouldTriggerCrossDomainLayer\b/.test(extractorSrc));
+
+// 24k. Phase 48 existing exports IMMUTABLE (extension-only boundary)
+check('extract-spec-block.mjs preserves extractSpecBlock signature (Phase 48 lock)',
+  /export\s+async\s+function\s+extractSpecBlock\(filePath,\s*kind,/.test(extractorSrc));
+check('extract-spec-block.mjs preserves generateCrossDomain signature (Phase 48 lock)',
+  /export\s+function\s+generateCrossDomain\(\{\s*ui,\s*api\s*\}\)/.test(extractorSrc));
+check('extract-spec-block.mjs preserves renderMarkdown signature (Phase 48 lock)',
+  /export\s+function\s+renderMarkdown\(\{\s*crossDomainBlock,\s*findingsCounts\s*\},\s*priorContent/.test(extractorSrc));
+
+// 24l. New markers + findings_version marker (A5)
+check('extract-spec-block.mjs declares CROSS_DOMAIN_FINDINGS_BLOCK_START marker (A5)',
+  /CROSS_DOMAIN_FINDINGS_BLOCK_START\s*=\s*['"]<!-- SUNCO:CROSS-DOMAIN-FINDINGS-BLOCK-START -->['"]/.test(extractorSrc));
+check('extract-spec-block.mjs declares CROSS_DOMAIN_LIFECYCLE_START marker (A5)',
+  /CROSS_DOMAIN_LIFECYCLE_START\s*=\s*['"]<!-- SUNCO:CROSS-DOMAIN-LIFECYCLE-START -->['"]/.test(extractorSrc));
+check('extract-spec-block.mjs declares FINDINGS_VERSION_MARKER findings_version:1 (A5 BS1 parity)',
+  /FINDINGS_VERSION_MARKER\s*=\s*['"]<!-- findings_version: 1 -->['"]/.test(extractorSrc));
+
+// 24m. Charter A6-i negative check: no sunco-cross-domain-* agent file
+const s24AgentFiles = fs.existsSync(s24CliAgentsDir) ? fs.readdirSync(s24CliAgentsDir) : [];
+const crossDomainAgentPresent = s24AgentFiles.some(f => /^sunco-cross-domain/.test(f));
+check('no sunco-cross-domain-* agent file created (A6 deterministic-first charter; charter drift prevention)',
+  !crossDomainAgentPresent);
+
+// 24n. A8 negative: no /sunco:cross-domain-check command file
+const s24CommandFiles = fs.existsSync(s24CommandsDir) ? fs.readdirSync(s24CommandsDir) : [];
+check('no /sunco:cross-domain-check command file (A8 surface inflation blocked)',
+  !s24CommandFiles.includes('cross-domain-check.md'));
+
+// 24o. A4 negative: no workflows/proceed-gate.md file (Option X inline extension, NOT creation)
+const s24WorkflowFiles = fs.existsSync(s24WorkflowsDir) ? fs.readdirSync(s24WorkflowsDir) : [];
+check('no workflows/proceed-gate.md file created (A4 Option X — inline command extension)',
+  !s24WorkflowFiles.includes('proceed-gate.md'));
+
+// 24p. commands/sunco/proceed-gate.md extension: cross-domain + severity + flag wired
+if (fs.existsSync(proceedGateCmdPath)) {
+  const pgMd = fs.readFileSync(proceedGateCmdPath, 'utf8');
+  check('proceed-gate.md frontmatter description mentions cross-domain (A8 user-discoverability)',
+    /cross-domain/i.test(pgMd.slice(0, 600)));
+  check('proceed-gate.md frontmatter argument-hint includes --allow-low-open (A4/A8)',
+    /argument-hint:[\s\S]*?--allow-low-open/.test(pgMd));
+  check('proceed-gate.md has Step 1.5 Cross-domain findings consumption (A4)',
+    /Step 1\.5[\s\S]*?Cross-domain findings consumption/i.test(pgMd));
+  check('proceed-gate.md CROSS_DOMAIN_FINDINGS path referenced (A4)',
+    /CROSS-DOMAIN-FINDINGS\.md/.test(pgMd));
+  check('proceed-gate.md imports parseLifecycleOverrides (A4/A5 wire)',
+    /parseLifecycleOverrides/.test(pgMd));
+  check('proceed-gate.md verdict policy: HIGH+open HARD BLOCK (A4 spec §8 L710)',
+    /HIGH[\s\S]*?open[\s\S]*?HARD BLOCK/i.test(pgMd));
+  check('proceed-gate.md verdict policy: --allow-low-open flag (A4/A8)',
+    /--allow-low-open/.test(pgMd));
+  check('proceed-gate.md wording: "existing ship verification behavior preserved for non-cross-domain phases" (A4 Codex)',
+    /existing[\s\S]{0,50}behavior preserved[\s\S]{0,80}non-cross-domain/i.test(pgMd));
+} else {
+  check('proceed-gate.md extension exists (A4)', false);
+}
+
+// 24q. verify-phase.md has Cross-Domain Gate section (A3 trigger + deterministic layer)
+if (fs.existsSync(verifyPhasePath)) {
+  const vpMd = fs.readFileSync(verifyPhasePath, 'utf8');
+  check('verify-phase.md has Cross-Domain Gate section (A3 additive layer)',
+    /##\s+Cross-Domain Gate.*Phase 49/i.test(vpMd));
+  check('verify-phase.md Cross-Domain Gate invokes shouldTriggerCrossDomainLayer (A3)',
+    /shouldTriggerCrossDomainLayer/.test(vpMd));
+  check('verify-phase.md Cross-Domain Gate invokes isCrossDomainStale (A3 freshness)',
+    /isCrossDomainStale/.test(vpMd));
+  check('verify-phase.md Cross-Domain Gate invokes generateCrossDomainFindings (A3)',
+    /generateCrossDomainFindings/.test(vpMd));
+  check('verify-phase.md Cross-Domain Gate writes CROSS-DOMAIN-FINDINGS.md (A5)',
+    /CROSS-DOMAIN-FINDINGS\.md/.test(vpMd));
+  check('verify-phase.md Cross-Domain Gate declares deterministic-only (A6 charter)',
+    /Deterministic-only|deterministic.only/i.test(vpMd));
+  check('verify-phase.md Cross-Domain Gate non-regression wording (A3 single-domain skip)',
+    /single-domain[\s\S]{0,300}skip|skip[\s\S]{0,80}single-domain|non-regression/i.test(vpMd));
+} else {
+  check('verify-phase.md exists (A3)', false);
+}
+
+// 24r. ship.md wording fix (A4 Codex)
+if (fs.existsSync(shipPath)) {
+  const shipMd = fs.readFileSync(shipPath, 'utf8');
+  check('ship.md mentions cross-domain gate consumption in Step 2 (A4)',
+    /CROSS-DOMAIN-FINDINGS\.md|cross-domain gate/i.test(shipMd));
+  check('ship.md wording: existing ship verification behavior preserved (A4 Codex)',
+    /existing ship verification behavior preserved|existing[\s\S]{0,50}behavior preserved/i.test(shipMd));
+} else {
+  check('ship.md exists (A4)', false);
+}
+
+// 24s. yaml direct dep in packages/cli/package.json (A7 Phase 48 debt closure)
+if (fs.existsSync(cliPackageJsonPath)) {
+  let cliPkg;
+  try { cliPkg = JSON.parse(fs.readFileSync(cliPackageJsonPath, 'utf8')); } catch {}
+  if (cliPkg) {
+    check('packages/cli/package.json has yaml as direct dependency (A7 Phase 48 debt CLOSED)',
+      cliPkg.dependencies && typeof cliPkg.dependencies.yaml === 'string' && cliPkg.dependencies.yaml.length > 0);
+    check('packages/cli/package.json yaml dep is semver-like (A7)',
+      cliPkg.dependencies && typeof cliPkg.dependencies.yaml === 'string'
+      && /^[~^]?\d+\.\d+\.\d+/.test(cliPkg.dependencies.yaml));
+  } else {
+    check('packages/cli/package.json parses as JSON (A7)', false);
+  }
+}
+
+// 24t. package-lock.json records yaml as direct dep of packages/cli workspace (A7)
+const rootLockPath = path.resolve(__dirname, '..', '..', '..', 'package-lock.json');
+if (fs.existsSync(rootLockPath)) {
+  let lock = null;
+  try { lock = JSON.parse(fs.readFileSync(rootLockPath, 'utf8')); } catch {}
+  const cliPkgInLock = lock?.packages?.['packages/cli'];
+  check('package-lock.json records yaml as direct dep of packages/cli (A7)',
+    cliPkgInLock?.dependencies && typeof cliPkgInLock.dependencies.yaml === 'string');
+}
+
+// 24u. Phase 49 CONTEXT populated with Gate 49 outcomes + charter + extension slot
+if (fs.existsSync(phase49ContextPath)) {
+  const ctx49 = fs.readFileSync(phase49ContextPath, 'utf8');
+  check('Phase 49 CONTEXT.md populated with Full Gate 49 outcomes + absorption table (A1-A8)',
+    /Gate 49|Full Gate 49/i.test(ctx49)
+    && /GREEN-CONDITIONAL|GREEN/.test(ctx49)
+    && /A1|A2|A3|A4|A5|A6|A7|A8/.test(ctx49)
+    && /Populated/i.test(ctx49));
+  check('Phase 49 CONTEXT.md contains charter citation (A6-i deterministic-first)',
+    /Deterministic[-\s]First/i.test(ctx49)
+    && /architecture\.md/.test(ctx49)
+    && /spec.*§8.*L685|line 685/i.test(ctx49));
+  check('Phase 49 CONTEXT.md documents future heuristic extension slot (A6-ii)',
+    /heuristic[\s\S]{0,200}extension|extension[\s\S]{0,80}heuristic|future heuristic/i.test(ctx49));
+  check('Phase 49 CONTEXT.md registers Phase 50 spec amendment debt (A6-iii)',
+    /Phase 50|M5\.1/.test(ctx49) && /amendment|spec.*§?8.*L685|L685[\s\S]{0,50}amendment/i.test(ctx49));
+  check('Phase 49 CONTEXT.md records premise-correction trail (preflight discovery)',
+    /premise[\s\S]{0,120}correction|preflight[\s\S]{0,80}discovery|install preflight/i.test(ctx49));
+} else {
+  check('Phase 49 CONTEXT.md exists (Populated)', false);
+}
+
+// 24v. Phase 48 assets existing exports preserved (content-grep, not hash, because extended)
+if (fs.existsSync(crossDomainSyncPath)) {
+  const syncMd = fs.readFileSync(crossDomainSyncPath, 'utf8');
+  check('cross-domain-sync.md unchanged — no Phase 49 mutations (Phase 48 asset frozen)',
+    /Phase 48\/M4\.1/.test(syncMd)
+    && /C7[\s\S]{0,200}Phase 49|internal workflow|No slash command in Phase 48/i.test(syncMd));
+}
+if (fs.existsSync(crossDomainSchemaPath)) {
+  const schemaMd = fs.readFileSync(crossDomainSchemaPath, 'utf8');
+  check('cross-domain.schema.json unchanged — no Phase 49 mutations (Phase 48 asset frozen)',
+    /BS1.*version const: 1|version const:\s*1/i.test(schemaMd)
+    && /Phase 48\/M4\.1/.test(schemaMd));
 }
 
 // Summary

@@ -52,7 +52,8 @@
     "prepack": "npm run build && npm run lint"
   },
   "dependencies": {
-    "commander": "14.0.3"
+    "commander": "14.0.3",
+    "yaml": "^2.4.2"
   },
   "devDependencies": {
     "@sunco/core": "*",
