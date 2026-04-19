@@ -25,7 +25,7 @@ Agents should load only the references relevant to a phase's tagged subdomain, n
 
 | Surface | Primary refs | Secondary refs |
 |---------|-------------|----------------|
-| `backend-phase-api` / `backend-review-api` | api-design, boundaries-and-architecture, security-and-permissions | performance-and-scale, observability-and-operations |
+| `backend-phase-api` / `backend-review-api` | api-design, boundaries-and-architecture, reliability-and-failure-modes, security-and-permissions | performance-and-scale, observability-and-operations |
 | `backend-phase-data` / `backend-review-data` | data-modeling, migrations-and-compatibility | performance-and-scale, reliability-and-failure-modes |
 | `backend-phase-event` / `backend-review-event` | reliability-and-failure-modes, boundaries-and-architecture | performance-and-scale, observability-and-operations |
 | `backend-phase-ops` / `backend-review-ops` | observability-and-operations, reliability-and-failure-modes | security-and-permissions, migrations-and-compatibility |
