@@ -3700,26 +3700,32 @@ if (fs.existsSync(s29AutoPath) && fs.existsSync(s29DoPath) && fs.existsSync(s29N
     autoDispatchHits.length <= 1); // do.md's fallback table has an `auto` keyword entry
 }
 
-// 29o [53-wrapper]  6 stage commands byte-identical vs 7791d33 baseline (R1)
-// Matches Phase 52b 28q 6-command set. DESIGN §7 lists 8 nominal stage
-// commands but current repo ships brainstorming.md (not brainstorm.md) and
-// compound.md does not yet exist (Phase 54 scope). We assert the same 6
-// that Phase 52b's R1 guard used. Byte-stability is enforced pre-commit via
-// `git diff --name-only 7791d33..HEAD -- .../{plan,execute,verify,proceed-gate,
-// ship,release}.md | wc -l == 0` per L15 done-when #13.
+// 29o [53-wrapper]  Stage commands byte-identical vs 7791d33 baseline (R1)
+// Expanded from Phase 52b 28q 6-command set to include brainstorming.md per
+// Codex second-pass blocking (pre-push hygiene): the repo ships brainstorming.md
+// as the BRAINSTORM-stage command file (DESIGN §7 nominal "brainstorm" = repo
+// "brainstorming"). compound.md does not yet exist (Phase 54 scope); it is
+// excluded from the positive-presence guard but MUST be absent to avoid a
+// Phase 54-scoped file leaking in. Byte-stability enforcement pre-commit via
+// `git diff --name-only 7791d33..HEAD -- .../{brainstorming,plan,execute,
+// verify,proceed-gate,ship,release}.md | wc -l == 0`.
 {
-  const stageNames = ['plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release'];
+  const stageNames = ['brainstorming', 'plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release'];
   const stagePaths = stageNames.map(n => path.resolve(s29CommandsDir, `${n}.md`));
   const missing = stagePaths.filter(p => !fs.existsSync(p));
-  check(`[53-wrapper] 6 stage commands present (29o; R1 per 28q precedent, missing: [${missing.join(', ')}])`,
+  check(`[53-wrapper] 7 stage commands present incl. brainstorming (29o; R1 expanded, missing: [${missing.join(', ')}])`,
     missing.length === 0);
   const frontmatterOk = stagePaths.every(p => {
     if (!fs.existsSync(p)) return false;
     const c = fs.readFileSync(p, 'utf8');
     return /^name:\s*sunco:/m.test(c);
   });
-  check('[53-wrapper] 6 stage commands have sunco:* frontmatter preserved (29o; R1)',
+  check('[53-wrapper] 7 stage commands have sunco:* frontmatter preserved (29o; R1)',
     frontmatterOk);
+  // compound.md absence guard (Phase 54 scope hard-lock for Phase 53)
+  const compoundPath = path.resolve(s29CommandsDir, 'compound.md');
+  check('[53-wrapper] compound.md absent (29o; Phase 54 scope; Phase 53 hard-lock)',
+    !fs.existsSync(compoundPath));
 }
 
 // 29p [53-wrapper]  where-am-i.md byte-identical (L6 ROADMAP-narrowing exclusion)
