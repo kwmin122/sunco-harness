@@ -521,4 +521,48 @@ See spec §14 "Done for v1". Key markers:
 4. Dogfood sunco-harness finds ≥5 findings in its own API surface
 5. All COEXIST commands unchanged (0 regression)
 
+**v1.4 status**: SHIPPED 2026-04-20 as `popcoru@0.12.0` (git tag `v0.12.0`, release commit `94041a2`). 17/17 phases, all 5 milestones (M1-M5) CLOSED. Rollback anchor `sunco-pre-dogfood` branch preserved at `3ac0ee9`. See CHANGELOG.md `## [0.12.0]` for full release notes.
+
+---
+
+## v1.5 SUNCO Workflow Router (Milestone M6 — 7 phases, 5 committed + 1 provisional + 1 deferred)
+
+**Design source**: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review with plan-verifier + Codex; no v2-relay divergence). Clean-room design inspired only by the general workflow idea (Brainstorm → Plan → Work → Review → Compound → Repeat); no compound-engineering-plugin code/prompts/files vendored.
+
+**Milestone goal**: Promote SUNCO from "bag of slash commands" to "workflow router" — evidence-based stage state machine with 10-stage enum (BRAINSTORM, PLAN, WORK, REVIEW, VERIFY, PROCEED, SHIP, RELEASE, COMPOUND, PAUSE), deterministic classifier with frozen-weight confidence, approval-boundary-enforced auto-execution (auto-routing ≠ auto-execution), and Compound as post-stage hook. v1.5 is **additive**: existing stage commands (`/sunco:brainstorm`, `/sunco:plan`, `/sunco:execute`, `/sunco:verify`, `/sunco:proceed-gate`, `/sunco:ship`, `/sunco:release`, `/sunco:compound`) remain byte-identical when invoked directly (R1 regression guarantee continued from v1.4).
+
+### Milestone M6 — v1.5 Router (Phases 52a-57)
+
+**Committed**:
+- **Phase 52a (spec §9 Phase 52a)**: Router core schemas + state machine docs — `schemas/route-decision.schema.json`, `references/router/{README,STAGE-MACHINE,EVIDENCE-MODEL,CONFIDENCE-CALIBRATION,APPROVAL-BOUNDARY}.md`, smoke Section 27 static subset. REQ: IF-18, IF-20, (partial) IF-19, (partial) IF-21.
+- **Phase 52b (spec §9 Phase 52b)**: Router classifier + evidence collector + decision writer + confidence module + router.md command + workflows/router.md + vitest runtime tests (deterministic confidence, freshness parsers, promotion criteria, Y1 class-definition), smoke Section 27 runtime subset + Section 28 placeholder. REQ: (runtime) IF-19, (enforcement) IF-21.
+- **Phase 53**: Router wrappers (minus `/sunco:auto`) — `commands/sunco/{router,do,next,mode,manager}.md` updates routing through 52b classifier; existing stage commands byte-identical; smoke Section 28. REQ: (integration) IF-18, IF-19, IF-20, IF-21.
+- **Phase 54**: Compound-router — `schemas/compound.schema.json`, `references/compound/{README,template}.md`, `references/compound/src/{compound-router,sink-proposer}.mjs`, `commands/sunco/compound.md`, `workflows/compound.md`, router post-stage hook integration, smoke Section 29. REQ: IF-22.
+- **Phase 55**: Router dogfood — 5 fixture scenarios (new feature / bugfix / release completion / incident recovery / milestone close) + vitest runner + retroactive v1.4 compound artifact + retroactive route decision backfill, smoke Section 30. REQ: IF-23.
+
+**Mid-milestone review gate** (between 55 and 56): Phase 55 dogfood results drive Phase 56/57 scope confirmation. FAIL → replan; no auto-continue.
+
+**Provisional**:
+- **Phase 56**: Release-router hardening — `workflows/release.md` sub-stage decomposition (PRE_FLIGHT → VERSION_BUMP → CHANGELOG → COMMIT → TAG → PUSH → PUBLISH → VERIFY_REGISTRY → TAG_PUSH → COMPOUND_HOOK), `/sunco:artifact-gate` extension, workspace consistency check, smoke Section 31. Scope confirmed at mid-milestone gate.
+
+**Deferred (explicit gate post-56)**:
+- **Phase 57**: `/sunco:auto` integration — risk-level-keyed `--allow` flags; autonomous loop constrained by 52b classifier + 53 wrappers. Frozen until Phase 56 complete + explicit gate opening.
+
+### Timeline
+
+Indicative: 3-5 weeks (52a small / 52b medium / 53 medium / 54 medium / 55 medium). Mid-milestone gate absorbs 56/57 replanning. Phase 57 `/sunco:auto` touch is deferred indefinitely pending 56 outcomes and explicit gate.
+
+### Success criteria (Done for v1.5)
+
+1. `/sunco:router <no-args>` produces schema-valid RouteDecision artifact with deterministic confidence (determinism invariant verified in Section 27 runtime)
+2. 10-stage enum + forward + regress + reset transitions enforced by classifier
+3. `.sun/router/session/` ephemeral tier + `.planning/router/decisions/` durable tier with deterministic promotion criteria
+4. `repo_mutate_official` class definition enforces ACK on memory/rules/backlog/official planning artifacts; blessed orchestrator batched-ACK covers `/sunco:execute`, `/sunco:verify`, `/sunco:release`
+5. Compound-router auto-writes `.planning/compound/release-*.md` on RELEASE stage exit (always-on)
+6. Freshness Gate (7-point) runs before every route decision; repo_mutate_official+ hard-blocks on drift
+7. Existing stage commands remain byte-identical when invoked directly (R1 guarantee preserved)
+8. Clean-room invariant: `grep -r "compound-engineering-plugin"` over 10-path scope-set returns 0 matches outside verbatim clean-room notices
+9. SDI-2 counter preserved or justified (v1.5 should not regress the counter budget)
+10. Phase 55 dogfood green on all 5 scenarios
+
 

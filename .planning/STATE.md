@@ -1,17 +1,27 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.4
-milestone_name: Impeccable Fusion
-status: initialized
+milestone: v1.5
+milestone_name: SUNCO Workflow Router
+status: kickoff
 stopped_at: ""
-last_updated: "2026-04-18T00:00:00.000Z"
-last_activity: 2026-04-18
+last_updated: "2026-04-20T00:00:00.000Z"
+last_activity: 2026-04-20
 progress:
-  total_phases: 17
+  total_phases: 7
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
   percent: 0
+previous_milestone:
+  label: v1.4
+  name: Impeccable Fusion
+  status: SHIPPED
+  npm_version: 0.12.0
+  git_tag: v0.12.0
+  release_commit: 94041a2
+  shipped_at: 2026-04-20
+  completed_phases: 17
+  total_phases: 17
 ---
 
 # Project State
@@ -21,19 +31,26 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** v1.4 Impeccable Fusion — 17 phases (35–51) scaffolded; Phase 35 skeleton work next.
+**Current focus:** v1.5 SUNCO Workflow Router kickoff — Phase 52a entry (Router core schemas + state machine docs). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review).
 
 ## Current Position
 
-Milestone: v1.4 Impeccable Fusion (initialized)
-Current phase: 35 (spec alias M1.1) — File layout + attribution scaffolding
-Status: scaffolded; Phase 35 skeleton to be populated via `/sunco:discuss 35`
-Spec source: `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.md` (locked at `6e6761a`)
-Last activity: 2026-04-18
+Milestone: v1.5 SUNCO Workflow Router (kickoff)
+Current phase: 52a-router-core-schemas (spec: DESIGN-v1.md §9 Phase 52a committed)
+Status: Gate 52a v2 convergent absorbed (Codex + plan-verifier GREEN-CONDITIONAL); Commit A (planning kickoff) in progress; Commit B (static deliverables) next
+Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`)
+Last activity: 2026-04-20
 
-Progress: [░░░░░░░░░░] 0% (0/17 phases)
+Progress (v1.5): [░░░░░░░░░░] 0% (0/7 phases — 5 committed + 1 provisional + 1 deferred)
+Committed: 52a, 52b, 53, 54, 55
+Provisional: 56 (release-router hardening; scope at mid-milestone gate)
+Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 + explicit gate)
 
-Historical note: Previous milestones archived in-place — v1.2 Light Harness (complete, Phase 17–21) and v1.3 Consolidation & Pivot Absorption (closed, Phase 22–34 + candidates). See ROADMAP.md for full trajectory.
+## v1.4 retrospective
+
+v1.4 Impeccable Fusion **SHIPPED 2026-04-20** as `popcoru@0.12.0` (git tag `v0.12.0`, release commit `94041a2`). 17/17 phases, all 5 milestones CLOSED. Rollback anchor `sunco-pre-dogfood` branch preserved at `3ac0ee9`. See CHANGELOG.md `## [0.12.0]` and memory `project_sunco_harness_v1_4.md` for full trail. v1.4 produced 8 learnings (L1 Freshness / L2 Evidence>Authority / L3 SDI vs spec-rule / L4 Push boundary / L5 External-signal additive fix / L6 Release artifact gate / L7 Scratch consolidation / L8 SemVer vs milestone label) absorbed into v1.5 router design §12.
+
+Historical note: Previous milestones archived in-place — v1.2 Light Harness (complete, Phase 17–21), v1.3 Consolidation & Pivot Absorption (closed, Phase 22–34 + candidates), v1.4 Impeccable Fusion (SHIPPED, Phase 35–51). See ROADMAP.md for full trajectory.
 
 ## Performance Metrics
 

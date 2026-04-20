@@ -300,6 +300,43 @@ Source spec: `docs/superpowers/specs/2026-04-18-sunco-impeccable-fusion-design.m
 
 ---
 
+## v1.5 Requirements — SUNCO Workflow Router
+
+Source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`, 4-round convergent review). Clean-room design; no external workflow/compound-plugin vendoring.
+
+### Router Core (M6)
+
+- **IF-18**: Router state machine — 10-stage enum (BRAINSTORM, PLAN, WORK, REVIEW, VERIFY, PROCEED, SHIP, RELEASE, COMPOUND, PAUSE) + UNKNOWN (classifier-internal); each stage has `entry_preconditions`, `exit_conditions`, `authorized_mutations`, `forbidden_mutations`, and for PAUSE additionally `persistence_location` + `resume_trigger` + `re_entrance`. Forward edges + explicit regress edges + stage reset primitive. Covered by Phase 52a (state machine docs) + Phase 53 (wrapper integration).
+
+- **IF-19**: Evidence model + 7-point Freshness Gate — 4 source tiers (deterministic required / deterministic derived / optional-pasted / unavailable). Freshness Gate runs as Router Step 0 before every stage decision. Drift → UNKNOWN + drift report. Risk-level-keyed drift policy (read_only soft-fresh, local_mutate soft-fresh+warn, repo_mutate/official hard-block, remote/external hard-block + double-ACK). Covered by Phase 52a (spec + docs) + Phase 52b (runtime classifier/collector + enforcement).
+
+- **IF-20**: Route Decision JSON Schema (draft-07) — `kind: route-decision`, `version: 1`, required fields `ts`, `freshness`, `current_stage`, `recommended_next`, `confidence` (0-1 numeric), `reason[]` (minItems 1), `preconditions.{satisfied,missing}`, `action.{command,mode}`, `approval_envelope.{risk_level,triggers_required}`. Ephemeral tier at `.sun/router/session/*.json` (gitignored, 14-day prune). Durable tier at `.planning/router/decisions/*.json` (git-tracked) with deterministic promotion criteria (RELEASE/COMPOUND/milestone-close/freshness-conflicted/first-per-phase/explicit-durable). Covered by Phase 52a (schema + persistence spec) + Phase 52b (writer runtime).
+
+- **IF-21**: Approval Boundary — 6 risk levels (read_only / local_mutate / repo_mutate_official / repo_mutate / remote_mutate / external_mutate) with `repo_mutate_official` defined as a **class** (inclusive: official planning artifacts under `.planning/` + `.claude/rules/` + memory + backlog + SDI counter; explicit exceptions: `.planning/router/decisions/`, `.planning/router/paused-state.json`, `.planning/router/archive/`, `.sun/`, compound draft writes). Blessed orchestrator batched-ACK for `/sunco:execute`, `/sunco:verify`, `/sunco:release`. Forbidden-without-ACK hard-lock list (push/tag/publish/npm-login/dep-install/rm-rf/memory-rules mutation/schema mutation/network fetch). Covered by Phase 52a (docs + class definition) + Phase 52b (runtime enforcement).
+
+### Compound Engine (M6)
+
+- **IF-22**: Compound-router — post-stage hook with trigger-score model (RELEASE/MILESTONE always-on; others score-gated with SDI-observational +2 / spec-rule-prescriptive +3 / CI-recovery +2 / post-judge fix +3 / rollback anchor +2 / plan debt +1 / gate RED/YELLOW +1 / user correction +1; dampeners for docs-only -3 / no-new-debt -2 / window-too-short -2). Artifact auto-write to `.planning/compound/<scope>-<ref>-<date>.md` with 8 required sections (context/learnings/patterns/automation/seeds/memory/rules/approval-log); sink proposals (memory/rules/backlog/SDI) as proposal-only requiring user ACK. `compound.schema.json` with `status` lifecycle (draft→proposed→partially-approved→approved→archived). Covered by Phase 54.
+
+### Router Dogfood (M6)
+
+- **IF-23**: Router dogfood — 5 fixture scenarios under `test/fixtures/router/`: (1) greenfield new feature → BRAINSTORM, (2) bugfix mid-phase → WORK, (3) release completion → COMPOUND always-on, (4) incident recovery with rollback → COMPOUND score ≥5 + SDI candidate, (5) milestone close → COMPOUND always-on. Deterministic assertions per scenario (stage enum + confidence band + compound artifact expectation + approval_envelope.risk_level). Retroactive v1.4 compound artifact at `.planning/compound/release-v0.12.0-20260420.md` + route decision log backfill for v1.4 window. Covered by Phase 55.
+
+**Coverage by phase (v1.5)**:
+| Phase | Reqs | IDs |
+|-------|------|-----|
+| 52a Router core schemas + state machine docs | 4 | IF-18, IF-20, (spec) IF-19, (spec) IF-21 |
+| 52b Router classifier + evidence + runtime | 2 | (runtime) IF-19, (enforcement) IF-21 |
+| 53 Router wrappers | 4 | (integration) IF-18, IF-19, IF-20, IF-21 |
+| 54 Compound-router | 1 | IF-22 |
+| 55 Router dogfood | 1 | IF-23 |
+| 56 Release-router hardening (provisional) | (cross-cut) | IF-21 (release approval envelope) |
+| 57 `/sunco:auto` (deferred) | (cross-cut) | IF-21 (auto-safe boundary) |
+
+Hard-lock common to v1.5 phases: `.github/workflows/ci.yml` untouched (v1.4 Path-A continuation); no mutations to `finding.schema.json`, `cross-domain.schema.json`, `ui-spec.schema.json`; no modifications to existing stage commands except Phase 53/56 scoped wrappers; `/sunco:auto` frozen until Phase 57.
+
+---
+
 ## v2 Requirements
 
 ### Extension Skills
