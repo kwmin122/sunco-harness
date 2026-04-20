@@ -8,10 +8,10 @@ last_updated: "2026-04-20T00:00:00.000Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 7
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 0
   completed_plans: 0
-  percent: 0
+  percent: 14
 previous_milestone:
   label: v1.4
   name: Impeccable Fusion
@@ -35,14 +35,15 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 ## Current Position
 
-Milestone: v1.5 SUNCO Workflow Router (kickoff)
-Current phase: 52a-router-core-schemas (spec: DESIGN-v1.md §9 Phase 52a committed)
-Status: Phase 52a local complete — Commit A (planning kickoff `5b8094e`) + Commit B (static contracts `13c110d`) created locally; reviewer diff relay converged (Codex GREEN + Reviewer GREEN-CONDITIONAL absorbed with 2 pre-push metadata fixes); pre-push metadata-alignment docs commit pending, then push.
-Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`)
+Milestone: v1.5 SUNCO Workflow Router (executing)
+Current phase: 52b-router-classifier pending Gate 52b kickoff (spec: DESIGN-v1.md §9 Phase 52b committed)
+Status: Phase 52a LANDED 2026-04-20 as 3-commit unit (`5b8094e` planning kickoff + `13c110d` static contracts + `4b1e093` pre-push metadata align; `origin/main == HEAD == 4b1e093`). Gate 52a v2 convergent: Codex GREEN + Reviewer GREEN-CONDITIONAL → post-absorption GREEN at `4b1e093`. Phase 52b Gate v1 absorbed convergent (GREEN-CONDITIONAL × 2 judges, no RED); implementation pending Commit 1/2/3 plan.
+Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 52b per Gate 52b B2)
 Last activity: 2026-04-20
 
-Progress (v1.5): [░░░░░░░░░░] 0% (0/7 phases — 5 committed + 1 provisional + 1 deferred)
-Committed: 52a, 52b, 53, 54, 55
+Progress (v1.5): [█░░░░░░░░░] 14% (1/7 total phases; 1/5 committed landed — 52a done; 52b/53/54/55 committed pending; 56 provisional; 57 deferred)
+Landed: 52a
+Pending committed: 52b, 53, 54, 55
 Provisional: 56 (release-router hardening; scope at mid-milestone gate)
 Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 + explicit gate)
 

@@ -4,7 +4,7 @@
 - **Milestone**: M6 SUNCO Workflow Router
 - **Design source**: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at commit `30e2041`; 4-round convergent review; **IMMUTABLE in Phase 52a** per Codex hard-lock)
 - **Requirement**: IF-18 (state machine), IF-20 (route decision schema), (partial spec) IF-19 (evidence model), (partial spec) IF-21 (approval boundary)
-- **Status**: Gate 52a v2 convergent absorbed (Codex + plan-verifier GREEN-CONDITIONAL); Commit A (planning kickoff) written; Commit B (static deliverables) next
+- **Status**: Phase 52a LANDED 2026-04-20 as 3-commit unit (`5b8094e` planning kickoff + `13c110d` static contracts + `4b1e093` pre-push metadata align; `origin/main == HEAD == 4b1e093`). Gate 52a v2 convergent: Codex GREEN + plan-verifier GREEN-CONDITIONAL → post-absorption GREEN at `4b1e093`.
 
 ## Phase 52a character
 
@@ -52,13 +52,13 @@ Original DESIGN §Patch G listed 3 files for verbatim notice. J5 expansion to 10
 
 ### Scope lock (committed deliverables)
 
-**Commit A — `planning(router): register v1.5 SUNCO Workflow Router kickoff`** (this commit, in progress):
+**Commit A — `planning(router): register v1.5 SUNCO Workflow Router kickoff`** (landed as `5b8094e`):
 1. `.planning/ROADMAP.md` — v1.5 M6 section append (7 phase entries; timeline; success criteria)
 2. `.planning/REQUIREMENTS.md` — v1.5 IF-18~IF-23 + phase mapping table
 3. `.planning/STATE.md` — v1.4→v1.5 transition (milestone, current_phase, progress, previous_milestone retrospective)
 4. `.planning/phases/52a-router-core-schemas/52a-CONTEXT.md` — this file
 
-**Commit B — `feat(router): add Phase 52a route decision schema and static references`** (next):
+**Commit B — `feat(router): add Phase 52a route decision schema and static references`** (landed as `13c110d`):
 5. `packages/cli/schemas/route-decision.schema.json` — DESIGN §4.1 verbatim (JSON Schema draft-07)
 6. `packages/cli/references/router/README.md` — clean-room notice + purpose + file index
 7. `packages/cli/references/router/STAGE-MACHINE.md` — 10 stages full contract + forward/regress/reset transitions
@@ -68,6 +68,12 @@ Original DESIGN §Patch G listed 3 files for verbatim notice. J5 expansion to 10
 11. `.planning/router/decisions/.keep` — directory reservation
 12. `packages/cli/bin/smoke-test.cjs` — Section 27 "Router Core Static Contract (Phase 52a)" with static-only checks (27b, 27c, 27d, 27e, 27f, 27g, 27j, 27k, 27l, 27m, 27n, 27o, 27t, 27v doc-only, 27y, 27z, 27aa)
 13. `packages/cli/package.json` files[] — **no mutation** (`schemas/` and `references/` already included; verified during Gate 52a)
+
+**Commit C — `docs(router): align Phase 52a status metadata`** (landed as `4b1e093`):
+14. `.planning/router/README.md` — Status prose alignment for post-kickoff state (superseded "Not yet registered in .planning/ROADMAP.md")
+15. `.planning/STATE.md` — narrative paragraph alignment for post-commit-B state (superseded "Commit A in progress; Commit B next")
+
+Reviewer classification: pre-push planning-consistency metadata alignment, **NOT SDI-2** (not a reactive post-push additive fix). Absorbed into same 3-commit atomic unit.
 
 ### Hard-locks (Phase 52a)
 

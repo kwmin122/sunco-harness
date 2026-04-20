@@ -534,7 +534,7 @@ See spec §14 "Done for v1". Key markers:
 ### Milestone M6 — v1.5 Router (Phases 52a-57)
 
 **Committed**:
-- **Phase 52a (spec §9 Phase 52a)**: Router core schemas + state machine docs — `schemas/route-decision.schema.json`, `references/router/{README,STAGE-MACHINE,EVIDENCE-MODEL,CONFIDENCE-CALIBRATION,APPROVAL-BOUNDARY}.md`, smoke Section 27 static subset. REQ: IF-18, IF-20, (partial) IF-19, (partial) IF-21.
+- **Phase 52a (spec §9 Phase 52a)**: Router core schemas + state machine docs — `schemas/route-decision.schema.json`, `references/router/{README,STAGE-MACHINE,EVIDENCE-MODEL,CONFIDENCE-CALIBRATION,APPROVAL-BOUNDARY}.md`, smoke Section 27 static subset. REQ: IF-18, IF-20, (partial) IF-19, (partial) IF-21. (landed 2026-04-20 as 3-commit unit: `5b8094e` + `13c110d` + `4b1e093`)
 - **Phase 52b (spec §9 Phase 52b)**: Router classifier + evidence collector + decision writer + confidence module + router.md command + workflows/router.md + vitest runtime tests (deterministic confidence, freshness parsers, promotion criteria, Y1 class-definition), smoke Section 27 runtime subset + Section 28 placeholder. REQ: (runtime) IF-19, (enforcement) IF-21.
 - **Phase 53**: Router wrappers (minus `/sunco:auto`) — `commands/sunco/{router,do,next,mode,manager}.md` updates routing through 52b classifier; existing stage commands byte-identical; smoke Section 28. REQ: (integration) IF-18, IF-19, IF-20, IF-21.
 - **Phase 54**: Compound-router — `schemas/compound.schema.json`, `references/compound/{README,template}.md`, `references/compound/src/{compound-router,sink-proposer}.mjs`, `commands/sunco/compound.md`, `workflows/compound.md`, router post-stage hook integration, smoke Section 29. REQ: IF-22.
