@@ -3530,6 +3530,43 @@ check('[52b-runtime] .planning/phases/52b-router-classifier/52b-CONTEXT.md exist
     missing.length === 0);
 }
 
+// ─── Section 29 — Router Wrappers (Phase 53) ─────────────────────────────────
+//
+// Contract tested: Phase 53 connects 4 user-facing wrapper commands
+// (/sunco:do, /sunco:next, /sunco:mode, /sunco:manager) to the Phase 52b
+// runtime engine via the /sunco:router command surface, plus the mode hook
+// (packages/cli/hooks/sunco-mode-router.cjs) directs mode-active non-slash
+// input directly to /sunco:router --intent <text> (G3a direct-to-router).
+// Section 29 asserts: 4 wrapper files updated with router-delegation prose,
+// hook directive updated, 8 stage commands + auto.md + where-am-i.md
+// byte-identical, command count stable at 88, approval-envelope propagation
+// prose per wrapper, UNKNOWN/HOLD fallback prose per wrapper.
+//
+// Sections 27 [52a-static] + 28 [52b-runtime] remain byte-stable (no
+// additions, no removals, no reordering). Section 29 is additive only.
+
+const s29CommandsDir = path.resolve(__dirname, '..', 'commands', 'sunco');
+const s29DoPath = path.resolve(s29CommandsDir, 'do.md');
+const s29NextPath = path.resolve(s29CommandsDir, 'next.md');
+const s29ModePath = path.resolve(s29CommandsDir, 'mode.md');
+const s29ManagerPath = path.resolve(s29CommandsDir, 'manager.md');
+const s29AutoPath = path.resolve(s29CommandsDir, 'auto.md');
+const s29WhereAmIPath = path.resolve(s29CommandsDir, 'where-am-i.md');
+const s29HookPath = path.resolve(__dirname, '..', 'hooks', 'sunco-mode-router.cjs');
+const s29Phase53Context = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases', '53-router-wrappers', '53-CONTEXT.md');
+
+console.log(`\n${BOLD}29. Router Wrappers (Phase 53)${RESET}`);
+
+// NOTE: Section 29 body is scaffolded in Commit 1 (this header block);
+// individual [53-wrapper] check assertions land in Commit 2 alongside
+// the 4 wrapper file updates + hook update. The scaffold preserves
+// Section 29 boundary for reviewer orientation without anticipating
+// wrapper content before it is authored.
+
+// 29a [53-wrapper]  Phase 53 CONTEXT scaffold populated (Commit 1 marker)
+check('[53-wrapper] .planning/phases/53-router-wrappers/53-CONTEXT.md exists (29a)',
+  fs.existsSync(s29Phase53Context));
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

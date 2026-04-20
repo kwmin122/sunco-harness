@@ -31,19 +31,20 @@ previous_milestone:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** v1.5 SUNCO Workflow Router — Phase 53 kickoff pending (router wrappers for do/next/mode/manager). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review; immutability extended through Phase 52b per Gate 52b B2).
+**Current focus:** v1.5 SUNCO Workflow Router — Phase 53 router wrappers construction in progress (`/sunco:do`, `/sunco:next`, `/sunco:mode`, `/sunco:manager` + mode hook). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review; immutability extended through Phase 53 per Gate 53 L16).
 
 ## Current Position
 
 Milestone: v1.5 SUNCO Workflow Router (executing)
-Current phase: Phase 52b-router-classifier COMPLETE locally; Phase 53 kickoff pending (spec: DESIGN-v1.md §9 Phase 53 committed)
-Status: Phase 52b runtime delivery COMPLETE locally 2026-04-20 as pre-planned 3-commit unit over the push-landed Phase 52a endpoint (`4b1e093`). Gate 52b v2 convergent: Codex GREEN-CONDITIONAL + Reviewer GREEN-CONDITIONAL → union absorbed (no v2 relay per Phase 47/48/49/51/52a precedent). Commit 1 = planning metadata alignment (post-push D1-D4+D6). Commit 2 = v1.2 Session Continuity leftover hygiene (D5). Commit 3 = runtime atomic (4 modules + command + workflow + 4 vitest + smoke Section 28 + 52b-CONTEXT). All commits local at the time of writing; push awaits user ACK per L4 Push boundary. On push, this state becomes Phase 52b LANDED.
-Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 52b per Gate 52b B2)
+Current phase: Phase 52b-router-classifier LANDED (origin/main = HEAD = `7791d33`); Phase 53-router-wrappers kickoff in progress (spec: DESIGN-v1.md §9 Phase 53 committed; Gate 53 v1 convergent absorbed)
+Status: Phase 53 Gate v1 cleared as convergent GREEN-CONDITIONAL (Codex + Reviewer Claude; no RED; 2 semantic divergences on G1/G2 spec-strict-resolved per Phase 47/48/49/51/52a/52b precedent). Phase 53 scope: 4 wrapper command updates (`do`/`next`/`mode`/`manager`) + `packages/cli/hooks/sunco-mode-router.cjs` direct-to-router update + smoke Section 29 `[53-wrapper]` additive + 53-CONTEXT scaffold + STATE D8 drift overwrite. Pre-planned 2-commit split (planning + runtime) classified NOT SDI-2. Rollback anchor `sunco-pre-52b-landed @ 4b1e093` created pre-Commit-1. Commit 1 = 53-CONTEXT + STATE D8 overwrite + smoke Section 29 header scaffold. Commit 2 = 4 wrappers + hook + smoke Section 29 populated + STATE progress bump. On Commit 2 landing, this state becomes Phase 53 COMPLETE locally; on push, Phase 53 LANDED.
+Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 53 per Gate 53 L16)
 Last activity: 2026-04-20
 
-Progress (v1.5): [██░░░░░░░░] 28% (2/7 total phases landed; 2/5 committed landed — 52a + 52b done; 53/54/55 committed pending; 56 provisional; 57 deferred)
+Progress (v1.5): [██░░░░░░░░] 28% (2/7 total phases landed; 2/5 committed landed — 52a + 52b done; 53 in progress; 54/55 committed pending; 56 provisional; 57 deferred)
 Landed: 52a, 52b
-Pending committed: 53, 54, 55
+In progress: 53 (router wrappers)
+Pending committed: 54, 55
 Provisional: 56 (release-router hardening; scope at mid-milestone gate)
 Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 + explicit gate)
 
