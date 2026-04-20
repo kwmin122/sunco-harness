@@ -3763,6 +3763,36 @@ if (fs.existsSync(s29WhereAmIPath)) {
     missing.length === 0);
 }
 
+// ─── Section 30 — Compound-Router (Phase 54) ───────────────────────────────
+//
+// Phase 54 adds the post-stage durable-decision consumer: schema + 2 runtime
+// modules (compound-router + sink-proposer) + command + workflow + 2 READMEs +
+// template + .planning/compound/README.md. Section 30 [54-compound] coverage
+// asserts structural contract + determinism + auto-write boundary + sink-
+// proposer proposal-only boundary + 9-path clean-room scope + byte-stability
+// of Phase 52a/52b/53 assets (content-marker parity).
+//
+// Section 30 checks are POPULATED in Phase 54 Commit B (feat). This header
+// block lands in Phase 54 Commit A (scaffold) to make the section boundary
+// visible for reviewer orientation — matching the Phase 53 Commit A pattern
+// that scaffolded Section 29 header before Commit B populated its checks.
+//
+// Gate-dispositive references:
+//   G1 trigger score / G2 auto-write boundary / G3 sink proposer boundary /
+//   G4 schema + $comment / G5 (b') standalone consumer / G6 9-path clean-room /
+//   G7 command count 89 / G8 Section 29 29o+29q flip / G9 ~22 checks /
+//   G10 2-commit split / G11 Phase 55 handoff contract.
+//
+// Cross-section amendments in Commit B:
+//   Section 29 29o: compound.md absence → presence + 8-command stage set
+//   Section 29 29q: allMdFiles.length === 88 → === 89
+//
+// Section 30 checks (to be populated in Commit B) will carry the '[54-compound]'
+// prefix on every assertion string, consistent with [52a-static] / [52b-runtime]
+// / [53-wrapper] section-prefix discipline.
+//
+// ────────────────────────────────────────────────────────────────────────────
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);
