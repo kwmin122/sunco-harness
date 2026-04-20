@@ -36,8 +36,8 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Milestone: v1.5 SUNCO Workflow Router (executing)
-Current phase: Phase 52b-router-classifier LANDED; Phase 53 kickoff pending (spec: DESIGN-v1.md §9 Phase 53 committed)
-Status: Phase 52b runtime delivery LANDED 2026-04-20 as pre-planned 3-commit unit over the push-landed Phase 52a endpoint (`4b1e093`). Gate 52b v2 convergent: Codex GREEN-CONDITIONAL + Reviewer GREEN-CONDITIONAL → union absorbed (no v2 relay per Phase 47/48/49/51/52a precedent). Commit 1 = planning metadata alignment (post-push D1-D4+D6). Commit 2 = v1.2 Session Continuity leftover hygiene (D5). Commit 3 = runtime atomic (4 modules + command + workflow + 4 vitest + smoke Section 28 + 52b-CONTEXT). All commits local at the time of writing; push awaits user ACK per L4 Push boundary.
+Current phase: Phase 52b-router-classifier COMPLETE locally; Phase 53 kickoff pending (spec: DESIGN-v1.md §9 Phase 53 committed)
+Status: Phase 52b runtime delivery COMPLETE locally 2026-04-20 as pre-planned 3-commit unit over the push-landed Phase 52a endpoint (`4b1e093`). Gate 52b v2 convergent: Codex GREEN-CONDITIONAL + Reviewer GREEN-CONDITIONAL → union absorbed (no v2 relay per Phase 47/48/49/51/52a precedent). Commit 1 = planning metadata alignment (post-push D1-D4+D6). Commit 2 = v1.2 Session Continuity leftover hygiene (D5). Commit 3 = runtime atomic (4 modules + command + workflow + 4 vitest + smoke Section 28 + 52b-CONTEXT). All commits local at the time of writing; push awaits user ACK per L4 Push boundary. On push, this state becomes Phase 52b LANDED.
 Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 52b per Gate 52b B2)
 Last activity: 2026-04-20
 
