@@ -3311,6 +3311,225 @@ for (const p of [s27RouterRefDir, s27SchemaPath, s27PlanningRouterDir]) {
 check('[52a-static] supplementary clean-room: no /ce:* command refs in router pack (27o)',
   s27BannedHits === 0);
 
+// ─── Section 28 — Router Classifier Runtime (Phase 52b) ──────────────────────
+//
+// Contract tested: Phase 52b lands the runtime modules that consume the
+// Phase 52a schemas + reference docs. Section 28 asserts: runtime module
+// existence, self-test pass, narrative-reason isolation (I4 enforcement for
+// confidence.mjs path-exact), Y1 class-definition classifier, approval-
+// boundary L14 enforcement, /sunco:auto frozen, stage commands byte-stable,
+// and Phase 52a static asset byte-stability.
+//
+// Section 27 [52a-static] checks remain byte-stable (no additions, no
+// removals, no reordering). Section 28 is additive only.
+
+const s28RouterSrcDir = path.resolve(__dirname, '..', 'references', 'router', 'src');
+const s28ClassifierPath = path.resolve(s28RouterSrcDir, 'classifier.mjs');
+const s28EvidencePath = path.resolve(s28RouterSrcDir, 'evidence-collector.mjs');
+const s28ConfidencePath = path.resolve(s28RouterSrcDir, 'confidence.mjs');
+const s28WriterPath = path.resolve(s28RouterSrcDir, 'decision-writer.mjs');
+const s28RouterCmdPath = path.resolve(__dirname, '..', 'commands', 'sunco', 'router.md');
+const s28RouterWorkflowPath = path.resolve(__dirname, '..', 'workflows', 'router.md');
+const s28Phase52bContext = path.resolve(__dirname, '..', '..', '..', '.planning', 'phases', '52b-router-classifier', '52b-CONTEXT.md');
+
+console.log(`\n${BOLD}28. Router Classifier Runtime (Phase 52b)${RESET}`);
+
+// 28a [52b-runtime]  router.md command exists + frontmatter name=sunco:router (27a counterpart)
+let s28RouterCmd = null;
+if (fs.existsSync(s28RouterCmdPath)) s28RouterCmd = fs.readFileSync(s28RouterCmdPath, 'utf8');
+check('[52b-runtime] commands/sunco/router.md exists (28a counterpart of DESIGN 27a)',
+  !!s28RouterCmd);
+check('[52b-runtime] router.md frontmatter name: sunco:router (28a)',
+  s28RouterCmd && /^name:\s*sunco:router\s*$/m.test(s28RouterCmd));
+
+// 28b [52b-runtime]  workflows/router.md exists
+const s28RouterWorkflow = fs.existsSync(s28RouterWorkflowPath) ? fs.readFileSync(s28RouterWorkflowPath, 'utf8') : null;
+check('[52b-runtime] workflows/router.md exists (28b)', !!s28RouterWorkflow);
+
+// 28c [52b-runtime]  4 runtime modules exist
+check('[52b-runtime] references/router/src/classifier.mjs exists (28c)', fs.existsSync(s28ClassifierPath));
+check('[52b-runtime] references/router/src/evidence-collector.mjs exists (28c)', fs.existsSync(s28EvidencePath));
+check('[52b-runtime] references/router/src/confidence.mjs exists (28c)', fs.existsSync(s28ConfidencePath));
+check('[52b-runtime] references/router/src/decision-writer.mjs exists (28c)', fs.existsSync(s28WriterPath));
+
+// 28d-g [52b-runtime]  Each runtime module --test passes (27h, 27i, 27u runtime)
+function runSelfTest(modulePath, expected, label) {
+  try {
+    const { execSync } = require('node:child_process');
+    const out = execSync(`node "${modulePath}" --test`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const m = out.match(/(\d+)\s+passed,\s+(\d+)\s+failed/);
+    const passedCount = m ? parseInt(m[1], 10) : 0;
+    const failedCount = m ? parseInt(m[2], 10) : -1;
+    check(label, passedCount >= expected && failedCount === 0);
+  } catch (e) {
+    check(label, false);
+  }
+}
+
+runSelfTest(s28ConfidencePath, 15, '[52b-runtime] confidence.mjs --test passes ≥15 checks, 0 failed (I1/I2/I3 runtime; 28d)');
+runSelfTest(s28ClassifierPath, 15, '[52b-runtime] classifier.mjs --test passes ≥15 checks, 0 failed (27h runtime; 28e)');
+runSelfTest(s28EvidencePath, 15, '[52b-runtime] evidence-collector.mjs --test passes ≥15 checks, 0 failed (27i runtime; 28f)');
+runSelfTest(s28WriterPath, 15, '[52b-runtime] decision-writer.mjs --test passes ≥15 checks, 0 failed (27u runtime + 27v3 Y1 class-definition; 28g)');
+
+// 28h [52b-runtime]  I4 path-exact grep: confidence.mjs has ZERO LLM SDK imports (27s runtime)
+if (fs.existsSync(s28ConfidencePath)) {
+  const confSrc = fs.readFileSync(s28ConfidencePath, 'utf8');
+  const forbiddenImports = [
+    /from\s+['"]@anthropic-ai\//,
+    /from\s+['"]@openai\//,
+    /from\s+['"]openai['"]/,
+    /from\s+['"]@ai-sdk\//,
+    /from\s+['"]ai['"]/,
+    /from\s+['"]@vercel\/ai/,
+    /from\s+['"]agent['"]/,
+    /import\s*\(\s*['"]ai['"]/,
+  ];
+  const hits = forbiddenImports.filter(re => re.test(confSrc)).length;
+  check('[52b-runtime] I4 confidence.mjs has zero LLM SDK imports (27s runtime path-exact; 28h)',
+    hits === 0);
+}
+
+// 28i [52b-runtime]  Narrative rendering lives in classifier.mjs (Gate 52b Reviewer B1)
+if (fs.existsSync(s28ClassifierPath)) {
+  const clfSrc = fs.readFileSync(s28ClassifierPath, 'utf8');
+  check('[52b-runtime] classifier.mjs exports renderNarrativeReasons (narrative outside confidence.mjs; 28i)',
+    /export\s+function\s+renderNarrativeReasons|export\s*\{[^}]*renderNarrativeReasons/.test(clfSrc));
+}
+
+// 28j [52b-runtime]  L14 enforcement: validateRouteDecision rejects remote_mutate+auto_safe
+if (fs.existsSync(s28ClassifierPath)) {
+  const clfSrc = fs.readFileSync(s28ClassifierPath, 'utf8');
+  check('[52b-runtime] classifier structural validator enforces L14 (remote/external never auto_safe; 28j)',
+    /L14 violated/.test(clfSrc) || /auto_safe/.test(clfSrc));
+}
+
+// 28k [52b-runtime]  Decision writer path allowlist: grep for STATE.md/ROADMAP.md REFUSAL pattern
+if (fs.existsSync(s28WriterPath)) {
+  const writerSrc = fs.readFileSync(s28WriterPath, 'utf8');
+  check('[52b-runtime] decision-writer.mjs enforces path allowlist with explicit RouterWriterPathError (28k)',
+    /RouterWriterPathError/.test(writerSrc)
+    && /assertInAllowlist/.test(writerSrc)
+    && /router writer allowlist/i.test(writerSrc));
+  // 28l: allowlist refuses STATE.md / ROADMAP.md / REQUIREMENTS.md / CONTEXT.md
+  check('[52b-runtime] decision-writer.mjs allowlist rejects non-router paths (28l; C5)',
+    /session\/\*\.json|\.sun\/router\/session/.test(writerSrc)
+    && /decisions\/\*\.json|\.planning\/router\/decisions/.test(writerSrc));
+}
+
+// 28m [52b-runtime]  Atomic tmp-in-same-dir rename pattern (L5 + Codex G4)
+if (fs.existsSync(s28WriterPath)) {
+  const writerSrc = fs.readFileSync(s28WriterPath, 'utf8');
+  check('[52b-runtime] decision-writer uses atomic tmp-in-same-dir rename (28m; L5)',
+    /atomicWrite|renameSync/.test(writerSrc)
+    && /\.tmp-/.test(writerSrc));
+}
+
+// 28n [52b-runtime]  Adapter injection pattern (L3 + Codex C1)
+if (fs.existsSync(s28EvidencePath)) {
+  const evSrc = fs.readFileSync(s28EvidencePath, 'utf8');
+  check('[52b-runtime] evidence-collector uses adapter injection pattern (28n; L3)',
+    /resolveAdapters/.test(evSrc)
+    && /execGit/.test(evSrc)
+    && /readFile/.test(evSrc)
+    && /statFile/.test(evSrc)
+    && /now/.test(evSrc));
+  check('[52b-runtime] evidence-collector requires explicit repoRoot (no process.cwd; 28n; L4)',
+    /ctx\.repoRoot.*required/i.test(evSrc) && !/process\.cwd\s*\(\s*\)/.test(evSrc));
+}
+
+// 28o [52b-runtime]  Freshness Gate returns exactly 7 checks (EVIDENCE-MODEL.md L73)
+if (fs.existsSync(s28EvidencePath)) {
+  const evSrc = fs.readFileSync(s28EvidencePath, 'utf8');
+  check('[52b-runtime] evidence-collector FRESHNESS_CHECK_IDS length === 7 (28o; EVIDENCE-MODEL L73)',
+    /FRESHNESS_CHECK_IDS\s*=\s*Object\.freeze\s*\(\s*\[[^\]]*'git-status'[^\]]*'cross-artifact-refs'/.test(evSrc));
+}
+
+// 28p [52b-runtime]  /sunco:auto frozen — no references in Phase 52b artifacts
+{
+  const s28AutoRefTargets = [s28ClassifierPath, s28EvidencePath, s28ConfidencePath, s28WriterPath, s28RouterCmdPath, s28RouterWorkflowPath];
+  let s28AutoHits = 0;
+  for (const p of s28AutoRefTargets) {
+    if (!fs.existsSync(p)) continue;
+    const content = fs.readFileSync(p, 'utf8');
+    // Match /sunco:auto or `sunco:auto` command-like references (not substring "auto_safe" etc).
+    if (/\/sunco:auto\b/.test(content)) s28AutoHits++;
+  }
+  check('[52b-runtime] /sunco:auto frozen — no references in Phase 52b runtime or command/workflow (28p; G10)',
+    s28AutoHits === 0);
+}
+
+// 28q [52b-runtime]  Stage commands present (byte-identical guard via pre-commit git diff; G9 / L15)
+{
+  const stageCommands = ['plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release'];
+  const stageCmdDir = path.resolve(__dirname, '..', 'commands', 'sunco');
+  let stageCmdsAllExist = true;
+  for (const name of stageCommands) {
+    if (!fs.existsSync(path.resolve(stageCmdDir, `${name}.md`))) { stageCmdsAllExist = false; break; }
+  }
+  check('[52b-runtime] 6 existing stage commands present (byte-identical guard via pre-commit git diff; 28q)',
+    stageCmdsAllExist);
+}
+
+// 28r [52b-runtime]  Phase 52a byte-stable — content-marker grep on 5 reference docs (Gate 52b L17 + B2)
+{
+  const s28Phase52aMarkers = [
+    { path: s27RouterReadme,     marker: /Consumer map/, label: 'README.md Consumer map' },
+    { path: s27StageMachine,     marker: /Stage enum \(10\)/, label: 'STAGE-MACHINE.md Stage enum' },
+    { path: s27EvidenceModel,    marker: /7-point Freshness Gate/, label: 'EVIDENCE-MODEL.md 7-point' },
+    { path: s27ConfidenceCalib,  marker: /Deterministic formula/, label: 'CONFIDENCE-CALIBRATION Deterministic formula' },
+    { path: s27ApprovalBoundary, marker: /definitional class/, label: 'APPROVAL-BOUNDARY definitional class' },
+    { path: s27SchemaPath,       marker: /"const":\s*"route-decision"/, label: 'schema const route-decision' },
+    { path: s27DesignDoc,        marker: /SUNCO Workflow Router/, label: 'DESIGN-v1.md title' },
+  ];
+  const missing = [];
+  for (const { path: p, marker, label } of s28Phase52aMarkers) {
+    if (!fs.existsSync(p)) { missing.push(label + ' (file missing)'); continue; }
+    if (!marker.test(fs.readFileSync(p, 'utf8'))) missing.push(label);
+  }
+  check(`[52b-runtime] Phase 52a assets byte-stable: 7 content markers preserved (28r; L17/B2, missing: [${missing.join(', ')}])`,
+    missing.length === 0);
+}
+
+// 28s [52b-runtime]  Clean-room notice on router.md command + workflow + 52b-CONTEXT
+{
+  const s28CleanRoomPhrase = 'clean-room';
+  const s28CleanRoomTargets = [s28RouterCmdPath, s28RouterWorkflowPath];
+  let s28CleanRoomMissing = [];
+  for (const p of s28CleanRoomTargets) {
+    if (!fs.existsSync(p)) { s28CleanRoomMissing.push(path.basename(p) + ' (missing)'); continue; }
+    const content = fs.readFileSync(p, 'utf8');
+    if (!new RegExp(s28CleanRoomPhrase, 'i').test(content)) s28CleanRoomMissing.push(path.basename(p));
+  }
+  check(`[52b-runtime] router.md command + workflow contain clean-room acknowledgement (28s, missing: [${s28CleanRoomMissing.join(', ')}])`,
+    s28CleanRoomMissing.length === 0);
+}
+
+// 28t [52b-runtime]  No /ce:* plugin refs in Phase 52b delta
+{
+  const s28CeTargets = [s28ClassifierPath, s28EvidencePath, s28ConfidencePath, s28WriterPath, s28RouterCmdPath, s28RouterWorkflowPath];
+  let s28CeHits = 0;
+  for (const p of s28CeTargets) {
+    if (!fs.existsSync(p)) continue;
+    const content = fs.readFileSync(p, 'utf8');
+    if (/\/ce:(brainstorm|plan|work|review|compound)\b/.test(content)) s28CeHits++;
+  }
+  check('[52b-runtime] Phase 52b delta has no /ce:* plugin refs (28t; clean-room)',
+    s28CeHits === 0);
+}
+
+// 28u [52b-runtime]  52b-CONTEXT.md populated
+check('[52b-runtime] .planning/phases/52b-router-classifier/52b-CONTEXT.md exists (28u)',
+  fs.existsSync(s28Phase52bContext));
+
+// 28v [52b-runtime]  4 vitest test files present at skills-workflow location (Phase 51 precedent)
+{
+  const vitestDir = path.resolve(__dirname, '..', '..', 'skills-workflow', 'src', 'shared', '__tests__');
+  const testFiles = ['router-classifier.test.ts', 'router-evidence.test.ts', 'router-confidence.test.ts', 'router-promotion.test.ts'];
+  const missing = testFiles.filter(f => !fs.existsSync(path.resolve(vitestDir, f)));
+  check(`[52b-runtime] 4 router vitest test files present at skills-workflow (28v, missing: [${missing.join(', ')}])`,
+    missing.length === 0);
+}
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

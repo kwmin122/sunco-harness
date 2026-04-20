@@ -275,7 +275,7 @@ Analyzing the error...
 
 **Claude Code** (`~/.claude/`):
 ```
-commands/sunco/           # 87 slash commands
+commands/sunco/           # 88 slash commands
 sunco/bin/                # 엔진 + sunco-tools.cjs
 sunco/workflows/          # 77 workflow files
 sunco/references/         # 16 reference documents

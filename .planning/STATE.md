@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: SUNCO Workflow Router
-status: kickoff
+status: executing
 stopped_at: ""
 last_updated: "2026-04-20T00:00:00.000Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 0
   completed_plans: 0
-  percent: 14
+  percent: 28
 previous_milestone:
   label: v1.4
   name: Impeccable Fusion
@@ -31,19 +31,19 @@ previous_milestone:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** v1.5 SUNCO Workflow Router kickoff — Phase 52a entry (Router core schemas + state machine docs). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review).
+**Current focus:** v1.5 SUNCO Workflow Router — Phase 53 kickoff pending (router wrappers for do/next/mode/manager). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review; immutability extended through Phase 52b per Gate 52b B2).
 
 ## Current Position
 
 Milestone: v1.5 SUNCO Workflow Router (executing)
-Current phase: 52b-router-classifier pending Gate 52b kickoff (spec: DESIGN-v1.md §9 Phase 52b committed)
-Status: Phase 52a LANDED 2026-04-20 as 3-commit unit (`5b8094e` planning kickoff + `13c110d` static contracts + `4b1e093` pre-push metadata align; `origin/main == HEAD == 4b1e093`). Gate 52a v2 convergent: Codex GREEN + Reviewer GREEN-CONDITIONAL → post-absorption GREEN at `4b1e093`. Phase 52b Gate v1 absorbed convergent (GREEN-CONDITIONAL × 2 judges, no RED); implementation pending Commit 1/2/3 plan.
+Current phase: Phase 52b-router-classifier LANDED; Phase 53 kickoff pending (spec: DESIGN-v1.md §9 Phase 53 committed)
+Status: Phase 52b runtime delivery LANDED 2026-04-20 as pre-planned 3-commit unit over the push-landed Phase 52a endpoint (`4b1e093`). Gate 52b v2 convergent: Codex GREEN-CONDITIONAL + Reviewer GREEN-CONDITIONAL → union absorbed (no v2 relay per Phase 47/48/49/51/52a precedent). Commit 1 = planning metadata alignment (post-push D1-D4+D6). Commit 2 = v1.2 Session Continuity leftover hygiene (D5). Commit 3 = runtime atomic (4 modules + command + workflow + 4 vitest + smoke Section 28 + 52b-CONTEXT). All commits local at the time of writing; push awaits user ACK per L4 Push boundary.
 Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 52b per Gate 52b B2)
 Last activity: 2026-04-20
 
-Progress (v1.5): [█░░░░░░░░░] 14% (1/7 total phases; 1/5 committed landed — 52a done; 52b/53/54/55 committed pending; 56 provisional; 57 deferred)
-Landed: 52a
-Pending committed: 52b, 53, 54, 55
+Progress (v1.5): [██░░░░░░░░] 28% (2/7 total phases landed; 2/5 committed landed — 52a + 52b done; 53/54/55 committed pending; 56 provisional; 57 deferred)
+Landed: 52a, 52b
+Pending committed: 53, 54, 55
 Provisional: 56 (release-router hardening; scope at mid-milestone gate)
 Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 + explicit gate)
 
