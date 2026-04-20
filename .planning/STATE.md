@@ -8,10 +8,10 @@ last_updated: "2026-04-20T00:00:00.000Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 0
   completed_plans: 0
-  percent: 42
+  percent: 57
 previous_milestone:
   label: v1.4
   name: Impeccable Fusion
@@ -31,24 +31,23 @@ previous_milestone:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** v1.5 SUNCO Workflow Router — Phase 53 router wrappers delivered as 3-commit unit (A+B+C; endpoint `72a391a`) routed through Phase 52b runtime; Phase 54 compound-router in-flight (Gate 54 v1 cleared; Commit A landed locally). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review; immutability extended through Phase 54 per Gate 54 L16).
+**Current focus:** v1.5 SUNCO Workflow Router — Phase 54 compound-router delivered as 2-commit unit (A+B) over Phase 53 endpoint (`72a391a`): schema + compound-router + sink-proposer + command + workflow + template + 2 READMEs + smoke Section 30 + Section 29 29o/29q amendments + product-contract command count 88→89. Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review; immutability extended through Phase 54 per Gate 54 L16).
 
 ## Current Position
 
 Milestone: v1.5 SUNCO Workflow Router (executing)
-Current phase: Phase 53 delivered as 3-commit unit over Phase 52b endpoint (`7791d33`): Commit A `9377607` (scaffold) + Commit B `4a5427f` (runtime) + Commit C `72a391a` (pre-push hygiene per Codex second-pass blocking). Phase 54 compound-router in-flight; Gate 54 v1 cleared convergent GREEN-CONDITIONAL (Reviewer Claude + Codex; 4 strict-side union absorptions on G5 naming / G6 `$comment` / wrapper-hint removal / architecture.md no-touch); Commit A (`docs(router): scaffold Phase 54 compound-router context and namespace`) landed locally.
-Status: Push status is determined authoritatively by `git rev-parse origin/main HEAD` — not by narrative prose. Phase 53 is on origin when `origin/main == 72a391a`. Phase 54 local commits (A, B pending) are on origin only when `origin/main == HEAD`. Rollback anchors preserved: `sunco-pre-53-landed @ 72a391a` (Phase 54 pre-first-mutation anchor), `sunco-pre-52b-landed @ 4b1e093`, `sunco-pre-dogfood @ 3ac0ee9`.
+Current phase: Phase 54 delivered as 2-commit unit over Phase 53 endpoint (`72a391a`): Commit A (`docs(router): scaffold Phase 54 compound-router context and namespace`) — 54-CONTEXT scaffold + STATE prose D1-fix + smoke Section 30 header. Commit B (`feat(router): add Phase 54 compound-router schema command workflow and smoke coverage`) — schema with `$comment` clean-room + 2 runtime modules (compound-router + sink-proposer) + command + workflow + 2 READMEs + template + `.planning/compound/` dir + smoke Section 30 populated + Section 29 29o/29q amendments + product-contract command count 88→89 + STATE progress bump. Gate 54 v1 cleared convergent GREEN-CONDITIONAL (Reviewer Claude + Codex; 4 strict-side union absorptions on G5 naming / G6 `$comment` / wrapper-hint removal / architecture.md no-touch).
+Status: Push status is determined authoritatively by `git rev-parse origin/main HEAD` — not by narrative prose. Phase 53 is on origin when `origin/main == 72a391a`. Phase 54 local commits are on origin only when `origin/main == HEAD`. Rollback anchors preserved: `sunco-pre-53-landed @ 72a391a` (Phase 54 pre-first-mutation anchor), `sunco-pre-52b-landed @ 4b1e093`, `sunco-pre-dogfood @ 3ac0ee9`.
 Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 54 per Gate 54 L16)
 Last activity: 2026-04-20
 
-Progress (v1.5): [████░░░░░░] 42% (3/7 total phases delivered by committed local state; frontmatter counts flip to 4/7 when Phase 54 Commit B lands locally; `git rev-parse origin/main HEAD` authoritative for what is on origin).
-Delivered by commit: 52a, 52b, 53
-In-flight: 54 (Commit A scaffold landed; Commit B runtime pending)
+Progress (v1.5): [█████░░░░░] 57% (4/7 total phases delivered by committed local state; `git rev-parse origin/main HEAD` authoritative for what is on origin).
+Delivered by commit: 52a, 52b, 53, 54
 Pending committed: 55
 Provisional: 56 (release-router hardening; scope at mid-milestone gate)
 Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 + explicit gate)
 
-**Note on frontmatter vs origin**: `progress.completed_phases` and `progress.percent` above count phases whose full commit set exists locally. Frontmatter bumps to `completed_phases: 4` / `percent: 57` only when Phase 54 Commit B lands locally. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed.
+**Note on frontmatter vs origin**: `progress.completed_phases: 4` and `progress.percent: 57` above count phases whose full commit set exists locally. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed. SDI-2 counter remains at **2** (Phase 54 pre-planned 2-commit split is NOT SDI-2 per Gate 52b B4 + Phase 53 precedent).
 
 ## v1.4 retrospective
 

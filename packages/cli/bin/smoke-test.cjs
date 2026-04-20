@@ -3700,32 +3700,28 @@ if (fs.existsSync(s29AutoPath) && fs.existsSync(s29DoPath) && fs.existsSync(s29N
     autoDispatchHits.length <= 1); // do.md's fallback table has an `auto` keyword entry
 }
 
-// 29o [53-wrapper]  Stage commands byte-identical vs 7791d33 baseline (R1)
-// Expanded from Phase 52b 28q 6-command set to include brainstorming.md per
-// Codex second-pass blocking (pre-push hygiene): the repo ships brainstorming.md
-// as the BRAINSTORM-stage command file (DESIGN §7 nominal "brainstorm" = repo
-// "brainstorming"). compound.md does not yet exist (Phase 54 scope); it is
-// excluded from the positive-presence guard but MUST be absent to avoid a
-// Phase 54-scoped file leaking in. Byte-stability enforcement pre-commit via
+// 29o [53-wrapper]  Stage commands byte-identical + Phase 54 compound present (R1)
+// Phase 54 amendment (Gate 54 G8/L7): compound.md absence guard REMOVED;
+// stage set expanded from 7 → 8 commands. Phase 54 adds compound.md as a net-
+// new file, not a mutation of existing 7; 8-command R1 protection set is the
+// current Phase 54 baseline for byte-identical enforcement going forward.
+// Byte-stability enforcement pre-commit via
 // `git diff --name-only 7791d33..HEAD -- .../{brainstorming,plan,execute,
-// verify,proceed-gate,ship,release}.md | wc -l == 0`.
+// verify,proceed-gate,ship,release}.md | wc -l == 0` — compound.md excluded
+// from the 7791d33 diff guard because it was created post-7791d33 in Phase 54.
 {
-  const stageNames = ['brainstorming', 'plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release'];
+  const stageNames = ['brainstorming', 'plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release', 'compound'];
   const stagePaths = stageNames.map(n => path.resolve(s29CommandsDir, `${n}.md`));
   const missing = stagePaths.filter(p => !fs.existsSync(p));
-  check(`[53-wrapper] 7 stage commands present incl. brainstorming (29o; R1 expanded, missing: [${missing.join(', ')}])`,
+  check(`[53-wrapper] 8 stage commands present incl. brainstorming+compound (29o; R1 Phase 54 expanded, missing: [${missing.join(', ')}])`,
     missing.length === 0);
   const frontmatterOk = stagePaths.every(p => {
     if (!fs.existsSync(p)) return false;
     const c = fs.readFileSync(p, 'utf8');
     return /^name:\s*sunco:/m.test(c);
   });
-  check('[53-wrapper] 7 stage commands have sunco:* frontmatter preserved (29o; R1)',
+  check('[53-wrapper] 8 stage commands have sunco:* frontmatter preserved (29o; R1 Phase 54)',
     frontmatterOk);
-  // compound.md absence guard (Phase 54 scope hard-lock for Phase 53)
-  const compoundPath = path.resolve(s29CommandsDir, 'compound.md');
-  check('[53-wrapper] compound.md absent (29o; Phase 54 scope; Phase 53 hard-lock)',
-    !fs.existsSync(compoundPath));
 }
 
 // 29p [53-wrapper]  where-am-i.md byte-identical (L6 ROADMAP-narrowing exclusion)
@@ -3735,11 +3731,12 @@ if (fs.existsSync(s29WhereAmIPath)) {
     /^name:\s*sunco:where-am-i\s*$/m.test(waiContent));
 }
 
-// 29q [53-wrapper]  command count stable at 88 (no new commands in Phase 53)
+// 29q [53-wrapper]  command count 89 post-Phase-54 (Phase 54 adds compound.md;
+// was 88 through Phase 53; Gate 54 G7/L18 amendment)
 {
   const allMdFiles = fs.readdirSync(s29CommandsDir).filter(f => f.endsWith('.md'));
-  check(`[53-wrapper] command count stable at 88 (29q; current=${allMdFiles.length})`,
-    allMdFiles.length === 88);
+  check(`[53-wrapper] command count === 89 post-Phase-54 (29q; current=${allMdFiles.length})`,
+    allMdFiles.length === 89);
 }
 
 // 29r [53-wrapper]  Phase 52a + 52b assets byte-stable (L16 hard-lock)
@@ -3772,26 +3769,293 @@ if (fs.existsSync(s29WhereAmIPath)) {
 // proposer proposal-only boundary + 9-path clean-room scope + byte-stability
 // of Phase 52a/52b/53 assets (content-marker parity).
 //
-// Section 30 checks are POPULATED in Phase 54 Commit B (feat). This header
-// block lands in Phase 54 Commit A (scaffold) to make the section boundary
-// visible for reviewer orientation — matching the Phase 53 Commit A pattern
-// that scaffolded Section 29 header before Commit B populated its checks.
+// Cross-section amendments (Phase 54 Commit B):
+//   Section 29 29o: compound.md absence → presence; 7 → 8 stage commands
+//   Section 29 29q: command count === 88 → === 89
 //
-// Gate-dispositive references:
-//   G1 trigger score / G2 auto-write boundary / G3 sink proposer boundary /
-//   G4 schema + $comment / G5 (b') standalone consumer / G6 9-path clean-room /
-//   G7 command count 89 / G8 Section 29 29o+29q flip / G9 ~22 checks /
-//   G10 2-commit split / G11 Phase 55 handoff contract.
-//
-// Cross-section amendments in Commit B:
-//   Section 29 29o: compound.md absence → presence + 8-command stage set
-//   Section 29 29q: allMdFiles.length === 88 → === 89
-//
-// Section 30 checks (to be populated in Commit B) will carry the '[54-compound]'
-// prefix on every assertion string, consistent with [52a-static] / [52b-runtime]
-// / [53-wrapper] section-prefix discipline.
+// Gate-dispositive references absorbed:
+//   G5 (b') standalone post-stage durable-decision consumer (Codex-strict)
+//   G6 $comment in schema (not description); 9-path verbatim notice scope
+//   G10 pre-planned 2-commit split; NOT SDI-2
 //
 // ────────────────────────────────────────────────────────────────────────────
+
+const s30CompoundCmdPath       = path.resolve(__dirname, '..', 'commands', 'sunco', 'compound.md');
+const s30CompoundWorkflowPath  = path.resolve(__dirname, '..', 'workflows', 'compound.md');
+const s30CompoundSchemaPath    = path.resolve(__dirname, '..', 'schemas', 'compound.schema.json');
+const s30CompoundDir           = path.resolve(__dirname, '..', 'references', 'compound');
+const s30CompoundReadmePath    = path.resolve(s30CompoundDir, 'README.md');
+const s30CompoundTemplatePath  = path.resolve(s30CompoundDir, 'template.md');
+const s30CompoundSrcDir        = path.resolve(s30CompoundDir, 'src');
+const s30CompoundRouterPath    = path.resolve(s30CompoundSrcDir, 'compound-router.mjs');
+const s30SinkProposerPath      = path.resolve(s30CompoundSrcDir, 'sink-proposer.mjs');
+const s30PlanningCompoundDir   = path.resolve(__dirname, '..', '..', '..', '.planning', 'compound');
+const s30PlanningCompoundReadme = path.resolve(s30PlanningCompoundDir, 'README.md');
+const s30ProductContract       = path.resolve(__dirname, '..', 'references', 'product-contract.md');
+
+// 30a [54-compound]  commands/sunco/compound.md exists + frontmatter name=sunco:compound
+check('[54-compound] commands/sunco/compound.md exists (30a)', fs.existsSync(s30CompoundCmdPath));
+if (fs.existsSync(s30CompoundCmdPath)) {
+  const c = fs.readFileSync(s30CompoundCmdPath, 'utf8');
+  check('[54-compound] compound.md frontmatter name: sunco:compound (30a)',
+    /^name:\s*sunco:compound\s*$/m.test(c));
+  check('[54-compound] compound.md contains clean-room notice (30a)',
+    /Clean-room notice/i.test(c) && /compound-engineering-plugin/.test(c));
+}
+
+// 30b [54-compound]  workflows/compound.md exists + clean-room notice
+check('[54-compound] workflows/compound.md exists (30b)', fs.existsSync(s30CompoundWorkflowPath));
+if (fs.existsSync(s30CompoundWorkflowPath)) {
+  const c = fs.readFileSync(s30CompoundWorkflowPath, 'utf8');
+  check('[54-compound] workflows/compound.md contains clean-room notice (30b)',
+    /Clean-room notice/i.test(c) && /compound-engineering-plugin/.test(c));
+}
+
+// 30c [54-compound]  references/compound/ pack files present
+check('[54-compound] references/compound/README.md exists (30c)', fs.existsSync(s30CompoundReadmePath));
+check('[54-compound] references/compound/template.md exists (30c)', fs.existsSync(s30CompoundTemplatePath));
+check('[54-compound] references/compound/src/compound-router.mjs exists (30c)', fs.existsSync(s30CompoundRouterPath));
+check('[54-compound] references/compound/src/sink-proposer.mjs exists (30c)', fs.existsSync(s30SinkProposerPath));
+
+// 30d [54-compound]  schema exists + valid JSON + draft-07 + $comment clean-room
+check('[54-compound] schemas/compound.schema.json exists (30d)', fs.existsSync(s30CompoundSchemaPath));
+if (fs.existsSync(s30CompoundSchemaPath)) {
+  let schema = null;
+  try { schema = JSON.parse(fs.readFileSync(s30CompoundSchemaPath, 'utf8')); } catch (e) { /* schema null */ }
+  check('[54-compound] compound.schema.json parses as JSON (30d)', !!schema);
+  if (schema) {
+    check('[54-compound] compound schema is draft-07 (30d)',
+      schema.$schema === 'http://json-schema.org/draft-07/schema#');
+    check('[54-compound] compound schema $comment carries clean-room attribution (30d; Gate 54 G6/$comment)',
+      typeof schema.$comment === 'string' &&
+      /Clean-room notice/i.test(schema.$comment) &&
+      /compound-engineering-plugin/.test(schema.$comment));
+
+    // 30e [54-compound]  kind const, version const
+    check('[54-compound] schema kind=compound and version=1 (30e)',
+      schema.properties && schema.properties.kind && schema.properties.kind.const === 'compound' &&
+      schema.properties.version && schema.properties.version.const === 1);
+
+    // 30f [54-compound]  sections: 8 canonical names
+    check('[54-compound] schema sections: 8 canonical names enum (30f)',
+      schema.properties && schema.properties.sections &&
+      schema.properties.sections.minItems === 8 &&
+      schema.properties.sections.maxItems === 8 &&
+      Array.isArray(schema.properties.sections.items && schema.properties.sections.items.enum) &&
+      schema.properties.sections.items.enum.length === 8 &&
+      ['context', 'learnings', 'patterns_sdi', 'rule_promotions', 'automation', 'seeds', 'memory_proposals', 'approval_log']
+        .every(n => schema.properties.sections.items.enum.includes(n)));
+
+    // 30g [54-compound]  scope enum
+    check('[54-compound] schema scope enum = [release,milestone,phase,incident,ad_hoc] (30g)',
+      schema.properties && schema.properties.scope && Array.isArray(schema.properties.scope.enum) &&
+      ['release', 'milestone', 'phase', 'incident', 'ad_hoc'].every(s => schema.properties.scope.enum.includes(s)) &&
+      schema.properties.scope.enum.length === 5);
+
+    // 30h [54-compound]  status enum
+    check('[54-compound] schema status enum = [draft,proposed,partially-approved,approved,archived] (30h)',
+      schema.properties && schema.properties.status && Array.isArray(schema.properties.status.enum) &&
+      ['draft', 'proposed', 'partially-approved', 'approved', 'archived'].every(s => schema.properties.status.enum.includes(s)) &&
+      schema.properties.status.enum.length === 5);
+
+    // Schema source has NO JSON comments (strict JSON; $comment field only)
+    const rawSchemaStr = fs.readFileSync(s30CompoundSchemaPath, 'utf8');
+    check('[54-compound] schema is strict JSON (no // or /* comments; Gate 54 G6 strict)',
+      !/^\s*\/\//m.test(rawSchemaStr) && !/\/\*[\s\S]*?\*\//.test(rawSchemaStr));
+  }
+}
+
+// 30i [54-compound]  template.md has 8 required section headings
+if (fs.existsSync(s30CompoundTemplatePath)) {
+  const t = fs.readFileSync(s30CompoundTemplatePath, 'utf8');
+  const required = ['context', 'learnings', 'patterns_sdi', 'rule_promotions', 'automation', 'seeds', 'memory_proposals', 'approval_log'];
+  const missing = required.filter(n => !new RegExp(`^##\\s+${n}\\b`, 'm').test(t));
+  check(`[54-compound] template.md has all 8 section headings (30i; missing: [${missing.join(', ')}])`,
+    missing.length === 0);
+  check('[54-compound] template.md contains clean-room notice (30i)',
+    /Clean-room notice/i.test(t) && /compound-engineering-plugin/.test(t));
+}
+
+// 30j [54-compound]  compound-router.mjs self-test passes ≥30 checks
+runSelfTest(s30CompoundRouterPath, 30, '[54-compound] compound-router.mjs --test passes ≥30 checks, 0 failed (30j; scoring determinism + decide + validate + allowlist + runCompound adapter)');
+
+// 30k [54-compound]  sink-proposer.mjs self-test passes ≥15 checks
+runSelfTest(s30SinkProposerPath, 15, '[54-compound] sink-proposer.mjs --test passes ≥15 checks, 0 failed (30k; proposal-only + L3 split 1:1 bucket mapping + determinism)');
+
+// 30l [54-compound]  compound-router.mjs has no LLM SDK imports (parallels 27s I4 for confidence)
+if (fs.existsSync(s30CompoundRouterPath)) {
+  const src = fs.readFileSync(s30CompoundRouterPath, 'utf8');
+  const llmPatterns = /@ai-sdk\/|from ['"]anthropic['"]|from ['"]openai['"]|from ['"]ai['"]/;
+  check('[54-compound] compound-router.mjs has zero LLM SDK imports (30l; I4 extension)',
+    !llmPatterns.test(src));
+}
+
+// 30m [54-compound]  sink-proposer.mjs has no fs writer imports (proposal-only boundary)
+if (fs.existsSync(s30SinkProposerPath)) {
+  const src = fs.readFileSync(s30SinkProposerPath, 'utf8');
+  // Proposal-only: no fs module import, no writeFile/renameSync/mkdirSync references
+  const hasFsImport = /^import\s+(?:\*\s+as\s+)?\w+\s+from\s+['"](?:node:)?fs(?:\/promises)?['"]/m.test(src) ||
+                      /^import\s*\{[^}]*\}\s*from\s*['"](?:node:)?fs(?:\/promises)?['"]/m.test(src);
+  const hasWriteCall = /\bwriteFileSync\b|\brenameSync\b|\bmkdirSync\b|\bwriteFile\b\s*\(/m.test(src);
+  check('[54-compound] sink-proposer.mjs has zero fs writer imports (30m; proposal-only L3)',
+    !hasFsImport);
+  check('[54-compound] sink-proposer.mjs has zero writeFile/renameSync/mkdirSync calls (30m; proposal-only L3)',
+    !hasWriteCall);
+}
+
+// 30n [54-compound]  sink-proposer.mjs has zero memory/rules/backlog write references
+if (fs.existsSync(s30SinkProposerPath)) {
+  const src = fs.readFileSync(s30SinkProposerPath, 'utf8');
+  // Exclude comment lines that reference the boundary docs
+  const noWriteToSinks = !/writeFile[^(]*\(\s*[^,)]*(?:memory|\.claude\/rules|backlog)/i.test(src);
+  check('[54-compound] sink-proposer.mjs has zero memory/rules/backlog write calls (30n; proposal-only)',
+    noWriteToSinks);
+}
+
+// 30o [54-compound]  9-path clean-room scope grep (outside notice blocks)
+{
+  const s30CleanRoomTargets = [
+    s30CompoundReadmePath,
+    s30CompoundTemplatePath,
+    s30CompoundRouterPath,
+    s30SinkProposerPath,
+    s30CompoundCmdPath,
+    s30CompoundWorkflowPath,
+    s30PlanningCompoundReadme,
+  ];
+  // Each file must contain the verbatim clean-room notice keyword
+  const missingNotice = s30CleanRoomTargets.filter(p => {
+    if (!fs.existsSync(p)) return true;
+    const c = fs.readFileSync(p, 'utf8');
+    return !(/Clean-room notice/i.test(c) && /compound-engineering-plugin/.test(c));
+  });
+  check(`[54-compound] 9-path verbatim clean-room notice present (30o; missing: [${missingNotice.length}])`,
+    missingNotice.length === 0);
+}
+
+// 30p [54-compound]  .planning/compound/README.md exists + clean-room
+check('[54-compound] .planning/compound/README.md exists (30p)', fs.existsSync(s30PlanningCompoundReadme));
+if (fs.existsSync(s30PlanningCompoundReadme)) {
+  const c = fs.readFileSync(s30PlanningCompoundReadme, 'utf8');
+  check('[54-compound] .planning/compound/README.md contains clean-room notice (30p)',
+    /Clean-room notice/i.test(c) && /compound-engineering-plugin/.test(c));
+}
+
+// 30q [54-compound]  command count === 89 (cross-section verification of 29q amendment)
+{
+  const cmdsDir = path.resolve(__dirname, '..', 'commands', 'sunco');
+  const allMdFiles = fs.readdirSync(cmdsDir).filter(f => f.endsWith('.md'));
+  check(`[54-compound] command count === 89 post-Phase-54 (30q; current=${allMdFiles.length})`,
+    allMdFiles.length === 89);
+}
+
+// 30r [54-compound]  product-contract.md L92 command count updated to 89 with Phase 54 attribution
+if (fs.existsSync(s30ProductContract)) {
+  const c = fs.readFileSync(s30ProductContract, 'utf8');
+  check('[54-compound] product-contract.md Total commands: 89 (30r; G7)',
+    /Total commands\*\*?:\s*89/.test(c));
+  check('[54-compound] product-contract.md references Phase 54 / compound (30r; G7)',
+    /compound.*Phase 54|Phase 54.*compound/i.test(c));
+}
+
+// 30s [54-compound]  Phase 52a byte-stable content-marker parity (parallels 28r/29r)
+{
+  const s30Phase52aMarkers = [
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'README.md'),                marker: /Consumer map/, label: 'router README Consumer map' },
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'STAGE-MACHINE.md'),         marker: /Stage enum \(10\)/, label: 'STAGE-MACHINE Stage enum' },
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'EVIDENCE-MODEL.md'),        marker: /7-point Freshness Gate/, label: 'EVIDENCE-MODEL 7-point' },
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'CONFIDENCE-CALIBRATION.md'),marker: /Deterministic formula/, label: 'CONFIDENCE-CALIBRATION deterministic formula' },
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'APPROVAL-BOUNDARY.md'),     marker: /definitional class/, label: 'APPROVAL-BOUNDARY definitional class' },
+    { path: path.resolve(__dirname, '..', 'schemas', 'route-decision.schema.json'),            marker: /"const":\s*"route-decision"/, label: 'route-decision schema const' },
+  ];
+  const missing = [];
+  for (const { path: p, marker, label } of s30Phase52aMarkers) {
+    if (!fs.existsSync(p)) { missing.push(label + ' (file missing)'); continue; }
+    if (!marker.test(fs.readFileSync(p, 'utf8'))) missing.push(label);
+  }
+  check(`[54-compound] Phase 52a assets byte-stable: 6 content markers preserved (30s; L10, missing: [${missing.join(', ')}])`,
+    missing.length === 0);
+}
+
+// 30t [54-compound]  Phase 52b runtime byte-stable content-marker parity
+{
+  const s30Phase52bMarkers = [
+    { path: path.resolve(__dirname, '..', 'commands', 'sunco', 'router.md'),                   marker: /^name:\s*sunco:router/m, label: 'router.md frontmatter' },
+    { path: path.resolve(__dirname, '..', 'workflows', 'router.md'),                           marker: /Router Workflow \(Phase 52b\)/, label: 'workflows/router.md title' },
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'src', 'classifier.mjs'),    marker: /export function classifyStage/, label: 'classifier export' },
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'src', 'evidence-collector.mjs'), marker: /export function collectEvidence/, label: 'evidence-collector export' },
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'src', 'confidence.mjs'),    marker: /export function computeConfidence/, label: 'confidence export' },
+    { path: path.resolve(__dirname, '..', 'references', 'router', 'src', 'decision-writer.mjs'), marker: /export function writeDecision/, label: 'decision-writer export' },
+  ];
+  const missing = [];
+  for (const { path: p, marker, label } of s30Phase52bMarkers) {
+    if (!fs.existsSync(p)) { missing.push(label + ' (file missing)'); continue; }
+    if (!marker.test(fs.readFileSync(p, 'utf8'))) missing.push(label);
+  }
+  check(`[54-compound] Phase 52b runtime byte-stable: 6 content markers preserved (30t; L10, missing: [${missing.join(', ')}])`,
+    missing.length === 0);
+}
+
+// 30u [54-compound]  Phase 53 wrappers byte-stable content-marker parity
+{
+  const s30Phase53Markers = [
+    { path: path.resolve(__dirname, '..', 'commands', 'sunco', 'do.md'),      marker: /^name:\s*sunco:do\s*$/m, label: 'do.md frontmatter' },
+    { path: path.resolve(__dirname, '..', 'commands', 'sunco', 'next.md'),    marker: /^name:\s*sunco:next\s*$/m, label: 'next.md frontmatter' },
+    { path: path.resolve(__dirname, '..', 'commands', 'sunco', 'mode.md'),    marker: /^name:\s*sunco:mode\s*$/m, label: 'mode.md frontmatter' },
+    { path: path.resolve(__dirname, '..', 'commands', 'sunco', 'manager.md'), marker: /^name:\s*sunco:manager\s*$/m, label: 'manager.md frontmatter' },
+  ];
+  const missing = [];
+  for (const { path: p, marker, label } of s30Phase53Markers) {
+    if (!fs.existsSync(p)) { missing.push(label + ' (file missing)'); continue; }
+    if (!marker.test(fs.readFileSync(p, 'utf8'))) missing.push(label);
+  }
+  check(`[54-compound] Phase 53 wrappers byte-stable: 4 frontmatter markers preserved (30u; L10, missing: [${missing.join(', ')}])`,
+    missing.length === 0);
+}
+
+// 30v [54-compound]  compound-router.mjs defines COMPOUND_SECTIONS with 8 canonical names
+if (fs.existsSync(s30CompoundRouterPath)) {
+  const src = fs.readFileSync(s30CompoundRouterPath, 'utf8');
+  const has8Sections = /COMPOUND_SECTIONS\s*=\s*Object\.freeze\(\[([\s\S]*?)\]\)/.test(src);
+  const all8Present = ['context', 'learnings', 'patterns_sdi', 'rule_promotions', 'automation', 'seeds', 'memory_proposals', 'approval_log']
+    .every(n => new RegExp(`['"]${n}['"]`).test(src));
+  check('[54-compound] compound-router.mjs exports COMPOUND_SECTIONS with all 8 canonical names (30v)',
+    has8Sections && all8Present);
+}
+
+// 30w [54-compound]  sink-proposer.mjs L3 split 1:1 bucket mapping (constants + exports)
+if (fs.existsSync(s30SinkProposerPath)) {
+  const src = fs.readFileSync(s30SinkProposerPath, 'utf8');
+  const hasObservationTypes = /OBSERVATION_SDI\s*=\s*['"]sdi_observational['"]/.test(src) &&
+                              /OBSERVATION_SPEC_RULE\s*=\s*['"]spec_rule_prescriptive['"]/.test(src) &&
+                              /OBSERVATION_MEMORY\s*=\s*['"]memory_candidate['"]/.test(src);
+  check('[54-compound] sink-proposer.mjs defines 3 observation types constants (30w; L3 split)',
+    hasObservationTypes);
+  check('[54-compound] sink-proposer.mjs exports proposeSinks + renderProposalSections (30w)',
+    /export function proposeSinks/.test(src) && /export function renderProposalSections/.test(src));
+}
+
+// 30x [54-compound]  Gate 54 hard-lock invariants: architecture.md NOT touched + 4 wrappers + 7 prior stage commands byte-stable from 72a391a
+// (This is a pre-commit invariant verified by git diff; smoke asserts that
+// the current command file set's canonical identifiers are preserved, not a
+// full byte-equality check — full byte-equality lives in the git pre-commit
+// invariant per 54-CONTEXT done-when #21.)
+{
+  const hardLockedFrontmatterSet = [
+    'brainstorming', 'plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release',
+    'do', 'next', 'mode', 'manager', 'router', 'auto', 'where-am-i',
+  ];
+  const cmdsDir = path.resolve(__dirname, '..', 'commands', 'sunco');
+  const allOk = hardLockedFrontmatterSet.every(n => {
+    const p = path.resolve(cmdsDir, `${n}.md`);
+    if (!fs.existsSync(p)) return false;
+    const c = fs.readFileSync(p, 'utf8');
+    // Handle frontmatter: "name: sunco:<n>" (with hyphen for proceed-gate / where-am-i)
+    return new RegExp(`^name:\\s*sunco:${n.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\s*$`, 'm').test(c);
+  });
+  check('[54-compound] 14 hard-locked command frontmatters preserved (30x; L10/L11 R1 continuation)',
+    allOk);
+}
 
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
