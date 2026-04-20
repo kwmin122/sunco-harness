@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/kwmin122/sunco-harness/blob/main/packages/cli/schemas/route-decision.schema.json",
+  "title": "SUNCO Route Decision",
+  "description": "Contract for a single SUNCO Workflow Router decision emitted per invocation. Phase 52a deliverable. Consumed by the router runtime (Phase 52b) and by compound-router (Phase 54). Clean-room design; no vendored external content.",
+  "type": "object",
+  "required": [
+    "kind",
+    "version",
+    "ts",
+    "freshness",
+    "current_stage",
+    "recommended_next",
+    "confidence",
+    "reason",
+    "preconditions",
+    "action",
+    "approval_envelope"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "route-decision"
+    },
+    "version": {
+      "const": 1
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of router invocation completion."
+    },
+    "freshness": {
+      "type": "object",
+      "required": ["status", "checks"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": ["fresh", "drift", "conflicted"]
+        },
+        "checks": {
+          "type": "array",
+          "description": "7-point Freshness Gate results. See references/router/EVIDENCE-MODEL.md.",
+          "items": {
+            "type": "object",
+            "required": ["id", "result"],
+            "properties": {
+              "id": { "type": "string" },
+              "result": { "type": "string" },
+              "detail": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "current_stage": {
+      "enum": [
+        "BRAINSTORM",
+        "PLAN",
+        "WORK",
+        "REVIEW",
+        "VERIFY",
+        "PROCEED",
+        "SHIP",
+        "RELEASE",
+        "COMPOUND",
+        "PAUSE",
+        "UNKNOWN"
+      ],
+      "description": "Classifier-determined current stage. UNKNOWN is classifier-internal only and indicates drift or ambiguous evidence."
+    },
+    "recommended_next": {
+      "enum": [
+        "BRAINSTORM",
+        "PLAN",
+        "WORK",
+        "REVIEW",
+        "VERIFY",
+        "PROCEED",
+        "SHIP",
+        "RELEASE",
+        "COMPOUND",
+        "PAUSE",
+        "HOLD"
+      ],
+      "description": "Router recommendation. HOLD = no forward recommendation (drift or low confidence). UNKNOWN is not emitted here."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Deterministic confidence score per references/router/CONFIDENCE-CALIBRATION.md. No LLM input. Monotonic in positive signals. Frozen-weight formula."
+    },
+    "reason": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Human-readable justifications ordered by contribution weight."
+    },
+    "preconditions": {
+      "type": "object",
+      "required": ["satisfied", "missing"],
+      "additionalProperties": false,
+      "properties": {
+        "satisfied": { "type": "array", "items": { "type": "string" } },
+        "missing": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["command", "mode"],
+      "additionalProperties": false,
+      "properties": {
+        "command": { "type": "string" },
+        "mode": {
+          "enum": ["auto_safe", "requires_user_ack", "manual_only"]
+        },
+        "args": { "type": "object" }
+      }
+    },
+    "approval_envelope": {
+      "type": "object",
+      "required": ["risk_level", "triggers_required"],
+      "additionalProperties": false,
+      "properties": {
+        "risk_level": {
+          "enum": [
+            "read_only",
+            "local_mutate",
+            "repo_mutate_official",
+            "repo_mutate",
+            "remote_mutate",
+            "external_mutate"
+          ],
+          "description": "Approval boundary classification per references/router/APPROVAL-BOUNDARY.md."
+        },
+        "triggers_required": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Named approval triggers that must fire before action.command executes."
+        },
+        "forbidden_without_ack": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Operations in the hard-lock list that require explicit ACK before router may propose them."
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "References to evidence inputs (git SHA, artifact paths, grep results) consulted during classification."
+    }
+  }
+}

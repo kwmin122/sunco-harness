@@ -1,0 +1,16 @@
+# Directory reservation for SUNCO Workflow Router durable decision tier.
+#
+# Phase 52a creates this directory with a .keep placeholder so that the
+# namespace exists before Phase 52b runtime writes begin. Content policy:
+#
+#   - durable tier route decision logs: <YYYYMMDD>-<HHMMSS>-<stage>.json
+#     written only when deterministic promotion criteria are met (see
+#     .planning/router/DESIGN-v1.md §4.2)
+#   - durable pause events: <YYYYMMDD>-<HHMMSS>-PAUSE.json (append-only)
+#
+# Ephemeral tier lives at .sun/router/session/ (gitignored); this is the
+# git-tracked durable counterpart. Entries older than 180 days may be moved
+# to .planning/router/archive/ by a future maintenance pass.
+#
+# Do not delete this .keep file without also archiving all durable decision
+# logs present in the directory.

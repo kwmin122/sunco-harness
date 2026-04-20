@@ -3020,6 +3020,297 @@ if (fs.existsSync(s25CrossDomainDoc)) {
     /L685|line 685/i.test(md));
 }
 
+// ─── Section 27 — Router Core Static Contract (Phase 52a) ───────────────────
+//
+// Contract tested: Phase 52a delivers documentation + schema contracts for the
+// v1.5 SUNCO Workflow Router. No runtime code lands in 52a; all runtime
+// assertions (command file existence, classifier/evidence-collector --test,
+// confidence determinism, promotion criteria, Y1 class-definition runtime)
+// live in Phase 52b Section 28. Section 27 asserts structural invariants only.
+//
+// Checks are deterministic grep/JSON parse only. No LLM. Clean-room grep
+// honors J5 10-path scope-set.
+
+const s27RouterRefDir = path.resolve(__dirname, '..', 'references', 'router');
+const s27SchemaPath = path.resolve(__dirname, '..', 'schemas', 'route-decision.schema.json');
+const s27RouterReadme = path.resolve(s27RouterRefDir, 'README.md');
+const s27StageMachine = path.resolve(s27RouterRefDir, 'STAGE-MACHINE.md');
+const s27EvidenceModel = path.resolve(s27RouterRefDir, 'EVIDENCE-MODEL.md');
+const s27ConfidenceCalib = path.resolve(s27RouterRefDir, 'CONFIDENCE-CALIBRATION.md');
+const s27ApprovalBoundary = path.resolve(s27RouterRefDir, 'APPROVAL-BOUNDARY.md');
+const s27PlanningRouterDir = path.resolve(__dirname, '..', '..', '..', '.planning', 'router');
+const s27DecisionsKeep = path.resolve(s27PlanningRouterDir, 'decisions', '.keep');
+const s27DesignDoc = path.resolve(s27PlanningRouterDir, 'DESIGN-v1.md');
+const s27GitignorePath = path.resolve(__dirname, '..', '..', '..', '.gitignore');
+
+console.log(`\n${BOLD}27. Router Core Static Contract (Phase 52a)${RESET}`);
+
+// 27b [52a-static]  route-decision.schema.json exists + valid JSON + draft-07
+let s27SchemaObj = null;
+if (fs.existsSync(s27SchemaPath)) {
+  try { s27SchemaObj = JSON.parse(fs.readFileSync(s27SchemaPath, 'utf8')); } catch {}
+}
+check('[52a-static] schemas/route-decision.schema.json exists + parses as JSON (27b)',
+  !!s27SchemaObj);
+check('[52a-static] schema $schema is draft-07 (27b)',
+  s27SchemaObj && s27SchemaObj.$schema && /draft-07/.test(s27SchemaObj.$schema));
+check('[52a-static] schema kind=route-decision and version=1 (27b)',
+  s27SchemaObj && s27SchemaObj.properties && s27SchemaObj.properties.kind
+  && s27SchemaObj.properties.kind.const === 'route-decision'
+  && s27SchemaObj.properties.version && s27SchemaObj.properties.version.const === 1);
+
+// 27c [52a-static]  current_stage enum = 10 + UNKNOWN (11 total)
+const s27ExpectedStageEnum = [
+  'BRAINSTORM', 'PLAN', 'WORK', 'REVIEW', 'VERIFY',
+  'PROCEED', 'SHIP', 'RELEASE', 'COMPOUND', 'PAUSE', 'UNKNOWN',
+];
+check('[52a-static] schema current_stage enum has 11 values (10 stages + UNKNOWN) (27c)',
+  s27SchemaObj && Array.isArray(s27SchemaObj.properties.current_stage.enum)
+  && s27SchemaObj.properties.current_stage.enum.length === 11
+  && s27ExpectedStageEnum.every(v => s27SchemaObj.properties.current_stage.enum.includes(v)));
+
+// 27d [52a-static]  recommended_next enum excludes UNKNOWN, includes HOLD
+check('[52a-static] schema recommended_next enum excludes UNKNOWN, includes HOLD (27d)',
+  s27SchemaObj && Array.isArray(s27SchemaObj.properties.recommended_next.enum)
+  && !s27SchemaObj.properties.recommended_next.enum.includes('UNKNOWN')
+  && s27SchemaObj.properties.recommended_next.enum.includes('HOLD'));
+
+// 27y [52a-static]  stage enum = 10 stages; IDEATE absent (D9 merge confirmed)
+check('[52a-static] stage enum 10 stages present; IDEATE absent (D9 merge) (27y)',
+  s27SchemaObj
+  && s27SchemaObj.properties.current_stage.enum.length === 11
+  && !s27SchemaObj.properties.current_stage.enum.includes('IDEATE'));
+
+// 27e [52a-static]  STAGE-MACHINE.md exists + defines all 10 stages with contract fields
+let s27StageMachineContent = null;
+if (fs.existsSync(s27StageMachine)) {
+  s27StageMachineContent = fs.readFileSync(s27StageMachine, 'utf8');
+}
+check('[52a-static] STAGE-MACHINE.md exists (27e)', !!s27StageMachineContent);
+if (s27StageMachineContent) {
+  const stages = ['BRAINSTORM', 'PLAN', 'WORK', 'REVIEW', 'VERIFY', 'PROCEED', 'SHIP', 'RELEASE', 'COMPOUND', 'PAUSE'];
+  const missingStages = stages.filter(s => !new RegExp(`### ${s}\\b`).test(s27StageMachineContent));
+  check('[52a-static] STAGE-MACHINE.md defines all 10 stages as ### sections (27e)',
+    missingStages.length === 0);
+  const contractFields = ['entry_preconditions:', 'exit_conditions:', 'authorized_mutations:', 'forbidden_mutations:'];
+  check('[52a-static] STAGE-MACHINE.md contract fields present across stages (27e)',
+    contractFields.every(f => s27StageMachineContent.indexOf(f) !== -1));
+}
+
+// 27z [52a-static]  STAGE-MACHINE.md regress edges present
+if (s27StageMachineContent) {
+  check('[52a-static] STAGE-MACHINE.md declares regress edges (WORK self-loop, VERIFY→WORK, PROCEED→WORK, REVIEW→WORK, SHIP→WORK|REVIEW, RELEASE→PROCEED|SHIP) (27z)',
+    /WORK\s+──\(tests fail/.test(s27StageMachineContent)
+    && /VERIFY\s+──\([^)]*FAIL[^)]*\)[^▶]*▶\s+WORK/.test(s27StageMachineContent)
+    && /PROCEED\s+──\(BLOCKED[^)]*\)[^▶]*▶\s+WORK/.test(s27StageMachineContent)
+    && /REVIEW\s+──\([^)]*re-implementation\)[^▶]*▶\s+WORK/.test(s27StageMachineContent)
+    && /SHIP\s+──[^▶]*▶\s+WORK \| REVIEW/.test(s27StageMachineContent)
+    && /RELEASE\s+──[^▶]*▶\s+PROCEED \| SHIP/.test(s27StageMachineContent));
+  check('[52a-static] STAGE-MACHINE.md declares stage reset primitive (27z)',
+    /Stage reset primitive/.test(s27StageMachineContent)
+    && /\/sunco:router reset/.test(s27StageMachineContent));
+}
+
+// 27aa [52a-static]  PAUSE contract has all 6 fields
+if (s27StageMachineContent) {
+  const pauseIdx = s27StageMachineContent.indexOf('### PAUSE');
+  const pauseBody = pauseIdx !== -1 ? s27StageMachineContent.slice(pauseIdx) : '';
+  const pauseFields = ['entry_preconditions:', 'exit_conditions:', 'authorized_mutations:',
+    'forbidden_mutations:', 'persistence_location:', 'resume_trigger:', 're_entrance:'];
+  check('[52a-static] PAUSE contract has all 7 fields (entry/exit/authorized/forbidden/persistence/resume/re_entrance) (27aa)',
+    pauseFields.every(f => pauseBody.indexOf(f) !== -1));
+  check('[52a-static] PAUSE resume_trigger mandates Freshness Gate re-run (27aa)',
+    /resume_trigger:[\s\S]{0,500}Freshness Gate/.test(pauseBody));
+}
+
+// 27f [52a-static]  EVIDENCE-MODEL.md exists + defines 4 source tiers + Freshness Gate
+let s27EvidenceContent = null;
+if (fs.existsSync(s27EvidenceModel)) {
+  s27EvidenceContent = fs.readFileSync(s27EvidenceModel, 'utf8');
+}
+check('[52a-static] EVIDENCE-MODEL.md exists (27f)', !!s27EvidenceContent);
+if (s27EvidenceContent) {
+  check('[52a-static] EVIDENCE-MODEL.md declares 4 source tiers (27f)',
+    /Tier 1.*Deterministic required/i.test(s27EvidenceContent)
+    && /Tier 2.*Deterministic derived/i.test(s27EvidenceContent)
+    && /Tier 3.*Optional-pasted/i.test(s27EvidenceContent)
+    && /Tier 4.*[Uu]navailable/.test(s27EvidenceContent));
+  check('[52a-static] EVIDENCE-MODEL.md defines 7-point Freshness Gate (27f)',
+    /Freshness Gate/.test(s27EvidenceContent)
+    && /7-point/.test(s27EvidenceContent));
+  check('[52a-static] EVIDENCE-MODEL.md defines risk-level-keyed drift policy (27f)',
+    /[Rr]isk-level-keyed drift policy/.test(s27EvidenceContent)
+    && /soft-fresh/i.test(s27EvidenceContent)
+    && /hard-block/i.test(s27EvidenceContent));
+}
+
+// 27g [52a-static]  CONFIDENCE-CALIBRATION.md exists + 4 bands + frozen weights + enforcement invariants
+let s27ConfidenceContent = null;
+if (fs.existsSync(s27ConfidenceCalib)) {
+  s27ConfidenceContent = fs.readFileSync(s27ConfidenceCalib, 'utf8');
+}
+check('[52a-static] CONFIDENCE-CALIBRATION.md exists (27g)', !!s27ConfidenceContent);
+if (s27ConfidenceContent) {
+  check('[52a-static] CONFIDENCE-CALIBRATION.md declares 4 bands (HIGH/MEDIUM/LOW/UNKNOWN) (27g)',
+    /`HIGH`[\s\S]{0,200}≥\s*0\.80/.test(s27ConfidenceContent)
+    && /`MEDIUM`[\s\S]{0,200}0\.50\s*[–-]\s*0\.799/.test(s27ConfidenceContent)
+    && /`LOW`[\s\S]{0,200}<\s*0\.50/.test(s27ConfidenceContent)
+    && /`UNKNOWN`/.test(s27ConfidenceContent));
+  check('[52a-static] CONFIDENCE-CALIBRATION.md frozen weights sum to 1.0 (27g)',
+    /0\.25/.test(s27ConfidenceContent)
+    && /0\.20/.test(s27ConfidenceContent)
+    && /0\.15/.test(s27ConfidenceContent)
+    && /0\.10/.test(s27ConfidenceContent));
+  check('[52a-static] CONFIDENCE-CALIBRATION.md declares 4 enforcement invariants I1-I4 (27g)',
+    /I1 — Determinism/.test(s27ConfidenceContent)
+    && /I2 — Bounds/.test(s27ConfidenceContent)
+    && /I3 — Monotonicity/.test(s27ConfidenceContent)
+    && /I4 — No LLM/.test(s27ConfidenceContent));
+  check('[52a-static] CONFIDENCE-CALIBRATION.md declares HIGH-band disabled failure fallback (27g)',
+    /HIGH.*band.*[dD]isabled/.test(s27ConfidenceContent)
+    || /HIGH-band is disabled/i.test(s27ConfidenceContent)
+    || /HIGH.*disabled.*auto-proceed/i.test(s27ConfidenceContent));
+}
+
+// 27j [52a-static]  APPROVAL-BOUNDARY.md forbidden-without-ACK list contains all 16+ items
+let s27ApprovalContent = null;
+if (fs.existsSync(s27ApprovalBoundary)) {
+  s27ApprovalContent = fs.readFileSync(s27ApprovalBoundary, 'utf8');
+}
+check('[52a-static] APPROVAL-BOUNDARY.md exists (27j)', !!s27ApprovalContent);
+if (s27ApprovalContent) {
+  const forbiddenItems = [
+    /git push\b/, /git push --tag/, /git push --force/, /git reset --hard/, /git branch -D/,
+    /npm publish/, /npm login/, /npm install/, /npm uninstall/,
+    /rm -rf/, /memory\/\*\.md write/, /\.claude\/rules\/\*\.md write/,
+    /\.planning\/REQUIREMENTS\.md mutation/, /\.planning\/ROADMAP\.md phase/,
+    /schema file mutation/, /network fetch/,
+  ];
+  const hitCount = forbiddenItems.filter(re => re.test(s27ApprovalContent)).length;
+  check(`[52a-static] APPROVAL-BOUNDARY.md forbidden-without-ACK list coverage ≥14 items (27j, hit ${hitCount}/16)`,
+    hitCount >= 14);
+  check('[52a-static] APPROVAL-BOUNDARY.md declares 6 risk levels (27j)',
+    /read_only/.test(s27ApprovalContent)
+    && /local_mutate/.test(s27ApprovalContent)
+    && /repo_mutate_official/.test(s27ApprovalContent)
+    && /\brepo_mutate\b/.test(s27ApprovalContent)
+    && /remote_mutate/.test(s27ApprovalContent)
+    && /external_mutate/.test(s27ApprovalContent));
+  check('[52a-static] APPROVAL-BOUNDARY.md repo_mutate_official declared as definitional class (Patch K) (27j)',
+    /definitional class/i.test(s27ApprovalContent)
+    && /Inclusive class/i.test(s27ApprovalContent)
+    && /Explicit exceptions/i.test(s27ApprovalContent));
+}
+
+// 27v [52a-static doc-only]  blessed orchestrator list documented
+check('[52a-static] APPROVAL-BOUNDARY.md blessed orchestrator list = {execute, verify, release} (27v doc-only)',
+  s27ApprovalContent
+  && /\/sunco:execute/.test(s27ApprovalContent)
+  && /\/sunco:verify/.test(s27ApprovalContent)
+  && /\/sunco:release/.test(s27ApprovalContent)
+  && /blessed orchestrator/i.test(s27ApprovalContent));
+
+// 27k [52a-static]  .planning/router/ layout present (README + decisions/.keep + DESIGN-v1.md preserved)
+check('[52a-static] .planning/router/README.md exists (27k)',
+  fs.existsSync(path.resolve(s27PlanningRouterDir, 'README.md')));
+check('[52a-static] .planning/router/decisions/.keep exists (directory reservation) (27k)',
+  fs.existsSync(s27DecisionsKeep));
+check('[52a-static] .planning/router/DESIGN-v1.md preserved (not mutated by Phase 52a) (27k)',
+  fs.existsSync(s27DesignDoc));
+
+// 27l [52a-static]  package.json files[] covers schemas/ + references/
+const s27PkgJsonPath = path.resolve(__dirname, '..', 'package.json');
+if (fs.existsSync(s27PkgJsonPath)) {
+  let pkg = null;
+  try { pkg = JSON.parse(fs.readFileSync(s27PkgJsonPath, 'utf8')); } catch {}
+  if (pkg) {
+    check('[52a-static] packages/cli/package.json files[] includes "references/" (27l)',
+      Array.isArray(pkg.files) && pkg.files.includes('references/'));
+  }
+}
+
+// 27t [52a-static]  .gitignore entry .sun/ covers ephemeral tier
+if (fs.existsSync(s27GitignorePath)) {
+  const gitignore = fs.readFileSync(s27GitignorePath, 'utf8');
+  check('[52a-static] .gitignore contains .sun/ entry (ephemeral tier gitignored) (27t)',
+    /^\.sun\/$/m.test(gitignore));
+}
+
+// 27m [52a-static]  Clean-room grep over 10-path scope-set: no compound-engineering-plugin outside notices
+const s27CleanRoomScopePaths = [
+  s27RouterRefDir,
+  path.resolve(__dirname, '..', 'references', 'compound'),         // may not exist until Phase 54
+  path.resolve(__dirname, '..', 'commands', 'sunco', 'router.md'), // Phase 52b
+  path.resolve(__dirname, '..', 'commands', 'sunco', 'compound.md'),
+  path.resolve(__dirname, '..', 'workflows', 'router.md'),
+  path.resolve(__dirname, '..', 'workflows', 'compound.md'),
+  s27SchemaPath,
+  path.resolve(__dirname, '..', 'schemas', 'compound.schema.json'), // Phase 54
+  s27PlanningRouterDir,
+  path.resolve(__dirname, '..', '..', '..', '.planning', 'compound'),
+];
+function s27GrepFiles(rootOrFile, pattern) {
+  const hits = [];
+  if (!fs.existsSync(rootOrFile)) return hits;
+  const stat = fs.statSync(rootOrFile);
+  if (stat.isFile()) {
+    const content = fs.readFileSync(rootOrFile, 'utf8');
+    if (pattern.test(content)) hits.push(rootOrFile);
+    return hits;
+  }
+  if (stat.isDirectory()) {
+    for (const entry of fs.readdirSync(rootOrFile)) {
+      if (entry === 'node_modules' || entry === '.git' || entry === 'archive') continue;
+      hits.push(...s27GrepFiles(path.join(rootOrFile, entry), pattern));
+    }
+  }
+  return hits;
+}
+const s27PluginName = /compound-engineering-plugin/;
+const s27PluginHits = [];
+for (const p of s27CleanRoomScopePaths) {
+  s27PluginHits.push(...s27GrepFiles(p, s27PluginName));
+}
+// For hits, check they are inside a clean-room-aware file
+// Legal files: those that contain a clean-room notice or a clean-room design
+// discussion. In those files, plugin name occurrences are treated as legal
+// negation/reference (the whole file is written with clean-room awareness).
+const s27IllegalHits = s27PluginHits.filter(p => {
+  const content = fs.readFileSync(p, 'utf8');
+  const hasCleanRoomContext = /clean-room notice/i.test(content)
+                           || /clean-room design/i.test(content)
+                           || /clean-room invariant/i.test(content)
+                           || /clean-room grep/i.test(content);
+  return !hasCleanRoomContext;
+});
+check('[52a-static] clean-room grep over 10-path scope-set: no compound-engineering-plugin refs outside notices (27m)',
+  s27IllegalHits.length === 0);
+
+// 27n [52a-static]  verbatim clean-room phrase on 5 reference docs
+const s27CleanRoomPhrase = 'No code, prompts, command files, schemas, agent definitions, skill implementations, or documentation text from compound-engineering-plugin or any third-party workflow/compound/retrospective tool is copied, vendored, or adapted into SUNCO';
+const s27NoticeFiles = [s27RouterReadme, s27StageMachine, s27EvidenceModel, s27ConfidenceCalib, s27ApprovalBoundary];
+let s27MissingNotices = [];
+for (const p of s27NoticeFiles) {
+  if (!fs.existsSync(p)) { s27MissingNotices.push(path.basename(p) + ' (missing)'); continue; }
+  const content = fs.readFileSync(p, 'utf8');
+  if (content.indexOf(s27CleanRoomPhrase) === -1) s27MissingNotices.push(path.basename(p));
+}
+check(`[52a-static] verbatim clean-room notice on 5 reference docs (27n, missing: [${s27MissingNotices.join(', ')}])`,
+  s27MissingNotices.length === 0);
+
+// 27o [52a-static]  supplementary clean-room sanity: no copied EveryInc content beyond notices
+// Deterministic heuristic: reference files should not contain common ce-compound vocabulary
+// in non-notice context. v1 lightweight check: specific known command names from external plugin.
+const s27BannedTokens = [/\/ce:brainstorm/, /\/ce:plan/, /\/ce:work/, /\/ce:review/, /\/ce:compound/];
+let s27BannedHits = 0;
+for (const p of [s27RouterRefDir, s27SchemaPath, s27PlanningRouterDir]) {
+  for (const token of s27BannedTokens) {
+    s27BannedHits += s27GrepFiles(p, token).length;
+  }
+}
+check('[52a-static] supplementary clean-room: no /ce:* command refs in router pack (27o)',
+  s27BannedHits === 0);
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);
