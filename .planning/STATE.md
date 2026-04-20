@@ -8,10 +8,10 @@ last_updated: "2026-04-20T00:00:00.000Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 0
   completed_plans: 0
-  percent: 28
+  percent: 42
 previous_milestone:
   label: v1.4
   name: Impeccable Fusion
@@ -31,19 +31,19 @@ previous_milestone:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** v1.5 SUNCO Workflow Router — Phase 53 router wrappers construction in progress (`/sunco:do`, `/sunco:next`, `/sunco:mode`, `/sunco:manager` + mode hook). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review; immutability extended through Phase 53 per Gate 53 L16).
+**Current focus:** v1.5 SUNCO Workflow Router — Phase 53 router wrappers COMPLETE locally (`/sunco:do`, `/sunco:next`, `/sunco:mode`, `/sunco:manager` + mode hook all routed through Phase 52b runtime); Phase 54 compound-router kickoff pending. Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review; immutability extended through Phase 53 per Gate 53 L16).
 
 ## Current Position
 
 Milestone: v1.5 SUNCO Workflow Router (executing)
-Current phase: Phase 52b-router-classifier LANDED (origin/main = HEAD = `7791d33`); Phase 53-router-wrappers kickoff in progress (spec: DESIGN-v1.md §9 Phase 53 committed; Gate 53 v1 convergent absorbed)
-Status: Phase 53 Gate v1 cleared as convergent GREEN-CONDITIONAL (Codex + Reviewer Claude; no RED; 2 semantic divergences on G1/G2 spec-strict-resolved per Phase 47/48/49/51/52a/52b precedent). Phase 53 scope: 4 wrapper command updates (`do`/`next`/`mode`/`manager`) + `packages/cli/hooks/sunco-mode-router.cjs` direct-to-router update + smoke Section 29 `[53-wrapper]` additive + 53-CONTEXT scaffold + STATE D8 drift overwrite. Pre-planned 2-commit split (planning + runtime) classified NOT SDI-2. Rollback anchor `sunco-pre-52b-landed @ 4b1e093` created pre-Commit-1. Commit 1 = 53-CONTEXT + STATE D8 overwrite + smoke Section 29 header scaffold. Commit 2 = 4 wrappers + hook + smoke Section 29 populated + STATE progress bump. On Commit 2 landing, this state becomes Phase 53 COMPLETE locally; on push, Phase 53 LANDED.
+Current phase: Phase 53-router-wrappers COMPLETE locally as pre-planned 2-commit unit over Phase 52b landed state (`7791d33`); Phase 54 compound-router kickoff pending (spec: DESIGN-v1.md §9 Phase 54 committed)
+Status: Phase 53 Gate v1 cleared as convergent GREEN-CONDITIONAL (Codex + Reviewer Claude; no RED; 2 semantic divergences on G1/G2 spec-strict-resolved per Phase 47/48/49/51/52a/52b precedent). Phase 53 scope delivered: 4 wrapper command updates (`do`/`next`/`mode`/`manager`) + `packages/cli/hooks/sunco-mode-router.cjs` direct-to-router update + smoke Section 29 `[53-wrapper]` additive 24 checks + 53-CONTEXT scaffold + STATE D8 drift overwrite + STATE progress bump. Commit 1 = 53-CONTEXT scaffold + STATE D8 overwrite + smoke Section 29 header (`9377607`). Commit 2 = 4 wrapper updates + hook update + smoke Section 29 populated + STATE progress bump (pending at the time of this prose; see HEAD). Both commits local at the time of writing; push awaits user ACK per L4 Push boundary. On push, this state becomes Phase 53 LANDED.
 Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 53 per Gate 53 L16)
 Last activity: 2026-04-20
 
-Progress (v1.5): [██░░░░░░░░] 28% (2/7 total phases landed; 2/5 committed landed — 52a + 52b done; 53 in progress; 54/55 committed pending; 56 provisional; 57 deferred)
-Landed: 52a, 52b
-In progress: 53 (router wrappers)
+Progress (v1.5): [████░░░░░░] 42% (3/7 total phases; 3/5 committed landed locally — 52a + 52b landed on origin; 53 COMPLETE locally pre-push; 54/55 committed pending; 56 provisional; 57 deferred)
+Landed (on origin): 52a, 52b
+COMPLETE locally (pre-push): 53
 Pending committed: 54, 55
 Provisional: 56 (release-router hardening; scope at mid-milestone gate)
 Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 + explicit gate)

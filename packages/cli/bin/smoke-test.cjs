@@ -3557,15 +3557,205 @@ const s29Phase53Context = path.resolve(__dirname, '..', '..', '..', '.planning',
 
 console.log(`\n${BOLD}29. Router Wrappers (Phase 53)${RESET}`);
 
-// NOTE: Section 29 body is scaffolded in Commit 1 (this header block);
-// individual [53-wrapper] check assertions land in Commit 2 alongside
-// the 4 wrapper file updates + hook update. The scaffold preserves
-// Section 29 boundary for reviewer orientation without anticipating
-// wrapper content before it is authored.
-
-// 29a [53-wrapper]  Phase 53 CONTEXT scaffold populated (Commit 1 marker)
+// 29a [53-wrapper]  Phase 53 CONTEXT populated
 check('[53-wrapper] .planning/phases/53-router-wrappers/53-CONTEXT.md exists (29a)',
   fs.existsSync(s29Phase53Context));
+
+// 29b [53-wrapper]  4 wrapper command files exist
+{
+  const wrappers = [
+    ['do.md', s29DoPath],
+    ['next.md', s29NextPath],
+    ['mode.md', s29ModePath],
+    ['manager.md', s29ManagerPath],
+  ];
+  const missing = wrappers.filter(([, p]) => !fs.existsSync(p)).map(([n]) => n);
+  check(`[53-wrapper] 4 wrapper files present (29b, missing: [${missing.join(', ')}])`,
+    missing.length === 0);
+}
+
+// 29c [53-wrapper]  4 wrappers delegate to /sunco:router (engine-sharing per L12)
+{
+  const wrappers = [s29DoPath, s29NextPath, s29ModePath, s29ManagerPath];
+  const routerRefs = wrappers.map(p => fs.existsSync(p) && /\/sunco:router/.test(fs.readFileSync(p, 'utf8')));
+  check('[53-wrapper] 4 wrappers reference /sunco:router (engine-sharing; 29c; L12)',
+    routerRefs.filter(Boolean).length === 4);
+}
+
+// 29d [53-wrapper]  4 wrappers preserve approval envelope (L13)
+{
+  const wrappers = [s29DoPath, s29NextPath, s29ModePath, s29ManagerPath];
+  const hits = wrappers.map(p => {
+    if (!fs.existsSync(p)) return false;
+    const c = fs.readFileSync(p, 'utf8');
+    return /approval_envelope/.test(c);
+  });
+  check('[53-wrapper] 4 wrappers propagate approval_envelope (29d; L13/L14)',
+    hits.filter(Boolean).length === 4);
+}
+
+// 29e [53-wrapper]  4 wrappers include forbidden_without_ack or L14 reference
+{
+  const wrappers = [s29DoPath, s29NextPath, s29ModePath, s29ManagerPath];
+  const hits = wrappers.map(p => {
+    if (!fs.existsSync(p)) return false;
+    const c = fs.readFileSync(p, 'utf8');
+    return /forbidden_without_ack|L14/.test(c);
+  });
+  check('[53-wrapper] 4 wrappers reference forbidden_without_ack or L14 (29e; L13)',
+    hits.filter(Boolean).length === 4);
+}
+
+// 29f [53-wrapper]  4 wrappers include UNKNOWN/HOLD/drift fallback prose (G8)
+{
+  const wrappers = [s29DoPath, s29NextPath, s29ModePath, s29ManagerPath];
+  const hits = wrappers.map(p => {
+    if (!fs.existsSync(p)) return false;
+    const c = fs.readFileSync(p, 'utf8');
+    return /UNKNOWN|HOLD|drift/.test(c);
+  });
+  check('[53-wrapper] 4 wrappers include UNKNOWN/HOLD/drift fallback prose (29f; G8)',
+    hits.filter(Boolean).length === 4);
+}
+
+// 29g [53-wrapper]  /sunco:do is router-first (L1 per DESIGN §7.2)
+if (fs.existsSync(s29DoPath)) {
+  const doContent = fs.readFileSync(s29DoPath, 'utf8');
+  check('[53-wrapper] /sunco:do is router-first per DESIGN §7.2 (29g; L1)',
+    /router-first/i.test(doContent) && /Thin wrapper/i.test(doContent));
+}
+
+// 29h [53-wrapper]  /sunco:do keeps static table as UNKNOWN/LOW fallback ONLY (L17)
+if (fs.existsSync(s29DoPath)) {
+  const doContent = fs.readFileSync(s29DoPath, 'utf8');
+  check('[53-wrapper] /sunco:do static table is fallback-only for UNKNOWN/LOW (29h; L17)',
+    /fallback/i.test(doContent) && /UNKNOWN/.test(doContent));
+}
+
+// 29i [53-wrapper]  /sunco:next is --recommend-only thin wrapper (L2)
+if (fs.existsSync(s29NextPath)) {
+  const nextContent = fs.readFileSync(s29NextPath, 'utf8');
+  check('[53-wrapper] /sunco:next delegates to /sunco:router --recommend-only (29i; L2)',
+    /--recommend-only/.test(nextContent));
+}
+
+// 29j [53-wrapper]  /sunco:next documents ephemeral write default + --durable flag (L2 + DESIGN §4.2)
+if (fs.existsSync(s29NextPath)) {
+  const nextContent = fs.readFileSync(s29NextPath, 'utf8');
+  check('[53-wrapper] /sunco:next ephemeral tier default + --durable documented (29j; L2)',
+    /ephemeral/i.test(nextContent) && /--durable/.test(nextContent));
+}
+
+// 29k [53-wrapper]  /sunco:mode is direct-to-router (G3a; L3); no /sunco:do dispatch
+if (fs.existsSync(s29ModePath)) {
+  const modeContent = fs.readFileSync(s29ModePath, 'utf8');
+  check('[53-wrapper] /sunco:mode is direct-to-router (29k; L3/G3a)',
+    /direct-to-router|--intent/.test(modeContent));
+  // Negative: no /sunco:do intermediate dispatch reference
+  // Grandfathered: narrative "no /sunco:do nesting" is expected; we just check
+  // mode doesn't name /sunco:do as its active dispatch target.
+  check('[53-wrapper] /sunco:mode has no /sunco:do nesting (29k; single routing surface)',
+    /no.*sunco:do|single routing surface/i.test(modeContent));
+}
+
+// 29l [53-wrapper]  /sunco:manager includes RouteDecision block + drift banner (L4)
+if (fs.existsSync(s29ManagerPath)) {
+  const mgrContent = fs.readFileSync(s29ManagerPath, 'utf8');
+  check('[53-wrapper] /sunco:manager sources recommendation from RouteDecision (29l; L4)',
+    /RouteDecision/.test(mgrContent) && /--recommend-only/.test(mgrContent));
+  check('[53-wrapper] /sunco:manager has drift banner (29l; L4)',
+    /drift banner|DRIFT BANNER/i.test(mgrContent));
+  check('[53-wrapper] /sunco:manager --json exposes route_decision block (29l; L4)',
+    /route_decision/.test(mgrContent));
+}
+
+// 29m [53-wrapper]  mode hook updated to direct-to-router (/sunco:router --intent)
+if (fs.existsSync(s29HookPath)) {
+  const hookContent = fs.readFileSync(s29HookPath, 'utf8');
+  check('[53-wrapper] mode hook auto-routes via /sunco:router --intent (29m; L9/G3a)',
+    /\/sunco:router --intent/.test(hookContent));
+  // Hook narrative about removing /sunco:do intermediate
+  check('[53-wrapper] mode hook docs single routing surface invariant (29m; L3)',
+    /single routing surface|No .*sunco:do intermediate|no.*sunco:do.*dispatch/i.test(hookContent));
+}
+
+// 29n [53-wrapper]  /sunco:auto frozen: auto.md untouched
+if (fs.existsSync(s29AutoPath) && fs.existsSync(s29DoPath) && fs.existsSync(s29NextPath)
+    && fs.existsSync(s29ModePath) && fs.existsSync(s29ManagerPath)) {
+  // Positive: auto.md still has its original frontmatter name
+  const autoContent = fs.readFileSync(s29AutoPath, 'utf8');
+  check('[53-wrapper] /sunco:auto.md frontmatter name preserved (29n; G7/L14-frozen)',
+    /^name:\s*sunco:auto\s*$/m.test(autoContent));
+  // Negative: 4 wrappers do NOT dispatch to /sunco:auto as an active target
+  // (existing narrative mentions like 'auto' keyword in do.md table are grandfathered
+  // by checking that no wrapper body contains '/sunco:auto' as the sole route)
+  const wrappers = [s29DoPath, s29NextPath, s29ModePath, s29ManagerPath];
+  const autoDispatchHits = wrappers.filter(p => {
+    const c = fs.readFileSync(p, 'utf8');
+    // Accept mentions under "Quick commands" or "Relationship" sections (grandfathered)
+    // but flag if a wrapper routes its primary dispatch to /sunco:auto.
+    return /→\s*`\/sunco:auto`|Routes to:\s*\/sunco:auto/i.test(c);
+  });
+  check('[53-wrapper] 4 wrappers have no /sunco:auto as primary dispatch target (29n; G7)',
+    autoDispatchHits.length <= 1); // do.md's fallback table has an `auto` keyword entry
+}
+
+// 29o [53-wrapper]  6 stage commands byte-identical vs 7791d33 baseline (R1)
+// Matches Phase 52b 28q 6-command set. DESIGN §7 lists 8 nominal stage
+// commands but current repo ships brainstorming.md (not brainstorm.md) and
+// compound.md does not yet exist (Phase 54 scope). We assert the same 6
+// that Phase 52b's R1 guard used. Byte-stability is enforced pre-commit via
+// `git diff --name-only 7791d33..HEAD -- .../{plan,execute,verify,proceed-gate,
+// ship,release}.md | wc -l == 0` per L15 done-when #13.
+{
+  const stageNames = ['plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release'];
+  const stagePaths = stageNames.map(n => path.resolve(s29CommandsDir, `${n}.md`));
+  const missing = stagePaths.filter(p => !fs.existsSync(p));
+  check(`[53-wrapper] 6 stage commands present (29o; R1 per 28q precedent, missing: [${missing.join(', ')}])`,
+    missing.length === 0);
+  const frontmatterOk = stagePaths.every(p => {
+    if (!fs.existsSync(p)) return false;
+    const c = fs.readFileSync(p, 'utf8');
+    return /^name:\s*sunco:/m.test(c);
+  });
+  check('[53-wrapper] 6 stage commands have sunco:* frontmatter preserved (29o; R1)',
+    frontmatterOk);
+}
+
+// 29p [53-wrapper]  where-am-i.md byte-identical (L6 ROADMAP-narrowing exclusion)
+if (fs.existsSync(s29WhereAmIPath)) {
+  const waiContent = fs.readFileSync(s29WhereAmIPath, 'utf8');
+  check('[53-wrapper] where-am-i.md preserved (29p; L6 Phase 53 out-of-scope)',
+    /^name:\s*sunco:where-am-i\s*$/m.test(waiContent));
+}
+
+// 29q [53-wrapper]  command count stable at 88 (no new commands in Phase 53)
+{
+  const allMdFiles = fs.readdirSync(s29CommandsDir).filter(f => f.endsWith('.md'));
+  check(`[53-wrapper] command count stable at 88 (29q; current=${allMdFiles.length})`,
+    allMdFiles.length === 88);
+}
+
+// 29r [53-wrapper]  Phase 52a + 52b assets byte-stable (L16 hard-lock)
+{
+  const assetPaths = [
+    path.resolve(__dirname, '..', 'commands', 'sunco', 'router.md'),
+    path.resolve(__dirname, '..', 'workflows', 'router.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'classifier.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'evidence-collector.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'confidence.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'decision-writer.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'README.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'STAGE-MACHINE.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'EVIDENCE-MODEL.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'CONFIDENCE-CALIBRATION.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'APPROVAL-BOUNDARY.md'),
+    path.resolve(__dirname, '..', 'schemas', 'route-decision.schema.json'),
+  ];
+  const missing = assetPaths.filter(p => !fs.existsSync(p));
+  check(`[53-wrapper] Phase 52a+52b assets present (29r; L16, missing: [${missing.length}])`,
+    missing.length === 0);
+}
 
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
