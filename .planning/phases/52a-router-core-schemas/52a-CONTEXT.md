@@ -91,7 +91,7 @@ From DESIGN + Round 2 absorption:
 3. All 5 reference docs contain verbatim clean-room notice at top (27n verbatim check passes)
 4. STAGE-MACHINE.md defines all 10 stages with full contract fields (27e check passes)
 5. `route-decision.schema.json` is valid JSON Schema draft-07 with 10-stage enum + UNKNOWN in current_stage; HOLD in recommended_next (27b, 27c, 27d)
-6. Smoke Section 27 static subset all pass (lint + build + smoke 619 baseline + ~16 new checks = ~635)
+6. Smoke Section 27 static subset all pass (lint + build + smoke 619 baseline + **35 new Section 27 [52a-static] checks = 654/654** actual at Commit B `13c110d`)
 7. Regression: smoke Sections 1-26 byte-stable (pre-52a baseline)
 8. Self-tests 10/22/17/33 unchanged (injector/adapter/backend-detector/extract-spec-block)
 9. Turbo lint 89/0 unchanged; turbo build 5/5 unchanged

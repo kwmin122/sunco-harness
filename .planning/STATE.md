@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Milestone: v1.5 SUNCO Workflow Router (kickoff)
 Current phase: 52a-router-core-schemas (spec: DESIGN-v1.md §9 Phase 52a committed)
-Status: Gate 52a v2 convergent absorbed (Codex + plan-verifier GREEN-CONDITIONAL); Commit A (planning kickoff) in progress; Commit B (static deliverables) next
+Status: Phase 52a local complete — Commit A (planning kickoff `5b8094e`) + Commit B (static contracts `13c110d`) created locally; reviewer diff relay converged (Codex GREEN + Reviewer GREEN-CONDITIONAL absorbed with 2 pre-push metadata fixes); pre-push metadata-alignment docs commit pending, then push.
 Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`)
 Last activity: 2026-04-20
 
