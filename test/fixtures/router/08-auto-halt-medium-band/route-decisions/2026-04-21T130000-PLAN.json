@@ -1,0 +1,44 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T13:00:00.000Z",
+  "freshness": {
+    "status": "drift",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "drift" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "PLAN",
+  "recommended_next": "PLAN",
+  "confidence": 0.65,
+  "reason": [
+    "state machine present: STATE.md phase matches ROADMAP entry (1/3 primary signals)",
+    "freshness gate DRIFT: origin/main != HEAD (1 of 3 primary signals failed)",
+    "ephemeral route log not fresh (mtime > 5min)"
+  ],
+  "preconditions": {
+    "satisfied": ["state_machine_present"],
+    "missing": ["freshness_gate_all_green", "ephemeral_log_fresh"]
+  },
+  "action": {
+    "command": "/sunco:plan",
+    "mode": "requires_user_ack",
+    "args": { "phase": "N" }
+  },
+  "approval_envelope": {
+    "risk_level": "local_mutate",
+    "triggers_required": []
+  },
+  "evidence_refs": [
+    "primary-signal-1: state machine ✓",
+    "primary-signal-2: freshness gate ✗ (origin drift)",
+    "primary-signal-3: ephemeral log ✗ (stale mtime)",
+    "MEDIUM band triggered: only 1/3 primary signals present"
+  ],
+  "confidence_signals": {
+    "primary_count": 1,
+    "primary_present": ["state_machine"]
+  }
+}

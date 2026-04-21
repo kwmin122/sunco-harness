@@ -1,0 +1,13 @@
+{
+  "scenario_id": 7,
+  "scenario_name": "auto halts before remote_mutate boundary regardless of --allow",
+  "last_current_stage": "RELEASE",
+  "last_confidence": 0.92,
+  "last_confidence_band": "HIGH",
+  "last_risk_level": "remote_mutate",
+  "primary_signal_count": 3,
+  "allow_level": "repo_mutate",
+  "expected_gate_outcome": "halt_remote_mutate",
+  "ab_57_rationale": "AB-57-1 risk_level NOT in permitted {read_only, local_mutate, repo_mutate}; remote_mutate requires per-invocation ACK per APPROVAL-BOUNDARY.md L21 (never cached). Even --allow=repo_mutate (highest permitted) does NOT bypass; HALT regardless of --allow.",
+  "compound_artifact_expected": false
+}

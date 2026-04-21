@@ -1,0 +1,13 @@
+{
+  "scenario_id": 8,
+  "scenario_name": "auto halts in MEDIUM band regardless of --allow (AB-57-2 oracle)",
+  "last_current_stage": "PLAN",
+  "last_confidence": 0.65,
+  "last_confidence_band": "MEDIUM",
+  "last_risk_level": "local_mutate",
+  "primary_signal_count": 1,
+  "allow_level": "local_mutate",
+  "expected_gate_outcome": "halt_medium_band",
+  "ab_57_rationale": "AB-57-1 risk_level local_mutate in permitted set AND risk_level <= allow (both local_mutate); BUT AB-57-2 MEDIUM band (0.65 < 0.80 HIGH threshold) -> HOLD regardless of --allow. Additionally only 1/3 primary signals present (would also trigger thin-HIGH degradation if confidence were >=0.80).",
+  "compound_artifact_expected": false
+}

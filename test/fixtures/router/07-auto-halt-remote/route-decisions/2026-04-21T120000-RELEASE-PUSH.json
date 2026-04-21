@@ -1,0 +1,45 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T12:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "RELEASE",
+  "recommended_next": "RELEASE",
+  "confidence": 0.92,
+  "reason": [
+    "state machine present: RELEASE phase matches ROADMAP entry",
+    "freshness gate all-green (7/7 checks)",
+    "ephemeral route log fresh (mtime < 5min)",
+    "next release sub-stage = PUSH (Phase 56 workflows/release.md Step 6; risk_level = remote_mutate)"
+  ],
+  "preconditions": {
+    "satisfied": ["state_machine_present", "freshness_gate_all_green", "ephemeral_log_fresh", "release_workflow_loaded"],
+    "missing": []
+  },
+  "action": {
+    "command": "/sunco:release",
+    "mode": "requires_user_ack",
+    "args": { "sub_stage": "PUSH" }
+  },
+  "approval_envelope": {
+    "risk_level": "remote_mutate",
+    "triggers_required": ["per_invocation_ack_never_cached"]
+  },
+  "evidence_refs": [
+    "primary-signal-1: state machine ✓",
+    "primary-signal-2: freshness gate ✓",
+    "primary-signal-3: ephemeral log ✓",
+    "APPROVAL-BOUNDARY.md L21: remote_mutate never cached"
+  ],
+  "confidence_signals": {
+    "primary_count": 3,
+    "primary_present": ["state_machine", "freshness_gate", "ephemeral_log"]
+  }
+}

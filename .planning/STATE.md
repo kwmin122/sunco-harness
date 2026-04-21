@@ -8,10 +8,10 @@ last_updated: "2026-04-21T00:00:00.000Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 0
   completed_plans: 0
-  percent: 86
+  percent: 100
 previous_milestone:
   label: v1.4
   name: Impeccable Fusion
@@ -41,12 +41,12 @@ Status: Push status is determined authoritatively by `git rev-parse origin/main 
 Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 57 per Gate 57 L15)
 Last activity: 2026-04-21
 
-Progress (v1.5): [████████░░] 86% (6/7 total phases delivered by committed local state; `git rev-parse origin/main HEAD` authoritative for what is on origin; Commit A mid-phase — frontmatter unchanged at Commit A per L17).
-Delivered by commit: 52a, 52b, 53, 54, 55, 56
-Pending committed: 57 (in-flight; Phase 57 `/sunco:auto` integration, 2-commit unit Commit A + Commit B; opens auto.md — first previously-frozen command file modified in v1.5)
+Progress (v1.5): [██████████] 100% (7/7 total phases delivered by committed local state — v1.5 committed set COMPLETE; `git rev-parse origin/main HEAD` authoritative for what is on origin; Commit B landed locally bumps progress; push awaits user approval).
+Delivered by commit: 52a, 52b, 53, 54, 55, 56, 57
+Pending committed: — (Phase 57 Commit A + Commit B landed locally; push awaits user approval)
 Next (post-Phase-57-landing): **v1.5-closure convening** (SEPARATE event; NOT Phase 57 scope) covers ship decision (popcoru@0.13.0), 7-item maintenance backlog triage, meta-retrospective, formalization of 15 accumulated strict-side union fixtures + 6 per-phase-landed anchor iterations
 
-**Note on frontmatter vs origin**: `progress.completed_phases: 6` and `progress.percent: 86` above count phases whose full commit set exists locally. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed. Commit A mid-phase preserves Phase 56 snapshot values; Commit B bumps to 7/7 (100% — v1.5 committed set complete) per L17 bookkeeping. SDI-2 counter remains at **2** (Phase 57 pre-planned 2-commit split is NOT SDI-2 per Gate 52b B4 + Phase 53/54/55/56 precedent).
+**Note on frontmatter vs origin**: `progress.completed_phases: 7` and `progress.percent: 100` above count phases whose full commit set exists locally. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed. Phase 57 local commits are on origin only when `origin/main == HEAD`. SDI-2 counter remains at **2** (Phase 57 pre-planned 2-commit split is NOT SDI-2 per Gate 52b B4 + Phase 53/54/55/56 precedent; SDI-2 counter preserved through entire v1.5 committed set).
 
 ## v1.4 retrospective
 

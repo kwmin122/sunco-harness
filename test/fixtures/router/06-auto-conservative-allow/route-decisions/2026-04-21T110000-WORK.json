@@ -1,0 +1,43 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T11:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "WORK",
+  "recommended_next": "WORK",
+  "confidence": 0.86,
+  "reason": [
+    "state machine present: STATE.md phase matches ROADMAP entry",
+    "freshness gate all-green (7/7 checks)",
+    "ephemeral route log fresh (mtime < 5min)"
+  ],
+  "preconditions": {
+    "satisfied": ["state_machine_present", "freshness_gate_all_green", "ephemeral_log_fresh"],
+    "missing": []
+  },
+  "action": {
+    "command": "/sunco:execute",
+    "mode": "requires_user_ack",
+    "args": { "phase": "57" }
+  },
+  "approval_envelope": {
+    "risk_level": "local_mutate",
+    "triggers_required": []
+  },
+  "evidence_refs": [
+    "primary-signal-1: state machine ✓",
+    "primary-signal-2: freshness gate ✓",
+    "primary-signal-3: ephemeral log ✓"
+  ],
+  "confidence_signals": {
+    "primary_count": 3,
+    "primary_present": ["state_machine", "freshness_gate", "ephemeral_log"]
+  }
+}

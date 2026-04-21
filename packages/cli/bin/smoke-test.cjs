@@ -4597,6 +4597,237 @@ check('[56-release] clean-room notice phrase in workflows/release.md (32v; clean
 //
 // ────────────────────────────────────────────────────────────────────────────
 
+const s33AutoCmd           = path.resolve(__dirname, '..', 'commands', 'sunco', 'auto.md');
+const s33AutoVitest        = path.resolve(__dirname, '..', '..', 'skills-workflow', 'src', 'shared', '__tests__', 'router-auto.test.ts');
+const s33FixturesRoot      = s31FixturesRoot; // reuse from Section 31
+const s33ScenarioDirs      = ['06-auto-conservative-allow', '07-auto-halt-remote', '08-auto-halt-medium-band'];
+
+// 33a [57-auto]  3 fixture dirs present; each has route-decisions/ + expected.json
+{
+  const presentDirs = s33ScenarioDirs.filter(d => fs.existsSync(path.resolve(s33FixturesRoot, d)));
+  check(`[57-auto] 3 scenario dirs under test/fixtures/router/ (33a; L7; present=${presentDirs.length})`,
+    presentDirs.length === 3);
+  const allHaveRd = s33ScenarioDirs.every(d => {
+    const rdDir = path.resolve(s33FixturesRoot, d, 'route-decisions');
+    if (!fs.existsSync(rdDir)) return false;
+    return fs.readdirSync(rdDir).filter(f => f.endsWith('.json')).length >= 1;
+  });
+  const allHaveExpected = s33ScenarioDirs.every(d => fs.existsSync(path.resolve(s33FixturesRoot, d, 'expected.json')));
+  check('[57-auto] each scenario has route-decisions/*.json + expected.json (33a; γ hybrid L7)',
+    allHaveRd && allHaveExpected);
+}
+
+// 33b [57-auto]  scenario RouteDecisions schema-valid
+{
+  const allValid = s33ScenarioDirs.every(d => {
+    const rdDir = path.resolve(s33FixturesRoot, d, 'route-decisions');
+    const files = fs.readdirSync(rdDir).filter(f => f.endsWith('.json'));
+    return files.every(f => {
+      try {
+        const rd = JSON.parse(fs.readFileSync(path.resolve(rdDir, f), 'utf8'));
+        return rd && rd.kind === 'route-decision' && rd.version === 1 &&
+               typeof rd.ts === 'string' && typeof rd.current_stage === 'string' &&
+               typeof rd.confidence === 'number' && rd.approval_envelope && rd.approval_envelope.risk_level;
+      } catch { return false; }
+    });
+  });
+  check('[57-auto] all 3 scenario RouteDecisions schema-valid (33b; Phase 52a contract)', allValid);
+}
+
+// 33c [57-auto]  3 expected.json oracles have expected_gate_outcome + ab_57_rationale fields
+{
+  const allOk = s33ScenarioDirs.every(d => {
+    try {
+      const oracle = JSON.parse(fs.readFileSync(path.resolve(s33FixturesRoot, d, 'expected.json'), 'utf8'));
+      return typeof oracle.expected_gate_outcome === 'string' &&
+             typeof oracle.ab_57_rationale === 'string' &&
+             ['read_only', 'local_mutate', 'repo_mutate'].includes(oracle.allow_level);
+    } catch { return false; }
+  });
+  check('[57-auto] 3 expected.json oracles carry expected_gate_outcome + ab_57_rationale + permitted allow_level (33c; AB-57-1)',
+    allOk);
+}
+
+const s33AutoMd = fs.existsSync(s33AutoCmd) ? fs.readFileSync(s33AutoCmd, 'utf8') : '';
+
+// 33d [57-auto]  auto.md frontmatter preserved
+check('[57-auto] auto.md frontmatter name: sunco:auto preserved (33d)',
+  /^name:\s*sunco:auto\s*$/m.test(s33AutoMd));
+
+// 33e [57-auto]  --allow <level> flag entry in flags list
+check('[57-auto] --allow <level> flag documented in <context> flags list (33e; L1)',
+  /`--allow <level>`\s+—\s+\*\*\(Phase 57\)\*\*/.test(s33AutoMd));
+
+// 33f [57-auto]  --allow parse table row + permitted-levels rule
+{
+  const parseRowOk = /\|\s+`--allow <level>`\s+\|\s+`ALLOW_LEVEL`\s+\|\s+`read_only`\s+\|/.test(s33AutoMd);
+  const ruleOk = /permitted literal set\s+`\{read_only, local_mutate, repo_mutate\}`/.test(s33AutoMd);
+  check('[57-auto] --allow parse row + permitted-literal-set rule present (33f; L1)',
+    parseRowOk && ruleOk);
+}
+
+// 33g [57-auto]  AB-57-5b permitted-levels literal set present in auto.md
+check('[57-auto] AB-57-5b permitted-levels literal set {read_only, local_mutate, repo_mutate} in auto.md (33g)',
+  /\{read_only, local_mutate, repo_mutate\}/.test(s33AutoMd));
+
+// 33h [57-auto]  AB-57-5a classifier-first invocation marker (/sunco:router --intent)
+check('[57-auto] AB-57-5a /sunco:router --intent classifier-first invocation marker in auto.md (33h)',
+  /\/sunco:router --intent/.test(s33AutoMd));
+
+// 33i [57-auto]  AB-57-1 L19 + L55 + L61-L63 APPROVAL-BOUNDARY citations
+{
+  const l19 = /APPROVAL-BOUNDARY\.md\s+L19/.test(s33AutoMd);
+  const l55 = /L55/.test(s33AutoMd);
+  const blessedRef = /L61-L63|blessed orchestrator/.test(s33AutoMd);
+  check('[57-auto] AB-57-1 APPROVAL-BOUNDARY L19 + L55 + blessed-list citations present (33i)',
+    l19 && l55 && blessedRef);
+}
+
+// 33j [57-auto]  AB-57-2 thin-HIGH degradation + ≥2/3 primary signals rule
+{
+  const thinHighOk = /thin-HIGH/.test(s33AutoMd) || /Thin-HIGH/.test(s33AutoMd);
+  const twoOfThree = /≥2 of 3 primary evidence signals|≥2\/3 primary|2 of 3 primary/.test(s33AutoMd);
+  const degradeToMedium = /degrade[sd]? to MEDIUM/.test(s33AutoMd);
+  check('[57-auto] AB-57-2 thin-HIGH + ≥2/3 primary signals + degrade-to-MEDIUM wording present (33j; L3)',
+    thinHighOk && twoOfThree && degradeToMedium);
+}
+
+// 33k [57-auto]  AB-57-3 compound-hook path chain (/sunco:auto → /sunco:release → COMPOUND_HOOK)
+{
+  const autoToRelease = /\/sunco:auto[\s\S]{0,200}\/sunco:release/.test(s33AutoMd);
+  const releaseToCompoundHook = /\/sunco:release[\s\S]{0,400}COMPOUND_HOOK/.test(s33AutoMd);
+  const noGenericHook = !/auto-fires at RELEASE stage/.test(s33AutoMd);
+  check('[57-auto] AB-57-3 compound-hook path chain present + no generic-hook framing (33k; L4)',
+    autoToRelease && releaseToCompoundHook && noGenericHook);
+}
+
+// 33l [57-auto]  D-REV-4 fix: APPROVAL-BOUNDARY L21 + L22 citations (NOT L14)
+{
+  const l21 = /L21/.test(s33AutoMd);
+  const l22 = /L22/.test(s33AutoMd);
+  check('[57-auto] D-REV-4 APPROVAL-BOUNDARY L21 + L22 hard-invariant citations present (33l)',
+    l21 && l22);
+}
+
+// 33m [57-auto]  router-auto.test.ts present + 3 describe blocks
+{
+  if (fs.existsSync(s33AutoVitest)) {
+    const ts = fs.readFileSync(s33AutoVitest, 'utf8');
+    const describeCount = (ts.match(/^describe\(/gm) || []).length;
+    check(`[57-auto] router-auto.test.ts exists with ≥3 describe blocks (33m; L8; found=${describeCount})`,
+      describeCount >= 3);
+    check('[57-auto] router-auto.test.ts defines AllowLevel + evaluateAutoGate policy-simulator (33m; L8)',
+      /evaluateAutoGate/.test(ts) && /AllowLevel/.test(ts) && /halt_medium_band/.test(ts));
+  } else {
+    check('[57-auto] router-auto.test.ts exists (33m; L8)', false);
+  }
+}
+
+// 33n [57-auto]  Stuck-detector preservation — AutoLock + 3-retry prose byte-stable
+{
+  const autoLockOk = /\.sun\/auto\.lock/.test(s33AutoMd);
+  const threeRetryOk = /3 retries per phase|PHASE_RETRY/.test(s33AutoMd);
+  check('[57-auto] stuck-detector preservation — AutoLock path + 3-retry mention (33n; L5)',
+    autoLockOk && threeRetryOk);
+}
+
+// 33o [57-auto]  Sections 27/28/29/30/31/32 byte-stable content markers
+{
+  const smokeContent = fs.readFileSync(__filename, 'utf8');
+  const sectionMarkers = [
+    '[52a-static] schemas/route-decision.schema.json exists + parses as JSON (27b)',
+    '[52b-runtime]',
+    '[53-wrapper]',
+    '[54-compound] commands/sunco/compound.md exists (30a)',
+    '[55-dogfood] test/fixtures/router/README.md exists (31a)',
+    '[56-release] packages/cli/workflows/release.md exists (32a; Gate 56 L1)',
+  ];
+  const missing = sectionMarkers.filter(m => !smokeContent.includes(m));
+  check(`[57-auto] Sections 27/28/29/30/31/32 byte-stable content markers preserved (33o; parallels 32o; missing=[${missing.length}])`,
+    missing.length === 0);
+}
+
+// 33p [57-auto]  Phase 52a+52b+53+54+55+56 runtime assets present (L12)
+{
+  const assetPaths = [
+    path.resolve(__dirname, '..', 'references', 'router', 'STAGE-MACHINE.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'APPROVAL-BOUNDARY.md'),
+    path.resolve(__dirname, '..', 'schemas', 'route-decision.schema.json'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'classifier.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'confidence.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'evidence-collector.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'decision-writer.mjs'),
+    path.resolve(__dirname, '..', 'workflows', 'router.md'),
+    path.resolve(__dirname, '..', 'schemas', 'compound.schema.json'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'src', 'compound-router.mjs'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'src', 'sink-proposer.mjs'),
+    path.resolve(__dirname, '..', 'workflows', 'compound.md'),
+    path.resolve(s32RepoRoot, '.planning', 'compound', 'release-v0.12.0-20260420.md'),
+    path.resolve(__dirname, '..', '..', 'skills-workflow', 'src', 'shared', '__tests__', 'router-dogfood.test.ts'),
+    path.resolve(__dirname, '..', 'workflows', 'release.md'),
+  ];
+  const missing = assetPaths.filter(p => !fs.existsSync(p));
+  check(`[57-auto] Phase 52a+52b+53+54+55+56 runtime assets present (33p; L12; missing=[${missing.length}])`,
+    missing.length === 0);
+}
+
+// 33q [57-auto]  R1 8-command stage protection byte-identical continuation
+{
+  const r1Pre54 = ['brainstorming', 'plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release'];
+  const pre54Ok = r1Pre54.every(n => s32GitBytesIdentical(
+    path.resolve(__dirname, '..', 'commands', 'sunco', `${n}.md`),
+    '7791d33',
+    `packages/cli/commands/sunco/${n}.md`,
+  ));
+  const compoundOk = s32GitBytesIdentical(
+    path.resolve(__dirname, '..', 'commands', 'sunco', 'compound.md'),
+    '8e22c9d',
+    'packages/cli/commands/sunco/compound.md',
+  );
+  check('[57-auto] R1 8-command byte-identical (33q; L13; split-baseline 7@7791d33 + compound@8e22c9d continuation)',
+    pre54Ok && compoundOk);
+}
+
+// 33r [57-auto]  architecture.md byte-identical from 72a391a (7th iteration defer)
+check('[57-auto] .claude/rules/architecture.md byte-identical from 72a391a (33r; L14; 7th iteration defer)',
+  s32GitBytesIdentical(s32ArchitectureRule, '72a391a', '.claude/rules/architecture.md'));
+
+// 33s [57-auto]  artifact-gate.md byte-identical from fa4eb52 (AB1 byte-lock extension)
+check('[57-auto] commands/sunco/artifact-gate.md byte-identical from fa4eb52 (33s; L19; AB1 extension)',
+  s32GitBytesIdentical(s32ArtifactGateCmd, 'fa4eb52', 'packages/cli/commands/sunco/artifact-gate.md'));
+
+// 33t [57-auto]  workflows/release.md byte-identical from Phase 56 (99c8934)
+check('[57-auto] packages/cli/workflows/release.md byte-identical from 99c8934 (33t; L19; Phase 56 byte-lock)',
+  s32GitBytesIdentical(
+    path.resolve(__dirname, '..', 'workflows', 'release.md'),
+    '99c8934',
+    'packages/cli/workflows/release.md',
+  ));
+
+// 33u [57-auto]  DESIGN-v1 + ROADMAP + REQUIREMENTS byte-identical (L15 through Phase 57)
+{
+  const designOk = s32GitBytesIdentical(s32DesignV1, '30e2041', '.planning/router/DESIGN-v1.md');
+  const roadmapOk = s32GitBytesIdentical(s32Roadmap, '55565ad', '.planning/ROADMAP.md');
+  const reqOk = s32GitBytesIdentical(s32Requirements, '5b8094e', '.planning/REQUIREMENTS.md');
+  check('[57-auto] DESIGN-v1 + ROADMAP + REQUIREMENTS byte-identical (33u; L15 extension through Phase 57)',
+    designOk && roadmapOk && reqOk);
+}
+
+// 33v [57-auto]  .planning/router/decisions/ only .keep (U2 continuation)
+{
+  const entries = fs.existsSync(s31DurableDir) ? fs.readdirSync(s31DurableDir) : [];
+  check(`[57-auto] .planning/router/decisions/ contains ONLY .keep (33v; U2 continuation; entries=${entries.length})`,
+    entries.length === 1 && entries[0] === '.keep');
+}
+
+// 33w [57-auto]  router-dogfood.test.ts byte-identical from Phase 55 (L18 continuation)
+check('[57-auto] router-dogfood.test.ts byte-identical from 97af2c3 (33w; L18; Phase 55 dogfood vitest byte-lock)',
+  s32GitBytesIdentical(
+    path.resolve(__dirname, '..', '..', 'skills-workflow', 'src', 'shared', '__tests__', 'router-dogfood.test.ts'),
+    '97af2c3',
+    'packages/skills-workflow/src/shared/__tests__/router-dogfood.test.ts',
+  ));
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

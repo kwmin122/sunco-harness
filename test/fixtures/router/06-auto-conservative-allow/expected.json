@@ -1,0 +1,13 @@
+{
+  "scenario_id": 6,
+  "scenario_name": "auto executes within --allow=local_mutate in HIGH band with 3/3 primary signals",
+  "last_current_stage": "WORK",
+  "last_confidence": 0.86,
+  "last_confidence_band": "HIGH",
+  "last_risk_level": "local_mutate",
+  "primary_signal_count": 3,
+  "allow_level": "local_mutate",
+  "expected_gate_outcome": "auto_execute",
+  "ab_57_rationale": "AB-57-1 risk_level in permitted {read_only, local_mutate, repo_mutate} AND risk_level <= allow; AB-57-2 HIGH band + 3/3 primary signals (>=2/3 required) -> auto_execute authorized",
+  "compound_artifact_expected": false
+}

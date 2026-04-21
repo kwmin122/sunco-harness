@@ -21,6 +21,7 @@ allowed-tools:
 - `--no-discuss` — Skip the discuss step for all phases (write minimal CONTEXT.md from ROADMAP).
 - `--no-verify` — Skip verification (lint-gate still runs — it is never optional).
 - `--dry-run` — Display phase plan but execute nothing.
+- `--allow <level>` — **(Phase 57)** Highest-allowed `approval_envelope.risk_level` for classifier-gated auto-execution. Permitted values: `read_only` (default) | `local_mutate` | `repo_mutate`. Lower tiers implicit (`--allow=local_mutate` permits both `read_only` and `local_mutate` actions without ACK). **EXCLUDED** from `--allow`: `repo_mutate_official` (per-write ACK per `references/router/APPROVAL-BOUNDARY.md` L19; blessed orchestrator batched-ACK exception applies ONLY to `/sunco:execute`, `/sunco:verify`, `/sunco:release` per L55/L61-L63 — `/sunco:auto` is NOT a blessed orchestrator); `remote_mutate` (per-invocation ACK, never cached, per APPROVAL-BOUNDARY.md L21); `external_mutate` (per-invocation ACK, never cached, never `--batch-ack`, per APPROVAL-BOUNDARY.md L22). These classes always HOLD and surface user ACK regardless of `--allow`.
 </context>
 
 <objective>
@@ -60,12 +61,14 @@ Parse `$ARGUMENTS` for flags before loading any context.
 | `--no-discuss` | `SKIP_DISCUSS` | false |
 | `--no-verify` | `SKIP_VERIFY` | false |
 | `--dry-run` | `DRY_RUN` | false |
+| `--allow <level>` | `ALLOW_LEVEL` | `read_only` |
 
 Rules:
 - `--from N` — skip all phases before N
 - `--only N` — run exactly one phase; implies `--max-phases 1`
 - `--max-phases 0` — unlimited (default)
 - `--dry-run` — display phase plan but execute nothing; print `[DRY RUN]` on all output
+- `--allow <level>` — Phase 57 classifier-gate policy; permitted literal set `{read_only, local_mutate, repo_mutate}` ONLY. Invalid value (e.g. `--allow=repo_mutate_official` or `--allow=remote_mutate` or `--allow=external_mutate`) → error with usage hint "permitted: read_only | local_mutate | repo_mutate"; do not proceed.
 - Unrecognized flags → warn and ignore
 
 ---
@@ -180,6 +183,36 @@ Update AutoLock:
 { "currentPhase": [N], "status": "running" }
 ```
 
+### 5a.5. Classifier-first gate (Phase 57)
+
+**Before any stage execution for this phase iteration**, invoke `/sunco:router --intent` to produce a RouteDecision. This is the Phase 57 classifier-first invocation contract — the classifier runs at EACH phase boundary prior to `5b. Checkpoint recovery` and any subsequent stage execution.
+
+Procedure:
+
+1. **Invoke classifier**: Run `/sunco:router --intent` internally (black-box consumer of Phase 52b `packages/cli/references/router/src/classifier.mjs` + `confidence.mjs` + `evidence-collector.mjs`; no new runtime introduced by Phase 57). Read the emitted `approval_envelope.risk_level`, `confidence` band, and `confidence_signals[]`.
+
+2. **`--allow` gate (AB-57-1)**: Compare `approval_envelope.risk_level` against `ALLOW_LEVEL` using the tier ordering `read_only < local_mutate < repo_mutate`. Permitted literal set `{read_only, local_mutate, repo_mutate}`. Actions:
+   - `risk_level ≤ ALLOW_LEVEL` AND `risk_level ∈ {read_only, local_mutate, repo_mutate}` → pass to band gate.
+   - `risk_level ∈ {repo_mutate_official, remote_mutate, external_mutate}` → **HOLD regardless of `--allow`** and surface user ACK prompt:
+     - `repo_mutate_official` → per-write ACK (APPROVAL-BOUNDARY.md L19; batched-ACK exception does NOT apply because `/sunco:auto` is not on the blessed orchestrator list at L61-L63).
+     - `remote_mutate` → per-invocation ACK, never cached (APPROVAL-BOUNDARY.md L21).
+     - `external_mutate` → per-invocation ACK, never cached, never `--batch-ack` (APPROVAL-BOUNDARY.md L22).
+   - `risk_level > ALLOW_LEVEL` (within permitted set; e.g., `--allow=read_only` but next action is `repo_mutate`) → HOLD + prompt user to re-invoke with higher `--allow` or to provide per-write ACK inline.
+
+3. **Band gate (AB-57-2 thin-HIGH degradation)**: Evaluate `confidence` band + `confidence_signals[]`:
+   - **HIGH band + ≥2 of 3 primary evidence signals present** (state machine / freshness gate / ephemeral route log) → auto-execute authorized (proceed to 5b). Note: frozen-weight HIGH threshold is upstream in Phase 52b `confidence.mjs`; Phase 57 adds the 2-of-3 primary-signal rule at gate time.
+   - **HIGH band + only 1 of 3 primary signals (thin-HIGH)** → degrade to MEDIUM treatment (HOLD + prompt; do not auto-execute).
+   - **MEDIUM band** → HOLD + prompt regardless of `--allow` (always ACK required at MEDIUM confidence).
+   - **LOW band** → HOLD + surface `/sunco:debug` recommendation (classifier evidence is insufficient to gate auto-execution).
+   - **UNKNOWN stage** → 2 consecutive UNKNOWN decisions → hard halt. 1 UNKNOWN → HOLD + prompt (remediate evidence drift before proceeding).
+   - **HOLD stage (classifier-emitted)** → hard halt (explicit HOLD intent from classifier; do not auto-bypass).
+
+4. **On HOLD/halt**: Update AutoLock `status: "paused"` + record `holdReason` (e.g., `risk_level_exceeds_allow` / `risk_level_requires_ack` / `thin_high_degraded_to_medium` / `medium_band_hold` / `low_band_debug` / `unknown_stage` / `hold_stage`). Surface the RouteDecision `reason[]` ordered list to the user. Prompt: `[proceed with ACK / re-invoke with different --allow / /sunco:debug / abort]`. Do NOT count classifier-HOLD as a stuck-detector retry (5a.5 HOLD is orthogonal to phase-level retry at 5h).
+
+5. **On pass**: Proceed to `5b. Checkpoint recovery`. The classifier-gate logs decision to `.sun/router/session/*.json` (ephemeral) and, if promotion criteria fire per `references/router/EVIDENCE-MODEL.md`, also to `.planning/router/decisions/*.json` (durable). Phase 52b writer path-allowlist enforced; no mutation outside those directories.
+
+**Scope boundary — no generic router-pipeline auto-hook installed by this gate (AB-57-3)**. The classifier-first gate here is a classification + policy-check, not a mutation hook. Post-RELEASE compound artifact write follows the Phase 56 path chain — see "5f.5. RELEASE-phase compound chain" below.
+
 ### 5b. Checkpoint recovery
 
 Before running any stage, check what artifacts already exist for this phase:
@@ -291,6 +324,20 @@ Mark phase complete:
 - Reset `PHASE_RETRY` counter for next phase
 
 Run `/sunco:transition [N]` to archive phase artifacts and initialize next phase directory.
+
+### 5f.5. RELEASE-phase compound chain (Phase 57; AB-57-3 preservation)
+
+When the phase loop reaches a RELEASE phase, the compound artifact write is **not** triggered by `/sunco:auto` directly. Phase 57 installs **no generic router-pipeline auto-hook** (Gate 54 U1 + Gate 56 release-workflow contract preserved).
+
+The explicit path chain for compound artifact generation under `/sunco:auto` is:
+
+1. `/sunco:auto` may reach a RELEASE phase in the queue (e.g., a phase whose stage classifier emits `current_stage: RELEASE`).
+2. `/sunco:auto` invokes `/sunco:release` at Step 5f (execute with lint-gate) as the release stage command. `/sunco:release` is on the blessed orchestrator list (APPROVAL-BOUNDARY.md L63) and carries the Phase 56 10-sub-stage approval-envelope contract (`workflows/release.md`).
+3. `/sunco:release` proceeds through its 10 sub-stages (PRE_FLIGHT → VERSION_BUMP → CHANGELOG → COMMIT → TAG → PUSH → PUBLISH → VERIFY_REGISTRY → TAG_PUSH → COMPOUND_HOOK per Phase 56 L2 mapping). Each sub-stage's `approval_envelope.risk_level` drives ACK behavior inside `/sunco:release`; `/sunco:auto` classifier-first gate (5a.5) is a separate upstream check and does not bypass Phase 56 sub-stage ACKs.
+4. `/sunco:release` reaches COMPOUND_HOOK sub-stage after VERIFY_REGISTRY success and BEFORE TAG_PUSH (Phase 56 L7; DESIGN §11 30e literal ordering).
+5. The existing Phase 56 release workflow writes the compound artifact to `.planning/compound/<scope>-<ref>-<YYYYMMDD>.md` at `status=proposed` per Gate 54 auto-write path-allowlist + APPROVAL-BOUNDARY.md L47 `local_mutate` exception (compound-router draft auto-write classified as local_mutate).
+
+`/sunco:auto` does not invoke `compound-router.runCompound(ctx)` directly; the invocation happens through `/sunco:release` as an intermediate orchestrator. Phase 54 compound-router assets + Phase 56 `workflows/release.md` path remain byte-identical under Phase 57. TAG_PUSH failure semantics (Phase 56 L6) are unchanged: post-semantic-completion git-metadata reconciliation failure does not move the compound trigger timing and does not re-trigger COMPOUND_HOOK on retry.
 
 ### 5j. Budget check (per-phase)
 
