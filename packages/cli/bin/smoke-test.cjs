@@ -4537,6 +4537,66 @@ check('[56-release] commands/sunco/artifact-gate.md byte-identical from fa4eb52 
 check('[56-release] clean-room notice phrase in workflows/release.md (32v; clean-room invariant)',
   /Clean-room notice/.test(s32ReleaseMd) && /compound-engineering-plugin/.test(s32ReleaseMd));
 
+// ─── Section 33 — Auto-Loop Integration (Phase 57) ─────────────────────────
+//
+// Phase 57 opens /sunco:auto — the ONLY previously-frozen command file
+// modified in v1.5 — and wires the autonomous loop through the Phase 52b
+// classifier with a new --allow <level> flag keyed to approval_envelope
+// risk_level. Phase 57 completes IF-21 (approval-boundary-enforced auto-
+// execution) at the autonomous-execution surface; Phase 56 hardened the
+// release sub-stage envelope surface.
+//
+// --allow permitted levels (Gate 57 AB-57-1; strict-side converged across
+// Codex + Reviewer Claude):
+//   read_only                  — auto-execute when within allow
+//   local_mutate               — auto-execute when within allow
+//   repo_mutate                — auto-execute when within allow
+//   repo_mutate_official       — EXCLUDED; per-write ACK (APPROVAL-BOUNDARY L19)
+//   remote_mutate              — EXCLUDED; per-invocation ACK (L21; never cached)
+//   external_mutate            — EXCLUDED; per-invocation ACK (L22; never --batch-ack)
+//
+// Phase 57 adds ZERO new runtime modules and ZERO new module exports. The
+// auto.md command file is modified in-place (opened from Phase 52a-56
+// frozen state 0e10442); the Phase 52b classifier.mjs + confidence.mjs +
+// evidence-collector.mjs + decision-writer.mjs remain byte-identical.
+// Self-test count stays at 249/249.
+//
+// Gate-dispositive references absorbed:
+//   AB-57-1 --allow permitted set = {read_only, local_mutate, repo_mutate}
+//       only; repo_mutate_official excluded per APPROVAL-BOUNDARY.md L19
+//       (per-write ACK) + L55 (blessed orchestrator batched-ACK exception
+//       applies ONLY to /sunco:execute, /sunco:verify, /sunco:release
+//       per L61-L63 hardcoded list; /sunco:auto is NOT on the blessed
+//       list). Codex + Reviewer Claude strict-side converged.
+//   AB-57-2 HIGH-band auto-execute requires frozen-weight HIGH AND ≥2/3
+//       primary evidence signals (state machine / freshness gate /
+//       ephemeral log). Thin-HIGH (1 signal) degrades to MEDIUM treatment.
+//       MEDIUM → HOLD regardless of --allow. LOW → HOLD + require
+//       /sunco:debug. UNKNOWN/HOLD → hard halt.
+//   AB-57-3 compound-hook path chain (no generic auto-hook):
+//       /sunco:auto → /sunco:release → COMPOUND_HOOK sub-stage → existing
+//       Phase 56 workflows/release.md writes compound artifact at
+//       status=proposed per Gate 54 auto-write + L47 local_mutate exception.
+//       NO "auto-fires at RELEASE" framing; the Phase 54/56 path is
+//       preserved verbatim.
+//   AB-57-4 3 dogfood fixtures (06-auto-conservative-allow +
+//       07-auto-halt-remote + 08-auto-halt-medium-band). MEDIUM-band HOLD
+//       invariant has dedicated dogfood oracle.
+//   AB-57-5 Section 33 adds (a) classifier-first-invocation assertion —
+//       /sunco:router --intent prose marker precedes stage execution
+//       blocks in auto.md; (b) permitted-levels literal set assertion —
+//       {read_only, local_mutate, repo_mutate} literal set presence in
+//       auto.md.
+//
+// auto.md is a SEPARATE hard-lock; NOT part of R1 8-command set. Phase 57
+// is the ONLY v1.5 phase where a previously-frozen command file is opened.
+//
+// L10 pre-planned 2-commit split; NOT SDI-2 (SDI-2 counter stays at 2).
+//
+// Section 33 checks populated in Phase 57 Commit B per L9.
+//
+// ────────────────────────────────────────────────────────────────────────────
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);
