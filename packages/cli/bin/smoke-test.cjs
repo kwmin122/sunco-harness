@@ -4335,6 +4335,208 @@ if (fs.existsSync(s31DogfoodVitest)) {
 //
 // ────────────────────────────────────────────────────────────────────────────
 
+const s32RepoRoot          = path.resolve(__dirname, '..', '..', '..');
+const s32WorkflowRelease   = path.resolve(__dirname, '..', 'workflows', 'release.md');
+const s32ArchitectureRule  = path.resolve(s32RepoRoot, '.claude', 'rules', 'architecture.md');
+const s32ArtifactGateCmd   = path.resolve(__dirname, '..', 'commands', 'sunco', 'artifact-gate.md');
+const s32DesignV1          = path.resolve(s32RepoRoot, '.planning', 'router', 'DESIGN-v1.md');
+const s32Roadmap           = path.resolve(s32RepoRoot, '.planning', 'ROADMAP.md');
+const s32Requirements      = path.resolve(s32RepoRoot, '.planning', 'REQUIREMENTS.md');
+const s32SubStages = [
+  'PRE_FLIGHT', 'VERSION_BUMP', 'CHANGELOG', 'COMMIT', 'TAG',
+  'PUSH', 'PUBLISH', 'VERIFY_REGISTRY', 'TAG_PUSH', 'COMPOUND_HOOK',
+];
+
+function s32GitBytesIdentical(file, sha, gitPath) {
+  try {
+    const expected = execSync(`git show ${sha}:${gitPath}`, { cwd: s32RepoRoot });
+    const actual = fs.readFileSync(file);
+    return Buffer.compare(expected, actual) === 0;
+  } catch {
+    return false;
+  }
+}
+
+// 32a [56-release]  workflows/release.md present
+check('[56-release] packages/cli/workflows/release.md exists (32a; Gate 56 L1)',
+  fs.existsSync(s32WorkflowRelease));
+
+const s32ReleaseMd = fs.existsSync(s32WorkflowRelease) ? fs.readFileSync(s32WorkflowRelease, 'utf8') : '';
+
+// 32b [56-release]  all 10 sub-stage markers present
+{
+  const present = s32SubStages.filter(n => s32ReleaseMd.includes(n));
+  check(`[56-release] 10 sub-stage markers in workflows/release.md (32b; L1; present=${present.length})`,
+    present.length === 10);
+}
+
+// 32c [56-release]  each sub-stage has approval_envelope block
+{
+  const envelopeBlocks = (s32ReleaseMd.match(/approval_envelope:/g) || []).length;
+  check(`[56-release] 10 approval_envelope blocks in workflows/release.md (32c; L1/L2; found=${envelopeBlocks})`,
+    envelopeBlocks === 10);
+}
+
+// 32d [56-release]  PRE_FLIGHT risk_level = read_only
+check('[56-release] PRE_FLIGHT risk_level = read_only (32d; L2)',
+  /### Step 1: PRE_FLIGHT[\s\S]*?risk_level:\s*read_only/.test(s32ReleaseMd));
+
+// 32e [56-release]  VERSION_BUMP + CHANGELOG risk_level = repo_mutate_official (AB2 class-by-purpose)
+{
+  const vbumpOk = /### Step 2: VERSION_BUMP[\s\S]*?risk_level:\s*repo_mutate_official/.test(s32ReleaseMd);
+  const clogOk = /### Step 3: CHANGELOG[\s\S]*?risk_level:\s*repo_mutate_official/.test(s32ReleaseMd);
+  check('[56-release] VERSION_BUMP + CHANGELOG risk_level = repo_mutate_official (32e; L2; AB2 class-by-purpose)',
+    vbumpOk && clogOk);
+}
+
+// 32f [56-release]  PUBLISH risk_level = external_mutate (DESIGN §11 30c literal)
+check('[56-release] PUBLISH risk_level = external_mutate (32f; L2; DESIGN §11 30c literal)',
+  /### Step 7: PUBLISH[\s\S]*?risk_level:\s*external_mutate/.test(s32ReleaseMd));
+
+// 32g [56-release]  COMPOUND_HOOK risk_level = local_mutate (APPROVAL-BOUNDARY.md L47 exception)
+check('[56-release] COMPOUND_HOOK risk_level = local_mutate (32g; L2; APPROVAL-BOUNDARY.md L47 exception)',
+  /### Step 10: COMPOUND_HOOK[\s\S]*?risk_level:\s*local_mutate/.test(s32ReleaseMd));
+
+// 32h [56-release]  PUSH + TAG_PUSH risk_level = remote_mutate
+{
+  const pushOk = /### Step 6: PUSH[\s\S]*?risk_level:\s*remote_mutate/.test(s32ReleaseMd);
+  const tpushOk = /### Step 9: TAG_PUSH[\s\S]*?risk_level:\s*remote_mutate/.test(s32ReleaseMd);
+  check('[56-release] PUSH + TAG_PUSH risk_level = remote_mutate (32h; L2; APPROVAL-BOUNDARY.md L14 hard invariant)',
+    pushOk && tpushOk);
+}
+
+// 32i [56-release]  COMMIT + TAG risk_level = repo_mutate
+{
+  const commitOk = /### Step 4: COMMIT[\s\S]*?risk_level:\s*repo_mutate\b/.test(s32ReleaseMd);
+  const tagOk = /### Step 5: TAG[\s\S]*?risk_level:\s*repo_mutate\b/.test(s32ReleaseMd);
+  check('[56-release] COMMIT + TAG risk_level = repo_mutate (32i; L2)',
+    commitOk && tagOk);
+}
+
+// 32j [56-release]  PRE_FLIGHT workspace consistency check enumerated (DESIGN §11 30d literal; Gate 56 L5)
+check('[56-release] PRE_FLIGHT workspace consistency check enumerated (32j; L5; DESIGN §11 30d)',
+  /Workspace consistency check \(DESIGN §11 30d literal; Gate 56 L5\)/.test(s32ReleaseMd));
+
+// 32k [56-release]  COMPOUND_HOOK post-VERIFY_REGISTRY wiring (DESIGN §11 30e literal; Gate 56 L7)
+check('[56-release] COMPOUND_HOOK post-VERIFY_REGISTRY wiring (32k; L7; DESIGN §11 30e literal)',
+  /after VERIFY_REGISTRY\s+success and BEFORE TAG_PUSH/.test(s32ReleaseMd));
+
+// 32l [56-release]  TAG_PUSH failure clause (Gate 56 L6; compound trigger NOT moved; retry separately invocable)
+{
+  const clauseOk =
+    /TAG_PUSH failure is post-semantic-completion git-metadata\s+reconciliation/.test(s32ReleaseMd) &&
+    /compound trigger timing is NOT moved/.test(s32ReleaseMd) &&
+    /TAG_PUSH\s+retry sub-stage is separately invocable/.test(s32ReleaseMd);
+  check('[56-release] TAG_PUSH failure clause present (32l; L6; post-semantic-completion + retry separately invocable)',
+    clauseOk);
+}
+
+// 32m [56-release]  AB1 artifact-gate scope line verbatim
+{
+  const ab1Ok = /packages\/cli\/commands\/sunco\/artifact-gate\.md is NOT opened by Phase 56 \(hard-lock through Phase 56 per explicit scope line\)/.test(s32ReleaseMd);
+  check('[56-release] AB1 artifact-gate scope line verbatim in workflows/release.md (32m; L4)',
+    ab1Ok);
+}
+
+// 32n [56-release]  AB2 CHANGELOG class-by-purpose policy sentence verbatim
+{
+  const ab2Ok =
+    /CHANGELOG\.md is treated as repo_mutate_official by purpose within the \/sunco:release release-record class/.test(s32ReleaseMd) &&
+    /APPROVAL-BOUNDARY\.md L26 class-by-purpose rationale \+ L63 blessed orchestrator explicit CHANGELOG\.md naming/.test(s32ReleaseMd) &&
+    /The L32 literal-path reading is narrower than the L26-intended class/.test(s32ReleaseMd);
+  check('[56-release] AB2 CHANGELOG class-by-purpose policy sentence verbatim (32n; L3; D1 errata anchor)',
+    ab2Ok);
+}
+
+// 32o [56-release]  Sections 27/28/29/30/31 byte-stable content markers
+{
+  const smokeContent = fs.readFileSync(__filename, 'utf8');
+  const sectionMarkers = [
+    '[52a-static] schemas/route-decision.schema.json exists + parses as JSON (27b)',
+    '[52b-runtime]',
+    '[53-wrapper]',
+    '[54-compound] commands/sunco/compound.md exists (30a)',
+    '[55-dogfood] test/fixtures/router/README.md exists (31a)',
+  ];
+  const missing = sectionMarkers.filter(m => !smokeContent.includes(m));
+  check(`[56-release] Sections 27/28/29/30/31 byte-stable content markers preserved (32o; parallels 31j; missing=[${missing.length}])`,
+    missing.length === 0);
+}
+
+// 32p [56-release]  Phase 52a+52b+53+54+55 runtime assets present (L12 cumulative content-marker)
+{
+  const assetPaths = [
+    path.resolve(__dirname, '..', 'references', 'router', 'STAGE-MACHINE.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'EVIDENCE-MODEL.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'CONFIDENCE-CALIBRATION.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'APPROVAL-BOUNDARY.md'),
+    path.resolve(__dirname, '..', 'schemas', 'route-decision.schema.json'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'classifier.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'confidence.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'evidence-collector.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'decision-writer.mjs'),
+    path.resolve(__dirname, '..', 'commands', 'sunco', 'router.md'),
+    path.resolve(__dirname, '..', 'workflows', 'router.md'),
+    path.resolve(__dirname, '..', 'schemas', 'compound.schema.json'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'README.md'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'template.md'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'src', 'compound-router.mjs'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'src', 'sink-proposer.mjs'),
+    path.resolve(__dirname, '..', 'commands', 'sunco', 'compound.md'),
+    path.resolve(__dirname, '..', 'workflows', 'compound.md'),
+    path.resolve(s32RepoRoot, '.planning', 'compound', 'release-v0.12.0-20260420.md'),
+    path.resolve(__dirname, '..', '..', 'skills-workflow', 'src', 'shared', '__tests__', 'router-dogfood.test.ts'),
+  ];
+  const missing = assetPaths.filter(p => !fs.existsSync(p));
+  check(`[56-release] Phase 52a+52b+53+54+55 runtime assets present (32p; L12; missing=[${missing.length}])`,
+    missing.length === 0);
+}
+
+// 32q [56-release]  R1 8-command stage protection — 7 commands @ 7791d33, compound.md @ 8e22c9d (first landing)
+{
+  const r1Pre54 = ['brainstorming', 'plan', 'execute', 'verify', 'proceed-gate', 'ship', 'release'];
+  const pre54Ok = r1Pre54.every(n => s32GitBytesIdentical(
+    path.resolve(__dirname, '..', 'commands', 'sunco', `${n}.md`),
+    '7791d33',
+    `packages/cli/commands/sunco/${n}.md`,
+  ));
+  const compoundOk = s32GitBytesIdentical(
+    path.resolve(__dirname, '..', 'commands', 'sunco', 'compound.md'),
+    '8e22c9d',
+    'packages/cli/commands/sunco/compound.md',
+  );
+  check('[56-release] R1 8-command stage protection byte-identical (32q; L13; 7 @ 7791d33 + compound @ 8e22c9d)',
+    pre54Ok && compoundOk);
+}
+
+// 32r [56-release]  .claude/rules/architecture.md byte-identical from 72a391a (6th iteration defer)
+check('[56-release] .claude/rules/architecture.md byte-identical from 72a391a (32r; L14; 6th iteration defer)',
+  s32GitBytesIdentical(s32ArchitectureRule, '72a391a', '.claude/rules/architecture.md'));
+
+// 32s [56-release]  commands/sunco/artifact-gate.md byte-identical from fa4eb52 (AB1 byte-lock)
+check('[56-release] commands/sunco/artifact-gate.md byte-identical from fa4eb52 (32s; L20; AB1 scope hard-lock)',
+  s32GitBytesIdentical(s32ArtifactGateCmd, 'fa4eb52', 'packages/cli/commands/sunco/artifact-gate.md'));
+
+// 32t [56-release]  DESIGN-v1.md + ROADMAP.md + REQUIREMENTS.md byte-identical (L15 immutability through Phase 56)
+{
+  const designOk = s32GitBytesIdentical(s32DesignV1, '30e2041', '.planning/router/DESIGN-v1.md');
+  const roadmapOk = s32GitBytesIdentical(s32Roadmap, '55565ad', '.planning/ROADMAP.md');
+  const reqOk = s32GitBytesIdentical(s32Requirements, '5b8094e', '.planning/REQUIREMENTS.md');
+  check('[56-release] DESIGN-v1.md + ROADMAP.md + REQUIREMENTS.md byte-identical (32t; L15 immutability extension)',
+    designOk && roadmapOk && reqOk);
+}
+
+// 32u [56-release]  .planning/router/decisions/ contains ONLY .keep (U2 Codex-strict durable-tier purity continuation)
+{
+  const entries = fs.existsSync(s31DurableDir) ? fs.readdirSync(s31DurableDir) : [];
+  check(`[56-release] .planning/router/decisions/ contains ONLY .keep (32u; U2 continuation; entries=${entries.length})`,
+    entries.length === 1 && entries[0] === '.keep');
+}
+
+// 32v [56-release]  clean-room notice phrase in workflows/release.md (parallels router.md + compound.md L3)
+check('[56-release] clean-room notice phrase in workflows/release.md (32v; clean-room invariant)',
+  /Clean-room notice/.test(s32ReleaseMd) && /compound-engineering-plugin/.test(s32ReleaseMd));
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

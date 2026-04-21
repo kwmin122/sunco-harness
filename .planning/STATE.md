@@ -8,10 +8,10 @@ last_updated: "2026-04-21T00:00:00.000Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 0
   completed_plans: 0
-  percent: 71
+  percent: 86
 previous_milestone:
   label: v1.4
   name: Impeccable Fusion
@@ -41,12 +41,12 @@ Status: Push status is determined authoritatively by `git rev-parse origin/main 
 Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 56 per Gate 56 L15)
 Last activity: 2026-04-21
 
-Progress (v1.5): [███████░░░] 71% (5/7 total phases delivered by committed local state; `git rev-parse origin/main HEAD` authoritative for what is on origin; Commit A mid-phase — frontmatter unchanged at Commit A per L17).
-Delivered by commit: 52a, 52b, 53, 54, 55
-Pending committed: 56 (in-flight; Phase 56 release-router hardening, 2-commit unit Commit A + Commit B)
-Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 LANDED + explicit gate)
+Progress (v1.5): [████████░░] 86% (6/7 total phases delivered by committed local state; `git rev-parse origin/main HEAD` authoritative for what is on origin; Commit B landed locally bumps progress; push awaits user approval).
+Delivered by commit: 52a, 52b, 53, 54, 55, 56
+Pending committed: — (Phase 56 Commit A + Commit B landed locally; push awaits user approval)
+Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 pushed to origin + explicit gate)
 
-**Note on frontmatter vs origin**: `progress.completed_phases: 5` and `progress.percent: 71` above count phases whose full commit set exists locally. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed. Commit A mid-phase preserves Phase 55 snapshot values; Commit B bumps to 6/7 (86%) per L17 bookkeeping. SDI-2 counter remains at **2** (Phase 56 pre-planned 2-commit split is NOT SDI-2 per Gate 52b B4 + Phase 53/54/55 precedent).
+**Note on frontmatter vs origin**: `progress.completed_phases: 6` and `progress.percent: 86` above count phases whose full commit set exists locally. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed. Phase 56 local commits are on origin only when `origin/main == HEAD`. SDI-2 counter remains at **2** (Phase 56 pre-planned 2-commit split is NOT SDI-2 per Gate 52b B4 + Phase 53/54/55 precedent).
 
 ## v1.4 retrospective
 
