@@ -4347,11 +4347,36 @@ const s32SubStages = [
   'PUSH', 'PUBLISH', 'VERIFY_REGISTRY', 'TAG_PUSH', 'COMPOUND_HOOK',
 ];
 
-function s32GitBytesIdentical(file, sha, gitPath) {
+// CI-portable byte-identical baseline table (Phase 57 Commit C fix).
+// Previous implementation used `git show <short-sha>:<path>` which fails in
+// shallow GitHub Actions checkouts (default fetch-depth=1). SHA-256 content
+// hash is environment-independent — works under any checkout depth and
+// serves as a tamper-evident tripwire for future drift on byte-locked files.
+// Historical baseline SHAs are retained in the 3rd arg (check label) for
+// documentation and error-message provenance.
+const BYTE_LOCKED_SHA256 = Object.freeze({
+  '.claude/rules/architecture.md':                                          'ced54d36ace097d657d3768beff1409c3bf6fd75126c12073f0afb18cd230e58',
+  'packages/cli/commands/sunco/artifact-gate.md':                           '75e5f9ff33bf105666501cfb5ea30d207d201a8bd98b8a803225a61fb7258bc5',
+  'packages/cli/workflows/release.md':                                      'bb5c85995119b2b56711f29f0c1e83698a1a8c7af1c55239a100705432baf44d',
+  '.planning/router/DESIGN-v1.md':                                          '6093842e31b38711b785deca105e1a582e910e098277ef60d1a45e21fb7f6b1d',
+  '.planning/ROADMAP.md':                                                   '6e905e62573941f03a90c453f83f0262f982376bf1761b3ef34390e000930bee',
+  '.planning/REQUIREMENTS.md':                                              '70cec3efbadb255a35f80680558d14f4e3fe1aaf8624d0c132835deeb6501683',
+  'packages/cli/commands/sunco/brainstorming.md':                           '1b493e584f87e9a8c8ee313f5494c40678a1ee1591180231feb413bdad935557',
+  'packages/cli/commands/sunco/plan.md':                                    'd47aadfb2ed2030bfa28058e5ec96ef5b607c87d38a07e80609814af1aeae622',
+  'packages/cli/commands/sunco/execute.md':                                 '4b0557e70570f592de8721496b6a2f734293b6bb580ab64dd4450b5952af1bcc',
+  'packages/cli/commands/sunco/verify.md':                                  '3dff19c447a1c4671f55d9f6747b2413d36ca9414072cd86c6873a749f89134a',
+  'packages/cli/commands/sunco/proceed-gate.md':                            'a3ac94c5cef8e387fa79e08441b31295c2f380eddbba9d4de51f8ad0c5c434ee',
+  'packages/cli/commands/sunco/ship.md':                                    'fefa479a85712de86be7e8fe3669f0245f55af46b1380f971073a6d8e8b3caf4',
+  'packages/cli/commands/sunco/release.md':                                 '741c944f74d33189da0d47c3e8b705881e105140eb51c39a8db61ad915303b6c',
+  'packages/cli/commands/sunco/compound.md':                                '9f18f9bdcbdc83ca3f0b8e52d03450cf562437afa6d6c75ffe83fea8cd277762',
+  'packages/skills-workflow/src/shared/__tests__/router-dogfood.test.ts':  '8c6ea1019c4ff476394992274dc9fe33ec3ac10a1dc2f6698f889e505e920f6c',
+});
+
+function s32GitBytesIdentical(file, _sha, gitPath) {
   try {
-    const expected = execSync(`git show ${sha}:${gitPath}`, { cwd: s32RepoRoot });
-    const actual = fs.readFileSync(file);
-    return Buffer.compare(expected, actual) === 0;
+    const actual = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+    const expected = BYTE_LOCKED_SHA256[gitPath];
+    return Boolean(expected) && actual === expected;
   } catch {
     return false;
   }
