@@ -6,6 +6,114 @@ Prior releases (v1.0 through v1.3) are summarized from git history and `ROADMAP.
 
 ---
 
+## [0.13.0] — 2026-04-22 — SUNCO v1.5 SUNCO Workflow Router
+
+**Internal milestone**: v1.5 SUNCO Workflow Router (7/7 phases committed: 52a + 52b + 53 + 54 + 55 + 56 + 57; M6 committed set complete). Design captured at commit `30e2041` in `.planning/router/DESIGN-v1.md` (678 lines, 4-round convergent review: plan-verifier + Codex; no v2 divergence relay; clean-room design inspired only by the general workflow idea of recurring stages).
+
+**npm version rationale**: per v1.4 CHANGELOG policy, v1.5 milestone → `0.13.0` (minor bump, pre-stable). `popcoru` remains pre-1.0; `1.0.0` is reserved for stable-API declaration.
+
+### Added
+
+**Phase 52a — Router contracts (static)**
+- `schemas/route-decision.schema.json` — 10-stage enum + `UNKNOWN` + `HOLD`; strict JSON Schema draft-07.
+- 5 router reference docs under `packages/cli/references/router/`: `README.md`, `STAGE-MACHINE.md`, `EVIDENCE-MODEL.md`, `CONFIDENCE-CALIBRATION.md`, `APPROVAL-BOUNDARY.md` (clean-room notices verbatim in every doc).
+- `.planning/router/decisions/.keep` — durable tier placeholder; kept `.keep`-only through entire v1.5 for audit-integrity (U2 Codex-strict).
+- REQUIREMENTS `IF-18..IF-23` + ROADMAP v1.5 M6 section.
+- Smoke Section 27 `[52a-static]` +35 checks.
+
+**Phase 52b — Router runtime**
+- 4 runtime modules under `packages/cli/references/router/src/`: `classifier.mjs` (pure stage classifier), `evidence-collector.mjs` (adapter-injected IO + 7-point Freshness Gate), `confidence.mjs` (frozen-weight confidence math; zero LLM SDK imports per I4 invariant), `decision-writer.mjs` (path-allowlist writer; atomic tmp-rename).
+- `/sunco:router` command + `workflows/router.md` deterministic pipeline (7 steps).
+- 4 vitest files at `packages/skills-workflow/src/shared/__tests__/router-{classifier,evidence,confidence,promotion}.test.ts` (79 tests).
+- Writer path-allowlist — only `.sun/router/session/*.json`, `.planning/router/decisions/*.json`, `.planning/router/paused-state.json` accepted (Codex C5 / Gate 52b L6).
+- Hard invariant L14: `remote_mutate` and `external_mutate` NEVER `auto_safe`; structurally enforced in `validateRouteDecision`.
+- Smoke Section 28 `[52b-runtime]` +27 checks.
+
+**Phase 53 — Router wrappers (minus /sunco:auto)**
+- 4 wrapper command updates: `/sunco:do`, `/sunco:next`, `/sunco:mode`, `/sunco:manager` — thin-wrap the 52b router engine (L12 engine-sharing; no wrapper duplicates routing logic).
+- Mode hook (`packages/cli/hooks/sunco-mode-router.cjs`) — direct-to-router (`/sunco:router --intent`); no `/sunco:do` intermediate dispatch.
+- R1 regression guarantee extended to 7 stage commands byte-identical (brainstorming/plan/execute/verify/proceed-gate/ship/release).
+- Smoke Section 29 `[53-wrapper]` +24 checks.
+
+**Phase 54 — Compound-router (post-stage durable-decision consumer)**
+- `packages/cli/schemas/compound.schema.json` — draft-07 + top-level `$comment` clean-room; 8 required sections enum; 5-state lifecycle (`draft` / `proposed` / `partially-approved` / `approved` / `archived`).
+- `packages/cli/references/compound/{README,template}.md` + `src/{compound-router,sink-proposer}.mjs` — adapter-injected IO, pure scoring, auto-write path-allowlist `.planning/compound/*.md` only; sink-proposer zero-fs-imports (proposal-only boundary); structural validator no AJV (Phase 52b L7 precedent).
+- `/sunco:compound` command + `workflows/compound.md` 6-step pipeline.
+- Trigger score model: SDI-observational (+2) / spec-rule-prescriptive (+3) / already-codified (-1) / memory-candidate (score=0); always-on for `stage_exit === 'RELEASE'` or `event.milestone_closed === true`.
+- R1 8-command extension: `compound.md` added to protection set.
+- Smoke Section 30 `[54-compound]` +39 checks.
+
+**Phase 55 — Router dogfood (IF-23)**
+- 5 fixture scenarios under `test/fixtures/router/{01..05}/` with γ hybrid layout (flat `route-decisions/*.json` + unified `expected.json` + `expected-compound.md` for WRITE scenarios 3/4/5 only; no per-scenario README per Codex G6).
+- `packages/skills-workflow/src/shared/__tests__/router-dogfood.test.ts` — 6 describe blocks, 14 tests; black-box consumer of Phase 52b classifier + Phase 54 compound-router (no new exports per L7).
+- Retroactive v1.4 compound artifact at `.planning/compound/release-v0.12.0-20260420.md` — schema-valid, `status: proposed`, 8 populated sections, `source_evidence[]` references fixture paths (L17 `-retroactive.json` naming).
+- Retroactive RouteDecision backfill (≥5 entries per DESIGN §11 31d) at `test/fixtures/router/retroactive-v1.4/route-decisions/*-retroactive.json` + `BACKFILL-PROVENANCE.md` (Gate 55 U2 Codex-strict relocation; durable tier `.planning/router/decisions/` preserved `.keep`-only).
+- Codex U1 strict correction: scenarios 3/4/5 `risk_level: local_mutate` per APPROVAL-BOUNDARY.md L18 + L47 (compound auto-write is explicit local_mutate exception).
+- Smoke Section 31 `[55-dogfood]` +27 checks.
+
+**Phase 56 — Release-router hardening (DESIGN §11 30a)**
+- `packages/cli/workflows/release.md` **NEW** — 10-sub-stage decomposition with per-sub-stage `approval_envelope` block (class + risk_level + mode + ACK shape + failure_semantics + rationale).
+- 10 sub-stages with locked risk_level mapping per Gate 56 L2:
+  - `PRE_FLIGHT` → `read_only` (auto_safe)
+  - `VERSION_BUMP` → `repo_mutate_official` (blessed batched-ACK via /sunco:release)
+  - `CHANGELOG` → `repo_mutate_official` (blessed batched-ACK; AB2 class-by-purpose per APPROVAL-BOUNDARY L26+L63)
+  - `COMMIT` → `repo_mutate` (per-write ACK)
+  - `TAG` → `repo_mutate` (per-write ACK)
+  - `PUSH` → `remote_mutate` (per-invocation, never cached; APPROVAL-BOUNDARY L21)
+  - `PUBLISH` → `external_mutate` (per-invocation, never cached, never `--batch-ack`; DESIGN §11 30c literal; APPROVAL-BOUNDARY L22)
+  - `VERIFY_REGISTRY` → `read_only` (auto_safe)
+  - `TAG_PUSH` → `remote_mutate` (per-invocation, never cached)
+  - `COMPOUND_HOOK` → `local_mutate` (APPROVAL-BOUNDARY L47 explicit exception for compound-router draft auto-write)
+- PRE_FLIGHT workspace consistency check enumerated as independent sub-step (DESIGN §11 30d).
+- COMPOUND_HOOK runs after VERIFY_REGISTRY success and BEFORE TAG_PUSH (DESIGN §11 30e; Gate 56 L7 ordering ensures compound `source_evidence[]` references registry-verified release).
+- TAG_PUSH failure clause: post-semantic-completion git-metadata reconciliation failure; compound trigger timing NOT moved; retry separately invocable (Gate 56 L6; prevents double-write).
+- Gate 56 AB1 artifact-gate scope boundary: `workflows/release.md` references `commands/sunco/artifact-gate.md` by name only; command file itself is NOT opened in Phase 56 (hard-lock extended through Phase 57).
+- Smoke Section 32 `[56-release]` +22 checks.
+
+**Phase 57 — /sunco:auto classifier-gated autonomous execution (IF-21)**
+- `packages/cli/commands/sunco/auto.md` **opened** — first previously-frozen command file modified in v1.5.
+- `--allow <level>` flag: permitted literal set `{read_only, local_mutate, repo_mutate}` **ONLY** (Gate 57 AB-57-1 strict-side converged across Codex + Reviewer Claude).
+- `repo_mutate_official` / `remote_mutate` / `external_mutate` EXCLUDED from `--allow`; always require explicit ACK per APPROVAL-BOUNDARY L19 (per-write) / L21 (per-invocation, never cached) / L22 (per-invocation, never cached, never `--batch-ack`).
+- Classifier-first invocation at each phase boundary: `/sunco:auto` calls `/sunco:router --intent` BEFORE any stage execution (Step 5a.5 in `auto.md`).
+- Band gating with thin-HIGH degradation (Gate 57 AB-57-2): HIGH auto-execute requires frozen-weight HIGH **AND** ≥2/3 primary evidence signals (state machine / freshness gate / ephemeral log). Thin-HIGH (1 signal) → MEDIUM treatment. MEDIUM → HOLD regardless of `--allow`. LOW → HOLD + `/sunco:debug` recommendation. UNKNOWN/HOLD → hard halt.
+- Compound-hook path chain (Gate 57 AB-57-3): explicit chain `/sunco:auto → /sunco:release → COMPOUND_HOOK → existing Phase 56 workflow writes artifact`; NO generic router-pipeline auto-hook installed.
+- 3 dogfood fixtures (Gate 57 AB-57-4): `06-auto-conservative-allow` (HIGH + 3/3 signals + `--allow=local_mutate` → auto_execute); `07-auto-halt-remote` (remote_mutate → halt regardless); `08-auto-halt-medium-band` (MEDIUM band → halt regardless; AB-57-2 oracle).
+- `packages/skills-workflow/src/shared/__tests__/router-auto.test.ts` — 3 describe blocks, 8 tests; `evaluateAutoGate` policy simulator mirrors `auto.md` Step 5a.5.
+- Stuck detector + `.sun/auto.lock` + 3-retry + `--budget` preserved byte-identical; classifier halts are additive.
+- Smoke Section 33 `[57-auto]` +25 checks.
+
+**Cross-phase infrastructure**
+- CI-portable byte-identical tripwire (Commit `46ab5ff`): SHA-256 content-hash comparison replaces `git show <sha>:<path>` in `smoke-test.cjs` — works under any checkout depth (shallow or full); no fetch-depth dependency. Hard-locked file baseline table covers 15 byte-stable files across Phases 52a-57.
+- Pre-planned 2-commit split pattern preserved across all 6 phases; SDI-2 counter stayed at **2** throughout v1.5 (zero scope-drift-instigated decompositions).
+- 6 rollback anchors preserved: `sunco-pre-dogfood @ 3ac0ee9` + `sunco-pre-52b-landed @ 4b1e093` + `sunco-pre-53-landed @ 72a391a` + `sunco-pre-54-landed @ 8e22c9d` + `sunco-pre-55-landed @ 97af2c3` + `sunco-pre-56-landed @ 99c8934`.
+
+### Coverage metrics at v1.5 release
+
+- Workflow tests: **1635/1635** across 145 files (up from 1099 at v1.4 ship).
+- Smoke: **818/818** (up from 619 at v1.4 ship).
+- Self-tests: **249/249** across 10 modules (compound-router 42 + sink-proposer 21 added in v1.5).
+- Turbo lint+build: **10/10** FULL TURBO.
+- Contract-lint: **89/89**.
+
+### Observational patterns (not formalized; deferred to v1.5-closure retrospective)
+
+- **Strict-side union accumulation**: 15 instances of Codex strict-side tightening / Reviewer absorb-before-build wording conditions across 5 consecutive phases (Phase 53: 2 / Phase 54: 4 / Phase 55: 2 / Phase 56: 2 / Phase 57: 5).
+- **Per-phase-landed anchor iterations**: 6 consecutive iterations of `sunco-pre-<N>-landed @ <sha>` pre-first-mutation anchor pattern (Phases 52b/53/54/55/56/57).
+- **architecture.md namespace defer**: 7 consecutive iterations of `.claude/rules/architecture.md` byte-identical from Phase 53 `72a391a` — namespace clarification for Agent Router / Workflow Router / compound-router / release-router / auto-loop-router deferred to v1.5-closure.
+- **DESIGN/ROADMAP/REQUIREMENTS immutability**: locked at Phase 52a commit `30e2041` (DESIGN) / `55565ad` (ROADMAP) / `5b8094e` (REQUIREMENTS); all errata absorbed in phase CONTEXTs, never patched upstream (L15 invariant).
+
+### v1.5 maintenance backlog (not release-blocking; harvested at v1.5-closure)
+
+1. `.claude/rules/architecture.md` namespace update (7th iteration defer).
+2. Codex O1 README + product-contract cascade flag formalization.
+3. Codex O2 per-phase anchor convention formalization (6 iterations reached).
+4. 54-CONTEXT + `references/compound/README.md` "2 sections" → "3 buckets" doc drift sweep (C2 mid-milestone carryover).
+5. 3-role strict-side union rule formalization (15 accumulated fixtures).
+6. C1 dogfood producer-consumer chain wiring (mid-milestone gate carryover).
+7. APPROVAL-BOUNDARY.md L32 inclusive class literal clarification (D1 spec-gap).
+
+---
+
 ## [0.12.0] — 2026-04-20 — SUNCO v1.4 Impeccable Fusion
 
 **Internal milestone**: v1.4 Impeccable Fusion (17/17 phases; all 5 milestones CLOSED: M1 Foundation, M2 Frontend Web Fusion, M3 Backend Excellence, M4 Cross-Domain Integration, M5 Rollout Hardening).
