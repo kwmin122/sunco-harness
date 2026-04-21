@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-12T10:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "VERIFY",
+  "recommended_next": "VERIFY",
+  "confidence": 0.85,
+  "reason": [
+    "retroactive fixture: v1.4 M3 backend excellence verify kickoff",
+    "commits exist in phase window; verification pending",
+    "backfilled from phase 45/M3.4 entry point"
+  ],
+  "preconditions": {
+    "satisfied": ["commits_in_window", "phase_plan_present"],
+    "missing": ["verification_present"]
+  },
+  "action": {
+    "command": "/sunco:verify",
+    "mode": "requires_user_ack",
+    "args": { "phase": "45-backend-phase-api", "retroactive": true }
+  },
+  "approval_envelope": {
+    "risk_level": "repo_mutate_official",
+    "triggers_required": ["verification_write_ack"]
+  },
+  "evidence_refs": [
+    "retroactive: M3 phase 45 entry",
+    "test/fixtures/router/retroactive-v1.4/BACKFILL-PROVENANCE.md"
+  ]
+}

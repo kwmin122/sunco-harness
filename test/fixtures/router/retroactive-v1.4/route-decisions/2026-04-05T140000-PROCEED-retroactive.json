@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-05T14:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "PROCEED",
+  "recommended_next": "SHIP",
+  "confidence": 0.88,
+  "reason": [
+    "retroactive fixture: v1.4 M2 SDI scaffolding + PIL 999.x automation PROCEED verdict",
+    "verification 7-layer Swiss cheese passed; no unresolved HIGH findings",
+    "backfilled from milestone M2 proceed-gate log"
+  ],
+  "preconditions": {
+    "satisfied": ["verification_present", "no_unresolved_high"],
+    "missing": []
+  },
+  "action": {
+    "command": "/sunco:ship",
+    "mode": "requires_user_ack",
+    "args": { "phase": "38-sdi-scaffolding", "retroactive": true }
+  },
+  "approval_envelope": {
+    "risk_level": "remote_mutate",
+    "triggers_required": ["pr_create_ack"]
+  },
+  "evidence_refs": [
+    "retroactive: M2 closure",
+    "test/fixtures/router/retroactive-v1.4/BACKFILL-PROVENANCE.md"
+  ]
+}

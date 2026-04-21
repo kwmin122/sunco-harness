@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-03-27T09:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "PLAN",
+  "recommended_next": "PLAN",
+  "confidence": 0.80,
+  "reason": [
+    "retroactive fixture: v1.4 M1 Impeccable WRAP surface kick-off",
+    "requirements exist (IF-10~IF-17); plan missing at M1 start",
+    "backfilled from git log + ROADMAP v1.4 section"
+  ],
+  "preconditions": {
+    "satisfied": ["requirements_present"],
+    "missing": ["phase_plan_present"]
+  },
+  "action": {
+    "command": "/sunco:plan",
+    "mode": "requires_user_ack",
+    "args": { "phase": "35-wrap-surface", "retroactive": true }
+  },
+  "approval_envelope": {
+    "risk_level": "repo_mutate_official",
+    "triggers_required": ["phase_plan_write_ack"]
+  },
+  "evidence_refs": [
+    "retroactive: git log 2026-03-27 M1 kick-off",
+    "test/fixtures/router/retroactive-v1.4/BACKFILL-PROVENANCE.md"
+  ]
+}

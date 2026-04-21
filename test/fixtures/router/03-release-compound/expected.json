@@ -1,0 +1,20 @@
+{
+  "scenario_id": 3,
+  "scenario_name": "release completion",
+  "last_current_stage": "COMPOUND",
+  "last_recommended_next": "COMPOUND",
+  "confidence_band_min": 1.00,
+  "risk_level": "local_mutate",
+  "action_command": "/sunco:compound",
+  "action_mode": "auto_safe",
+  "compound_decision": "write",
+  "compound_score_min": 6,
+  "compound_always_on": true,
+  "compound_artifact_expected": true,
+  "compound_input": {
+    "stage_exit": "RELEASE",
+    "event": {},
+    "window": { "from": "2026-04-21T10:00:00.000Z", "to": "2026-04-21T14:00:00.000Z" }
+  },
+  "design_row": "DESIGN §10 row 3: release completion → COMPOUND 1.00 always-on (RELEASE +6; risk_level=local_mutate per Gate 55 U1 Codex-strict APPROVAL-BOUNDARY.md L47)"
+}

@@ -4091,11 +4091,190 @@ if (fs.existsSync(s30SinkProposerPath)) {
 //      test/fixtures/router/retroactive-v1.4/route-decisions/*.json)
 //   L9 pre-planned 2-commit split; NOT SDI-2 (SDI-2 counter stays at 2)
 //
-// Section 31 checks are populated in Phase 55 Commit B (feat runtime). This
-// Commit A header block establishes the Section boundary for reviewer
-// orientation; no check() invocations yet.
+// Section 31 checks populated in Phase 55 Commit B per L8.
 //
 // ────────────────────────────────────────────────────────────────────────────
+
+const s31FixturesRoot      = path.resolve(__dirname, '..', '..', '..', 'test', 'fixtures', 'router');
+const s31RetroDir          = path.resolve(s31FixturesRoot, 'retroactive-v1.4');
+const s31RetroRdDir        = path.resolve(s31RetroDir, 'route-decisions');
+const s31RetroProvenance   = path.resolve(s31RetroDir, 'BACKFILL-PROVENANCE.md');
+const s31DogfoodVitest     = path.resolve(__dirname, '..', '..', 'skills-workflow', 'src', 'shared', '__tests__', 'router-dogfood.test.ts');
+const s31RetroArtifact     = path.resolve(__dirname, '..', '..', '..', '.planning', 'compound', 'release-v0.12.0-20260420.md');
+const s31DurableDir        = path.resolve(__dirname, '..', '..', '..', '.planning', 'router', 'decisions');
+const s31ScenarioDirs = [
+  '01-greenfield-brainstorm',
+  '02-bugfix-work',
+  '03-release-compound',
+  '04-incident-recovery',
+  '05-milestone-close',
+];
+const s31WriteScenarios = ['03-release-compound', '04-incident-recovery', '05-milestone-close'];
+
+// 31a [55-dogfood]  top-level fixture README present
+check('[55-dogfood] test/fixtures/router/README.md exists (31a)',
+  fs.existsSync(path.resolve(s31FixturesRoot, 'README.md')));
+
+// 31b [55-dogfood]  5 scenario dirs present; each has route-decisions/ + expected.json
+{
+  const presentDirs = s31ScenarioDirs.filter(d => fs.existsSync(path.resolve(s31FixturesRoot, d)));
+  check(`[55-dogfood] 5 scenario dirs under test/fixtures/router/ (31b; present=${presentDirs.length})`,
+    presentDirs.length === 5);
+  const allHaveRd = s31ScenarioDirs.every(d => {
+    const rdDir = path.resolve(s31FixturesRoot, d, 'route-decisions');
+    if (!fs.existsSync(rdDir)) return false;
+    const files = fs.readdirSync(rdDir).filter(f => f.endsWith('.json'));
+    return files.length >= 1;
+  });
+  check('[55-dogfood] each scenario has route-decisions/*.json (31b; γ hybrid L2)', allHaveRd);
+  const allHaveExpected = s31ScenarioDirs.every(d => fs.existsSync(path.resolve(s31FixturesRoot, d, 'expected.json')));
+  check('[55-dogfood] each scenario has expected.json unified oracle (31b; γ hybrid L2)', allHaveExpected);
+}
+
+// 31c [55-dogfood]  WRITE scenarios (3/4/5) have expected-compound.md oracle; SKIP scenarios (1/2) do NOT
+{
+  const writeHaveOracle = s31WriteScenarios.every(d => fs.existsSync(path.resolve(s31FixturesRoot, d, 'expected-compound.md')));
+  check('[55-dogfood] scenarios 3/4/5 have expected-compound.md (31c; γ hybrid L2)', writeHaveOracle);
+  const skipMissingOracle = ['01-greenfield-brainstorm', '02-bugfix-work']
+    .every(d => !fs.existsSync(path.resolve(s31FixturesRoot, d, 'expected-compound.md')));
+  check('[55-dogfood] scenarios 1/2 do NOT have expected-compound.md (31c; γ hybrid L2 skip oracle)', skipMissingOracle);
+}
+
+// 31d [55-dogfood]  scenario RouteDecisions are schema-valid (kind + version + ts + current_stage + confidence)
+{
+  const allValid = s31ScenarioDirs.every(d => {
+    const rdDir = path.resolve(s31FixturesRoot, d, 'route-decisions');
+    const files = fs.readdirSync(rdDir).filter(f => f.endsWith('.json'));
+    return files.every(f => {
+      try {
+        const rd = JSON.parse(fs.readFileSync(path.resolve(rdDir, f), 'utf8'));
+        return rd && rd.kind === 'route-decision' && rd.version === 1 &&
+               typeof rd.ts === 'string' && typeof rd.current_stage === 'string' &&
+               typeof rd.confidence === 'number';
+      } catch { return false; }
+    });
+  });
+  check('[55-dogfood] all scenario RouteDecisions schema-valid (31d; Phase 52a contract)', allValid);
+}
+
+// 31e [55-dogfood]  scenarios 3/4/5 last decision risk_level = local_mutate (Gate 55 U1 Codex-strict)
+{
+  const correctRisk = s31WriteScenarios.every(d => {
+    const rdDir = path.resolve(s31FixturesRoot, d, 'route-decisions');
+    const files = fs.readdirSync(rdDir).filter(f => f.endsWith('.json')).sort();
+    const lastRd = JSON.parse(fs.readFileSync(path.resolve(rdDir, files[files.length - 1]), 'utf8'));
+    return lastRd.current_stage === 'COMPOUND' && lastRd.approval_envelope.risk_level === 'local_mutate';
+  });
+  check('[55-dogfood] scenarios 3/4/5 COMPOUND risk_level = local_mutate (31e; U1 Codex-strict per APPROVAL-BOUNDARY.md L47)',
+    correctRisk);
+}
+
+// 31f [55-dogfood]  retroactive v1.4 fixture tree
+check('[55-dogfood] test/fixtures/router/retroactive-v1.4/ exists (31f)', fs.existsSync(s31RetroDir));
+check('[55-dogfood] retroactive-v1.4 BACKFILL-PROVENANCE.md present (31f; U2 Codex-strict fixture-tree location)',
+  fs.existsSync(s31RetroProvenance));
+{
+  const files = fs.existsSync(s31RetroRdDir)
+    ? fs.readdirSync(s31RetroRdDir).filter(f => f.endsWith('.json'))
+    : [];
+  check(`[55-dogfood] retroactive-v1.4 ≥5 RouteDecision entries (31f; DESIGN §11 31d; present=${files.length})`,
+    files.length >= 5);
+  const allRetroSuffix = files.every(f => /-retroactive\.json$/.test(f));
+  check('[55-dogfood] retroactive fixtures use -retroactive.json suffix (31f; Gate 55 L17 naming convention)',
+    allRetroSuffix);
+}
+
+// 31g [55-dogfood]  .planning/router/decisions/ durable tier contains ONLY .keep (U2 negative assertion)
+{
+  const entries = fs.existsSync(s31DurableDir) ? fs.readdirSync(s31DurableDir) : [];
+  check(`[55-dogfood] .planning/router/decisions/ contains ONLY .keep (31g; U2 Codex-strict audit integrity; entries=${entries.length})`,
+    entries.length === 1 && entries[0] === '.keep');
+}
+
+// 31h [55-dogfood]  retroactive v1.4 compound artifact present + schema contract markers + 8 sections
+check('[55-dogfood] .planning/compound/release-v0.12.0-20260420.md exists (31h)',
+  fs.existsSync(s31RetroArtifact));
+if (fs.existsSync(s31RetroArtifact)) {
+  const md = fs.readFileSync(s31RetroArtifact, 'utf8');
+  check('[55-dogfood] retroactive artifact: kind=compound + version=1 (31h)',
+    /kind:\s*compound/.test(md) && /version:\s*1/.test(md));
+  check('[55-dogfood] retroactive artifact: scope=release + ref=v0.12.0 (31h)',
+    /scope:\s*release/.test(md) && /ref:\s*v0\.12\.0/.test(md));
+  check('[55-dogfood] retroactive artifact: status=proposed (31h; L4 lifecycle match)',
+    /status:\s*proposed/.test(md));
+  check('[55-dogfood] retroactive artifact: clean_room_notice=true + generated_by=sunco-compound-router (31h)',
+    /clean_room_notice:\s*true/.test(md) && /generated_by:\s*sunco-compound-router/.test(md));
+  check('[55-dogfood] retroactive artifact: clean-room notice verbatim phrase (31h)',
+    /Clean-room notice/i.test(md) && /compound-engineering-plugin/.test(md));
+  const sections = ['context', 'learnings', 'patterns_sdi', 'rule_promotions', 'automation', 'seeds', 'memory_proposals', 'approval_log'];
+  const sectionsPresent = sections.every(s => new RegExp(`^## ${s}\\b`, 'm').test(md));
+  check('[55-dogfood] retroactive artifact: all 8 canonical sections as ## headings (31h; L4 contract)',
+    sectionsPresent);
+  check('[55-dogfood] retroactive artifact: source_evidence[] references fixture paths (31h; L17 naming)',
+    /test\/fixtures\/router\/retroactive-v1\.4\//.test(md));
+}
+
+// 31i [55-dogfood]  vitest dogfood file present
+check('[55-dogfood] packages/skills-workflow/src/shared/__tests__/router-dogfood.test.ts exists (31i; L3)',
+  fs.existsSync(s31DogfoodVitest));
+if (fs.existsSync(s31DogfoodVitest)) {
+  const tsContent = fs.readFileSync(s31DogfoodVitest, 'utf8');
+  const describeCount = (tsContent.match(/^describe\(/gm) || []).length;
+  check(`[55-dogfood] dogfood vitest has ≥5 describe blocks (31i; L3; found=${describeCount})`,
+    describeCount >= 5);
+  check('[55-dogfood] dogfood vitest imports decideCompound + validateCompoundArtifact + COMPOUND_SECTIONS (31i; L7 black-box)',
+    /decideCompound/.test(tsContent) && /validateCompoundArtifact/.test(tsContent) && /COMPOUND_SECTIONS/.test(tsContent));
+}
+
+// 31j [55-dogfood]  Sections 27 + 28 + 29 + 30 byte-stable (content-marker parity; parallels 28r/29r/30s/30t/30u)
+{
+  const smokeContent = fs.readFileSync(__filename, 'utf8');
+  const sectionMarkers = [
+    '[52a-static] schemas/route-decision.schema.json exists + parses as JSON (27b)',
+    '[52b-runtime]',
+    '[53-wrapper]',
+    '[54-compound] commands/sunco/compound.md exists (30a)',
+    '[54-compound] 14 hard-locked command frontmatters preserved (30x; L10/L11 R1 continuation)',
+  ];
+  const missing = sectionMarkers.filter(m => !smokeContent.includes(m));
+  check(`[55-dogfood] Sections 27/28/29/30 byte-stable content markers preserved (31j; parallels 28r/29r/30s/30t/30u; missing=[${missing.length}])`,
+    missing.length === 0);
+}
+
+// 31k [55-dogfood]  Phase 52a+52b+53+54 runtime assets byte-stable (cumulative content-marker grep)
+{
+  const assetPaths = [
+    path.resolve(__dirname, '..', 'references', 'router', 'STAGE-MACHINE.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'EVIDENCE-MODEL.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'CONFIDENCE-CALIBRATION.md'),
+    path.resolve(__dirname, '..', 'references', 'router', 'APPROVAL-BOUNDARY.md'),
+    path.resolve(__dirname, '..', 'schemas', 'route-decision.schema.json'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'classifier.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'confidence.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'evidence-collector.mjs'),
+    path.resolve(__dirname, '..', 'references', 'router', 'src', 'decision-writer.mjs'),
+    path.resolve(__dirname, '..', 'commands', 'sunco', 'router.md'),
+    path.resolve(__dirname, '..', 'workflows', 'router.md'),
+    path.resolve(__dirname, '..', 'schemas', 'compound.schema.json'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'README.md'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'template.md'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'src', 'compound-router.mjs'),
+    path.resolve(__dirname, '..', 'references', 'compound', 'src', 'sink-proposer.mjs'),
+    path.resolve(__dirname, '..', 'commands', 'sunco', 'compound.md'),
+    path.resolve(__dirname, '..', 'workflows', 'compound.md'),
+  ];
+  const missing = assetPaths.filter(p => !fs.existsSync(p));
+  check(`[55-dogfood] Phase 52a+52b+53+54 runtime assets present (31k; L11; missing=[${missing.length}])`,
+    missing.length === 0);
+}
+
+// 31l [55-dogfood]  retroactive v1.4 artifact NOT in .planning/router/decisions/ (audit integrity)
+{
+  const durableEntries = fs.existsSync(s31DurableDir) ? fs.readdirSync(s31DurableDir) : [];
+  const noRetroInDurable = !durableEntries.some(e => /retroactive/i.test(e) || /BACKFILL/i.test(e));
+  check('[55-dogfood] durable tier has no retroactive/backfill contamination (31l; U2 strict namespace integrity)',
+    noRetroInDurable);
+}
 
 // Summary
 console.log(`\n${'─'.repeat(50)}`);

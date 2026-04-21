@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T13:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "COMPOUND",
+  "recommended_next": "COMPOUND",
+  "confidence": 1.00,
+  "reason": [
+    "release exited successfully (RELEASE stage complete)",
+    "tag v1.0.0 pushed; npm publish verified",
+    "compound artifact required per always-on RELEASE trigger"
+  ],
+  "preconditions": {
+    "satisfied": ["release_complete", "tag_published", "npm_published"],
+    "missing": []
+  },
+  "action": {
+    "command": "/sunco:compound",
+    "mode": "auto_safe",
+    "args": { "scope": "release", "ref": "v1.0.0" }
+  },
+  "approval_envelope": {
+    "risk_level": "local_mutate",
+    "triggers_required": []
+  },
+  "evidence_refs": [
+    "git tag v1.0.0",
+    "npm view popcoru@1.0.0"
+  ]
+}

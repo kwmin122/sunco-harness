@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T14:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "WORK",
+  "recommended_next": "WORK",
+  "confidence": 0.75,
+  "reason": [
+    "CI failure detected; fix commit pending",
+    "rollback anchor used once to restore baseline",
+    "post-judge fix commit series in-flight"
+  ],
+  "preconditions": {
+    "satisfied": ["ci_failure_recovered", "rollback_anchor_used", "phase_plan_present"],
+    "missing": ["all_tests_passing"]
+  },
+  "action": {
+    "command": "/sunco:execute",
+    "mode": "requires_user_ack",
+    "args": { "phase": "45-incident", "fix_series": true }
+  },
+  "approval_envelope": {
+    "risk_level": "repo_mutate",
+    "triggers_required": ["code_edit_batch_ack"]
+  },
+  "evidence_refs": [
+    "git log --grep='fix:' HEAD~5..HEAD",
+    ".planning/phases/45-incident/45-CONTEXT.md"
+  ]
+}

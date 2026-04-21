@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-20T12:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "COMPOUND",
+  "recommended_next": "COMPOUND",
+  "confidence": 1.00,
+  "reason": [
+    "retroactive fixture: v1.4 Impeccable Fusion shipped (popcoru@0.12.0 tag v0.12.0 release commit 94041a2)",
+    "always-on RELEASE exit + MILESTONE CLOSED triggers both fired",
+    "compound artifact required — this is the fixture that drives release-v0.12.0-20260420.md generation"
+  ],
+  "preconditions": {
+    "satisfied": ["release_complete", "tag_published", "npm_published", "milestone_closed"],
+    "missing": []
+  },
+  "action": {
+    "command": "/sunco:compound",
+    "mode": "auto_safe",
+    "args": { "scope": "release", "ref": "v0.12.0", "retroactive": true }
+  },
+  "approval_envelope": {
+    "risk_level": "local_mutate",
+    "triggers_required": []
+  },
+  "evidence_refs": [
+    "retroactive: v1.4 shipping; release commit 94041a2",
+    "test/fixtures/router/retroactive-v1.4/BACKFILL-PROVENANCE.md"
+  ]
+}

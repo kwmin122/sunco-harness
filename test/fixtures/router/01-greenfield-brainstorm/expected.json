@@ -1,0 +1,22 @@
+{
+  "scenario_id": 1,
+  "scenario_name": "greenfield new feature",
+  "last_current_stage": "BRAINSTORM",
+  "last_recommended_next": "BRAINSTORM",
+  "confidence_band_min": 0.80,
+  "risk_level": "local_mutate",
+  "action_command": "/sunco:discuss",
+  "action_mode": "auto_safe",
+  "compound_decision": "skip",
+  "compound_score_max": 1,
+  "compound_always_on": false,
+  "compound_artifact_expected": false,
+  "compound_input": {
+    "stage_exit": "BRAINSTORM",
+    "event": {
+      "window_too_short": true
+    },
+    "window": { "from": "2026-04-21T08:00:00.000Z", "to": "2026-04-21T10:00:00.000Z" }
+  },
+  "design_row": "DESIGN §10 row 1: greenfield → BRAINSTORM ≥0.80 skip"
+}

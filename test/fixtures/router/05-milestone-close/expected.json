@@ -1,0 +1,22 @@
+{
+  "scenario_id": 5,
+  "scenario_name": "milestone close",
+  "last_current_stage": "COMPOUND",
+  "last_recommended_next": "COMPOUND",
+  "confidence_band_min": 1.00,
+  "risk_level": "local_mutate",
+  "action_command": "/sunco:compound",
+  "action_mode": "auto_safe",
+  "compound_decision": "write",
+  "compound_score_min": 5,
+  "compound_always_on": true,
+  "compound_artifact_expected": true,
+  "compound_input": {
+    "stage_exit": "COMPOUND",
+    "event": {
+      "milestone_closed": true
+    },
+    "window": { "from": "2026-04-21T14:00:00.000Z", "to": "2026-04-21T18:00:00.000Z" }
+  },
+  "design_row": "DESIGN §10 row 5: milestone close → COMPOUND 1.00 always-on (MILESTONE_CLOSED +5; risk_level=local_mutate per Gate 55 U1 Codex-strict)"
+}

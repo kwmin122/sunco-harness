@@ -1,0 +1,37 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T09:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "BRAINSTORM",
+  "recommended_next": "BRAINSTORM",
+  "confidence": 0.85,
+  "reason": [
+    "greenfield: no phase artifacts present",
+    "no commits in window",
+    "goal statement exists but requirements unclear"
+  ],
+  "preconditions": {
+    "satisfied": ["goal_statement_present"],
+    "missing": ["requirements_present", "acceptance_criteria_present"]
+  },
+  "action": {
+    "command": "/sunco:discuss",
+    "mode": "auto_safe",
+    "args": { "scope": "new-feature" }
+  },
+  "approval_envelope": {
+    "risk_level": "local_mutate",
+    "triggers_required": []
+  },
+  "evidence_refs": [
+    "greenfield: no REQUIREMENTS.md / no PLAN.md / no commits"
+  ]
+}

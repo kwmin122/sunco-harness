@@ -1,0 +1,24 @@
+{
+  "scenario_id": 4,
+  "scenario_name": "incident recovery",
+  "last_current_stage": "COMPOUND",
+  "last_recommended_next": "COMPOUND",
+  "confidence_band_min": 0.75,
+  "risk_level": "local_mutate",
+  "action_command": "/sunco:compound",
+  "action_mode": "auto_safe",
+  "compound_decision": "write",
+  "compound_score_min": 5,
+  "compound_always_on": false,
+  "compound_artifact_expected": true,
+  "compound_input": {
+    "stage_exit": "COMPOUND",
+    "event": {
+      "ci_recovered": true,
+      "rollback_used": true,
+      "post_judge_fix": true
+    },
+    "window": { "from": "2026-04-21T12:00:00.000Z", "to": "2026-04-21T16:00:00.000Z" }
+  },
+  "design_row": "DESIGN §10 row 4: incident recovery → COMPOUND ≥0.75 score≥5 (CI +2 + rollback +2 + post-judge fix +3 = 7; threshold 5 crossed; NOT always-on)"
+}

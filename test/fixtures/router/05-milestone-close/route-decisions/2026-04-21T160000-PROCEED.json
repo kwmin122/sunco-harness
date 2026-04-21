@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T16:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "PROCEED",
+  "recommended_next": "PROCEED",
+  "confidence": 0.90,
+  "reason": [
+    "all milestone phases COMPLETED",
+    "verification artifacts present for every phase",
+    "milestone final proceed-gate decision pending"
+  ],
+  "preconditions": {
+    "satisfied": ["all_phases_verified", "milestone_summary_drafted"],
+    "missing": ["milestone_proceed_verdict"]
+  },
+  "action": {
+    "command": "/sunco:proceed-gate",
+    "mode": "requires_user_ack",
+    "args": { "scope": "milestone", "label": "M6" }
+  },
+  "approval_envelope": {
+    "risk_level": "repo_mutate_official",
+    "triggers_required": ["milestone_proceed_ack"]
+  },
+  "evidence_refs": [
+    ".planning/phases/52a..55/*/*-VERIFICATION.md",
+    ".planning/STATE.md"
+  ]
+}

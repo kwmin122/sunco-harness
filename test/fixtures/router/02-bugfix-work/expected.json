@@ -1,0 +1,22 @@
+{
+  "scenario_id": 2,
+  "scenario_name": "bugfix mid-phase",
+  "last_current_stage": "WORK",
+  "last_recommended_next": "WORK",
+  "confidence_band_min": 0.80,
+  "risk_level": "repo_mutate",
+  "action_command": "/sunco:execute",
+  "action_mode": "requires_user_ack",
+  "compound_decision": "skip",
+  "compound_score_max": 1,
+  "compound_always_on": false,
+  "compound_artifact_expected": false,
+  "compound_input": {
+    "stage_exit": "WORK",
+    "event": {
+      "plan_debt": true
+    },
+    "window": { "from": "2026-04-21T09:00:00.000Z", "to": "2026-04-21T12:00:00.000Z" }
+  },
+  "design_row": "DESIGN §10 row 2: bugfix mid-phase → WORK ≥0.80 skip (risk_level=repo_mutate per STAGE_ACTION_MAP; Gate 55 L6 live-classifier-output)"
+}

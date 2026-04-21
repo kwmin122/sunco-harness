@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-19T17:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "RELEASE",
+  "recommended_next": "RELEASE",
+  "confidence": 0.95,
+  "reason": [
+    "retroactive fixture: v1.4 M5 release preparation (pre-tag, pre-publish)",
+    "all 17 phases verified; proceed-gate passed at milestone level",
+    "version bump 0.11.x → 0.12.0 committed; tag pending"
+  ],
+  "preconditions": {
+    "satisfied": ["milestone_verified", "version_bumped"],
+    "missing": ["tag_pushed", "npm_published"]
+  },
+  "action": {
+    "command": "/sunco:release",
+    "mode": "requires_user_ack",
+    "args": { "version": "0.12.0", "retroactive": true }
+  },
+  "approval_envelope": {
+    "risk_level": "external_mutate",
+    "triggers_required": ["npm_publish_ack", "tag_push_ack"]
+  },
+  "evidence_refs": [
+    "retroactive: v1.4 M5 release",
+    "test/fixtures/router/retroactive-v1.4/BACKFILL-PROVENANCE.md"
+  ]
+}

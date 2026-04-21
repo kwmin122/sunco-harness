@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T17:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "COMPOUND",
+  "recommended_next": "COMPOUND",
+  "confidence": 1.00,
+  "reason": [
+    "milestone M6 CLOSED",
+    "always-on MILESTONE_CLOSED trigger fires",
+    "compound artifact required for milestone retrospective"
+  ],
+  "preconditions": {
+    "satisfied": ["milestone_closed", "all_phases_verified"],
+    "missing": []
+  },
+  "action": {
+    "command": "/sunco:compound",
+    "mode": "auto_safe",
+    "args": { "scope": "milestone", "ref": "M6" }
+  },
+  "approval_envelope": {
+    "risk_level": "local_mutate",
+    "triggers_required": []
+  },
+  "evidence_refs": [
+    ".planning/STATE.md milestone.status=CLOSED",
+    ".planning/milestones/M6-SUMMARY.md"
+  ]
+}

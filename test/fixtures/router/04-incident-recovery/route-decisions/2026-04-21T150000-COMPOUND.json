@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T15:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "COMPOUND",
+  "recommended_next": "COMPOUND",
+  "confidence": 0.80,
+  "reason": [
+    "incident recovery complete; compound candidate score ≥5",
+    "SDI observational pattern: rollback anchor used + CI recovery",
+    "post-judge fix commit captured; SDI candidate"
+  ],
+  "preconditions": {
+    "satisfied": ["ci_failure_recovered", "rollback_anchor_used", "post_judge_fix_committed"],
+    "missing": []
+  },
+  "action": {
+    "command": "/sunco:compound",
+    "mode": "auto_safe",
+    "args": { "scope": "incident", "ref": "phase-45-incident" }
+  },
+  "approval_envelope": {
+    "risk_level": "local_mutate",
+    "triggers_required": []
+  },
+  "evidence_refs": [
+    "rollback anchor sunco-pre-45-incident",
+    "CI run retry success"
+  ]
+}

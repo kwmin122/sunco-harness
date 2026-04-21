@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T12:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "RELEASE",
+  "recommended_next": "RELEASE",
+  "confidence": 0.95,
+  "reason": [
+    "proceed_gate verdict = PROCEED",
+    "ship complete; tag/publish pending",
+    "version bump committed"
+  ],
+  "preconditions": {
+    "satisfied": ["phase_summary_present", "shipped", "version_bumped"],
+    "missing": ["tag_published", "npm_published"]
+  },
+  "action": {
+    "command": "/sunco:release",
+    "mode": "requires_user_ack",
+    "args": { "version": "1.0.0" }
+  },
+  "approval_envelope": {
+    "risk_level": "external_mutate",
+    "triggers_required": ["npm_publish_ack", "tag_push_ack"]
+  },
+  "evidence_refs": [
+    "package.json version=1.0.0",
+    ".planning/phases/N/N-SUMMARY.md"
+  ]
+}

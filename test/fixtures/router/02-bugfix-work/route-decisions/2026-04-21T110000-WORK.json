@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T11:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "WORK",
+  "recommended_next": "WORK",
+  "confidence": 0.88,
+  "reason": [
+    "plan exists; implementation commits partial",
+    "tests mixed (existing tests pass; new tests missing)",
+    "regress self-loop: WORK → WORK while tests incomplete"
+  ],
+  "preconditions": {
+    "satisfied": ["phase_plan_present", "commits_in_window"],
+    "missing": ["all_tests_passing", "phase_summary_present"]
+  },
+  "action": {
+    "command": "/sunco:execute",
+    "mode": "requires_user_ack",
+    "args": { "phase": "42-bugfix", "continue": true }
+  },
+  "approval_envelope": {
+    "risk_level": "repo_mutate",
+    "triggers_required": ["code_edit_batch_ack"]
+  },
+  "evidence_refs": [
+    ".planning/phases/42-bugfix/42-PLAN-01.md",
+    "git log HEAD~3..HEAD"
+  ]
+}

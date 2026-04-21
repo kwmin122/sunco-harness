@@ -1,0 +1,38 @@
+{
+  "kind": "route-decision",
+  "version": 1,
+  "ts": "2026-04-21T10:00:00.000Z",
+  "freshness": {
+    "status": "fresh",
+    "checks": [
+      { "id": "git-status", "result": "clean" },
+      { "id": "origin-sync", "result": "synced" },
+      { "id": "state-alignment", "result": "aligned" }
+    ]
+  },
+  "current_stage": "PLAN",
+  "recommended_next": "PLAN",
+  "confidence": 0.82,
+  "reason": [
+    "requirements exist (IF-42 bugfix entry)",
+    "phase CONTEXT.md exists; PLAN.md missing",
+    "no commits in phase window"
+  ],
+  "preconditions": {
+    "satisfied": ["requirements_present", "phase_context_present"],
+    "missing": ["phase_plan_present"]
+  },
+  "action": {
+    "command": "/sunco:plan",
+    "mode": "requires_user_ack",
+    "args": { "phase": "42-bugfix" }
+  },
+  "approval_envelope": {
+    "risk_level": "repo_mutate_official",
+    "triggers_required": ["phase_plan_write_ack"]
+  },
+  "evidence_refs": [
+    ".planning/phases/42-bugfix/42-CONTEXT.md",
+    ".planning/REQUIREMENTS.md#IF-42"
+  ]
+}
