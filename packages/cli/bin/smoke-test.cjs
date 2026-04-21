@@ -4276,6 +4276,65 @@ if (fs.existsSync(s31DogfoodVitest)) {
     noRetroInDurable);
 }
 
+// ─── Section 32 — Router Release Hardening (Phase 56) ──────────────────────
+//
+// Phase 56 hardens the /sunco:release surface as the canonical approval-
+// boundary-enforced auto-execution exemplar (IF-21 cross-cut). The workflow
+// file packages/cli/workflows/release.md decomposes release execution into
+// 10 deterministic sub-stages, each carrying a per-sub-stage approval_envelope
+// block (class name + risk_level + mode + ACK shape + failure semantics).
+//
+// 10 sub-stages (Gate 56 L1; DESIGN §11 30a):
+//   PRE_FLIGHT       → read_only
+//   VERSION_BUMP     → repo_mutate_official  (blessed batched-ACK via /sunco:release)
+//   CHANGELOG        → repo_mutate_official  (blessed batched-ACK; AB2 class-by-purpose)
+//   COMMIT           → repo_mutate           (per-write ACK)
+//   TAG              → repo_mutate           (per-write ACK)
+//   PUSH             → remote_mutate         (per-invocation; never cached)
+//   PUBLISH          → external_mutate       (per-invocation; never cached; never --batch-ack;
+//                                              DESIGN §11 30c literal)
+//   VERIFY_REGISTRY  → read_only
+//   TAG_PUSH         → remote_mutate         (per-invocation; never cached)
+//   COMPOUND_HOOK    → local_mutate          (APPROVAL-BOUNDARY.md L47 exception)
+//
+// Phase 56 adds ZERO new runtime modules and ZERO new module exports. The
+// workflow file is a contract document (markdown) consumed by /sunco:release
+// command execution; it does not correspond to a packages/cli/references/
+// release/ directory or src/*.mjs module. Self-test count stays at 249/249.
+// Vitest count stays at 1627/1627 (no new vitest file).
+//
+// Gate-dispositive references absorbed:
+//   AB1 artifact-gate scope boundary — workflows/release.md references
+//       commands/sunco/artifact-gate.md by name; the command file itself is
+//       NOT opened by Phase 56 (hard-lock through Phase 56 per explicit scope
+//       line). Opening requires a separate phase or explicit scope expansion.
+//   AB2 CHANGELOG class-by-purpose policy — CHANGELOG.md is repo_mutate_official
+//       by purpose within the /sunco:release release-record class, deriving
+//       from APPROVAL-BOUNDARY.md L26 class-by-purpose + L63 blessed orchestrator
+//       explicit CHANGELOG.md naming. The L32 literal-path reading is narrower
+//       than the L26-intended class; D1 errata logs the spec gap for v1.5
+//       maintenance backlog.
+//   L5 PRE_FLIGHT workspace consistency check as independent sub-stage (Phase 51
+//       Flag 1 lineage) — separate from VERSION_BUMP so workspace-mismatch
+//       failure does not contaminate VERSION_BUMP attempt semantics.
+//   L6 TAG_PUSH failure clause — post-semantic-completion git-metadata
+//       reconciliation failure; compound trigger timing NOT moved; retry
+//       separately invocable (prevents double-write of compound artifact).
+//   L7 COMPOUND_HOOK post-VERIFY_REGISTRY wiring (DESIGN §11 30e literal) —
+//       compound-router.runCompound(ctx) fires after VERIFY_REGISTRY success
+//       and BEFORE TAG_PUSH so source_evidence[] references registry-verified
+//       release.
+//   L10 pre-planned 2-commit split; NOT SDI-2 (SDI-2 counter stays at 2)
+//
+// Mid-milestone gate (post-Phase-55-landing) was a separate convening event:
+// PASS-WITH-CONDITIONS with C1 (dogfood chain wiring) + C2 (54-CONTEXT + README
+// doc drift) folded into v1.5 maintenance backlog. Phase 57 (/sunco:auto
+// integration) remains frozen through Phase 56 + explicit gate opening.
+//
+// Section 32 checks populated in Phase 56 Commit B per L9.
+//
+// ────────────────────────────────────────────────────────────────────────────
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);
