@@ -4057,6 +4057,46 @@ if (fs.existsSync(s30SinkProposerPath)) {
     allOk);
 }
 
+// ─── Section 31 — Router Dogfood (Phase 55) ────────────────────────────────
+//
+// Phase 55 exercises the Phase 52a/52b/53/54 producer-consumer contract
+// end-to-end against 5 deterministic fixture scenarios + retroactive v1.4
+// backfill. Section 31 [55-dogfood] coverage asserts fixture tree presence,
+// γ hybrid layout (Gate 55 L2: flat route-decisions/ + unified expected.json
+// + expected-compound.md for WRITE scenarios only), retroactive v1.4 compound
+// artifact schema-validity, fixture-only RouteDecision backfill discipline
+// (durable tier .planning/router/decisions/ remains .keep-only per U2 Codex-
+// strict provenance relocation), and byte-stability of Phase 52a/52b/53/54
+// runtime assets (content-marker parity grep; parallels 28r/29r/30s/30t/30u).
+//
+// Phase 55 adds ZERO new runtime modules and ZERO new module exports. The
+// vitest runner at packages/skills-workflow/src/shared/__tests__/
+// router-dogfood.test.ts consumes existing Phase 52b classifier + Phase 54
+// compound-router + sink-proposer exports as black boxes. Self-test count
+// stays at 249/249 (Gate 55 L7).
+//
+// Gate-dispositive references absorbed:
+//   U1 scenarios 3/4/5 risk_level = local_mutate (Codex-strict per APPROVAL-
+//      BOUNDARY.md L18+L47 + commands/sunco/compound.md L89; scenarios 1/2
+//      risk_level taken from live classifier output per L6)
+//   U2 BACKFILL-PROVENANCE.md at test/fixtures/router/retroactive-v1.4/
+//      (NOT .planning/router/decisions/; audit-integrity of durable-tier
+//      namespace; Codex-strict)
+//   L2 γ hybrid fixture layout (flat route-decisions/ per 54-CONTEXT L203 +
+//      unified expected.json + expected-compound.md for 3/4/5 only + no per-
+//      scenario README; top-level fixture README only)
+//   L4 retroactive v1.4 compound artifact at status=proposed (matches
+//      compound-router natural auto-write lifecycle per schema L66)
+//   L5 fixture-only retroactive RouteDecision backfill (≥5 entries at
+//      test/fixtures/router/retroactive-v1.4/route-decisions/*.json)
+//   L9 pre-planned 2-commit split; NOT SDI-2 (SDI-2 counter stays at 2)
+//
+// Section 31 checks are populated in Phase 55 Commit B (feat runtime). This
+// Commit A header block establishes the Section boundary for reviewer
+// orientation; no check() invocations yet.
+//
+// ────────────────────────────────────────────────────────────────────────────
+
 // Summary
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`  ${GREEN}${passed} passed${RESET}, ${failed > 0 ? RED : ''}${failed} failed${RESET}, ${warnings > 0 ? YELLOW : ''}${warnings} warnings${RESET}`);

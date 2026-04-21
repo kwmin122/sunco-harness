@@ -31,23 +31,23 @@ previous_milestone:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** v1.5 SUNCO Workflow Router — Phase 54 compound-router delivered as 2-commit unit (A+B) over Phase 53 endpoint (`72a391a`): schema + compound-router + sink-proposer + command + workflow + template + 2 READMEs + smoke Section 30 + Section 29 29o/29q amendments + product-contract command count 88→89. Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; 4-round convergent review; immutability extended through Phase 54 per Gate 54 L16).
+**Current focus:** v1.5 SUNCO Workflow Router — Phase 54 LANDED as 2-commit unit (A `5824a98` + B `8e22c9d`); Phase 55 dogfood in-flight as pre-planned 2-commit unit over Phase 54 endpoint (`8e22c9d`): 5 fixture scenarios + vitest runner + retroactive v1.4 compound artifact + fixture-only RouteDecision backfill + smoke Section 31. Gate 55 v1 cleared convergent GREEN-CONDITIONAL (Reviewer Claude + Codex; 2 Codex strict-side union absorptions: U1 risk_level correction + U2 provenance relocation). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; immutability extended through Phase 55 per Gate 55 L14).
 
 ## Current Position
 
 Milestone: v1.5 SUNCO Workflow Router (executing)
-Current phase: Phase 54 delivered as 2-commit unit over Phase 53 endpoint (`72a391a`): Commit A (`docs(router): scaffold Phase 54 compound-router context and namespace`) — 54-CONTEXT scaffold + STATE prose D1-fix + smoke Section 30 header. Commit B (`feat(router): add Phase 54 compound-router schema command workflow and smoke coverage`) — schema with `$comment` clean-room + 2 runtime modules (compound-router + sink-proposer) + command + workflow + 2 READMEs + template + `.planning/compound/` dir + smoke Section 30 populated + Section 29 29o/29q amendments + product-contract command count 88→89 + STATE progress bump. Gate 54 v1 cleared convergent GREEN-CONDITIONAL (Reviewer Claude + Codex; 4 strict-side union absorptions on G5 naming / G6 `$comment` / wrapper-hint removal / architecture.md no-touch).
-Status: Push status is determined authoritatively by `git rev-parse origin/main HEAD` — not by narrative prose. Phase 53 is on origin when `origin/main == 72a391a`. Phase 54 local commits are on origin only when `origin/main == HEAD`. Rollback anchors preserved: `sunco-pre-53-landed @ 72a391a` (Phase 54 pre-first-mutation anchor), `sunco-pre-52b-landed @ 4b1e093`, `sunco-pre-dogfood @ 3ac0ee9`.
-Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 54 per Gate 54 L16)
-Last activity: 2026-04-20
+Current phase: Phase 55 (Router Dogfood) in-flight as pre-planned 2-commit unit over Phase 54 endpoint (`8e22c9d`): Commit A (`docs(router): scaffold Phase 55 dogfood context and fixture skeleton`) — 55-CONTEXT scaffold + STATE prose update + smoke Section 31 header + 5 scenario scaffold `.keep` files + retroactive-v1.4 scaffold + top-level fixture README. Commit B (`feat(router): add Phase 55 dogfood vitest runner and retroactive v1.4 backfill`) — vitest runner + full scenario fixtures + retroactive v1.4 compound artifact + retroactive fixture RouteDecisions + BACKFILL-PROVENANCE.md (fixture tree per U2 Codex-strict) + smoke Section 31 populated + STATE frontmatter bump. Gate 55 v1 cleared convergent GREEN-CONDITIONAL (Reviewer Claude + Codex; 2 Codex strict-side union absorptions on U1 risk_level correction + U2 provenance location).
+Status: Push status is determined authoritatively by `git rev-parse origin/main HEAD` — not by narrative prose. Phase 54 is on origin when `origin/main == 8e22c9d`. Phase 55 local commits are on origin only when `origin/main == HEAD`. Rollback anchors preserved: `sunco-pre-54-landed @ 8e22c9d` (Phase 55 pre-first-mutation anchor; 4th iteration of per-phase-landed anchor pattern), `sunco-pre-53-landed @ 72a391a`, `sunco-pre-52b-landed @ 4b1e093`, `sunco-pre-dogfood @ 3ac0ee9`.
+Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 55 per Gate 55 L14)
+Last activity: 2026-04-21
 
-Progress (v1.5): [█████░░░░░] 57% (4/7 total phases delivered by committed local state; `git rev-parse origin/main HEAD` authoritative for what is on origin).
+Progress (v1.5): [█████░░░░░] 57% (4/7 total phases delivered by committed local state at Commit A snapshot; `git rev-parse origin/main HEAD` authoritative for what is on origin; Commit B bumps to 5/7 = 71%).
 Delivered by commit: 52a, 52b, 53, 54
-Pending committed: 55
-Provisional: 56 (release-router hardening; scope at mid-milestone gate)
+In-flight: 55 (Commit A scaffold; Commit B runtime pending)
+Provisional: 56 (release-router hardening; scope confirmed at mid-milestone gate post-Phase-55-landing per DESIGN §9)
 Deferred: 57 (`/sunco:auto` integration; frozen until Phase 56 + explicit gate)
 
-**Note on frontmatter vs origin**: `progress.completed_phases: 4` and `progress.percent: 57` above count phases whose full commit set exists locally. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed. SDI-2 counter remains at **2** (Phase 54 pre-planned 2-commit split is NOT SDI-2 per Gate 52b B4 + Phase 53 precedent).
+**Note on frontmatter vs origin**: `progress.completed_phases: 4` and `progress.percent: 57` above count phases whose full commit set exists locally as of Commit A. Commit B updates frontmatter to `completed_phases: 5` / `percent: 71`. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed. SDI-2 counter remains at **2** (Phase 55 pre-planned 2-commit split is NOT SDI-2 per Gate 52b B4 + Phase 53/54 precedent).
 
 ## v1.4 retrospective
 
