@@ -32,6 +32,7 @@ function makeEvidence(overrides: Partial<EvidenceRecord> = {}): EvidenceRecord {
       startedAt: now,
       completedAt: now,
       durationMs: 1,
+      metadata: {},
     }],
     editTransactions: [{
       id: 'edit-1',
@@ -44,9 +45,12 @@ function makeEvidence(overrides: Partial<EvidenceRecord> = {}): EvidenceRecord {
         status: 'modified',
         beforeHash: { algorithm: 'sha256', value: 'before' },
         afterHash: { algorithm: 'sha256', value: 'after' },
+        metadata: {},
       }],
       diffPath: '.sunco/tasks/task-1/diffs/changes.patch',
       rollbackPatchPath: '.sunco/tasks/task-1/diffs/rollback.patch',
+      staleFiles: [],
+      metadata: {},
     }],
     ...overrides,
   });
@@ -74,6 +78,7 @@ describe('Done Gate', () => {
           startedAt: now,
           completedAt: now,
           durationMs: 1,
+          metadata: {},
         }],
       }),
       requiredChecks: ['test', 'build'],
@@ -113,7 +118,10 @@ describe('Done Gate', () => {
             status: 'modified',
             beforeHash: { algorithm: 'sha256', value: 'before' },
             afterHash: { algorithm: 'sha256', value: 'after' },
+            metadata: {},
           }],
+          staleFiles: ['src/index.ts'],
+          metadata: {},
         }],
       }),
       requiredChecks: ['test'],
@@ -123,6 +131,29 @@ describe('Done Gate', () => {
     expect(result.status).toBe('blocked');
     expect(result.staleEditTransactionIds).toEqual(['edit-1']);
     expect(result.reasons).toContain('edit transaction edit-1 is missing rollback evidence');
+  });
+
+  it('blocks mutation tasks when edit evidence has no changed files', () => {
+    const result = evaluateDoneGate({
+      task: makeTask(),
+      evidence: makeEvidence({
+        editTransactions: [{
+          id: 'edit-empty',
+          taskId: 'task-1',
+          status: 'observed',
+          createdAt: now,
+          updatedAt: now,
+          changedFiles: [],
+          staleFiles: [],
+          metadata: {},
+        }],
+      }),
+      requiredChecks: ['test'],
+      now,
+    });
+
+    expect(result.status).toBe('blocked');
+    expect(result.reasons).toContain('changed-file evidence is required for risk repo_mutate');
   });
 
   it('passes when required evidence, checks, edit records, and approvals are present', () => {
@@ -136,6 +167,7 @@ describe('Done Gate', () => {
           approvedBy: 'user',
           approvedAt: now,
           scope: ['repo'],
+          metadata: {},
         }],
       }),
       requiredChecks: ['test'],

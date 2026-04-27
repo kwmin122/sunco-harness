@@ -1,7 +1,7 @@
 # SUNCO Runtime Foundation
 
-Status: Phase 58 architecture contract  
-Milestone: v1.6 / M7 Proof-first Runtime Foundation  
+Status: Phase 58 architecture contract
+Milestone: v1.6 / M7 Proof-first Runtime Foundation
 Date: 2026-04-26
 
 ## 1. Product Constitution

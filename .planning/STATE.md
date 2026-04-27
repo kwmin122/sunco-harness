@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Proof-first Runtime Foundation
-status: phase-67-complete-pending-commit
+status: phase-67-complete-pending-push
 stopped_at: ""
-last_updated: "2026-04-27T11:05:00.000Z"
+last_updated: "2026-04-27T20:35:00+09:00"
 last_activity: 2026-04-27
 progress:
   total_phases: 10
@@ -31,20 +31,20 @@ previous_milestone:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 끝났다고 말하기 전에 증거를 요구하는 proof-first runtime
-**Current focus:** v1.6 / M7 Proof-first Runtime Foundation — Phases 58-67 are implemented and verified locally. v1.5 Workflow Router is treated as shipped foundation; M7 moves SUNCO from command-heavy skill pack framing toward runtime ownership of task state, evidence, edit records, verification results, and done decisions.
+**Current focus:** v1.6 / M7 Proof-first Runtime Foundation — Phases 58-67 are implemented and verification-gate hardening is complete locally. v1.5 Workflow Router is treated as shipped foundation; M7 moves SUNCO from command-heavy skill pack framing toward runtime ownership of task state, evidence, edit records, verification results, and done decisions.
 
 ## Current Position
 
 Milestone: v1.6 Proof-first Runtime Foundation
-Current phase: Phase 67 v1.6 Release Hardening complete pending commit. Phases 60-66 added the first runtime vertical slice: evidence store, verifier, done gate, hash edit engine, runtime loop, simple UX front door, and benchmark seeds.
-Status: `git status` works in this session; `HEAD == 4e9cdfc75d816cdb5199f2158c12cae2ba2efe0f`. The working tree contains uncommitted M7 Phase 60-67 implementation changes.
+Current phase: Phase 67 v1.6 Release Hardening complete pending push. Phases 60-66 added the first runtime vertical slice: evidence store, verifier, done gate, hash edit engine, runtime loop, simple UX front door, and benchmark seeds.
+Status: local branch contains the M7 architecture commit, runtime implementation commit, and verification-gate hardening commit. Hardening closes package typecheck, untracked added-file diff/rollback evidence, zero-change mutation blocking, and committed-diff whitespace checks.
 Design source: `docs/architecture/runtime-foundation.md`
 Last activity: 2026-04-27
 
 Progress (v1.6/M7): [##########] 100% (10/10 phases complete)
-Delivered by commit: `4e9cdfc` for Phase 58-59
-Pending committed: Phase 60-67 runtime implementation and hardening
-Next: commit the completed M7 runtime implementation, then decide whether v1.6 release packaging/publish should proceed.
+Delivered locally: Phase 58-59 architecture contract, Phase 60-67 runtime implementation, and verification-gate hardening
+Pending: optional v1.6 release packaging/publish decision
+Next: decide whether v1.6 release packaging/publish should proceed.
 
 ## v1.4 retrospective
 

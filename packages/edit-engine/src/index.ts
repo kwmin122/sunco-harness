@@ -57,7 +57,7 @@ export async function captureFileHashes(input: CaptureHashesInput): Promise<Reco
 
 export async function detectChangedFiles(cwd: string): Promise<ChangedFile[]> {
   const resolvedCwd = resolve(cwd);
-  const status = await gitText(resolvedCwd, ['status', '--porcelain=v1']);
+  const status = await gitText(resolvedCwd, ['status', '--porcelain=v1', '-uall']);
   const lines = status.split('\n').filter((line) => line.trim().length > 0);
   const changed: ChangedFile[] = [];
 
@@ -103,8 +103,9 @@ export async function createEditTransaction(input: CreateEditTransactionInput): 
   const now = input.now ?? new Date().toISOString();
   const changedFiles = await detectChangedFiles(cwd);
   const staleFiles = await detectStaleFiles({ cwd, files: changedFiles });
-  const diff = await gitText(cwd, ['diff', '--binary', '--no-ext-diff', 'HEAD', '--']);
-  const rollback = await gitText(cwd, ['diff', '--binary', '--no-ext-diff', '-R', 'HEAD', '--']);
+  const diff = await createPatchForFiles(cwd, changedFiles, 'forward');
+  const rollback = await createPatchForFiles(cwd, changedFiles, 'rollback');
+  const patchMissing = changedFiles.length > 0 && (diff.trim().length === 0 || rollback.trim().length === 0);
   const store = input.store ?? new EvidenceStore({ cwd });
   const diffPath = changedFiles.length > 0
     ? await store.writeDiff(input.taskId, 'changes.patch', diff)
@@ -116,13 +117,14 @@ export async function createEditTransaction(input: CreateEditTransactionInput): 
   const transaction = EditTransactionSchema.parse({
     id: `edit-${Date.now()}`,
     taskId: input.taskId,
-    status: 'observed',
+    status: staleFiles.length > 0 ? 'stale' : patchMissing ? 'failed' : 'observed',
     createdAt: now,
     updatedAt: now,
     changedFiles,
     staleFiles,
     diffPath,
     rollbackPatchPath,
+    failureReason: patchMissing ? 'changed files were detected but diff or rollback patch was empty' : undefined,
   });
 
   await store.updateEvidence(input.taskId, (record) => ({
@@ -147,11 +149,13 @@ export async function createEditTransaction(input: CreateEditTransactionInput): 
 }
 
 export async function createRollbackPatch(cwd: string): Promise<string> {
-  return gitText(resolve(cwd), ['diff', '--binary', '--no-ext-diff', '-R', 'HEAD', '--']);
+  const resolvedCwd = resolve(cwd);
+  return createPatchForFiles(resolvedCwd, await detectChangedFiles(resolvedCwd), 'rollback');
 }
 
 export async function createDiffPatch(cwd: string): Promise<string> {
-  return gitText(resolve(cwd), ['diff', '--binary', '--no-ext-diff', 'HEAD', '--']);
+  const resolvedCwd = resolve(cwd);
+  return createPatchForFiles(resolvedCwd, await detectChangedFiles(resolvedCwd), 'forward');
 }
 
 async function hashGitHeadPath(cwd: string, path: string): Promise<FileHash | null> {
@@ -184,6 +188,27 @@ function isRuntimeArtifactPath(path: string): boolean {
   return path === '.sunco' || path.startsWith('.sunco/') || path === '.sun' || path.startsWith('.sun/');
 }
 
+async function createPatchForFiles(cwd: string, files: ChangedFile[], direction: 'forward' | 'rollback'): Promise<string> {
+  if (files.length === 0) return '';
+  const trackedArgs = direction === 'forward'
+    ? ['diff', '--binary', '--no-ext-diff', 'HEAD', '--']
+    : ['diff', '--binary', '--no-ext-diff', '-R', 'HEAD', '--'];
+  const trackedPatch = await gitText(cwd, trackedArgs);
+  const untrackedPatches = await Promise.all(files.filter(isUntrackedFile).map((file) => (
+    direction === 'forward'
+      ? gitText(cwd, ['diff', '--no-index', '--binary', '--', '/dev/null', file.path], [0, 1])
+      : gitText(cwd, ['diff', '--no-index', '--binary', '--', file.path, '/dev/null'], [0, 1])
+  )));
+  const patches = [trackedPatch, ...untrackedPatches]
+    .map((patch) => patch.trimEnd())
+    .filter((patch) => patch.length > 0);
+  return patches.length > 0 ? patches.join('\n') + '\n' : '';
+}
+
+function isUntrackedFile(file: ChangedFile): boolean {
+  return file.status === 'added' && file.beforeHash === null && file.metadata.gitStatus === '??';
+}
+
 function normalizeRelativePath(cwd: string, path: string): string {
   const resolved = resolve(cwd, path);
   const rel = relative(cwd, resolved);
@@ -193,13 +218,20 @@ function normalizeRelativePath(cwd: string, path: string): string {
   return rel;
 }
 
-async function gitText(cwd: string, args: string[]): Promise<string> {
-  const result = await execFileAsync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    maxBuffer: 20 * 1024 * 1024,
-  });
-  return result.stdout;
+async function gitText(cwd: string, args: string[], allowedExitCodes = [0]): Promise<string> {
+  try {
+    const result = await execFileAsync('git', args, {
+      cwd,
+      encoding: 'utf8',
+      maxBuffer: 20 * 1024 * 1024,
+    });
+    return result.stdout;
+  } catch (err) {
+    const error = err as Error & { code?: number | string; stdout?: string };
+    const code = typeof error.code === 'number' ? error.code : Number(error.code);
+    if (allowedExitCodes.includes(code)) return error.stdout ?? '';
+    throw err;
+  }
 }
 
 async function gitBuffer(cwd: string, args: string[]): Promise<Buffer> {

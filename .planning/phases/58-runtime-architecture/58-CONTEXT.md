@@ -1,7 +1,7 @@
 # Phase 58 — Runtime Architecture Contract
 
-Status: implemented and registered  
-Milestone: v1.6 / M7 Proof-first Runtime Foundation  
+Status: implemented and registered
+Milestone: v1.6 / M7 Proof-first Runtime Foundation
 Date: 2026-04-26
 
 ## Context

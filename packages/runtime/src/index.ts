@@ -299,8 +299,13 @@ function evaluateEditTransactions(risk: RiskLevel, edits: EditTransaction[]): {
     return { reasons, nextActions, staleEditTransactionIds };
   }
 
+  if (edits.every((edit) => edit.changedFiles.length === 0)) {
+    reasons.push(`changed-file evidence is required for risk ${risk}`);
+    nextActions.push('make the intended repo change or lower the task risk');
+  }
+
   for (const edit of edits) {
-    if (edit.status === 'stale' || edit.status === 'failed') {
+    if (edit.status === 'stale' || edit.status === 'failed' || edit.staleFiles.length > 0) {
       reasons.push(`edit transaction ${edit.id} is ${edit.status}`);
       staleEditTransactionIds.push(edit.id);
       nextActions.push('refresh edit evidence before marking done');

@@ -40,6 +40,9 @@ describe('EvidenceStore', () => {
         source: 'runtime',
         type: 'created',
         summary: 'Task created',
+        inputs: {},
+        outputs: {},
+        metadata: {},
       });
       await store.appendDecision({
         id: 'decision-2',
@@ -48,6 +51,9 @@ describe('EvidenceStore', () => {
         source: 'done_gate',
         type: 'blocked',
         summary: 'No evidence',
+        inputs: {},
+        outputs: {},
+        metadata: {},
       });
 
       const decisions = await store.readDecisions('task-1');
@@ -74,14 +80,16 @@ describe('EvidenceStore', () => {
             kind: 'test',
             command: 'npm test',
             status: 'pass',
+            required: true,
             startedAt: now,
             completedAt: now,
             durationMs: 1,
             logPath,
+            metadata: {},
           },
         ],
         artifacts: [
-          { kind: 'diff', path: diffPath },
+          { kind: 'diff', path: diffPath, metadata: {} },
         ],
         updatedAt: now,
       }));

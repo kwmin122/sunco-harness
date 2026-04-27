@@ -13,6 +13,10 @@
   "scripts": {
     "build": "turbo build",
     "test": "turbo test",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck:runtime": "npm run typecheck --workspace @sunco/evidence && npm run typecheck --workspace @sunco/verifier && npm run typecheck --workspace @sunco/edit-engine && npm run typecheck --workspace @sunco/runtime",
+    "format:check": "git diff --check && git diff --cached --check",
+    "format:check:base": "git diff --check origin/main..HEAD",
     "lint": "turbo lint",
     "clean": "turbo clean"
   },

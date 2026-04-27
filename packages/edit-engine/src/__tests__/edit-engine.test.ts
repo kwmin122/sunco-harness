@@ -75,6 +75,28 @@ describe('Hash Edit Engine', () => {
     }
   });
 
+  it('records non-empty diff and rollback evidence for untracked added files', async () => {
+    const cwd = await makeRepo();
+    try {
+      await writeFile(join(cwd, 'added.js'), 'export const added = true;\n', 'utf-8');
+      const store = new EvidenceStore({ cwd });
+      await store.createTask({ id: 'task-1', goal: 'record untracked add', now });
+
+      const transaction = await createEditTransaction({ cwd, taskId: 'task-1', store, now });
+      const diff = await createDiffPatch(cwd);
+      const rollback = await createRollbackPatch(cwd);
+
+      expect(transaction.status).toBe('observed');
+      expect(transaction.changedFiles).toMatchObject([{ path: 'added.js', status: 'added' }]);
+      expect(diff).toContain('new file mode');
+      expect(diff).toContain('+export const added = true;');
+      expect(rollback).toContain('deleted file mode');
+      expect(rollback).toContain('-export const added = true;');
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
   it('detects stale expected before hashes against HEAD', async () => {
     const cwd = await makeRepo();
     try {

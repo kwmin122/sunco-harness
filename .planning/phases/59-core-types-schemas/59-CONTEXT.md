@@ -1,8 +1,8 @@
 # Phase 59 — Core Types + Schemas
 
-Status: implemented and verified  
-Milestone: v1.6 / M7 Proof-first Runtime Foundation  
-Requirement: IF-25  
+Status: implemented and verified
+Milestone: v1.6 / M7 Proof-first Runtime Foundation
+Requirement: IF-25
 Date: 2026-04-27
 
 ## Context

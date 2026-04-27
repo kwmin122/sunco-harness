@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -13,7 +13,15 @@ async function git(cwd: string, args: string[]): Promise<void> {
   await execFileAsync('git', args, { cwd });
 }
 
-async function makeProject(testScript = 'node -e "console.log(\'ok\')"'): Promise<string> {
+type MakeProjectOptions = {
+  mutate?: boolean;
+  untracked?: boolean;
+};
+
+async function makeProject(
+  testScript = 'node -e "console.log(\'ok\')"',
+  options: MakeProjectOptions = {},
+): Promise<string> {
   const cwd = await mkdtemp(join(tmpdir(), 'sunco-runtime-'));
   await git(cwd, ['init']);
   await git(cwd, ['config', 'user.email', 'sunco@example.com']);
@@ -28,7 +36,12 @@ async function makeProject(testScript = 'node -e "console.log(\'ok\')"'): Promis
   await writeFile(join(cwd, 'src.txt'), 'before\n', 'utf-8');
   await git(cwd, ['add', '.']);
   await git(cwd, ['commit', '-m', 'initial']);
-  await writeFile(join(cwd, 'src.txt'), 'after\n', 'utf-8');
+  if (options.mutate ?? true) {
+    await writeFile(join(cwd, 'src.txt'), 'after\n', 'utf-8');
+  }
+  if (options.untracked) {
+    await writeFile(join(cwd, 'added.js'), 'export const added = true;\n', 'utf-8');
+  }
   return cwd;
 }
 
@@ -70,6 +83,50 @@ describe('Runtime Loop MVP', () => {
       expect(result.task.status).toBe('blocked');
       expect(result.gate.status).toBe('blocked');
       expect(result.gate.failedChecks).toEqual(['test-1']);
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('blocks repo mutation tasks with zero changed-file evidence', async () => {
+    const cwd = await makeProject(undefined, { mutate: false });
+    try {
+      const result = await runRuntimeLoop({
+        cwd,
+        goal: 'do not allow a false done mutation',
+        taskId: 'task-1',
+        now: () => now,
+      });
+
+      expect(result.task.status).toBe('blocked');
+      expect(result.gate.status).toBe('blocked');
+      expect(result.evidence?.editTransactions[0].changedFiles).toEqual([]);
+      expect(result.gate.reasons).toContain('changed-file evidence is required for risk repo_mutate');
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('records diff and rollback evidence for untracked added files', async () => {
+    const cwd = await makeProject(undefined, { mutate: false, untracked: true });
+    try {
+      const result = await runRuntimeLoop({
+        cwd,
+        goal: 'add a new source file',
+        taskId: 'task-1',
+        now: () => now,
+      });
+
+      expect(result.task.status).toBe('done');
+      expect(result.gate.status).toBe('passed');
+      expect(result.evidence?.editTransactions[0].changedFiles.map((file) => file.path)).toEqual(['added.js']);
+
+      const diff = await readFile(join(cwd, '.sunco/tasks/task-1/diffs/changes.patch'), 'utf-8');
+      const rollback = await readFile(join(cwd, '.sunco/tasks/task-1/diffs/rollback.patch'), 'utf-8');
+      expect(diff).toContain('new file mode');
+      expect(diff).toContain('+export const added = true;');
+      expect(rollback).toContain('deleted file mode');
+      expect(rollback).toContain('-export const added = true;');
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }

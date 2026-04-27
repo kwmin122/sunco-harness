@@ -19,7 +19,9 @@ The edit engine observes git changes, captures before/after SHA-256 hashes, reco
 
 Runtime artifact paths under `.sunco/` and `.sun/` are ignored when observing user edits.
 
+Untracked added files are part of the edit-evidence contract: they must produce non-empty forward diff evidence and non-empty rollback patch evidence before Done Gate can pass.
+
 ## Verification
 
 - `npm test --workspace @sunco/edit-engine`
-- Covered file hashing, changed-file detection, stale before-hash detection, diff patch creation, rollback patch creation, and evidence-store integration.
+- Covered file hashing, changed-file detection, stale before-hash detection, untracked added-file diff/rollback evidence, diff patch creation, rollback patch creation, and evidence-store integration.
