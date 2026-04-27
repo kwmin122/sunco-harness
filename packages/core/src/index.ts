@@ -13,6 +13,76 @@ export const VERSION = '0.0.1';
 export type { SkillId, CommandName, Branded } from './types.js';
 
 // ---------------------------------------------------------------------------
+// Proof-first Runtime Contracts (M7)
+// ---------------------------------------------------------------------------
+export {
+  TASK_STATUSES,
+  RISK_LEVELS,
+  CHECK_STATUSES,
+  CHECK_KINDS,
+  DONE_GATE_STATUSES,
+  EDIT_TRANSACTION_STATUSES,
+  CHANGED_FILE_STATUSES,
+  RUNTIME_DECISION_SOURCES,
+  RUNTIME_ARTIFACT_KINDS,
+  RuntimeMetadataSchema,
+  RuntimeIdSchema,
+  RuntimeIsoTimestampSchema,
+  RuntimePathSchema,
+  TaskStatusSchema,
+  RiskLevelSchema,
+  CheckStatusSchema,
+  CheckKindSchema,
+  DoneGateStatusSchema,
+  EditTransactionStatusSchema,
+  ChangedFileStatusSchema,
+  RuntimeDecisionSourceSchema,
+  RuntimeArtifactKindSchema,
+  RuntimeArtifactSchema,
+  TaskSchema,
+  CheckResultSchema,
+  ApprovalRecordSchema,
+  FileHashSchema,
+  ChangedFileSchema,
+  EditTransactionSchema,
+  RuntimeDecisionSchema,
+  EvidenceRecordSchema,
+  DoneGateResultSchema,
+  RuntimeError,
+  RuntimeSchemaError,
+  MissingEvidenceError,
+  DoneGateBlockedError,
+  RiskApprovalRequiredError,
+} from './runtime/index.js';
+export type {
+  TaskStatus,
+  RiskLevel,
+  CheckStatus,
+  CheckKind,
+  DoneGateStatus,
+  EditTransactionStatus,
+  ChangedFileStatus,
+  RuntimeDecisionSource,
+  RuntimeArtifactKind,
+  RuntimeArtifact,
+  Task,
+  CheckResult,
+  ApprovalRecord,
+  FileHash,
+  ChangedFile,
+  EditTransaction,
+  RuntimeDecision,
+  EvidenceRecord,
+  DoneGateResult,
+  RuntimeAgentRequest,
+  RuntimeAgentResult,
+  RuntimeAgentAdapter,
+  ProjectSignal,
+  VerificationCheckSpec,
+  RuntimeCodeIntelProvider,
+} from './runtime/index.js';
+
+// ---------------------------------------------------------------------------
 // Config System
 // ---------------------------------------------------------------------------
 export { loadConfig } from './config/loader.js';

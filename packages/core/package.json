@@ -9,6 +9,10 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
     "./advisor": {
       "types": "./dist/agent/advisor.d.ts",
       "import": "./dist/agent/advisor.js"

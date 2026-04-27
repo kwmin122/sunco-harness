@@ -565,4 +565,37 @@ Indicative: 3-5 weeks (52a small / 52b medium / 53 medium / 54 medium / 55 mediu
 9. SDI-2 counter preserved or justified (v1.5 should not regress the counter budget)
 10. Phase 55 dogfood green on all 5 scenarios
 
+**v1.5 status**: COMPLETE and shipped as the Workflow Router foundation. Phase 57 opened `/sunco:auto` under explicit approval-boundary constraints. The next milestone is not more routing surface; it is runtime ownership of task evidence and done decisions.
+
+---
+
+## v1.6 Proof-first Runtime Foundation (Milestone M7 — Phases 58-67)
+
+**Design source**: `docs/architecture/runtime-foundation.md` (Phase 58). M7 absorbs the OMO/SUNCO comparison feedback by moving SUNCO from skill-pack framing toward a proof-first AI coding runtime.
+
+**Milestone goal**: SUNCO blocks `done` unless the task has evidence. M7 creates the first runtime vertical slice: task record, edit evidence, verification evidence, done gate, and status. It does not attempt full LSP, TUI, studio UI, marketplace, or full multi-agent runtime.
+
+### Milestone M7 — Runtime Foundation
+
+**Planned**:
+- **Phase 58**: Runtime Architecture Contract — `docs/architecture/runtime-foundation.md`, M7 package boundaries, product constitution, task/evidence/done/edit contracts. REQ: IF-24.
+- **Phase 59**: Core Types + Schemas — `Task`, `TaskStatus`, `EvidenceRecord`, `CheckResult`, `DoneGateResult`, `ApprovalRecord`, `EditTransaction`, `RuntimeDecision`. REQ: IF-25.
+- **Phase 60**: Evidence Store — `.sunco/tasks/<task-id>/` persistence, `task.json`, `evidence.json`, `checks/`, `diffs/`, append-only `decisions.jsonl`. REQ: IF-26.
+- **Phase 61**: Verify Engine — JS/TS package-manager detection, check selection, command execution, check logs, evidence-producing results. REQ: IF-27.
+- **Phase 62**: Done Gate — completion authority over evidence; blocks missing checks, failed checks, missing approvals, unresolved failures, stale edits. REQ: IF-28.
+- **Phase 63**: Hash Edit Engine — before hash, changed-file detection, diff record, rollback patch, stale context check. REQ: IF-29.
+- **Phase 64**: Runtime Loop MVP — `do -> observe/edit -> verify -> done gate -> status` loop shell with finite attempts and block states. REQ: IF-30.
+- **Phase 65**: Simple UX — front-door command flow centered on `do`, `verify`, `status`, `ship`; advanced commands remain available behind router/manager. REQ: IF-31.
+- **Phase 66**: Benchmark Seed — false-done and bugfix-basic benchmarks; metrics include false_done_prevented, checks_required, checks_passed, interventions, time_to_green. REQ: IF-32.
+- **Phase 67**: v1.6 Release Hardening — docs, migration, final verification, release evidence. REQ: IF-33.
+
+### Success criteria (Done for v1.6/M7)
+
+1. A task can be created and persisted.
+2. Task evidence is stored under `.sunco/tasks/<task-id>/`.
+3. Changed files can be tied to a task with hashes, diff, and rollback patch.
+4. JS/TS verify checks can run and write evidence.
+5. Done Gate blocks missing or failed evidence.
+6. Runtime status shows task, risk, checks, changed files, and next action.
+7. A false-done benchmark proves SUNCO blocks an invalid completion.
 

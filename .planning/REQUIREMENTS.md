@@ -337,6 +337,50 @@ Hard-lock common to v1.5 phases: `.github/workflows/ci.yml` untouched (v1.4 Path
 
 ---
 
+## v1.6 Requirements — Proof-first Runtime Foundation
+
+Source: `docs/architecture/runtime-foundation.md` (Phase 58). M7 reframes SUNCO from command-heavy skill pack toward proof-first runtime: tasks cannot be marked done without evidence.
+
+### Runtime Core (M7)
+
+- **IF-24**: Runtime Architecture Contract — define product constitution (`No evidence, no done` and related laws), M7 package boundaries, task/evidence/done/edit/verify contracts, deferred surfaces, and the first runtime vertical slice. Covered by Phase 58.
+
+- **IF-25**: Core Types + Schemas — define canonical records for `Task`, `TaskStatus`, `RiskLevel`, `EvidenceRecord`, `CheckResult`, `DoneGateResult`, `ApprovalRecord`, `EditTransaction`, and `RuntimeDecision`. Types must support future agent-adapter/code-intel interfaces without requiring those packages in M7. Covered by Phase 59.
+
+- **IF-26**: Evidence Store — persist task-scoped evidence under `.sunco/tasks/<task-id>/` with `task.json`, `evidence.json`, `checks/`, `diffs/`, and append-only `decisions.jsonl`. Missing evidence is a blocker, not a warning. Covered by Phase 60.
+
+- **IF-27**: Verify Engine — detect JavaScript/TypeScript verification commands from package-manager and package-script signals, run selected checks, capture logs, summarize results, and write `CheckResult` evidence. Covered by Phase 61.
+
+- **IF-28**: Done Gate — block completion when evidence is missing, required checks failed or were not run, approval is missing, risk exceeds approval boundary, unresolved failures remain, or edit evidence is stale/failed. Covered by Phase 62.
+
+- **IF-29**: Hash Edit Engine — capture before hashes, detect changed files, store diff patches, store rollback patches, and detect stale context before applying or accepting edit evidence. Covered by Phase 63.
+
+- **IF-30**: Runtime Loop MVP — provide a finite loop shell that can create/accept a task, observe or execute edits, collect edit evidence, run verifier, run Done Gate, and report `done` or `blocked`. Covered by Phase 64.
+
+- **IF-31**: Simple UX — front-door flow centers on `sunco do`, `sunco verify`, `sunco status`, and `sunco ship` plus slash equivalents. Existing advanced commands remain installed but are no longer the primary first-use path. Covered by Phase 65.
+
+- **IF-32**: Benchmark Seed — create first benchmark seeds for false-done prevention and basic bugfix flow with metrics `false_done_prevented`, `checks_required`, `checks_passed`, `user_interventions`, and `time_to_green`. Covered by Phase 66.
+
+- **IF-33**: v1.6 Release Hardening — release notes, migration docs, final verification, and runtime-foundation evidence for publish. Covered by Phase 67.
+
+**Coverage by phase (v1.6/M7)**:
+| Phase | Reqs | IDs |
+|-------|------|-----|
+| 58 Runtime Architecture Contract | 1 | IF-24 |
+| 59 Core Types + Schemas | 1 | IF-25 |
+| 60 Evidence Store | 1 | IF-26 |
+| 61 Verify Engine | 1 | IF-27 |
+| 62 Done Gate | 1 | IF-28 |
+| 63 Hash Edit Engine | 1 | IF-29 |
+| 64 Runtime Loop MVP | 1 | IF-30 |
+| 65 Simple UX | 1 | IF-31 |
+| 66 Benchmark Seed | 1 | IF-32 |
+| 67 v1.6 Release Hardening | 1 | IF-33 |
+
+M7 excluded surfaces: TUI, Studio/web UI, full LSP, multi-agent runtime, marketplace, all-language verifier support, and full code-intel graph.
+
+---
+
 ## v2 Requirements
 
 ### Extension Skills

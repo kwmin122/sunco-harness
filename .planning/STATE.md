@@ -1,27 +1,27 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5
-milestone_name: SUNCO Workflow Router
-status: executing
+milestone: v1.6
+milestone_name: Proof-first Runtime Foundation
+status: phase-59-complete-pending-commit
 stopped_at: ""
-last_updated: "2026-04-21T00:00:00.000Z"
-last_activity: 2026-04-21
+last_updated: "2026-04-27T10:01:46.000Z"
+last_activity: 2026-04-27
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 0
-  completed_plans: 0
-  percent: 100
+  total_phases: 10
+  completed_phases: 2
+  total_plans: 1
+  completed_plans: 1
+  percent: 20
 previous_milestone:
-  label: v1.4
-  name: Impeccable Fusion
+  label: v1.5
+  name: SUNCO Workflow Router
   status: SHIPPED
-  npm_version: 0.12.0
-  git_tag: v0.12.0
-  release_commit: 94041a2
-  shipped_at: 2026-04-20
-  completed_phases: 17
-  total_phases: 17
+  npm_version: 0.13.0
+  git_tag: ""
+  release_commit: ""
+  shipped_at: 2026-04-26
+  completed_phases: 7
+  total_phases: 7
 ---
 
 # Project State
@@ -30,23 +30,21 @@ previous_milestone:
 
 See: .planning/PROJECT.md (updated 2026-03-27)
 
-**Core value:** 에이전트가 실수를 덜 하게 판을 깔아주는 OS -- 하네스 엔지니어링이 핵심
-**Current focus:** v1.5 SUNCO Workflow Router — Phase 56 LANDED as 2-commit unit (A `7caa860` + B `99c8934`) on 2026-04-21; Phase 57 `/sunco:auto` integration in-flight as pre-planned 2-commit unit over Phase 56 endpoint (`99c8934`): `commands/sunco/auto.md` (opened — first previously-frozen command file modified in v1.5) + 3 dogfood fixtures (06/07/08) + `router-auto.test.ts` vitest + smoke Section 33. Gate 57 v1 cleared convergent GREEN-CONDITIONAL (Reviewer Claude + Codex; **5 absorb-before-build conditions** AB-57-1..5: `--allow` permitted set = {read_only, local_mutate, repo_mutate} only / thin-HIGH→MEDIUM band gating / compound-hook path chain preservation / 3 fixtures not 2 / Section 33 classifier-first-invocation + permitted-levels literal assertions; **15 accumulated strict-side union fixtures** across Phases 53-57; formalization candidate at v1.5-closure meta-retrospective). Design source: `.planning/router/DESIGN-v1.md` (captured 2026-04-20 at `30e2041`; immutability extended through Phase 57 per Gate 57 L15).
+**Core value:** 에이전트가 끝났다고 말하기 전에 증거를 요구하는 proof-first runtime
+**Current focus:** v1.6 / M7 Proof-first Runtime Foundation — Phase 59 Core Types + Schemas is implemented and verified. v1.5 Workflow Router is treated as shipped foundation; M7 moves SUNCO from command-heavy skill pack framing toward runtime ownership of task state, evidence, edit records, verification results, and done decisions.
 
 ## Current Position
 
-Milestone: v1.5 SUNCO Workflow Router (executing)
-Current phase: Phase 57 (`/sunco:auto` Integration) in-flight as pre-planned 2-commit unit over Phase 56 endpoint (`99c8934`): Commit A (`docs(router): scaffold Phase 57 auto-integration context and fixture skeleton`) — 57-CONTEXT scaffold + STATE prose update + smoke Section 33 header + 3 fixture scaffold `.keep` files. Commit B (`feat(router): wire /sunco:auto through classifier with --allow risk-level gating`) — `packages/cli/commands/sunco/auto.md` modified with classifier-first invocation + `--allow <level>` flag grammar per Gate 57 L1 (permitted = `{read_only, local_mutate, repo_mutate}` only; `repo_mutate_official`/`remote_mutate`/`external_mutate` require explicit ACK per APPROVAL-BOUNDARY.md L19 + L21 + L22 + L55) + band gating with thin-HIGH→MEDIUM degradation + AB-57-3 compound-hook path chain (no generic auto-hook; `/sunco:auto → /sunco:release → COMPOUND_HOOK → Phase 56 workflow`) + 3 fixture populations + `router-auto.test.ts` vitest + smoke Section 33 populated + STATE frontmatter bump. Gate 57 v1 cleared convergent GREEN-CONDITIONAL (Reviewer Claude + Codex; 5 absorb-before-build conditions AB-57-1..5; AB-57-1 strict-side mirrored across both reviewers; AB-57-3 Codex-independent; AB-57-2/4/5 Reviewer-independent; Phase 57 is the largest absorb-count Gate in v1.5).
-Status: Push status is determined authoritatively by `git rev-parse origin/main HEAD` — not by narrative prose. Phase 56 is on origin when `origin/main == 99c8934`. Phase 57 local commits are on origin only when `origin/main == HEAD`. Rollback anchors preserved: `sunco-pre-56-landed @ 99c8934` (Phase 57 pre-first-mutation anchor; **6th iteration** of per-phase-landed anchor pattern; Codex O2 formalization continues deferred to v1.5-closure per Gate 57 G13 convergent), `sunco-pre-55-landed @ 97af2c3`, `sunco-pre-54-landed @ 8e22c9d`, `sunco-pre-53-landed @ 72a391a`, `sunco-pre-52b-landed @ 4b1e093`, `sunco-pre-dogfood @ 3ac0ee9`.
-Design source: `.planning/router/DESIGN-v1.md` (locked at commit `30e2041`; immutability extends through Phase 57 per Gate 57 L15)
-Last activity: 2026-04-21
+Milestone: v1.6 Proof-first Runtime Foundation
+Current phase: Phase 59 Core Types + Schemas complete; next phase is Phase 60 Evidence Store. Phase 59 added canonical runtime records, Zod schemas, runtime errors, and future adapter/code-intel interfaces under `@sunco/core` plus the `@sunco/core/runtime` subpath export.
+Status: `git status` works in this session; `origin/main == HEAD == 8c6d6967e1e76cbf18a2787c963f8ff1cc97d00d`. The working tree contains uncommitted M7 Phase 58 + Phase 59 changes.
+Design source: `docs/architecture/runtime-foundation.md`
+Last activity: 2026-04-27
 
-Progress (v1.5): [██████████] 100% (7/7 total phases delivered by committed local state — v1.5 committed set COMPLETE; `git rev-parse origin/main HEAD` authoritative for what is on origin; Commit B landed locally bumps progress; push awaits user approval).
-Delivered by commit: 52a, 52b, 53, 54, 55, 56, 57
-Pending committed: — (Phase 57 Commit A + Commit B landed locally; push awaits user approval)
-Next (post-Phase-57-landing): **v1.5-closure convening** (SEPARATE event; NOT Phase 57 scope) covers ship decision (popcoru@0.13.0), 7-item maintenance backlog triage, meta-retrospective, formalization of 15 accumulated strict-side union fixtures + 6 per-phase-landed anchor iterations
-
-**Note on frontmatter vs origin**: `progress.completed_phases: 7` and `progress.percent: 100` above count phases whose full commit set exists locally. Origin state is verified by git, not by prose — `git rev-parse origin/main HEAD` is the single source of truth for what has pushed. Phase 57 local commits are on origin only when `origin/main == HEAD`. SDI-2 counter remains at **2** (Phase 57 pre-planned 2-commit split is NOT SDI-2 per Gate 52b B4 + Phase 53/54/55/56 precedent; SDI-2 counter preserved through entire v1.5 committed set).
+Progress (v1.6/M7): [##--------] 20% (2/10 phases complete)
+Delivered by commit: —
+Pending committed: Phase 58 architecture contract + Phase 59 core runtime contracts
+Next: Phase 60 Evidence Store after the current working tree is committed/reviewed.
 
 ## v1.4 retrospective
 

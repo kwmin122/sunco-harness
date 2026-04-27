@@ -4542,12 +4542,14 @@ check('[56-release] .claude/rules/architecture.md byte-identical from 72a391a (3
 check('[56-release] commands/sunco/artifact-gate.md byte-identical from fa4eb52 (32s; L20; AB1 scope hard-lock)',
   s32GitBytesIdentical(s32ArtifactGateCmd, 'fa4eb52', 'packages/cli/commands/sunco/artifact-gate.md'));
 
-// 32t [56-release]  DESIGN-v1.md + ROADMAP.md + REQUIREMENTS.md byte-identical (L15 immutability through Phase 56)
+// 32t [56-release]  DESIGN-v1.md byte-identical; ROADMAP/REQUIREMENTS advanced to M7
 {
   const designOk = s32GitBytesIdentical(s32DesignV1, '30e2041', '.planning/router/DESIGN-v1.md');
-  const roadmapOk = s32GitBytesIdentical(s32Roadmap, '55565ad', '.planning/ROADMAP.md');
-  const reqOk = s32GitBytesIdentical(s32Requirements, '5b8094e', '.planning/REQUIREMENTS.md');
-  check('[56-release] DESIGN-v1.md + ROADMAP.md + REQUIREMENTS.md byte-identical (32t; L15 immutability extension)',
+  const roadmapText = fs.existsSync(s32Roadmap) ? fs.readFileSync(s32Roadmap, 'utf8') : '';
+  const reqText = fs.existsSync(s32Requirements) ? fs.readFileSync(s32Requirements, 'utf8') : '';
+  const roadmapOk = /v1\.6 Proof-first Runtime Foundation/.test(roadmapText) && /Phase 58/.test(roadmapText);
+  const reqOk = /v1\.6 Requirements — Proof-first Runtime Foundation/.test(reqText) && /IF-24/.test(reqText);
+  check('[56-release] DESIGN-v1.md byte-identical + ROADMAP/REQUIREMENTS M7 registration present (32t; Phase 58 transition)',
     designOk && roadmapOk && reqOk);
 }
 
@@ -4829,12 +4831,14 @@ check('[57-auto] packages/cli/workflows/release.md byte-identical from 99c8934 (
     'packages/cli/workflows/release.md',
   ));
 
-// 33u [57-auto]  DESIGN-v1 + ROADMAP + REQUIREMENTS byte-identical (L15 through Phase 57)
+// 33u [57-auto]  DESIGN-v1 byte-identical; ROADMAP/REQUIREMENTS advanced to M7
 {
   const designOk = s32GitBytesIdentical(s32DesignV1, '30e2041', '.planning/router/DESIGN-v1.md');
-  const roadmapOk = s32GitBytesIdentical(s32Roadmap, '55565ad', '.planning/ROADMAP.md');
-  const reqOk = s32GitBytesIdentical(s32Requirements, '5b8094e', '.planning/REQUIREMENTS.md');
-  check('[57-auto] DESIGN-v1 + ROADMAP + REQUIREMENTS byte-identical (33u; L15 extension through Phase 57)',
+  const roadmapText = fs.existsSync(s32Roadmap) ? fs.readFileSync(s32Roadmap, 'utf8') : '';
+  const reqText = fs.existsSync(s32Requirements) ? fs.readFileSync(s32Requirements, 'utf8') : '';
+  const roadmapOk = /v1\.6 Proof-first Runtime Foundation/.test(roadmapText) && /Phase 67/.test(roadmapText);
+  const reqOk = /v1\.6 Requirements — Proof-first Runtime Foundation/.test(reqText) && /IF-33/.test(reqText);
+  check('[57-auto] DESIGN-v1 byte-identical + ROADMAP/REQUIREMENTS M7 registration present (33u; Phase 58 transition)',
     designOk && roadmapOk && reqOk);
 }
 
