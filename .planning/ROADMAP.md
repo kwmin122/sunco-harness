@@ -577,7 +577,7 @@ Indicative: 3-5 weeks (52a small / 52b medium / 53 medium / 54 medium / 55 mediu
 
 ### Milestone M7 — Runtime Foundation
 
-**Planned**:
+**Implemented locally**:
 - **Phase 58**: Runtime Architecture Contract — `docs/architecture/runtime-foundation.md`, M7 package boundaries, product constitution, task/evidence/done/edit contracts. REQ: IF-24.
 - **Phase 59**: Core Types + Schemas — `Task`, `TaskStatus`, `EvidenceRecord`, `CheckResult`, `DoneGateResult`, `ApprovalRecord`, `EditTransaction`, `RuntimeDecision`. REQ: IF-25.
 - **Phase 60**: Evidence Store — `.sunco/tasks/<task-id>/` persistence, `task.json`, `evidence.json`, `checks/`, `diffs/`, append-only `decisions.jsonl`. REQ: IF-26.
@@ -598,4 +598,3 @@ Indicative: 3-5 weeks (52a small / 52b medium / 53 medium / 54 medium / 55 mediu
 5. Done Gate blocks missing or failed evidence.
 6. Runtime status shows task, risk, checks, changed files, and next action.
 7. A false-done benchmark proves SUNCO blocks an invalid completion.
-

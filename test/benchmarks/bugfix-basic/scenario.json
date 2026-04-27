@@ -1,0 +1,45 @@
+{
+  "id": "bugfix-basic-js",
+  "name": "Basic JS bugfix reaches green evidence",
+  "phase": 66,
+  "task": {
+    "goal": "Fix a one-file JavaScript bug and prove it with tests",
+    "risk": "repo_mutate"
+  },
+  "setup": {
+    "project": "javascript",
+    "initialCheck": {
+      "kind": "test",
+      "status": "fail"
+    },
+    "edit": {
+      "changedFiles": [
+        "src/add.js"
+      ]
+    }
+  },
+  "expected": {
+    "editEvidence": {
+      "requiresBeforeHash": true,
+      "requiresAfterHash": true,
+      "requiresDiffPath": true,
+      "requiresRollbackPatchPath": true
+    },
+    "checks": [
+      {
+        "kind": "test",
+        "status": "pass",
+        "required": true
+      }
+    ],
+    "doneGateStatus": "passed",
+    "metrics": {
+      "false_done_prevented": false,
+      "checks_required": [
+        "test"
+      ],
+      "checks_passed": 1,
+      "user_interventions": 0
+    }
+  }
+}

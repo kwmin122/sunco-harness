@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Proof-first Runtime Foundation
-status: phase-59-complete-pending-commit
+status: phase-67-complete-pending-commit
 stopped_at: ""
-last_updated: "2026-04-27T10:01:46.000Z"
+last_updated: "2026-04-27T11:05:00.000Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 10
-  completed_phases: 2
-  total_plans: 1
-  completed_plans: 1
-  percent: 20
+  completed_phases: 10
+  total_plans: 8
+  completed_plans: 8
+  percent: 100
 previous_milestone:
   label: v1.5
   name: SUNCO Workflow Router
@@ -31,20 +31,20 @@ previous_milestone:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 끝났다고 말하기 전에 증거를 요구하는 proof-first runtime
-**Current focus:** v1.6 / M7 Proof-first Runtime Foundation — Phase 59 Core Types + Schemas is implemented and verified. v1.5 Workflow Router is treated as shipped foundation; M7 moves SUNCO from command-heavy skill pack framing toward runtime ownership of task state, evidence, edit records, verification results, and done decisions.
+**Current focus:** v1.6 / M7 Proof-first Runtime Foundation — Phases 58-67 are implemented and verified locally. v1.5 Workflow Router is treated as shipped foundation; M7 moves SUNCO from command-heavy skill pack framing toward runtime ownership of task state, evidence, edit records, verification results, and done decisions.
 
 ## Current Position
 
 Milestone: v1.6 Proof-first Runtime Foundation
-Current phase: Phase 59 Core Types + Schemas complete; next phase is Phase 60 Evidence Store. Phase 59 added canonical runtime records, Zod schemas, runtime errors, and future adapter/code-intel interfaces under `@sunco/core` plus the `@sunco/core/runtime` subpath export.
-Status: `git status` works in this session; `origin/main == HEAD == 8c6d6967e1e76cbf18a2787c963f8ff1cc97d00d`. The working tree contains uncommitted M7 Phase 58 + Phase 59 changes.
+Current phase: Phase 67 v1.6 Release Hardening complete pending commit. Phases 60-66 added the first runtime vertical slice: evidence store, verifier, done gate, hash edit engine, runtime loop, simple UX front door, and benchmark seeds.
+Status: `git status` works in this session; `HEAD == 4e9cdfc75d816cdb5199f2158c12cae2ba2efe0f`. The working tree contains uncommitted M7 Phase 60-67 implementation changes.
 Design source: `docs/architecture/runtime-foundation.md`
 Last activity: 2026-04-27
 
-Progress (v1.6/M7): [##--------] 20% (2/10 phases complete)
-Delivered by commit: —
-Pending committed: Phase 58 architecture contract + Phase 59 core runtime contracts
-Next: Phase 60 Evidence Store after the current working tree is committed/reviewed.
+Progress (v1.6/M7): [##########] 100% (10/10 phases complete)
+Delivered by commit: `4e9cdfc` for Phase 58-59
+Pending committed: Phase 60-67 runtime implementation and hardening
+Next: commit the completed M7 runtime implementation, then decide whether v1.6 release packaging/publish should proceed.
 
 ## v1.4 retrospective
 

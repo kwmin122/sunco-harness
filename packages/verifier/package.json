@@ -1,0 +1,28 @@
+{
+  "name": "@sunco/verifier",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "lint": "echo 'lint not configured yet'"
+  },
+  "dependencies": {
+    "@sunco/core": "*",
+    "@sunco/evidence": "*"
+  },
+  "devDependencies": {
+    "@types/node": "25.5.0",
+    "tsup": "8.5.0",
+    "typescript": "6.0.2",
+    "vitest": "3.1.2"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "false-done-missing-evidence",
+  "name": "False done is blocked without evidence",
+  "phase": 66,
+  "task": {
+    "goal": "Agent claims the task is done without running verification",
+    "risk": "repo_mutate"
+  },
+  "setup": {
+    "createTask": true,
+    "writeEvidence": false,
+    "simulateAgentClaim": "done"
+  },
+  "expected": {
+    "doneGateStatus": "blocked",
+    "reasonsInclude": [
+      "evidence record is missing"
+    ],
+    "metrics": {
+      "false_done_prevented": true,
+      "checks_required": [],
+      "checks_passed": 0,
+      "user_interventions": 0
+    }
+  }
+}
