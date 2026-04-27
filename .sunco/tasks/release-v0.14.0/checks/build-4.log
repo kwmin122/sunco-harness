@@ -1,8 +1,8 @@
 command: npm run build
 status: pass
 exitCode: 0
-startedAt: 2026-04-27T12:51:44.439Z
-completedAt: 2026-04-27T12:51:45.875Z
+startedAt: 2026-04-27T12:55:51.868Z
+completedAt: 2026-04-27T12:55:53.281Z
 
 stdout:
 
@@ -56,23 +56,6 @@ stdout:
 @sunco/core:build: DTS dist/runtime/index.d.ts  1.53 KB
 @sunco/core:build: DTS dist/types-DVARqpEA.d.ts 7.23 KB
 @sunco/core:build: DTS dist/index-0hIsCjTs.d.ts 36.89 KB
-@sunco/evidence:build: cache hit, replaying logs 28cb7116e26102c9
-@sunco/evidence:build: 
-@sunco/evidence:build: > @sunco/evidence@0.0.1 build
-@sunco/evidence:build: > tsup
-@sunco/evidence:build: 
-@sunco/evidence:build: CLI Building entry: src/index.ts
-@sunco/evidence:build: CLI Using tsconfig: tsconfig.json
-@sunco/evidence:build: CLI tsup v8.5.0
-@sunco/evidence:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/evidence/tsup.config.ts
-@sunco/evidence:build: CLI Target: node22
-@sunco/evidence:build: CLI Cleaning output folder
-@sunco/evidence:build: ESM Build start
-@sunco/evidence:build: ESM dist/index.js 5.14 KB
-@sunco/evidence:build: ESM ⚡️ Build success in 7ms
-@sunco/evidence:build: DTS Build start
-@sunco/evidence:build: DTS ⚡️ Build success in 1121ms
-@sunco/evidence:build: DTS dist/index.d.ts 1.60 KB
 @sunco/skills-extension:build: cache hit, replaying logs 25d9c350eb6ed484
 @sunco/skills-extension:build: 
 @sunco/skills-extension:build: > @sunco/skills-extension@0.0.1 build
@@ -90,23 +73,23 @@ stdout:
 @sunco/skills-extension:build: DTS Build start
 @sunco/skills-extension:build: DTS ⚡️ Build success in 513ms
 @sunco/skills-extension:build: DTS dist/index.d.ts 13.00 B
-@sunco/edit-engine:build: cache hit, replaying logs 94c18c81ddb97245
-@sunco/edit-engine:build: 
-@sunco/edit-engine:build: > @sunco/edit-engine@0.0.1 build
-@sunco/edit-engine:build: > tsup
-@sunco/edit-engine:build: 
-@sunco/edit-engine:build: CLI Building entry: src/index.ts
-@sunco/edit-engine:build: CLI Using tsconfig: tsconfig.json
-@sunco/edit-engine:build: CLI tsup v8.5.0
-@sunco/edit-engine:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/edit-engine/tsup.config.ts
-@sunco/edit-engine:build: CLI Target: node22
-@sunco/edit-engine:build: CLI Cleaning output folder
-@sunco/edit-engine:build: ESM Build start
-@sunco/edit-engine:build: ESM dist/index.js 7.36 KB
-@sunco/edit-engine:build: ESM ⚡️ Build success in 6ms
-@sunco/edit-engine:build: DTS Build start
-@sunco/edit-engine:build: DTS ⚡️ Build success in 497ms
-@sunco/edit-engine:build: DTS dist/index.d.ts 1.16 KB
+@sunco/evidence:build: cache hit, replaying logs 28cb7116e26102c9
+@sunco/evidence:build: 
+@sunco/evidence:build: > @sunco/evidence@0.0.1 build
+@sunco/evidence:build: > tsup
+@sunco/evidence:build: 
+@sunco/evidence:build: CLI Building entry: src/index.ts
+@sunco/evidence:build: CLI Using tsconfig: tsconfig.json
+@sunco/evidence:build: CLI tsup v8.5.0
+@sunco/evidence:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/evidence/tsup.config.ts
+@sunco/evidence:build: CLI Target: node22
+@sunco/evidence:build: CLI Cleaning output folder
+@sunco/evidence:build: ESM Build start
+@sunco/evidence:build: ESM dist/index.js 5.14 KB
+@sunco/evidence:build: ESM ⚡️ Build success in 7ms
+@sunco/evidence:build: DTS Build start
+@sunco/evidence:build: DTS ⚡️ Build success in 1121ms
+@sunco/evidence:build: DTS dist/index.d.ts 1.60 KB
 @sunco/verifier:build: cache hit, replaying logs 87cb05c510ae2b51
 @sunco/verifier:build: 
 @sunco/verifier:build: > @sunco/verifier@0.0.1 build
@@ -124,23 +107,23 @@ stdout:
 @sunco/verifier:build: DTS Build start
 @sunco/verifier:build: DTS ⚡️ Build success in 464ms
 @sunco/verifier:build: DTS dist/index.d.ts 1.13 KB
-@sunco/runtime:build: cache hit, replaying logs 005090ce7d8146a2
-@sunco/runtime:build: 
-@sunco/runtime:build: > @sunco/runtime@0.0.1 build
-@sunco/runtime:build: > tsup
-@sunco/runtime:build: 
-@sunco/runtime:build: CLI Building entry: src/index.ts
-@sunco/runtime:build: CLI Using tsconfig: tsconfig.json
-@sunco/runtime:build: CLI tsup v8.5.0
-@sunco/runtime:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/runtime/tsup.config.ts
-@sunco/runtime:build: CLI Target: node22
-@sunco/runtime:build: CLI Cleaning output folder
-@sunco/runtime:build: ESM Build start
-@sunco/runtime:build: ESM dist/index.js 9.12 KB
-@sunco/runtime:build: ESM ⚡️ Build success in 14ms
-@sunco/runtime:build: DTS Build start
-@sunco/runtime:build: DTS ⚡️ Build success in 1001ms
-@sunco/runtime:build: DTS dist/index.d.ts 1.61 KB
+@sunco/edit-engine:build: cache hit, replaying logs 94c18c81ddb97245
+@sunco/edit-engine:build: 
+@sunco/edit-engine:build: > @sunco/edit-engine@0.0.1 build
+@sunco/edit-engine:build: > tsup
+@sunco/edit-engine:build: 
+@sunco/edit-engine:build: CLI Building entry: src/index.ts
+@sunco/edit-engine:build: CLI Using tsconfig: tsconfig.json
+@sunco/edit-engine:build: CLI tsup v8.5.0
+@sunco/edit-engine:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/edit-engine/tsup.config.ts
+@sunco/edit-engine:build: CLI Target: node22
+@sunco/edit-engine:build: CLI Cleaning output folder
+@sunco/edit-engine:build: ESM Build start
+@sunco/edit-engine:build: ESM dist/index.js 7.36 KB
+@sunco/edit-engine:build: ESM ⚡️ Build success in 6ms
+@sunco/edit-engine:build: DTS Build start
+@sunco/edit-engine:build: DTS ⚡️ Build success in 497ms
+@sunco/edit-engine:build: DTS dist/index.d.ts 1.16 KB
 @sunco/skills-harness:build: cache hit, replaying logs 95dbac7996ce0a46
 @sunco/skills-harness:build: 
 @sunco/skills-harness:build: > @sunco/skills-harness@0.0.1 build
@@ -177,6 +160,23 @@ stdout:
 @sunco/skills-harness:build: DTS dist/health.skill.d.ts 599.00 B
 @sunco/skills-harness:build: DTS dist/init.skill.d.ts   614.00 B
 @sunco/skills-harness:build: DTS dist/lint.skill.d.ts   912.00 B
+@sunco/runtime:build: cache hit, replaying logs 005090ce7d8146a2
+@sunco/runtime:build: 
+@sunco/runtime:build: > @sunco/runtime@0.0.1 build
+@sunco/runtime:build: > tsup
+@sunco/runtime:build: 
+@sunco/runtime:build: CLI Building entry: src/index.ts
+@sunco/runtime:build: CLI Using tsconfig: tsconfig.json
+@sunco/runtime:build: CLI tsup v8.5.0
+@sunco/runtime:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/runtime/tsup.config.ts
+@sunco/runtime:build: CLI Target: node22
+@sunco/runtime:build: CLI Cleaning output folder
+@sunco/runtime:build: ESM Build start
+@sunco/runtime:build: ESM dist/index.js 9.12 KB
+@sunco/runtime:build: ESM ⚡️ Build success in 14ms
+@sunco/runtime:build: DTS Build start
+@sunco/runtime:build: DTS ⚡️ Build success in 1001ms
+@sunco/runtime:build: DTS dist/index.d.ts 1.61 KB
 @sunco/skills-workflow:build: cache hit, replaying logs c966f00a4a3f4757
 @sunco/skills-workflow:build: 
 @sunco/skills-workflow:build: > @sunco/skills-workflow@0.0.1 build
@@ -408,7 +408,7 @@ popcoru:build: ESM ⚡️ Build success in 198ms
 
  Tasks:    9 successful, 9 total
 Cached:    9 cached, 9 total
-  Time:    52ms >>> FULL TURBO
+  Time:    54ms >>> FULL TURBO
 
 
 

@@ -1,8 +1,8 @@
 command: npm run test
 status: pass
 exitCode: 0
-startedAt: 2026-04-27T12:51:42.308Z
-completedAt: 2026-04-27T12:51:43.472Z
+startedAt: 2026-04-27T12:55:49.589Z
+completedAt: 2026-04-27T12:55:50.775Z
 
 stdout:
 
@@ -73,6 +73,23 @@ stdout:
 @sunco/skills-extension:build: DTS Build start
 @sunco/skills-extension:build: DTS ⚡️ Build success in 513ms
 @sunco/skills-extension:build: DTS dist/index.d.ts 13.00 B
+@sunco/evidence:build: cache hit, replaying logs 28cb7116e26102c9
+@sunco/evidence:build: 
+@sunco/evidence:build: > @sunco/evidence@0.0.1 build
+@sunco/evidence:build: > tsup
+@sunco/evidence:build: 
+@sunco/evidence:build: CLI Building entry: src/index.ts
+@sunco/evidence:build: CLI Using tsconfig: tsconfig.json
+@sunco/evidence:build: CLI tsup v8.5.0
+@sunco/evidence:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/evidence/tsup.config.ts
+@sunco/evidence:build: CLI Target: node22
+@sunco/evidence:build: CLI Cleaning output folder
+@sunco/evidence:build: ESM Build start
+@sunco/evidence:build: ESM dist/index.js 5.14 KB
+@sunco/evidence:build: ESM ⚡️ Build success in 7ms
+@sunco/evidence:build: DTS Build start
+@sunco/evidence:build: DTS ⚡️ Build success in 1121ms
+@sunco/evidence:build: DTS dist/index.d.ts 1.60 KB
 @sunco/core:test: cache hit, replaying logs 5d86dc25fcaa843f
 @sunco/core:test: 
 @sunco/core:test: > @sunco/core@0.0.1 test
@@ -135,7 +152,6 @@ stdout:
 @sunco/core:test:    Duration  1.66s (transform 1.07s, setup 0ms, collect 3.38s, tests 1.08s, environment 3ms, prepare 2.28s)
 @sunco/core:test: 
 @sunco/skills-extension:test: cache hit, replaying logs 43fe56747dd2badc
-@sunco/evidence:build: cache hit, replaying logs 28cb7116e26102c9
 @sunco/skills-extension:test: 
 @sunco/skills-extension:test: > @sunco/skills-extension@0.0.1 test
 @sunco/skills-extension:test: > npm run typecheck
@@ -144,22 +160,21 @@ stdout:
 @sunco/skills-extension:test: > @sunco/skills-extension@0.0.1 typecheck
 @sunco/skills-extension:test: > tsc --noEmit -p tsconfig.json
 @sunco/skills-extension:test: 
-@sunco/evidence:build: 
-@sunco/evidence:build: > @sunco/evidence@0.0.1 build
-@sunco/evidence:build: > tsup
-@sunco/evidence:build: 
-@sunco/evidence:build: CLI Building entry: src/index.ts
-@sunco/evidence:build: CLI Using tsconfig: tsconfig.json
-@sunco/evidence:build: CLI tsup v8.5.0
-@sunco/evidence:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/evidence/tsup.config.ts
-@sunco/evidence:build: CLI Target: node22
-@sunco/evidence:build: CLI Cleaning output folder
-@sunco/evidence:build: ESM Build start
-@sunco/evidence:build: ESM dist/index.js 5.14 KB
-@sunco/evidence:build: ESM ⚡️ Build success in 7ms
-@sunco/evidence:build: DTS Build start
-@sunco/evidence:build: DTS ⚡️ Build success in 1121ms
-@sunco/evidence:build: DTS dist/index.d.ts 1.60 KB
+@sunco/evidence:test: cache hit, replaying logs bfa382a9516be11c
+@sunco/evidence:test: 
+@sunco/evidence:test: > @sunco/evidence@0.0.1 test
+@sunco/evidence:test: > vitest run
+@sunco/evidence:test: 
+@sunco/evidence:test: 
+@sunco/evidence:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/evidence
+@sunco/evidence:test: 
+@sunco/evidence:test:  ✓ src/__tests__/evidence-store.test.ts (3 tests) 34ms
+@sunco/evidence:test: 
+@sunco/evidence:test:  Test Files  1 passed (1)
+@sunco/evidence:test:       Tests  3 passed (3)
+@sunco/evidence:test:    Start at  21:50:56
+@sunco/evidence:test:    Duration  365ms (transform 35ms, setup 0ms, collect 54ms, tests 34ms, environment 0ms, prepare 63ms)
+@sunco/evidence:test: 
 @sunco/verifier:build: cache hit, replaying logs 87cb05c510ae2b51
 @sunco/verifier:build: 
 @sunco/verifier:build: > @sunco/verifier@0.0.1 build
@@ -194,36 +209,6 @@ stdout:
 @sunco/edit-engine:build: DTS Build start
 @sunco/edit-engine:build: DTS ⚡️ Build success in 497ms
 @sunco/edit-engine:build: DTS dist/index.d.ts 1.16 KB
-@sunco/evidence:test: cache hit, replaying logs bfa382a9516be11c
-@sunco/evidence:test: 
-@sunco/evidence:test: > @sunco/evidence@0.0.1 test
-@sunco/evidence:test: > vitest run
-@sunco/evidence:test: 
-@sunco/evidence:test: 
-@sunco/evidence:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/evidence
-@sunco/evidence:test: 
-@sunco/evidence:test:  ✓ src/__tests__/evidence-store.test.ts (3 tests) 34ms
-@sunco/evidence:test: 
-@sunco/evidence:test:  Test Files  1 passed (1)
-@sunco/evidence:test:       Tests  3 passed (3)
-@sunco/evidence:test:    Start at  21:50:56
-@sunco/evidence:test:    Duration  365ms (transform 35ms, setup 0ms, collect 54ms, tests 34ms, environment 0ms, prepare 63ms)
-@sunco/evidence:test: 
-@sunco/verifier:test: cache hit, replaying logs ee73e4bfdf83abb7
-@sunco/verifier:test: 
-@sunco/verifier:test: > @sunco/verifier@0.0.1 test
-@sunco/verifier:test: > vitest run
-@sunco/verifier:test: 
-@sunco/verifier:test: 
-@sunco/verifier:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/verifier
-@sunco/verifier:test: 
-@sunco/verifier:test:  ✓ src/__tests__/verifier.test.ts (3 tests) 312ms
-@sunco/verifier:test: 
-@sunco/verifier:test:  Test Files  1 passed (1)
-@sunco/verifier:test:       Tests  3 passed (3)
-@sunco/verifier:test:    Start at  21:50:57
-@sunco/verifier:test:    Duration  1.05s (transform 66ms, setup 0ms, collect 93ms, tests 312ms, environment 0ms, prepare 125ms)
-@sunco/verifier:test: 
 @sunco/skills-harness:build: cache hit, replaying logs 95dbac7996ce0a46
 @sunco/skills-harness:build: 
 @sunco/skills-harness:build: > @sunco/skills-harness@0.0.1 build
@@ -260,7 +245,39 @@ stdout:
 @sunco/skills-harness:build: DTS dist/health.skill.d.ts 599.00 B
 @sunco/skills-harness:build: DTS dist/init.skill.d.ts   614.00 B
 @sunco/skills-harness:build: DTS dist/lint.skill.d.ts   912.00 B
+@sunco/verifier:test: cache hit, replaying logs ee73e4bfdf83abb7
+@sunco/verifier:test: 
+@sunco/verifier:test: > @sunco/verifier@0.0.1 test
+@sunco/verifier:test: > vitest run
+@sunco/verifier:test: 
+@sunco/verifier:test: 
+@sunco/verifier:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/verifier
+@sunco/verifier:test: 
+@sunco/verifier:test:  ✓ src/__tests__/verifier.test.ts (3 tests) 312ms
+@sunco/verifier:test: 
+@sunco/verifier:test:  Test Files  1 passed (1)
+@sunco/verifier:test:       Tests  3 passed (3)
+@sunco/verifier:test:    Start at  21:50:57
+@sunco/verifier:test:    Duration  1.05s (transform 66ms, setup 0ms, collect 93ms, tests 312ms, environment 0ms, prepare 125ms)
+@sunco/verifier:test: 
+@sunco/edit-engine:test: cache hit, replaying logs 95a08341a6110ca4
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test: > @sunco/edit-engine@0.0.1 test
+@sunco/edit-engine:test: > vitest run
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/edit-engine
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test:  ✓ src/__tests__/edit-engine.test.ts (5 tests) 1150ms
+@sunco/edit-engine:test:    ✓ Hash Edit Engine > creates diff and rollback patch records in task evidence  352ms
+@sunco/edit-engine:test:    ✓ Hash Edit Engine > records non-empty diff and rollback evidence for untracked added files  349ms
+@sunco/edit-engine:test: 
 @sunco/runtime:build: cache hit, replaying logs 005090ce7d8146a2
+@sunco/edit-engine:test:  Test Files  1 passed (1)
+@sunco/edit-engine:test:       Tests  5 passed (5)
+@sunco/edit-engine:test:    Start at  21:50:57
+@sunco/edit-engine:test:    Duration  1.88s (transform 50ms, setup 0ms, collect 80ms, tests 1.15s, environment 0ms, prepare 95ms)
+@sunco/edit-engine:test: 
 @sunco/runtime:build: 
 @sunco/runtime:build: > @sunco/runtime@0.0.1 build
 @sunco/runtime:build: > tsup
@@ -277,23 +294,6 @@ stdout:
 @sunco/runtime:build: DTS Build start
 @sunco/runtime:build: DTS ⚡️ Build success in 1001ms
 @sunco/runtime:build: DTS dist/index.d.ts 1.61 KB
-@sunco/edit-engine:test: cache hit, replaying logs 95a08341a6110ca4
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test: > @sunco/edit-engine@0.0.1 test
-@sunco/edit-engine:test: > vitest run
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/edit-engine
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test:  ✓ src/__tests__/edit-engine.test.ts (5 tests) 1150ms
-@sunco/edit-engine:test:    ✓ Hash Edit Engine > creates diff and rollback patch records in task evidence  352ms
-@sunco/edit-engine:test:    ✓ Hash Edit Engine > records non-empty diff and rollback evidence for untracked added files  349ms
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test:  Test Files  1 passed (1)
-@sunco/edit-engine:test:       Tests  5 passed (5)
-@sunco/edit-engine:test:    Start at  21:50:57
-@sunco/edit-engine:test:    Duration  1.88s (transform 50ms, setup 0ms, collect 80ms, tests 1.15s, environment 0ms, prepare 95ms)
-@sunco/edit-engine:test: 
 @sunco/skills-harness:test: cache hit, replaying logs e0712f45de5da09d
 @sunco/skills-harness:test: 
 @sunco/skills-harness:test: > @sunco/skills-harness@0.0.1 test
@@ -1725,7 +1725,7 @@ popcoru:test:
 
  Tasks:    18 successful, 18 total
 Cached:    18 cached, 18 total
-  Time:    71ms >>> FULL TURBO
+  Time:    72ms >>> FULL TURBO
 
 
 
