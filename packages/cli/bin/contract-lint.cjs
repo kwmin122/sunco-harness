@@ -100,9 +100,26 @@ for (const hook of expectedHooks) {
 
 // 5. Required package files
 console.log('');
-const requiredFiles = ['bin/install.cjs', 'bin/sunco-tools.cjs', 'bin/smoke-test.cjs'];
+const requiredFiles = [
+  'bin/install.cjs',
+  'bin/sunco-tools.cjs',
+  'bin/sunco-runtime.cjs',
+  'bin/smoke-test.cjs',
+  'bin/release-artifact-smoke.cjs',
+];
 for (const f of requiredFiles) {
   check(`Package file: ${f}`, fs.existsSync(path.join(pkgRoot, f)));
+}
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.join(pkgRoot, 'package.json'), 'utf8'));
+  check('package.json exposes sunco-runtime bin',
+    pkg.bin && pkg.bin['sunco-runtime'] === './bin/sunco-runtime.cjs');
+  const tsup = fs.readFileSync(path.join(pkgRoot, 'tsup.config.ts'), 'utf8');
+  check('tsup builds runtime-cli entrypoint', tsup.includes('src/runtime-cli.ts'));
+  check('tsup bundles runtime workspace packages',
+    tsup.includes('@sunco/runtime') && tsup.includes('@sunco/evidence') && tsup.includes('@sunco/verifier'));
+} catch (err) {
+  check('runtime packaging contract checks', false, err.message);
 }
 
 // 6. Gate commands

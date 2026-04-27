@@ -381,6 +381,35 @@ M7 excluded surfaces: TUI, Studio/web UI, full LSP, multi-agent runtime, marketp
 
 ---
 
+## M8 Requirements — Productization Gate
+
+Source: M7 verification review and Phase 68 productization context. M8 closes the gap between source-tree runtime correctness and installed-product runtime correctness.
+
+### Productization Core (M8)
+
+- **IF-34**: Runtime Front Door Productization — `sunco-runtime` must be exposed as an npm bin and installed into each runtime home as an executable front door. Installed runtime directories must not require unpublished workspace packages. Covered by Phase 68.
+
+- **IF-35**: Release Artifact Gate — validate `npm pack -> clean npm prefix install -> temp HOME runtime install -> installed sunco-runtime do/status/verify/ship` across Claude, Codex, Cursor, and Antigravity. Covered by Phase 68 and Phase 69.
+
+- **IF-36**: Version/Release Truth — package version, README, STATE, release docs, changelog, git tag, npm publish, registry verification, and canary language must describe the same artifact state. Covered by Phase 70.
+
+- **IF-37**: Install Matrix — release verification must cover supported Node versions, operating systems, package-manager paths, and clean HOME installs. Covered by Phase 71.
+
+- **IF-38**: Dogfood Release Evidence — SUNCO's own release must be represented as `.sunco/tasks/<release-id>/` evidence before publish. Covered by Phase 72.
+
+**Coverage by phase (M8)**:
+| Phase | Reqs | IDs |
+|-------|------|-----|
+| 68 Runtime Front Door Productization | 2 | IF-34, IF-35 |
+| 69 Release Artifact Gate CI | 1 | IF-35 |
+| 70 Version/Release Truth | 1 | IF-36 |
+| 71 Install Matrix | 1 | IF-37 |
+| 72 Dogfood Release Evidence | 1 | IF-38 |
+
+M8 excluded surfaces: approval UX, true stale-edit preflight authority, loop guardrails, evidence durability hash-chain, benchmark runner, and full ship/release semantics. Those move to M9-M12.
+
+---
+
 ## v2 Requirements
 
 ### Extension Skills

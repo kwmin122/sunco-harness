@@ -18,7 +18,8 @@
   ],
   "bin": {
     "popcoru": "./bin/install.cjs",
-    "sunco": "./bin/install.cjs"
+    "sunco": "./bin/install.cjs",
+    "sunco-runtime": "./bin/sunco-runtime.cjs"
   },
   "keywords": [
     "ai",
@@ -49,7 +50,9 @@
     "test": "node bin/smoke-test.cjs --runtime claude",
     "test:codex": "node bin/smoke-test.cjs --runtime codex",
     "test:all": "node bin/smoke-test.cjs --runtime claude && node bin/smoke-test.cjs --runtime codex",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "node bin/contract-lint.cjs",
+    "test:artifact": "node bin/release-artifact-smoke.cjs",
     "prepack": "npm run build && npm run lint"
   },
   "dependencies": {
@@ -58,8 +61,13 @@
   },
   "devDependencies": {
     "@sunco/core": "*",
+    "@sunco/edit-engine": "*",
+    "@sunco/evidence": "*",
+    "@sunco/runtime": "*",
     "@sunco/skills-harness": "*",
     "@sunco/skills-workflow": "*",
+    "@sunco/verifier": "*",
+    "@types/node": "25.5.0",
     "tsup": "8.5.0",
     "typescript": "6.0.2"
   }

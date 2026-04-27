@@ -571,6 +571,17 @@ function install(targetDir, runtimeDir) {
   if (fs.existsSync(srcTools)) {
     ensureDir(destEngine);
     copyFileWithReplacement(srcTools, path.join(destEngine, 'sunco-tools.cjs'), runtimeDir);
+    fs.chmodSync(path.join(destEngine, 'sunco-tools.cjs'), 0o755);
+  }
+
+  // M8 P0: Copy productized runtime front door into every installed runtime.
+  // The wrapper loads runtime-cli.js from destEngine, so installed products do
+  // not need unpublished @sunco/* packages in node_modules.
+  const srcRuntimeCli = path.join(srcBin, 'sunco-runtime.cjs');
+  if (fs.existsSync(srcRuntimeCli)) {
+    ensureDir(destEngine);
+    copyFileWithReplacement(srcRuntimeCli, path.join(destEngine, 'sunco-runtime.cjs'), runtimeDir);
+    fs.chmodSync(path.join(destEngine, 'sunco-runtime.cjs'), 0o755);
   }
 
   // Copy runtime-registry.cjs (sunco-tools.cjs requires it via ./runtime-registry.cjs)

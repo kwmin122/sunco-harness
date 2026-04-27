@@ -26,7 +26,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { execSync } = require('child_process');
+const { execFileSync, execSync } = require('child_process');
 
 const GREEN = '\x1b[32m';
 const RED = '\x1b[31m';
@@ -70,6 +70,77 @@ function warn(name, detail) {
   warnings++;
 }
 
+function runNode(scriptPath, args, opts = {}) {
+  return execFileSync(process.execPath, [scriptPath, ...args], {
+    encoding: 'utf8',
+    timeout: 30000,
+    ...opts,
+  });
+}
+
+function runInstalledRuntimeWorkflow(runtimeCliPath) {
+  const repoDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sunco-installed-runtime-'));
+  const env = {
+    ...process.env,
+    GIT_AUTHOR_NAME: 'SUNCO Smoke',
+    GIT_AUTHOR_EMAIL: 'sunco-smoke@example.com',
+    GIT_COMMITTER_NAME: 'SUNCO Smoke',
+    GIT_COMMITTER_EMAIL: 'sunco-smoke@example.com',
+  };
+
+  execFileSync('git', ['init', '-q'], { cwd: repoDir, env });
+  fs.writeFileSync(
+    path.join(repoDir, 'package.json'),
+    JSON.stringify({
+      name: 'sunco-installed-runtime-smoke',
+      private: true,
+      scripts: {
+        test: 'node -e "process.exit(0)"',
+      },
+    }, null, 2) + '\n',
+    'utf8',
+  );
+  fs.writeFileSync(path.join(repoDir, 'src.txt'), 'before\n', 'utf8');
+  execFileSync('git', ['add', 'package.json', 'src.txt'], { cwd: repoDir, env });
+  execFileSync('git', ['commit', '-q', '-m', 'seed'], { cwd: repoDir, env });
+  fs.writeFileSync(path.join(repoDir, 'src.txt'), 'after\n', 'utf8');
+
+  const doResult = JSON.parse(runNode(runtimeCliPath, [
+    'do',
+    'installed',
+    'runtime',
+    'smoke',
+    '--task',
+    'installed-runtime-smoke',
+    '--json',
+  ], { cwd: repoDir, env }));
+
+  const statusResult = JSON.parse(runNode(runtimeCliPath, [
+    'status',
+    'installed-runtime-smoke',
+    '--json',
+  ], { cwd: repoDir, env }));
+
+  const verifyResult = JSON.parse(runNode(runtimeCliPath, [
+    'verify',
+    'installed-runtime-smoke',
+    '--json',
+  ], { cwd: repoDir, env }));
+
+  const shipResult = JSON.parse(runNode(runtimeCliPath, [
+    'ship',
+    'installed-runtime-smoke',
+    '--json',
+  ], { cwd: repoDir, env }));
+
+  return {
+    doResult,
+    statusResult,
+    verifyResult,
+    shipResult,
+  };
+}
+
 console.log(`\n${BOLD}SUNCO Smoke Test${RESET} — runtime: ${runtime} (${DIM}${targetDir}${RESET})\n`);
 
 // 1. Install tree completeness
@@ -77,6 +148,7 @@ console.log(`${BOLD}1. Install Tree${RESET}`);
 check('sunco/ directory exists', fs.existsSync(suncoDir));
 check('bin/cli.js exists', fs.existsSync(path.join(binDir, 'cli.js')));
 check('bin/sunco-tools.cjs exists', fs.existsSync(path.join(binDir, 'sunco-tools.cjs')));
+check('bin/sunco-runtime.cjs exists', fs.existsSync(path.join(binDir, 'sunco-runtime.cjs')));
 check('bin/package.json exists', fs.existsSync(path.join(binDir, 'package.json')));
 check('VERSION file exists', fs.existsSync(path.join(suncoDir, 'VERSION')));
 
@@ -132,6 +204,42 @@ if (fs.existsSync(cliJsPath)) {
   }
 } else {
   check('cli.js exists', false, 'missing');
+}
+
+// 3c. sunco-runtime installed-product execution
+console.log(`\n${BOLD}3c. sunco-runtime Execution${RESET}`);
+const runtimeCliPath = path.join(binDir, 'sunco-runtime.cjs');
+if (fs.existsSync(runtimeCliPath)) {
+  try {
+    const helpOutput = runNode(runtimeCliPath, ['--help'], {
+      env: { ...process.env, NODE_NO_WARNINGS: '1' },
+    });
+    check('sunco-runtime --help runs from installed runtime', helpOutput.includes('SUNCO Runtime'));
+  } catch (err) {
+    check('sunco-runtime --help runs from installed runtime', false, err.message);
+  }
+
+  try {
+    const result = runInstalledRuntimeWorkflow(runtimeCliPath);
+    check('sunco-runtime do marks changed-file task done',
+      result.doResult.success === true
+      && result.doResult.task?.status === 'done'
+      && Array.isArray(result.doResult.changedFiles)
+      && result.doResult.changedFiles.includes('src.txt'));
+    check('sunco-runtime status reads installed task evidence',
+      result.statusResult.success === true
+      && result.statusResult.status?.task?.id === 'installed-runtime-smoke');
+    check('sunco-runtime verify replays checks through Done Gate',
+      result.verifyResult.success === true
+      && result.verifyResult.gate?.status === 'passed');
+    check('sunco-runtime ship marks installed task shipped',
+      result.shipResult.success === true
+      && result.shipResult.task?.status === 'shipped');
+  } catch (err) {
+    check('sunco-runtime installed do/status/verify/ship workflow', false, err.message);
+  }
+} else {
+  check('sunco-runtime execution', false, 'file missing');
 }
 
 // 4. Hook files

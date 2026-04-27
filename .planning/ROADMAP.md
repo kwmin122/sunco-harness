@@ -598,3 +598,30 @@ Indicative: 3-5 weeks (52a small / 52b medium / 53 medium / 54 medium / 55 mediu
 5. Done Gate blocks missing or failed evidence.
 6. Runtime status shows task, risk, checks, changed files, and next action.
 7. A false-done benchmark proves SUNCO blocks an invalid completion.
+
+---
+
+## M8 Productization Gate (Installed Runtime RC — Phases 68-72)
+
+**Design source**: M7 verification review and `docs/runtime/v1.6-release-hardening.md`. M8 exists because source-tree green is insufficient: the packaged and installed product must prove the same runtime behavior.
+
+**Milestone goal**: `sunco-runtime` works from the actual installed artifact. The gate runs through package, install, temp HOME runtime install, and runtime front-door commands before any published release claim.
+
+### Milestone M8 — Productization
+
+**In progress locally**:
+- **Phase 68**: Runtime front-door productization — npm `sunco-runtime` bin, bundled runtime CLI, installer fan-out to Claude/Codex/Cursor/Antigravity runtime homes, installed smoke coverage. REQ: IF-34, IF-35.
+
+**Pending**:
+- **Phase 69**: Release Artifact Gate CI — promote `npm run test:artifact --workspace popcoru` into the official release gate on clean HOME + clean npm prefix. REQ: IF-35.
+- **Phase 70**: Version/Release Truth — align package semver, README, STATE, release notes, changelog, tag, publish, registry verification, and canary language. REQ: IF-36.
+- **Phase 71**: Install Matrix — validate Node version, OS, package-manager, and clean HOME install variants. REQ: IF-37.
+- **Phase 72**: Dogfood Release Evidence — this repo's own release must pass through `.sunco/tasks/<release-id>/` evidence before publish. REQ: IF-38.
+
+### Success criteria (Done for M8)
+
+1. `npm pack` includes the runtime front door and bundled runtime engine.
+2. A clean npm prefix install exposes the `sunco-runtime` bin.
+3. A temp HOME install copies `sunco-runtime.cjs` into each supported runtime directory.
+4. Installed Claude, Codex, Cursor, and Antigravity runtimes can run `sunco-runtime do/status/verify/ship`.
+5. The release claim distinguishes local RC, published npm version, git tag, registry verification, and canary evidence.

@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/cli.ts'],
+  entry: ['src/cli.ts', 'src/runtime-cli.ts'],
   format: ['esm'],
   target: 'node22',
   platform: 'node',
@@ -26,7 +26,8 @@ const require = __createRequire(import.meta.url);`,
   // Bundled (moved from external): execa, simple-git, chokidar
   // These are pure JS and required for core CLI operations.
   noExternal: [
-    '@sunco/core', '@sunco/skills-harness', '@sunco/skills-workflow',
+    '@sunco/core', '@sunco/edit-engine', '@sunco/evidence', '@sunco/runtime',
+    '@sunco/skills-harness', '@sunco/skills-workflow', '@sunco/verifier',
     // Pure JS deps bundled for self-contained runtime
     // CJS require() calls are shimmed via banner createRequire()
     'execa', 'simple-git', 'chokidar',
