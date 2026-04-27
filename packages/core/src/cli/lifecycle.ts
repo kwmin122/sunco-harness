@@ -92,7 +92,7 @@ export function createNoopRecommender(): RecommenderApi {
  * 1. loadConfig(cwd) -- merged TOML config
  * 2. ensureSunDir(cwd) -- create .sun/ if needed
  * 3. createStateEngine() + initialize -- SQLite + file store
- * 4. scanSkillFiles() -- discover *.skill.ts files
+ * 4. scanSkillFiles() -- discover *.skill.{ts,js,mjs} files
  * 5. resolveActiveSkills() -- apply policy (preset/add/remove)
  * 6. Create SkillRegistry, register active skills
  * 7. createAgentRouter() -- init with available providers
@@ -130,7 +130,7 @@ export function createLifecycle(): Lifecycle {
       }
 
       // Step 4b: Scan for skill files (development mode extensibility)
-      // Convention: packages/skills-*/src/ contains *.skill.ts files
+      // Convention: packages/skills-*/src/ contains *.skill.{ts,js,mjs} files
       const skillBasePaths = [
         join(cwd, 'packages', 'skills-harness', 'src'),
         join(cwd, 'packages', 'skills-workflow', 'src'),

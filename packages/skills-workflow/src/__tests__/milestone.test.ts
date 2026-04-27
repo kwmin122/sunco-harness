@@ -104,6 +104,10 @@ function createMockContext(
       error: vi.fn(),
     },
     run: vi.fn(),
+    registry: {
+      getAll: vi.fn().mockReturnValue([]),
+      getByTier: vi.fn().mockReturnValue([]),
+    },
     cwd: '/test/project',
     args,
     signal: new AbortController().signal,
@@ -297,8 +301,9 @@ describe('milestone skill', () => {
       expect(result.summary).toContain('WARN');
       expect(result.data).toHaveProperty('score', 85);
       expect(result.data).toHaveProperty('verdict', 'WARN');
-      expect(result.data.met).toEqual(['AUTH-01', 'UI-01']);
-      expect(result.data.unmet).toEqual(['AUTH-02']);
+      const data = result.data as { met: string[]; unmet: string[] };
+      expect(data.met).toEqual(['AUTH-01', 'UI-01']);
+      expect(data.unmet).toEqual(['AUTH-02']);
 
       // Verify agent was dispatched
       expect(ctx.agent.run).toHaveBeenCalledTimes(1);

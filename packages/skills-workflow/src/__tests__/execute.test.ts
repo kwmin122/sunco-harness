@@ -72,7 +72,7 @@ vi.mock('../shared/gates.js', () => ({
 }));
 
 import { readFile, readdir } from 'node:fs/promises';
-import { parsePlanMd, groupPlansByWave } from '../shared/plan-parser.js';
+import { parsePlanMd, groupPlansByWave, type ParsedPlan } from '../shared/plan-parser.js';
 import { resolvePhaseDir } from '../shared/phase-reader.js';
 import executeSkill from '../execute.skill.js';
 
@@ -86,7 +86,11 @@ const mockedResolvePhaseDir = vi.mocked(resolvePhaseDir);
 // Fixtures
 // ---------------------------------------------------------------------------
 
-function createParsedPlan(overrides: Record<string, unknown> = {}) {
+function mockReaddirEntries(entries: string[]): Awaited<ReturnType<typeof readdir>> {
+  return entries as unknown as Awaited<ReturnType<typeof readdir>>;
+}
+
+function createParsedPlan(overrides: Record<string, unknown> = {}): ParsedPlan {
   return {
     frontmatter: {
       phase: '06-execution-review',
@@ -97,6 +101,8 @@ function createParsedPlan(overrides: Record<string, unknown> = {}) {
       files_modified: ['src/foo.ts'],
       autonomous: true,
       requirements: ['WF-14'],
+      capabilities: [],
+      isDeliverySlice: false,
       ...(overrides.frontmatter as Record<string, unknown> ?? {}),
     },
     objective: 'Test objective',
@@ -110,6 +116,9 @@ function createParsedPlan(overrides: Record<string, unknown> = {}) {
         done: ['File created'],
       },
     ],
+    deliveryScope: '',
+    verificationIntent: '',
+    technicalDirection: '',
     raw: '---\nphase: 06\n---\n<tasks>...</tasks>',
     ...(overrides.top as Record<string, unknown> ?? {}),
   };
@@ -206,7 +215,7 @@ function setupValidPhase(opts: {
     `06-${String(i + 1).padStart(2, '0')}-PLAN.md`,
   );
   // readdir returns entries including non-PLAN.md files
-  mockedReaddir.mockResolvedValue([...planFiles, '06-CONTEXT.md', '06-RESEARCH.md'] as unknown as ReturnType<typeof readdir>);
+  mockedReaddir.mockResolvedValue(mockReaddirEntries([...planFiles, '06-CONTEXT.md', '06-RESEARCH.md']));
 
   // readFile returns plan content
   mockedReadFile.mockResolvedValue('---\nphase: 06\nplan: 01\n---\n<tasks></tasks>');
@@ -298,7 +307,7 @@ describe('executeSkill', () => {
   it('returns failure when no PLAN.md files found', async () => {
     mockedResolvePhaseDir.mockResolvedValue('/test/project/.planning/phases/06-execution-review');
     // readdir returns no PLAN.md files
-    mockedReaddir.mockResolvedValue(['06-CONTEXT.md', '06-RESEARCH.md'] as unknown as ReturnType<typeof readdir>);
+    mockedReaddir.mockResolvedValue(mockReaddirEntries(['06-CONTEXT.md', '06-RESEARCH.md']));
     const ctx = createMockContext();
 
     const result = await executeSkill.execute(ctx);

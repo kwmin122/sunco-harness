@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest';
 import { SilentUiAdapter } from '../adapters/SilentUiAdapter.js';
 import { InkUiAdapter } from '../adapters/InkUiAdapter.js';
 import { createSkillUi } from '../adapters/index.js';
-import type { Recommendation } from '../../../recommend/types.js';
+import type { Recommendation } from '../../recommend/types.js';
 
 // ---------------------------------------------------------------------------
 // Behavioral Tests via SilentUiAdapter (full pipeline)

@@ -248,11 +248,11 @@ export type SkillDefinitionInput = {
   stage: SkillStage;
   category: SkillCategory;
   routing: SkillRouting;
-  options?: SkillOption[];
+  options?: readonly SkillOption[];
   complexity?: SkillComplexity;
   /** Visibility tier. Defaults to 'workflow' when omitted (D-02). */
   tier?: SkillTier;
   execute: (ctx: SkillContext) => Promise<SkillResult>;
   /** Alias declarations — alternate commands/ids that dispatch to this skill (Phase 32) */
-  aliases?: AliasDefinition[];
+  aliases?: readonly AliasDefinition[];
 };

@@ -41,14 +41,15 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
-    "lint": "echo 'lint not configured yet'"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "npm run typecheck"
   },
   "dependencies": {
     "@sunco/core": "*",
     "chalk": "5.6.2",
     "chokidar": "5.0.0",
     "eslint": "10.1.0",
-    "eslint-plugin-boundaries": "6.0.1",
+    "eslint-plugin-boundaries": "6.0.2",
     "smol-toml": "1.6.1",
     "typescript-eslint": "8.57.2"
   },

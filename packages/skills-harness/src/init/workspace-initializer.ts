@@ -159,6 +159,8 @@ export async function initializeWorkspace(
       configPath: 'config.toml',
       rulesGenerated: 0,
       preset,
+      claudeMdGenerated: false,
+      claudeRulesGenerated: 0,
     };
   }
 

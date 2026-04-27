@@ -91,6 +91,10 @@ Status: Ready to execute
 Last activity: 2026-03-28
 `;
 
+function enoent(): NodeJS.ErrnoException {
+  return Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+}
+
 // ---------------------------------------------------------------------------
 // Mock context factory
 // ---------------------------------------------------------------------------
@@ -170,7 +174,7 @@ describe('statusSkill', () => {
       const p = String(path);
       if (p.includes('ROADMAP.md')) return Promise.resolve(SAMPLE_ROADMAP);
       if (p.includes('STATE.md')) return Promise.resolve(SAMPLE_STATE);
-      return Promise.reject(new Error('File not found'));
+      return Promise.reject(enoent());
     });
 
     const ctx = createMockContext();
@@ -183,7 +187,7 @@ describe('statusSkill', () => {
   });
 
   it('returns failure when .planning/ directory is missing', async () => {
-    mockedReadFile.mockRejectedValue(new Error('ENOENT'));
+    mockedReadFile.mockRejectedValue(enoent());
 
     const ctx = createMockContext();
     const result = await statusSkill.execute(ctx);
@@ -197,7 +201,7 @@ describe('statusSkill', () => {
       const p = String(path);
       if (p.includes('ROADMAP.md')) return Promise.resolve(SAMPLE_ROADMAP);
       if (p.includes('STATE.md')) return Promise.resolve(SAMPLE_STATE);
-      return Promise.reject(new Error('File not found'));
+      return Promise.reject(enoent());
     });
 
     const ctx = createMockContext({ args: { json: true } });
@@ -226,7 +230,7 @@ describe('statusSkill', () => {
       const p = String(path);
       if (p.includes('ROADMAP.md')) return Promise.resolve(SAMPLE_ROADMAP);
       if (p.includes('STATE.md')) return Promise.resolve(SAMPLE_STATE);
-      return Promise.reject(new Error('File not found'));
+      return Promise.reject(enoent());
     });
 
     const ctx = createMockContext({ args: { json: true, snapshot: 'query' } });
@@ -247,9 +251,9 @@ describe('statusSkill', () => {
   it('handles ROADMAP.md missing but STATE.md present', async () => {
     mockedReadFile.mockImplementation((path: unknown) => {
       const p = String(path);
-      if (p.includes('ROADMAP.md')) return Promise.reject(new Error('ENOENT'));
+      if (p.includes('ROADMAP.md')) return Promise.reject(enoent());
       if (p.includes('STATE.md')) return Promise.resolve(SAMPLE_STATE);
-      return Promise.reject(new Error('File not found'));
+      return Promise.reject(enoent());
     });
 
     const ctx = createMockContext();
@@ -264,7 +268,7 @@ describe('statusSkill', () => {
       const p = String(path);
       if (p.includes('ROADMAP.md')) return Promise.resolve(SAMPLE_ROADMAP);
       if (p.includes('STATE.md')) return Promise.resolve(SAMPLE_STATE);
-      return Promise.reject(new Error('File not found'));
+      return Promise.reject(enoent());
     });
 
     const ctx = createMockContext();
@@ -310,7 +314,7 @@ describe('progress alias (Phase 32)', () => {
   it('progress alias produces identical output to status (equivalence)', async () => {
     // Both 'progress' and 'status' dispatch to the same executeStatus() function
     const mockedReadFile = vi.mocked(readFile);
-    mockedReadFile.mockRejectedValue(new Error('ENOENT'));
+    mockedReadFile.mockRejectedValue(enoent());
 
     const ctx1 = createMockContext();
     const ctx2 = createMockContext();

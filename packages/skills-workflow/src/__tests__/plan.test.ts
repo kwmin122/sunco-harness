@@ -281,7 +281,7 @@ describe('planSkill', () => {
 
   // Test 3: missing CONTEXT.md
   it('returns failure when CONTEXT.md is missing', async () => {
-    mockedReaddir.mockResolvedValue(['05-context-planning'] as unknown as ReturnType<typeof readdir>);
+    mockedReaddir.mockResolvedValue(['05-context-planning'] as unknown as Awaited<ReturnType<typeof readdir>>);
     mockedReadFile.mockImplementation(async (filePath) => {
       const p = String(filePath);
       if (p.includes('CONTEXT.md')) throw new Error('ENOENT');

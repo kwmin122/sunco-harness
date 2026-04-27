@@ -40,7 +40,7 @@ function createMockState(store: Record<string, unknown> = {}): StateApi {
       return Object.keys(store).filter((k) => k.startsWith(prefix));
     }),
     has: vi.fn(async (key: string): Promise<boolean> => key in store),
-  };
+  } as unknown as StateApi;
 }
 
 function createMockUi(): SkillUi {

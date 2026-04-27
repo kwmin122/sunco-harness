@@ -79,6 +79,10 @@ function createMockContext(args: Record<string, unknown> = {}): SkillContext {
       error: vi.fn(),
     },
     run: vi.fn(),
+    registry: {
+      getAll: vi.fn().mockReturnValue([]),
+      getByTier: vi.fn().mockReturnValue([]),
+    },
     cwd: '/test/project',
     args,
     signal: new AbortController().signal,

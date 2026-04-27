@@ -11,14 +11,19 @@
  */
 
 import { glob } from 'glob';
+import { pathToFileURL } from 'node:url';
 import type { SkillDefinition } from './types.js';
+
+type DynamicImport = (specifier: string) => Promise<{ default?: unknown } & Record<string, unknown>>;
+
+const nativeImport = new Function('specifier', 'return import(specifier)') as DynamicImport;
 
 // ---------------------------------------------------------------------------
 // Scanner
 // ---------------------------------------------------------------------------
 
 /**
- * Scan base paths for *.skill.ts files and dynamically import them.
+ * Scan base paths for skill files and dynamically import them.
  *
  * @param basePaths - Array of directory paths to scan (e.g., ['packages/skills-harness/src'])
  * @returns Array of validated SkillDefinition objects
@@ -36,7 +41,7 @@ export async function scanSkillFiles(
   for (const basePath of basePaths) {
     let files: string[];
     try {
-      files = await glob('**/*.skill.ts', {
+      files = await glob('**/*.skill.{ts,js,mjs}', {
         cwd: basePath,
         absolute: true,
         nodir: true,
@@ -48,7 +53,7 @@ export async function scanSkillFiles(
 
     for (const file of files) {
       try {
-        const mod = await import(file);
+        const mod = await nativeImport(pathToFileURL(file).href);
         const skill = mod.default ?? mod;
 
         // Validate it looks like a SkillDefinition

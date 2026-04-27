@@ -15,6 +15,7 @@ import {
 import type { ParsedPlan } from '../shared/plan-parser.js';
 
 function makePlan(overrides: Partial<ParsedPlan['frontmatter']> & { files_modified: string[] }): ParsedPlan {
+  const { files_modified, ...frontmatterOverrides } = overrides;
   return {
     frontmatter: {
       phase: '01',
@@ -22,12 +23,12 @@ function makePlan(overrides: Partial<ParsedPlan['frontmatter']> & { files_modifi
       type: 'tdd',
       wave: 1,
       depends_on: [],
-      files_modified: overrides.files_modified,
+      files_modified,
       autonomous: false,
       requirements: [],
       capabilities: [],
       isDeliverySlice: false,
-      ...overrides,
+      ...frontmatterOverrides,
     },
     objective: '',
     context: '',

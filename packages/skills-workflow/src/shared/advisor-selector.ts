@@ -245,7 +245,7 @@ export function shouldShowPicker(config?: Partial<AdvisorConfig> | null): boolea
   if (config.enabled === false) return false;
   if (config.family === 'custom') return false;
   if (config.model && config.model !== 'deterministic') return false;
-  if (config.engine === 'deterministic' && config.family !== 'custom') return true;
+  if (config.engine === 'deterministic') return true;
   return !config.model;
 }
 

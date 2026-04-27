@@ -3,7 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { collectEvidence, runFreshnessGate, FRESHNESS_CHECK_IDS, EvidenceCollectorError } from '../../../../../packages/cli/references/router/src/evidence-collector.mjs';
 
 const REPO = '/fake/repo';
-const makeAdapters = (fs: any) => ({
+
+type Fixture = {
+  git: Record<string, string>;
+  files?: Record<string, string>;
+  stats?: Record<string, { mtimeMs: number; isDirectory: boolean; entries?: string[] }>;
+};
+
+const makeAdapters = (fs: Fixture) => ({
   repoRoot: REPO,
   execGit: (args: string[]) => fs.git[args.join(' ')] || '',
   readFile: (p: string) => (fs.files && fs.files[p] !== undefined) ? fs.files[p] : null,
@@ -11,7 +18,7 @@ const makeAdapters = (fs: any) => ({
   now: () => new Date('2026-04-20T12:00:00.000Z'),
 });
 
-const FRESH_FIXTURE = {
+const FRESH_FIXTURE: Fixture = {
   git: {
     'status --porcelain': '',
     'rev-parse HEAD': 'abc123\n',
@@ -40,8 +47,8 @@ describe('router evidence-collector — IO boundary contract', () => {
     const spy = { readFileCalls: 0, statFileCalls: 0, execGitCalls: 0 };
     const ctx = {
       repoRoot: REPO,
-      readFile: (p: string) => { spy.readFileCalls++; return FRESH_FIXTURE.files[p] ?? null; },
-      statFile: (p: string) => { spy.statFileCalls++; return FRESH_FIXTURE.stats[p] || null; },
+      readFile: (p: string) => { spy.readFileCalls++; return FRESH_FIXTURE.files?.[p] ?? null; },
+      statFile: (p: string) => { spy.statFileCalls++; return FRESH_FIXTURE.stats?.[p] || null; },
       execGit: (args: string[]) => { spy.execGitCalls++; return FRESH_FIXTURE.git[args.join(' ')] || ''; },
       now: () => new Date('2026-04-20T12:00:00.000Z'),
     };

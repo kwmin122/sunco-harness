@@ -141,12 +141,18 @@ function createMockContext(
 // readFile/readdir helpers
 // ---------------------------------------------------------------------------
 
+function mockReaddirImplementation(impl: (dir: unknown) => string[]): void {
+  (mockedReaddir as unknown as {
+    mockImplementation(fn: (dir: unknown) => Promise<string[]>): void;
+  }).mockImplementation(async (dir) => impl(dir));
+}
+
 function setupPhaseDir() {
-  mockedReaddir.mockImplementation(async (dir) => {
+  mockReaddirImplementation((dir) => {
     const dirStr = String(dir);
-    if (dirStr.endsWith('phases')) return ['05-context-planning'] as unknown as Dirent[];
-    if (dirStr.includes('05-context-planning')) return ['05-01-PLAN.md'] as unknown as Dirent[];
-    return [] as unknown as Dirent[];
+    if (dirStr.endsWith('phases')) return ['05-context-planning'];
+    if (dirStr.includes('05-context-planning')) return ['05-01-PLAN.md'];
+    return [];
   });
 }
 
@@ -191,11 +197,11 @@ describe('prepare mode (review)', () => {
 
   it('fails when no PLAN.md files exist', async () => {
     setupPhaseDir();
-    mockedReaddir.mockImplementation(async (dir) => {
+    mockReaddirImplementation((dir) => {
       const dirStr = String(dir);
-      if (dirStr.endsWith('phases')) return ['05-context-planning'] as unknown as Dirent[];
+      if (dirStr.endsWith('phases')) return ['05-context-planning'];
       // Phase dir has no PLAN files
-      return ['05-CONTEXT.md'] as unknown as Dirent[];
+      return ['05-CONTEXT.md'];
     });
     mockedReadFile.mockImplementation(async (path) => {
       const p = String(path);
@@ -228,10 +234,10 @@ describe('prepare mode (review)', () => {
 
 describe('prepare --draft mode', () => {
   it('fails when CONTEXT.md is missing', async () => {
-    mockedReaddir.mockImplementation(async (dir) => {
+    mockReaddirImplementation((dir) => {
       const dirStr = String(dir);
-      if (dirStr.endsWith('phases')) return ['05-context-planning'] as unknown as Dirent[];
-      return [] as unknown as Dirent[];
+      if (dirStr.endsWith('phases')) return ['05-context-planning'];
+      return [];
     });
     mockedReadFile.mockRejectedValue(new Error('ENOENT'));
 
@@ -242,10 +248,10 @@ describe('prepare --draft mode', () => {
   });
 
   it('writes draft prompt on success', async () => {
-    mockedReaddir.mockImplementation(async (dir) => {
+    mockReaddirImplementation((dir) => {
       const dirStr = String(dir);
-      if (dirStr.endsWith('phases')) return ['05-context-planning'] as unknown as Dirent[];
-      return [] as unknown as Dirent[];
+      if (dirStr.endsWith('phases')) return ['05-context-planning'];
+      return [];
     });
     mockedReadFile.mockImplementation(async (path) => {
       const p = String(path);

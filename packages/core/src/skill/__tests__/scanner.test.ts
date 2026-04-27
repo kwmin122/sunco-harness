@@ -1,11 +1,11 @@
 /**
  * @sunco/core - Skill Scanner tests
  *
- * Tests convention-based *.skill.ts file discovery.
+ * Tests convention-based *.skill.{ts,js,mjs} file discovery.
  * Uses temporary directories with fixture skill files.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -37,7 +37,7 @@ describe('scanSkillFiles', () => {
     expect(result).toEqual([]);
   });
 
-  it('discovers *.skill.ts files and imports them', async () => {
+  it('discovers skill files and imports them', async () => {
     // Create a fixture skill file with a valid default export
     const skillContent = `
       export default {
@@ -51,12 +51,32 @@ describe('scanSkillFiles', () => {
         execute: async () => ({ success: true }),
       };
     `;
-    await writeFile(join(tempDir, 'hello.skill.ts'), skillContent);
+    await writeFile(join(tempDir, 'hello.skill.mjs'), skillContent);
 
     const result = await scanSkillFiles([tempDir]);
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('test.hello');
     expect(result[0].command).toBe('hello');
+  });
+
+  it('continues to support TypeScript skill files in dev test runners', async () => {
+    const skillContent = `
+      export default {
+        id: 'test.typescript',
+        command: 'typescript',
+        kind: 'deterministic',
+        stage: 'stable',
+        category: 'test',
+        routing: 'directExec',
+        description: 'TypeScript skill',
+        execute: async () => ({ success: true }),
+      };
+    `;
+    await writeFile(join(tempDir, 'typescript.skill.ts'), skillContent);
+
+    const result = await scanSkillFiles([tempDir]);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('test.typescript');
   });
 
   it('discovers nested skill files', async () => {
@@ -75,7 +95,7 @@ describe('scanSkillFiles', () => {
         execute: async () => ({ success: true }),
       };
     `;
-    await writeFile(join(nestedDir, 'lint.skill.ts'), skillContent);
+    await writeFile(join(nestedDir, 'lint.skill.mjs'), skillContent);
 
     const result = await scanSkillFiles([tempDir]);
     expect(result).toHaveLength(1);
@@ -93,9 +113,12 @@ describe('scanSkillFiles', () => {
   it('skips files without valid skill exports', async () => {
     // File exports a non-skill object
     const badContent = `export default { notASkill: true };`;
-    await writeFile(join(tempDir, 'bad.skill.ts'), badContent);
+    await writeFile(join(tempDir, 'bad.skill.mjs'), badContent);
 
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const result = await scanSkillFiles([tempDir]);
+    warnSpy.mockRestore();
+
     expect(result).toEqual([]);
   });
 
@@ -105,11 +128,11 @@ describe('scanSkillFiles', () => {
 
     try {
       await writeFile(
-        join(dir1, 'a.skill.ts'),
+        join(dir1, 'a.skill.mjs'),
         `export default { id: 'a', command: 'a', kind: 'deterministic', stage: 'stable', category: 'test', routing: 'directExec', description: 'A', execute: async () => ({ success: true }) };`,
       );
       await writeFile(
-        join(dir2, 'b.skill.ts'),
+        join(dir2, 'b.skill.mjs'),
         `export default { id: 'b', command: 'b', kind: 'deterministic', stage: 'stable', category: 'test', routing: 'directExec', description: 'B', execute: async () => ({ success: true }) };`,
       );
 

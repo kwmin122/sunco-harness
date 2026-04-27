@@ -16,7 +16,7 @@ import type { SkillContext, SkillResult } from '@sunco/core';
 
 function makeCtx(
   args: Record<string, unknown>,
-  runImpl?: (id: string, args: unknown) => Promise<SkillResult>,
+  runImpl?: (id: string, args?: Record<string, unknown>) => Promise<SkillResult>,
 ): SkillContext {
   const defaultRun = async (): Promise<SkillResult> => ({ success: true, summary: 'ok' });
   return {
@@ -131,7 +131,7 @@ describe('orchestrateSkill execution', () => {
   });
 
   it('stop-on-fail aborts after the first failed step', async () => {
-    const runMock = vi.fn(async (id: string): Promise<SkillResult> => {
+    const runMock = vi.fn(async (id: string, _args?: Record<string, unknown>): Promise<SkillResult> => {
       if (id === 'workflow.scan') return { success: false, summary: 'scan failed' };
       return { success: true, summary: 'ok' };
     });
@@ -148,7 +148,7 @@ describe('orchestrateSkill execution', () => {
   });
 
   it('without --stop-on-fail, continues through the chain despite failures', async () => {
-    const runMock = vi.fn(async (id: string): Promise<SkillResult> => {
+    const runMock = vi.fn(async (id: string, _args?: Record<string, unknown>): Promise<SkillResult> => {
       if (id === 'workflow.scan') return { success: false, summary: 'scan failed' };
       return { success: true, summary: 'ok' };
     });

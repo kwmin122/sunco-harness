@@ -15,18 +15,19 @@ import type { StateApi, FileStoreApi } from '../../state/types.js';
 import type { RecommenderApi } from '../../recommend/types.js';
 import type { SkillUi } from '../../ui/adapters/SkillUi.js';
 import type { SunConfig } from '../../config/types.js';
+import { SunConfigSchema } from '../../config/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock factories
 // ---------------------------------------------------------------------------
 
 function mockConfig(): SunConfig {
-  return {
+  return SunConfigSchema.parse({
     skills: { preset: 'none', add: [], remove: [] },
     agent: { defaultProvider: 'claude-code-cli', timeout: 120_000, maxRetries: 1 },
     ui: { theme: 'default', silent: false, json: false },
     state: { dbPath: '.sun/state.db' },
-  };
+  });
 }
 
 function mockStateApi(): StateApi {

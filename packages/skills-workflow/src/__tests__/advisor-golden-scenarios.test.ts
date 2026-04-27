@@ -212,12 +212,12 @@ describe('golden scenario 5 — existing-plan (auth edit with spec already appro
 // ---------------------------------------------------------------------------
 
 describe('golden cross-scenario invariants', () => {
-  const cases = [
+  const cases: Array<{ name: string; intent: string; files: readonly string[]; flags?: Record<string, boolean> }> = [
     { name: 'auth', intent: 'fix login bug', files: ['src/auth/session.ts'] },
     { name: 'docs', intent: 'fix typo', files: ['README.md'] },
     { name: 'schema-deploy', intent: 'deploy schema', files: ['prisma/schema.prisma'] },
     { name: 'test-fail', intent: 'debug test', files: [], flags: { testFailures: true } },
-  ] as const;
+  ];
 
   it('every decision has a stable suppressionKey', () => {
     for (const c of cases) {

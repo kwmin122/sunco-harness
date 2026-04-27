@@ -259,6 +259,20 @@ describe('registerSkills', () => {
 // ---------------------------------------------------------------------------
 
 describe('registerSkills alias dispatch (Phase 32)', () => {
+  async function withSuppressedDeprecation<T>(fn: () => Promise<T>): Promise<T> {
+    const previous = process.env.SUNCO_SUPPRESS_DEPRECATION;
+    process.env.SUNCO_SUPPRESS_DEPRECATION = '1';
+    try {
+      return await fn();
+    } finally {
+      if (previous === undefined) {
+        delete process.env.SUNCO_SUPPRESS_DEPRECATION;
+      } else {
+        process.env.SUNCO_SUPPRESS_DEPRECATION = previous;
+      }
+    }
+  }
+
   function makeQuickWithAlias() {
     return defineSkill({
       id: 'workflow.quick',
@@ -299,7 +313,7 @@ describe('registerSkills alias dispatch (Phase 32)', () => {
     program.exitOverride();
     program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
 
-    await program.parseAsync(['node', 'sunco', 'fast']);
+    await withSuppressedDeprecation(() => program.parseAsync(['node', 'sunco', 'fast']));
 
     expect(executeHook).toHaveBeenCalledWith('workflow.quick', expect.any(Object));
   });
@@ -319,7 +333,7 @@ describe('registerSkills alias dispatch (Phase 32)', () => {
     program.exitOverride();
     program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
 
-    await program.parseAsync(['node', 'sunco', 'fast']);
+    await withSuppressedDeprecation(() => program.parseAsync(['node', 'sunco', 'fast']));
 
     expect(capturedArgs).toHaveLength(1);
     expect(capturedArgs[0].speed).toBe('fast');
@@ -340,7 +354,7 @@ describe('registerSkills alias dispatch (Phase 32)', () => {
     program.exitOverride();
     program.configureOutput({ writeOut: () => {}, writeErr: () => {} });
 
-    await program.parseAsync(['node', 'sunco', 'fast', '--speed', 'slow']);
+    await withSuppressedDeprecation(() => program.parseAsync(['node', 'sunco', 'fast', '--speed', 'slow']));
 
     expect(capturedArgs).toHaveLength(1);
     expect(capturedArgs[0].speed).toBe('slow');  // user wins

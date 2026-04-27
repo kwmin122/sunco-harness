@@ -12,8 +12,9 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "echo 'no tests yet'",
-    "lint": "echo 'lint not configured yet'"
+    "test": "npm run typecheck",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "npm run typecheck"
   },
   "dependencies": {
     "@sunco/core": "*"

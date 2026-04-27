@@ -257,10 +257,15 @@ describe('groupPlansByWave', () => {
         files_modified: [],
         autonomous: true,
         requirements: [],
+        capabilities: [],
+        isDeliverySlice: false,
       },
       objective: `Plan ${plan}`,
       context: '',
       tasks: [],
+      deliveryScope: '',
+      verificationIntent: '',
+      technicalDirection: '',
       raw: '',
     };
   }

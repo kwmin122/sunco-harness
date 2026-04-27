@@ -73,21 +73,24 @@ describe('formatDurationMs', () => {
 
 describe('renderDashboardTui', () => {
   let originalIsTTY: boolean | undefined;
-  let stderrSpy: ReturnType<typeof vi.spyOn>;
+  let stderrSpy: {
+    mockRestore(): void;
+    mock: { calls: unknown[][] };
+  };
 
   beforeEach(() => {
     originalIsTTY = process.stdout.isTTY;
-    // @ts-expect-error — override read-only in test
-    process.stdout.isTTY = false;
-    stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    Object.defineProperty(process.stdout, 'isTTY', { configurable: true, value: false });
+    stderrSpy = vi
+      .spyOn(process.stderr as never, 'write' as never)
+      .mockImplementation(() => true) as unknown as typeof stderrSpy;
     // Reset exitCode
     process.exitCode = 0;
   });
 
   afterEach(() => {
     // Restore
-    // @ts-expect-error — restore read-only
-    process.stdout.isTTY = originalIsTTY;
+    Object.defineProperty(process.stdout, 'isTTY', { configurable: true, value: originalIsTTY });
     stderrSpy.mockRestore();
     process.exitCode = 0;
   });

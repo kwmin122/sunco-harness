@@ -10,9 +10,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { SkillContext, SkillResult } from '@sunco/core';
+import type { SkillContext, SkillResult, SkillUi } from '@sunco/core';
 import type { FileStoreApi, StateApi, RecommenderApi } from '@sunco/core';
-import type { SkillUi } from '@sunco/core/ui';
 import type { Handoff } from '../shared/handoff.js';
 
 // ---------------------------------------------------------------------------
@@ -77,6 +76,10 @@ function createMockContext(overrides: Partial<SkillContext> = {}): SkillContext 
       error: vi.fn(),
     },
     run: vi.fn(async () => ({ success: true })),
+    registry: {
+      getAll: vi.fn().mockReturnValue([]),
+      getByTier: vi.fn().mockReturnValue([]),
+    },
     cwd: '/test/project',
     args: {},
     signal: new AbortController().signal,

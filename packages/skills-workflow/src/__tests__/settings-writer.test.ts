@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { SkillContext, SkillResult } from '@sunco/core';
 import type { StateApi, FileStoreApi } from '@sunco/core';
+import { SunConfigSchema } from '@sunco/core';
 
 // ---------------------------------------------------------------------------
 // Mock helpers (shared pattern from todo.test.ts)
@@ -29,7 +30,7 @@ function createMockState(store: Record<string, unknown> = {}): StateApi {
       return Object.keys(store).filter((k) => k.startsWith(prefix));
     }),
     has: vi.fn(async (key: string): Promise<boolean> => key in store),
-  };
+  } as unknown as StateApi;
 }
 
 function createMockFileStore(): FileStoreApi {
@@ -47,13 +48,13 @@ function createMockContext(
   configOverride: Record<string, unknown> = {},
 ): SkillContext {
   return {
-    config: {
+    config: SunConfigSchema.parse({
       skills: { preset: 'none', add: [], remove: [] },
       agent: { defaultProvider: 'claude-code-cli', timeout: 120000, maxRetries: 1 },
       ui: { theme: 'default', silent: false, json: false },
       state: { dbPath: '.sun/state.db' },
       ...configOverride,
-    } as SkillContext['config'],
+    }),
     state: createMockState(),
     fileStore: createMockFileStore(),
     agent: {} as SkillContext['agent'],
@@ -71,6 +72,10 @@ function createMockContext(
       error: vi.fn(),
     },
     run: vi.fn(async () => ({ success: true })),
+    registry: {
+      getAll: vi.fn().mockReturnValue([]),
+      getByTier: vi.fn().mockReturnValue([]),
+    },
     cwd: '/tmp/test-project',
     args,
     signal: new AbortController().signal,

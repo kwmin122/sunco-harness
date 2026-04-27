@@ -51,6 +51,9 @@ function createMockAgentResult(overrides: Partial<AgentResult> = {}): AgentResul
     success: true,
     outputText: 'Mock result',
     providerId: 'test',
+    artifacts: [],
+    warnings: [],
+    usage: { estimated: true, wallTimeMs: 0 },
     ...overrides,
   };
 }

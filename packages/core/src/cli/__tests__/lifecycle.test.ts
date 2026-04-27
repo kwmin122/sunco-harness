@@ -22,6 +22,7 @@ import type { AgentRouterApi } from '../../agent/types.js';
 import type { UiAdapter } from '../../ui/adapters/UiAdapter.js';
 import type { SkillUi } from '../../ui/adapters/SkillUi.js';
 import type { SunConfig } from '../../config/types.js';
+import { SunConfigSchema } from '../../config/types.js';
 
 // ---------------------------------------------------------------------------
 // Noop Recommender
@@ -59,12 +60,12 @@ describe('createLifecycle.createExecuteHook', () => {
   let mockStateEngine: StateEngine;
   let executeHook: SkillExecuteHook;
 
-  const mockConfig = {
+  const mockConfig = SunConfigSchema.parse({
     skills: { preset: 'none', add: [], remove: [] },
     agent: { defaultProvider: 'claude-code-cli', timeout: 120000, maxRetries: 1 },
     ui: { theme: 'default', silent: false, json: false },
     state: { dbPath: '.sun/state.db' },
-  } satisfies SunConfig;
+  }) satisfies SunConfig;
 
   beforeEach(() => {
     mockResult = { success: true, summary: 'test passed' };
@@ -87,6 +88,7 @@ describe('createLifecycle.createExecuteHook', () => {
     mockSkillUi = {
       entry: vi.fn().mockResolvedValue(undefined),
       ask: vi.fn().mockResolvedValue({ selectedId: 'a', selectedLabel: 'A', source: 'default' as const }),
+      askText: vi.fn().mockResolvedValue({ text: 'A', source: 'default' as const }),
       progress: vi.fn().mockReturnValue({ update: vi.fn(), done: vi.fn() }),
       result: vi.fn().mockResolvedValue(undefined),
     };
