@@ -18,6 +18,12 @@ type DynamicImport = (specifier: string) => Promise<{ default?: unknown } & Reco
 
 const nativeImport = new Function('specifier', 'return import(specifier)') as DynamicImport;
 
+const SKILL_FILE_PATTERNS = [
+  '**/*.skill.ts',
+  '**/*.skill.js',
+  '**/*.skill.mjs',
+] as const;
+
 // ---------------------------------------------------------------------------
 // Scanner
 // ---------------------------------------------------------------------------
@@ -41,11 +47,7 @@ export async function scanSkillFiles(
   for (const basePath of basePaths) {
     let files: string[];
     try {
-      files = await glob('**/*.skill.{ts,js,mjs}', {
-        cwd: basePath,
-        absolute: true,
-        nodir: true,
-      });
+      files = await findSkillFiles(basePath);
     } catch {
       // Non-existent path or permission error -- skip silently
       continue;
@@ -78,6 +80,24 @@ export async function scanSkillFiles(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+async function findSkillFiles(basePath: string): Promise<string[]> {
+  const files = new Set<string>();
+
+  for (const pattern of SKILL_FILE_PATTERNS) {
+    const matches = await glob(pattern, {
+      cwd: basePath,
+      absolute: true,
+      nodir: true,
+    });
+
+    for (const file of matches) {
+      files.add(file);
+    }
+  }
+
+  return [...files].sort();
+}
 
 /**
  * Type guard: check if a value has the shape of a SkillDefinition.
