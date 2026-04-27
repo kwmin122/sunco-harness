@@ -1,10 +1,10 @@
 {
   "id": "release-v0.14.0",
-  "goal": "release popcoru 0.14.0 scanner CI hardening",
+  "goal": "fix clean-runner package smoke install preflight",
   "status": "done",
   "risk": "repo_mutate",
-  "createdAt": "2026-04-27T12:44:31.412Z",
-  "updatedAt": "2026-04-27T12:45:49.579Z",
+  "createdAt": "2026-04-27T12:51:26.417Z",
+  "updatedAt": "2026-04-27T12:51:45.879Z",
   "activeEvidenceId": "release-v0.14.0-evidence",
   "evidencePath": ".sunco/tasks/release-v0.14.0/evidence.json",
   "attempt": 0,

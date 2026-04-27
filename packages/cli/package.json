@@ -47,9 +47,9 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "node bin/smoke-test.cjs --runtime claude",
-    "test:codex": "node bin/smoke-test.cjs --runtime codex",
-    "test:all": "node bin/smoke-test.cjs --runtime claude && node bin/smoke-test.cjs --runtime codex",
+    "test": "node bin/source-install-smoke.cjs --runtime claude",
+    "test:codex": "node bin/source-install-smoke.cjs --runtime codex",
+    "test:all": "node bin/source-install-smoke.cjs --runtime claude,codex",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "node bin/contract-lint.cjs",
     "test:artifact": "node bin/release-artifact-smoke.cjs",

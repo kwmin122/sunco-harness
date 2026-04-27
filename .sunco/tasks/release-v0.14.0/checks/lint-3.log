@@ -1,8 +1,8 @@
 command: npm run lint
 status: pass
 exitCode: 0
-startedAt: 2026-04-27T12:45:47.361Z
-completedAt: 2026-04-27T12:45:48.246Z
+startedAt: 2026-04-27T12:51:43.473Z
+completedAt: 2026-04-27T12:51:44.438Z
 
 stdout:
 
@@ -12,6 +12,15 @@ stdout:
 • Packages in scope: @sunco/core, @sunco/edit-engine, @sunco/evidence, @sunco/runtime, @sunco/skills-extension, @sunco/skills-harness, @sunco/skills-workflow, @sunco/verifier, popcoru
 • Running lint in 9 packages
 • Remote caching disabled
+@sunco/skills-extension:lint: cache hit, replaying logs b8ead0b26b94d68f
+@sunco/skills-extension:lint: 
+@sunco/skills-extension:lint: > @sunco/skills-extension@0.0.1 lint
+@sunco/skills-extension:lint: > npm run typecheck
+@sunco/skills-extension:lint: 
+@sunco/skills-extension:lint: 
+@sunco/skills-extension:lint: > @sunco/skills-extension@0.0.1 typecheck
+@sunco/skills-extension:lint: > tsc --noEmit -p tsconfig.json
+@sunco/skills-extension:lint: 
 @sunco/edit-engine:lint: cache hit, replaying logs 1fb3d5824ca90984
 @sunco/edit-engine:lint: 
 @sunco/edit-engine:lint: > @sunco/edit-engine@0.0.1 lint
@@ -39,7 +48,34 @@ stdout:
 @sunco/skills-harness:lint: > @sunco/skills-harness@0.0.1 typecheck
 @sunco/skills-harness:lint: > tsc --noEmit -p tsconfig.json
 @sunco/skills-harness:lint: 
-popcoru:lint: cache hit, replaying logs b92a940e8fc1d8c8
+@sunco/core:lint: cache hit, replaying logs 088b28455e0e5f1a
+@sunco/core:lint: 
+@sunco/core:lint: > @sunco/core@0.0.1 lint
+@sunco/core:lint: > npm run typecheck
+@sunco/core:lint: 
+@sunco/core:lint: 
+@sunco/core:lint: > @sunco/core@0.0.1 typecheck
+@sunco/core:lint: > tsc --noEmit -p tsconfig.json
+@sunco/core:lint: 
+@sunco/runtime:lint: cache hit, replaying logs 236d62f47604c0d2
+@sunco/runtime:lint: 
+@sunco/runtime:lint: > @sunco/runtime@0.0.1 lint
+@sunco/runtime:lint: > npm run typecheck
+@sunco/runtime:lint: 
+@sunco/runtime:lint: 
+@sunco/runtime:lint: > @sunco/runtime@0.0.1 typecheck
+@sunco/runtime:lint: > tsc --noEmit -p tsconfig.json
+@sunco/runtime:lint: 
+@sunco/skills-workflow:lint: cache hit, replaying logs b929349bf981042f
+@sunco/skills-workflow:lint: 
+@sunco/skills-workflow:lint: > @sunco/skills-workflow@0.0.1 lint
+@sunco/skills-workflow:lint: > npm run typecheck
+@sunco/skills-workflow:lint: 
+@sunco/skills-workflow:lint: 
+@sunco/skills-workflow:lint: > @sunco/skills-workflow@0.0.1 typecheck
+@sunco/skills-workflow:lint: > tsc --noEmit -p tsconfig.json
+@sunco/skills-workflow:lint: 
+popcoru:lint: cache hit, replaying logs ce821f027c853a7c
 popcoru:lint: 
 popcoru:lint: > popcoru@0.14.0 lint
 popcoru:lint: > node bin/contract-lint.cjs
@@ -156,42 +192,6 @@ popcoru:lint: ──────────────────────
 popcoru:lint:   [32m94 passed[0m, 0 failed[0m
 popcoru:lint: ──────────────────────────────────────────────────
 popcoru:lint: 
-@sunco/skills-extension:lint: cache hit, replaying logs b8ead0b26b94d68f
-@sunco/skills-extension:lint: 
-@sunco/skills-extension:lint: > @sunco/skills-extension@0.0.1 lint
-@sunco/skills-extension:lint: > npm run typecheck
-@sunco/skills-extension:lint: 
-@sunco/skills-extension:lint: 
-@sunco/skills-extension:lint: > @sunco/skills-extension@0.0.1 typecheck
-@sunco/skills-extension:lint: > tsc --noEmit -p tsconfig.json
-@sunco/skills-extension:lint: 
-@sunco/core:lint: cache hit, replaying logs 088b28455e0e5f1a
-@sunco/core:lint: 
-@sunco/core:lint: > @sunco/core@0.0.1 lint
-@sunco/core:lint: > npm run typecheck
-@sunco/core:lint: 
-@sunco/core:lint: 
-@sunco/core:lint: > @sunco/core@0.0.1 typecheck
-@sunco/core:lint: > tsc --noEmit -p tsconfig.json
-@sunco/core:lint: 
-@sunco/runtime:lint: cache hit, replaying logs 236d62f47604c0d2
-@sunco/runtime:lint: 
-@sunco/runtime:lint: > @sunco/runtime@0.0.1 lint
-@sunco/runtime:lint: > npm run typecheck
-@sunco/runtime:lint: 
-@sunco/runtime:lint: 
-@sunco/runtime:lint: > @sunco/runtime@0.0.1 typecheck
-@sunco/runtime:lint: > tsc --noEmit -p tsconfig.json
-@sunco/runtime:lint: 
-@sunco/skills-workflow:lint: cache hit, replaying logs b929349bf981042f
-@sunco/skills-workflow:lint: 
-@sunco/skills-workflow:lint: > @sunco/skills-workflow@0.0.1 lint
-@sunco/skills-workflow:lint: > npm run typecheck
-@sunco/skills-workflow:lint: 
-@sunco/skills-workflow:lint: 
-@sunco/skills-workflow:lint: > @sunco/skills-workflow@0.0.1 typecheck
-@sunco/skills-workflow:lint: > tsc --noEmit -p tsconfig.json
-@sunco/skills-workflow:lint: 
 @sunco/verifier:lint: cache hit, replaying logs c8b02edbe25a0b22
 @sunco/verifier:lint: 
 @sunco/verifier:lint: > @sunco/verifier@0.0.1 lint
@@ -204,7 +204,7 @@ popcoru:lint:
 
  Tasks:    9 successful, 9 total
 Cached:    9 cached, 9 total
-  Time:    31ms >>> FULL TURBO
+  Time:    32ms >>> FULL TURBO
 
 
 
