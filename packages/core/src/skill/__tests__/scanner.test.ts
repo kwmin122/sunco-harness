@@ -5,21 +5,26 @@
  * Uses temporary directories with fixture skill files.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { scanSkillFiles } from '../scanner.js';
 
 describe('scanSkillFiles', () => {
+  const tempRoot = join(process.cwd(), '.tmp-scanner');
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), 'sun-scanner-'));
+    await mkdir(tempRoot, { recursive: true });
+    tempDir = await mkdtemp(join(tempRoot, 'case-'));
   });
 
   afterEach(async () => {
     await rm(tempDir, { recursive: true, force: true });
+  });
+
+  afterAll(async () => {
+    await rm(tempRoot, { recursive: true, force: true });
   });
 
   it('returns empty array for empty directory', async () => {
@@ -123,8 +128,8 @@ describe('scanSkillFiles', () => {
   });
 
   it('scans multiple base paths', async () => {
-    const dir1 = await mkdtemp(join(tmpdir(), 'sun-scan1-'));
-    const dir2 = await mkdtemp(join(tmpdir(), 'sun-scan2-'));
+    const dir1 = await mkdtemp(join(tempRoot, 'scan1-'));
+    const dir2 = await mkdtemp(join(tempRoot, 'scan2-'));
 
     try {
       await writeFile(

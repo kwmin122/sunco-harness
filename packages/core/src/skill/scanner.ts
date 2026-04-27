@@ -10,18 +10,17 @@
  * Decision: SKL-03 (convention-based discovery)
  */
 
-import { glob } from 'glob';
+import { readdir, realpath } from 'node:fs/promises';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { SkillDefinition } from './types.js';
 
 type DynamicImport = (specifier: string) => Promise<{ default?: unknown } & Record<string, unknown>>;
 
-const nativeImport = new Function('specifier', 'return import(specifier)') as DynamicImport;
-
-const SKILL_FILE_PATTERNS = [
-  '**/*.skill.ts',
-  '**/*.skill.js',
-  '**/*.skill.mjs',
+const SKILL_FILE_SUFFIXES = [
+  '.skill.ts',
+  '.skill.js',
+  '.skill.mjs',
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -55,7 +54,7 @@ export async function scanSkillFiles(
 
     for (const file of files) {
       try {
-        const mod = await nativeImport(pathToFileURL(file).href);
+        const mod = await import(pathToFileURL(await realpath(file)).href) as Awaited<ReturnType<DynamicImport>>;
         const skill = mod.default ?? mod;
 
         // Validate it looks like a SkillDefinition
@@ -82,21 +81,31 @@ export async function scanSkillFiles(
 // ---------------------------------------------------------------------------
 
 async function findSkillFiles(basePath: string): Promise<string[]> {
-  const files = new Set<string>();
+  const files: string[] = [];
+  await collectSkillFiles(basePath, files);
+  return files.sort();
+}
 
-  for (const pattern of SKILL_FILE_PATTERNS) {
-    const matches = await glob(pattern, {
-      cwd: basePath,
-      absolute: true,
-      nodir: true,
-    });
-
-    for (const file of matches) {
-      files.add(file);
-    }
+async function collectSkillFiles(directory: string, files: string[]): Promise<void> {
+  let entries;
+  try {
+    entries = await readdir(directory, { withFileTypes: true });
+  } catch {
+    return;
   }
 
-  return [...files].sort();
+  for (const entry of entries) {
+    const filePath = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      await collectSkillFiles(filePath, files);
+    } else if (entry.isFile() && isSkillFileName(entry.name)) {
+      files.push(filePath);
+    }
+  }
+}
+
+function isSkillFileName(fileName: string): boolean {
+  return SKILL_FILE_SUFFIXES.some((suffix) => fileName.endsWith(suffix));
 }
 
 /**

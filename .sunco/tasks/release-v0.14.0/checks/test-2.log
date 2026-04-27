@@ -1,8 +1,8 @@
 command: npm run test
 status: pass
 exitCode: 0
-startedAt: 2026-04-27T12:37:35.455Z
-completedAt: 2026-04-27T12:37:36.479Z
+startedAt: 2026-04-27T12:45:46.460Z
+completedAt: 2026-04-27T12:45:47.360Z
 
 stdout:
 
@@ -12,7 +12,7 @@ stdout:
 • Packages in scope: @sunco/core, @sunco/edit-engine, @sunco/evidence, @sunco/runtime, @sunco/skills-extension, @sunco/skills-harness, @sunco/skills-workflow, @sunco/verifier, popcoru
 • Running test in 9 packages
 • Remote caching disabled
-@sunco/core:build: cache hit, replaying logs 7f5e7cb9389beb4c
+@sunco/core:build: cache hit, replaying logs 5b302ecffd22d851
 @sunco/core:build: 
 @sunco/core:build: > @sunco/core@0.0.1 build
 @sunco/core:build: > tsup
@@ -24,57 +24,39 @@ stdout:
 @sunco/core:build: CLI Target: node22
 @sunco/core:build: CLI Cleaning output folder
 @sunco/core:build: ESM Build start
-@sunco/core:build: ESM dist/agent/advisor.js              4.07 KB
-@sunco/core:build: ESM dist/chunk-CRCD6VAF.js             3.15 KB
-@sunco/core:build: ESM dist/SkillResult-ZU73A7TU.js       139.00 B
-@sunco/core:build: ESM dist/engine-ACC4MOOJ.js            133.00 B
-@sunco/core:build: ESM dist/runtime/index.js              1.73 KB
-@sunco/core:build: ESM dist/index.js                      66.36 KB
-@sunco/core:build: ESM dist/claude-sdk-WQX44DZA.js        151.00 B
-@sunco/core:build: ESM dist/chunk-FLNO3DPL.js             8.43 KB
-@sunco/core:build: ESM dist/chunk-CUEO7O3Q.js             2.11 KB
-@sunco/core:build: ESM dist/claude-cli-5A5CX2BD.js        151.00 B
-@sunco/core:build: ESM dist/codex-cli-RYQ4U2PN.js         149.00 B
-@sunco/core:build: ESM dist/InteractiveChoice-QP5G2S72.js 151.00 B
-@sunco/core:build: ESM dist/chunk-LZ3TVZ23.js             1.63 KB
-@sunco/core:build: ESM dist/chunk-UQZ5E2QY.js             1.32 KB
-@sunco/core:build: ESM dist/chunk-7FSE7WCI.js             2.37 KB
-@sunco/core:build: ESM dist/chunk-GN2CQJII.js             1.59 KB
-@sunco/core:build: ESM dist/chunk-I6PAORPR.js             332.00 B
-@sunco/core:build: ESM dist/chunk-V4WTU3W5.js             32.46 KB
-@sunco/core:build: ESM dist/chunk-5K3LWGPF.js             710.00 B
-@sunco/core:build: ESM dist/chunk-LGPLJRTO.js             2.09 KB
-@sunco/core:build: ESM dist/SkillEntry-JCA3JHB4.js        107.00 B
-@sunco/core:build: ESM dist/chunk-UTQGFW62.js             908.00 B
 @sunco/core:build: ESM dist/SkillProgress-6NTZOJQG.js     113.00 B
+@sunco/core:build: ESM dist/chunk-CRCD6VAF.js             3.15 KB
+@sunco/core:build: ESM dist/chunk-V4WTU3W5.js             32.46 KB
+@sunco/core:build: ESM dist/chunk-GN2CQJII.js             1.59 KB
+@sunco/core:build: ESM dist/engine-ACC4MOOJ.js            133.00 B
+@sunco/core:build: ESM dist/claude-sdk-WQX44DZA.js        151.00 B
+@sunco/core:build: ESM dist/SkillResult-ZU73A7TU.js       139.00 B
+@sunco/core:build: ESM dist/claude-cli-5A5CX2BD.js        151.00 B
+@sunco/core:build: ESM dist/chunk-CUEO7O3Q.js             2.11 KB
+@sunco/core:build: ESM dist/chunk-7FSE7WCI.js             2.37 KB
+@sunco/core:build: ESM dist/codex-cli-RYQ4U2PN.js         149.00 B
+@sunco/core:build: ESM dist/agent/advisor.js              4.07 KB
+@sunco/core:build: ESM dist/chunk-FLNO3DPL.js             8.43 KB
 @sunco/core:build: ESM dist/chunk-H2UZVEXC.js             2.90 KB
+@sunco/core:build: ESM dist/runtime/index.js              1.73 KB
+@sunco/core:build: ESM dist/chunk-LZ3TVZ23.js             1.63 KB
+@sunco/core:build: ESM dist/chunk-UTQGFW62.js             908.00 B
+@sunco/core:build: ESM dist/index.js                      66.68 KB
+@sunco/core:build: ESM dist/chunk-UQZ5E2QY.js             1.32 KB
+@sunco/core:build: ESM dist/chunk-5K3LWGPF.js             710.00 B
+@sunco/core:build: ESM dist/chunk-I6PAORPR.js             332.00 B
+@sunco/core:build: ESM dist/SkillEntry-JCA3JHB4.js        107.00 B
+@sunco/core:build: ESM dist/InteractiveChoice-QP5G2S72.js 151.00 B
+@sunco/core:build: ESM dist/chunk-LGPLJRTO.js             2.09 KB
 @sunco/core:build: ESM ⚡️ Build success in 16ms
 @sunco/core:build: DTS Build start
-@sunco/core:build: DTS ⚡️ Build success in 978ms
+@sunco/core:build: DTS ⚡️ Build success in 980ms
 @sunco/core:build: DTS dist/agent/advisor.d.ts  825.00 B
 @sunco/core:build: DTS dist/index.d.ts          93.30 KB
 @sunco/core:build: DTS dist/runtime/index.d.ts  1.53 KB
 @sunco/core:build: DTS dist/types-DVARqpEA.d.ts 7.23 KB
 @sunco/core:build: DTS dist/index-0hIsCjTs.d.ts 36.89 KB
-@sunco/skills-extension:build: cache hit, replaying logs 108517a47457a35b
-@sunco/skills-extension:build: 
-@sunco/skills-extension:build: > @sunco/skills-extension@0.0.1 build
-@sunco/skills-extension:build: > tsup
-@sunco/skills-extension:build: 
-@sunco/skills-extension:build: CLI Building entry: src/index.ts
-@sunco/skills-extension:build: CLI Using tsconfig: tsconfig.json
-@sunco/skills-extension:build: CLI tsup v8.5.0
-@sunco/skills-extension:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/skills-extension/tsup.config.ts
-@sunco/skills-extension:build: CLI Target: node22
-@sunco/skills-extension:build: CLI Cleaning output folder
-@sunco/skills-extension:build: ESM Build start
-@sunco/skills-extension:build: ESM dist/index.js 0 B
-@sunco/skills-extension:build: ESM ⚡️ Build success in 5ms
-@sunco/skills-extension:build: DTS Build start
-@sunco/skills-extension:build: DTS ⚡️ Build success in 679ms
-@sunco/skills-extension:build: DTS dist/index.d.ts 13.00 B
-@sunco/evidence:build: cache hit, replaying logs e538c9f6053c71c3
-@sunco/core:test: cache hit, replaying logs 72d8d16167ce977d
+@sunco/evidence:build: cache hit, replaying logs 28cb7116e26102c9
 @sunco/evidence:build: 
 @sunco/evidence:build: > @sunco/evidence@0.0.1 build
 @sunco/evidence:build: > tsup
@@ -87,10 +69,11 @@ stdout:
 @sunco/evidence:build: CLI Cleaning output folder
 @sunco/evidence:build: ESM Build start
 @sunco/evidence:build: ESM dist/index.js 5.14 KB
-@sunco/evidence:build: ESM ⚡️ Build success in 6ms
+@sunco/evidence:build: ESM ⚡️ Build success in 7ms
 @sunco/evidence:build: DTS Build start
-@sunco/evidence:build: DTS ⚡️ Build success in 1227ms
+@sunco/evidence:build: DTS ⚡️ Build success in 1278ms
 @sunco/evidence:build: DTS dist/index.d.ts 1.60 KB
+@sunco/core:test: cache hit, replaying logs 5d86dc25fcaa843f
 @sunco/core:test: 
 @sunco/core:test: > @sunco/core@0.0.1 test
 @sunco/core:test: > vitest run
@@ -98,16 +81,17 @@ stdout:
 @sunco/core:test: 
 @sunco/core:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/core
 @sunco/core:test: 
-@sunco/core:test:  ✓ src/recommend/__tests__/engine.test.ts (18 tests) 6ms
-@sunco/core:test:  ✓ src/recommend/__tests__/rules.test.ts (34 tests) 16ms
-@sunco/core:test:  ✓ src/agent/__tests__/permission.test.ts (18 tests) 17ms
-@sunco/core:test:  ✓ src/agent/__tests__/router.test.ts (20 tests) 6ms
-@sunco/core:test:  ✓ src/agent/__tests__/claude-cli.test.ts (13 tests) 4ms
-@sunco/core:test:  ✓ src/skill/__tests__/registry.test.ts (12 tests) 11ms
-@sunco/core:test:  ✓ src/skill/__tests__/context.test.ts (11 tests) 22ms
-@sunco/core:test:  ✓ src/cli/__tests__/lifecycle.test.ts (12 tests) 43ms
-@sunco/core:test:  ✓ src/ui/__tests__/SilentUiAdapter.test.ts (15 tests) 4ms
-@sunco/core:test:  ✓ src/skill/__tests__/resolver.test.ts (11 tests) 4ms
+@sunco/core:test:  ✓ src/recommend/__tests__/engine.test.ts (18 tests) 9ms
+@sunco/core:test:  ✓ src/recommend/__tests__/rules.test.ts (34 tests) 5ms
+@sunco/core:test:  ✓ src/agent/__tests__/permission.test.ts (18 tests) 7ms
+@sunco/core:test:  ✓ src/skill/__tests__/registry.test.ts (12 tests) 5ms
+@sunco/core:test:  ✓ src/agent/__tests__/router.test.ts (20 tests) 8ms
+@sunco/core:test:  ✓ src/skill/__tests__/context.test.ts (11 tests) 6ms
+@sunco/core:test:  ✓ src/agent/__tests__/claude-cli.test.ts (13 tests) 27ms
+@sunco/core:test:  ✓ src/ui/__tests__/SilentUiAdapter.test.ts (15 tests) 3ms
+@sunco/core:test:  ✓ src/cli/__tests__/lifecycle.test.ts (12 tests) 87ms
+@sunco/core:test:  ✓ src/state/__tests__/active-work.test.ts (10 tests) 78ms
+@sunco/core:test:  ✓ src/skill/__tests__/resolver.test.ts (11 tests) 3ms
 @sunco/core:test: stdout | src/ui/__tests__/patterns.test.ts > InkUiAdapter structural verification > imports and dispatches to all 4 pattern kinds
 @sunco/core:test: 
 @sunco/core:test: Test Entry
@@ -128,56 +112,46 @@ stdout:
 @sunco/core:test: 
 @sunco/core:test: Working
 @sunco/core:test: 
-@sunco/core:test:  ✓ src/ui/__tests__/patterns.test.ts (16 tests) 5ms
-@sunco/core:test:  ✓ src/state/__tests__/active-work.test.ts (10 tests) 109ms
-@sunco/core:test:  ✓ src/state/__tests__/database.test.ts (23 tests) 64ms
-@sunco/core:test:  ✓ src/agent/__tests__/codex-cli.test.ts (10 tests) 5ms
-@sunco/core:test:  ✓ src/state/__tests__/file-store.test.ts (22 tests) 208ms
-@sunco/core:test:  ✓ src/agent/__tests__/tracker.test.ts (7 tests) 1ms
-@sunco/core:test:  ✓ src/config/__tests__/loader.test.ts (11 tests) 92ms
-@sunco/core:test:  ✓ src/cli/__tests__/skill-router.test.ts (32 tests) 15ms
+@sunco/core:test:  ✓ src/ui/__tests__/patterns.test.ts (16 tests) 7ms
+@sunco/core:test:  ✓ src/state/__tests__/database.test.ts (23 tests) 132ms
+@sunco/core:test:  ✓ src/agent/__tests__/codex-cli.test.ts (10 tests) 4ms
+@sunco/core:test:  ✓ src/state/__tests__/file-store.test.ts (22 tests) 162ms
 @sunco/core:test:  ✓ src/agent/__tests__/advisor.test.ts (7 tests) 2ms
-@sunco/core:test:  ✓ src/skill/__tests__/scanner.test.ts (9 tests) 211ms
-@sunco/core:test:  ✓ src/state/__tests__/directory.test.ts (11 tests) 86ms
-@sunco/core:test:  ✓ src/config/__tests__/schema.test.ts (8 tests) 3ms
-@sunco/core:test:  ✓ src/runtime/__tests__/types.test.ts (8 tests) 5ms
-@sunco/core:test:  ✓ src/skill/__tests__/define.test.ts (14 tests) 12ms
-@sunco/core:test:  ✓ src/ui/__tests__/askText.test.ts (4 tests) 19ms
-@sunco/core:test:  ✓ src/config/__tests__/merger.test.ts (12 tests) 2ms
-@sunco/core:test:  ✓ src/state/__tests__/api.test.ts (9 tests) 63ms
+@sunco/core:test:  ✓ src/agent/__tests__/tracker.test.ts (7 tests) 4ms
+@sunco/core:test:  ✓ src/cli/__tests__/skill-router.test.ts (32 tests) 8ms
+@sunco/core:test:  ✓ src/config/__tests__/loader.test.ts (11 tests) 189ms
+@sunco/core:test:  ✓ src/skill/__tests__/scanner.test.ts (9 tests) 97ms
+@sunco/core:test:  ✓ src/config/__tests__/schema.test.ts (8 tests) 4ms
+@sunco/core:test:  ✓ src/runtime/__tests__/types.test.ts (8 tests) 38ms
+@sunco/core:test:  ✓ src/skill/__tests__/define.test.ts (14 tests) 7ms
+@sunco/core:test:  ✓ src/ui/__tests__/askText.test.ts (4 tests) 4ms
+@sunco/core:test:  ✓ src/config/__tests__/merger.test.ts (12 tests) 3ms
+@sunco/core:test:  ✓ src/state/__tests__/directory.test.ts (11 tests) 152ms
+@sunco/core:test:  ✓ src/state/__tests__/api.test.ts (9 tests) 194ms
 @sunco/core:test: 
 @sunco/core:test:  Test Files  27 passed (27)
 @sunco/core:test:       Tests  377 passed (377)
-@sunco/core:test:    Start at  21:36:16
-@sunco/core:test:    Duration  1.49s (transform 686ms, setup 0ms, collect 2.93s, tests 1.03s, environment 3ms, prepare 2.23s)
+@sunco/core:test:    Start at  21:44:02
+@sunco/core:test:    Duration  1.76s (transform 893ms, setup 0ms, collect 3.37s, tests 1.25s, environment 5ms, prepare 1.88s)
 @sunco/core:test: 
-@sunco/skills-extension:test: cache hit, replaying logs 9605b7c1896ab5a2
-@sunco/skills-extension:test: 
-@sunco/skills-extension:test: > @sunco/skills-extension@0.0.1 test
-@sunco/skills-extension:test: > npm run typecheck
-@sunco/skills-extension:test: 
-@sunco/skills-extension:test: 
-@sunco/skills-extension:test: > @sunco/skills-extension@0.0.1 typecheck
-@sunco/skills-extension:test: > tsc --noEmit -p tsconfig.json
-@sunco/skills-extension:test: 
-@sunco/verifier:build: cache hit, replaying logs 3f2fa7925a463106
-@sunco/verifier:build: 
-@sunco/verifier:build: > @sunco/verifier@0.0.1 build
-@sunco/verifier:build: > tsup
-@sunco/verifier:build: 
-@sunco/verifier:build: CLI Building entry: src/index.ts
-@sunco/verifier:build: CLI Using tsconfig: tsconfig.json
-@sunco/verifier:build: CLI tsup v8.5.0
-@sunco/verifier:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/verifier/tsup.config.ts
-@sunco/verifier:build: CLI Target: node22
-@sunco/verifier:build: CLI Cleaning output folder
-@sunco/verifier:build: ESM Build start
-@sunco/verifier:build: ESM dist/index.js 6.66 KB
-@sunco/verifier:build: ESM ⚡️ Build success in 7ms
-@sunco/verifier:build: DTS Build start
-@sunco/verifier:build: DTS ⚡️ Build success in 459ms
-@sunco/verifier:build: DTS dist/index.d.ts 1.13 KB
-@sunco/evidence:test: cache hit, replaying logs c40f3469cb63e41d
+@sunco/skills-extension:build: cache hit, replaying logs 25d9c350eb6ed484
+@sunco/skills-extension:build: 
+@sunco/skills-extension:build: > @sunco/skills-extension@0.0.1 build
+@sunco/skills-extension:build: > tsup
+@sunco/skills-extension:build: 
+@sunco/skills-extension:build: CLI Building entry: src/index.ts
+@sunco/skills-extension:build: CLI Using tsconfig: tsconfig.json
+@sunco/skills-extension:build: CLI tsup v8.5.0
+@sunco/skills-extension:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/skills-extension/tsup.config.ts
+@sunco/skills-extension:build: CLI Target: node22
+@sunco/skills-extension:build: CLI Cleaning output folder
+@sunco/skills-extension:build: ESM Build start
+@sunco/skills-extension:build: ESM dist/index.js 0 B
+@sunco/skills-extension:build: ESM ⚡️ Build success in 4ms
+@sunco/skills-extension:build: DTS Build start
+@sunco/skills-extension:build: DTS ⚡️ Build success in 688ms
+@sunco/skills-extension:build: DTS dist/index.d.ts 13.00 B
+@sunco/evidence:test: cache hit, replaying logs bfa382a9516be11c
 @sunco/evidence:test: 
 @sunco/evidence:test: > @sunco/evidence@0.0.1 test
 @sunco/evidence:test: > vitest run
@@ -185,14 +159,14 @@ stdout:
 @sunco/evidence:test: 
 @sunco/evidence:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/evidence
 @sunco/evidence:test: 
-@sunco/evidence:test:  ✓ src/__tests__/evidence-store.test.ts (3 tests) 52ms
+@sunco/evidence:test:  ✓ src/__tests__/evidence-store.test.ts (3 tests) 97ms
 @sunco/evidence:test: 
 @sunco/evidence:test:  Test Files  1 passed (1)
 @sunco/evidence:test:       Tests  3 passed (3)
-@sunco/evidence:test:    Start at  21:36:18
-@sunco/evidence:test:    Duration  372ms (transform 35ms, setup 0ms, collect 48ms, tests 52ms, environment 0ms, prepare 53ms)
+@sunco/evidence:test:    Start at  21:44:04
+@sunco/evidence:test:    Duration  487ms (transform 58ms, setup 0ms, collect 86ms, tests 97ms, environment 0ms, prepare 44ms)
 @sunco/evidence:test: 
-@sunco/edit-engine:build: cache hit, replaying logs ed878a03a33e021d
+@sunco/edit-engine:build: cache hit, replaying logs 94c18c81ddb97245
 @sunco/edit-engine:build: 
 @sunco/edit-engine:build: > @sunco/edit-engine@0.0.1 build
 @sunco/edit-engine:build: > tsup
@@ -205,11 +179,89 @@ stdout:
 @sunco/edit-engine:build: CLI Cleaning output folder
 @sunco/edit-engine:build: ESM Build start
 @sunco/edit-engine:build: ESM dist/index.js 7.36 KB
-@sunco/edit-engine:build: ESM ⚡️ Build success in 8ms
+@sunco/edit-engine:build: ESM ⚡️ Build success in 28ms
 @sunco/edit-engine:build: DTS Build start
-@sunco/edit-engine:build: DTS ⚡️ Build success in 443ms
+@sunco/edit-engine:build: DTS ⚡️ Build success in 486ms
 @sunco/edit-engine:build: DTS dist/index.d.ts 1.16 KB
-@sunco/verifier:test: cache hit, replaying logs c5d4790bb131dba0
+@sunco/skills-extension:test: cache hit, replaying logs 43fe56747dd2badc
+@sunco/skills-extension:test: 
+@sunco/skills-extension:test: > @sunco/skills-extension@0.0.1 test
+@sunco/skills-extension:test: > npm run typecheck
+@sunco/skills-extension:test: 
+@sunco/skills-extension:test: 
+@sunco/skills-extension:test: > @sunco/skills-extension@0.0.1 typecheck
+@sunco/skills-extension:test: > tsc --noEmit -p tsconfig.json
+@sunco/skills-extension:test: 
+@sunco/verifier:build: cache hit, replaying logs 87cb05c510ae2b51
+@sunco/verifier:build: 
+@sunco/verifier:build: > @sunco/verifier@0.0.1 build
+@sunco/verifier:build: > tsup
+@sunco/verifier:build: 
+@sunco/verifier:build: CLI Building entry: src/index.ts
+@sunco/verifier:build: CLI Using tsconfig: tsconfig.json
+@sunco/verifier:build: CLI tsup v8.5.0
+@sunco/verifier:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/verifier/tsup.config.ts
+@sunco/verifier:build: CLI Target: node22
+@sunco/verifier:build: CLI Cleaning output folder
+@sunco/verifier:build: ESM Build start
+@sunco/verifier:build: ESM dist/index.js 6.66 KB
+@sunco/verifier:build: ESM ⚡️ Build success in 15ms
+@sunco/verifier:build: DTS Build start
+@sunco/verifier:build: DTS ⚡️ Build success in 503ms
+@sunco/verifier:build: DTS dist/index.d.ts 1.13 KB
+@sunco/edit-engine:test: cache hit, replaying logs 95a08341a6110ca4
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test: > @sunco/edit-engine@0.0.1 test
+@sunco/edit-engine:test: > vitest run
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/edit-engine
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test:  ✓ src/__tests__/edit-engine.test.ts (5 tests) 1147ms
+@sunco/edit-engine:test:    ✓ Hash Edit Engine > records non-empty diff and rollback evidence for untracked added files  350ms
+@sunco/edit-engine:test: 
+@sunco/edit-engine:test:  Test Files  1 passed (1)
+@sunco/edit-engine:test:       Tests  5 passed (5)
+@sunco/edit-engine:test:    Start at  21:44:06
+@sunco/edit-engine:test:    Duration  1.90s (transform 57ms, setup 0ms, collect 131ms, tests 1.15s, environment 0ms, prepare 160ms)
+@sunco/edit-engine:test: 
+@sunco/skills-harness:build: cache hit, replaying logs 95dbac7996ce0a46
+@sunco/skills-harness:build: 
+@sunco/skills-harness:build: > @sunco/skills-harness@0.0.1 build
+@sunco/skills-harness:build: > tsup
+@sunco/skills-harness:build: 
+@sunco/skills-harness:build: CLI Building entry: src/agents.skill.ts, src/guard.skill.ts, src/health.skill.ts, src/index.ts, src/init.skill.ts, src/lint.skill.ts
+@sunco/skills-harness:build: CLI Using tsconfig: tsconfig.json
+@sunco/skills-harness:build: CLI tsup v8.5.0
+@sunco/skills-harness:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/skills-harness/tsup.config.ts
+@sunco/skills-harness:build: CLI Target: node22
+@sunco/skills-harness:build: CLI Cleaning output folder
+@sunco/skills-harness:build: ESM Build start
+@sunco/skills-harness:build: ESM dist/agents.skill.js   138.00 B
+@sunco/skills-harness:build: ESM dist/health.skill.js   168.00 B
+@sunco/skills-harness:build: ESM dist/index.js          4.18 KB
+@sunco/skills-harness:build: ESM dist/chunk-DIYQLLCS.js 17.11 KB
+@sunco/skills-harness:build: ESM dist/chunk-UORI5Q3U.js 23.83 KB
+@sunco/skills-harness:build: ESM dist/init.skill.js     164.00 B
+@sunco/skills-harness:build: ESM dist/chunk-XVNLXWZI.js 15.96 KB
+@sunco/skills-harness:build: ESM dist/chunk-EXI54775.js 13.02 KB
+@sunco/skills-harness:build: ESM dist/chunk-F4JRSS7L.js 1.75 KB
+@sunco/skills-harness:build: ESM dist/chunk-5CICN3YQ.js 6.31 KB
+@sunco/skills-harness:build: ESM dist/chunk-M2L6Q2EY.js 9.10 KB
+@sunco/skills-harness:build: ESM dist/esm-4HAK7ECL.js   157.83 KB
+@sunco/skills-harness:build: ESM dist/guard.skill.js    166.00 B
+@sunco/skills-harness:build: ESM dist/lint.skill.js     164.00 B
+@sunco/skills-harness:build: ESM dist/chunk-QGM4M3NI.js 1.70 KB
+@sunco/skills-harness:build: ESM ⚡️ Build success in 40ms
+@sunco/skills-harness:build: DTS Build start
+@sunco/skills-harness:build: DTS ⚡️ Build success in 2315ms
+@sunco/skills-harness:build: DTS dist/index.d.ts        15.62 KB
+@sunco/skills-harness:build: DTS dist/agents.skill.d.ts 714.00 B
+@sunco/skills-harness:build: DTS dist/guard.skill.d.ts  751.00 B
+@sunco/skills-harness:build: DTS dist/health.skill.d.ts 599.00 B
+@sunco/skills-harness:build: DTS dist/init.skill.d.ts   614.00 B
+@sunco/skills-harness:build: DTS dist/lint.skill.d.ts   912.00 B
+@sunco/verifier:test: cache hit, replaying logs ee73e4bfdf83abb7
 @sunco/verifier:test: 
 @sunco/verifier:test: > @sunco/verifier@0.0.1 test
 @sunco/verifier:test: > vitest run
@@ -217,14 +269,14 @@ stdout:
 @sunco/verifier:test: 
 @sunco/verifier:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/verifier
 @sunco/verifier:test: 
-@sunco/verifier:test:  ✓ src/__tests__/verifier.test.ts (3 tests) 270ms
+@sunco/verifier:test:  ✓ src/__tests__/verifier.test.ts (3 tests) 348ms
 @sunco/verifier:test: 
 @sunco/verifier:test:  Test Files  1 passed (1)
 @sunco/verifier:test:       Tests  3 passed (3)
-@sunco/verifier:test:    Start at  21:36:20
-@sunco/verifier:test:    Duration  1.03s (transform 70ms, setup 0ms, collect 100ms, tests 270ms, environment 0ms, prepare 116ms)
+@sunco/verifier:test:    Start at  21:44:06
+@sunco/verifier:test:    Duration  1.07s (transform 59ms, setup 0ms, collect 97ms, tests 348ms, environment 0ms, prepare 173ms)
 @sunco/verifier:test: 
-@sunco/runtime:build: cache hit, replaying logs 28c0cbb26bbc7692
+@sunco/runtime:build: cache hit, replaying logs 005090ce7d8146a2
 @sunco/runtime:build: 
 @sunco/runtime:build: > @sunco/runtime@0.0.1 build
 @sunco/runtime:build: > tsup
@@ -237,79 +289,11 @@ stdout:
 @sunco/runtime:build: CLI Cleaning output folder
 @sunco/runtime:build: ESM Build start
 @sunco/runtime:build: ESM dist/index.js 9.12 KB
-@sunco/runtime:build: ESM ⚡️ Build success in 8ms
+@sunco/runtime:build: ESM ⚡️ Build success in 16ms
 @sunco/runtime:build: DTS Build start
-@sunco/runtime:build: DTS ⚡️ Build success in 848ms
+@sunco/runtime:build: DTS ⚡️ Build success in 1062ms
 @sunco/runtime:build: DTS dist/index.d.ts 1.61 KB
-@sunco/skills-harness:build: cache hit, replaying logs 053afdd32e36074b
-@sunco/skills-harness:build: 
-@sunco/skills-harness:build: > @sunco/skills-harness@0.0.1 build
-@sunco/skills-harness:build: > tsup
-@sunco/skills-harness:build: 
-@sunco/skills-harness:build: CLI Building entry: src/agents.skill.ts, src/guard.skill.ts, src/health.skill.ts, src/index.ts, src/init.skill.ts, src/lint.skill.ts
-@sunco/skills-harness:build: CLI Using tsconfig: tsconfig.json
-@sunco/skills-harness:build: CLI tsup v8.5.0
-@sunco/skills-harness:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/skills-harness/tsup.config.ts
-@sunco/skills-harness:build: CLI Target: node22
-@sunco/skills-harness:build: CLI Cleaning output folder
-@sunco/skills-harness:build: ESM Build start
-@sunco/skills-harness:build: ESM dist/guard.skill.js    166.00 B
-@sunco/skills-harness:build: ESM dist/agents.skill.js   138.00 B
-@sunco/skills-harness:build: ESM dist/health.skill.js   168.00 B
-@sunco/skills-harness:build: ESM dist/index.js          4.18 KB
-@sunco/skills-harness:build: ESM dist/chunk-DIYQLLCS.js 17.11 KB
-@sunco/skills-harness:build: ESM dist/chunk-UORI5Q3U.js 23.83 KB
-@sunco/skills-harness:build: ESM dist/chunk-XVNLXWZI.js 15.96 KB
-@sunco/skills-harness:build: ESM dist/chunk-5CICN3YQ.js 6.31 KB
-@sunco/skills-harness:build: ESM dist/lint.skill.js     164.00 B
-@sunco/skills-harness:build: ESM dist/chunk-EXI54775.js 13.02 KB
-@sunco/skills-harness:build: ESM dist/init.skill.js     164.00 B
-@sunco/skills-harness:build: ESM dist/chunk-F4JRSS7L.js 1.75 KB
-@sunco/skills-harness:build: ESM dist/chunk-M2L6Q2EY.js 9.10 KB
-@sunco/skills-harness:build: ESM dist/esm-4HAK7ECL.js   157.83 KB
-@sunco/skills-harness:build: ESM dist/chunk-QGM4M3NI.js 1.70 KB
-@sunco/skills-harness:build: ESM ⚡️ Build success in 40ms
-@sunco/skills-harness:build: DTS Build start
-@sunco/skills-harness:build: DTS ⚡️ Build success in 2009ms
-@sunco/skills-harness:build: DTS dist/index.d.ts        15.62 KB
-@sunco/skills-harness:build: DTS dist/agents.skill.d.ts 714.00 B
-@sunco/skills-harness:build: DTS dist/guard.skill.d.ts  751.00 B
-@sunco/skills-harness:build: DTS dist/health.skill.d.ts 599.00 B
-@sunco/skills-harness:build: DTS dist/init.skill.d.ts   614.00 B
-@sunco/skills-harness:build: DTS dist/lint.skill.d.ts   912.00 B
-@sunco/edit-engine:test: cache hit, replaying logs 989fef751b6b7926
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test: > @sunco/edit-engine@0.0.1 test
-@sunco/edit-engine:test: > vitest run
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/edit-engine
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test:  ✓ src/__tests__/edit-engine.test.ts (5 tests) 1002ms
-@sunco/edit-engine:test: 
-@sunco/edit-engine:test:  Test Files  1 passed (1)
-@sunco/edit-engine:test:       Tests  5 passed (5)
-@sunco/edit-engine:test:    Start at  21:36:20
-@sunco/edit-engine:test:    Duration  1.64s (transform 61ms, setup 0ms, collect 89ms, tests 1.00s, environment 0ms, prepare 161ms)
-@sunco/edit-engine:test: 
-@sunco/runtime:test: cache hit, replaying logs 027e0c32c4b60e99
-@sunco/runtime:test: 
-@sunco/runtime:test: > @sunco/runtime@0.0.1 test
-@sunco/runtime:test: > vitest run
-@sunco/runtime:test: 
-@sunco/runtime:test: 
-@sunco/runtime:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/runtime
-@sunco/runtime:test: 
-@sunco/runtime:test:  ✓ src/__tests__/done-gate.test.ts (6 tests) 3ms
-@sunco/runtime:test:  ✓ src/__tests__/runtime-loop.test.ts (4 tests) 1108ms
-@sunco/runtime:test:    ✓ Runtime Loop MVP > records diff and rollback evidence for untracked added files  354ms
-@sunco/runtime:test: 
-@sunco/runtime:test:  Test Files  2 passed (2)
-@sunco/runtime:test:       Tests  10 passed (10)
-@sunco/runtime:test:    Start at  21:36:21
-@sunco/runtime:test:    Duration  1.38s (transform 49ms, setup 0ms, collect 86ms, tests 1.11s, environment 0ms, prepare 81ms)
-@sunco/runtime:test: 
-@sunco/skills-harness:test: cache hit, replaying logs 58e4feccf9b93c74
+@sunco/skills-harness:test: cache hit, replaying logs e0712f45de5da09d
 @sunco/skills-harness:test: 
 @sunco/skills-harness:test: > @sunco/skills-harness@0.0.1 test
 @sunco/skills-harness:test: > vitest run
@@ -317,35 +301,52 @@ stdout:
 @sunco/skills-harness:test: 
 @sunco/skills-harness:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/skills-harness
 @sunco/skills-harness:test: 
-@sunco/skills-harness:test:  ✓ src/agents/__tests__/suggestion-engine.test.ts (6 tests) 4ms
-@sunco/skills-harness:test:  ✓ src/init/__tests__/types.test.ts (10 tests) 14ms
-@sunco/skills-harness:test:  ✓ src/lint/__tests__/formatter.test.ts (12 tests) 3ms
-@sunco/skills-harness:test:  ✓ src/agents/__tests__/doc-analyzer.test.ts (9 tests) 21ms
-@sunco/skills-harness:test:  ✓ src/init/__tests__/workspace-initializer.test.ts (9 tests) 61ms
-@sunco/skills-harness:test:  ✓ src/lint/__tests__/config-generator.test.ts (6 tests) 46ms
-@sunco/skills-harness:test:  ✓ src/init/__tests__/convention-extractor.test.ts (7 tests) 61ms
-@sunco/skills-harness:test:  ✓ src/guard/__tests__/promoter.test.ts (5 tests) 5ms
-@sunco/skills-harness:test:  ✓ src/health/__tests__/freshness-checker.test.ts (4 tests) 22ms
-@sunco/skills-harness:test:  ✓ src/health/__tests__/pattern-tracker.test.ts (5 tests) 10ms
-@sunco/skills-harness:test:  ✓ src/health/__tests__/reporter.test.ts (12 tests) 3ms
-@sunco/skills-harness:test:  ✓ src/agents/__tests__/efficiency-scorer.test.ts (9 tests) 73ms
+@sunco/skills-harness:test:  ✓ src/agents/__tests__/suggestion-engine.test.ts (6 tests) 2ms
+@sunco/skills-harness:test:  ✓ src/init/__tests__/types.test.ts (10 tests) 4ms
+@sunco/skills-harness:test:  ✓ src/lint/__tests__/formatter.test.ts (12 tests) 4ms
+@sunco/skills-harness:test:  ✓ src/agents/__tests__/doc-analyzer.test.ts (9 tests) 35ms
+@sunco/skills-harness:test:  ✓ src/lint/__tests__/config-generator.test.ts (6 tests) 58ms
+@sunco/skills-harness:test:  ✓ src/init/__tests__/convention-extractor.test.ts (7 tests) 49ms
+@sunco/skills-harness:test:  ✓ src/init/__tests__/workspace-initializer.test.ts (9 tests) 49ms
+@sunco/skills-harness:test:  ✓ src/health/__tests__/pattern-tracker.test.ts (5 tests) 6ms
+@sunco/skills-harness:test:  ✓ src/health/__tests__/reporter.test.ts (12 tests) 2ms
+@sunco/skills-harness:test:  ✓ src/agents/__tests__/efficiency-scorer.test.ts (9 tests) 3ms
+@sunco/skills-harness:test:  ✓ src/guard/__tests__/promoter.test.ts (5 tests) 2ms
 @sunco/skills-harness:test:  ✓ src/lint/__tests__/rule-store.test.ts (4 tests) 2ms
-@sunco/skills-harness:test:  ✓ src/guard/__tests__/watcher.test.ts (4 tests) 15ms
-@sunco/skills-harness:test:  ✓ src/init/__tests__/presets.test.ts (9 tests) 1ms
-@sunco/skills-harness:test:  ✓ src/init/__tests__/layer-detector.test.ts (6 tests) 160ms
-@sunco/skills-harness:test:  ✓ src/init/__tests__/ecosystem-detector.test.ts (6 tests) 30ms
-@sunco/skills-harness:test:  ✓ src/guard/__tests__/analyzer.test.ts (5 tests) 84ms
-@sunco/skills-harness:test:  ✓ src/lint/__tests__/runner.test.ts (4 tests) 310ms
+@sunco/skills-harness:test:  ✓ src/health/__tests__/freshness-checker.test.ts (4 tests) 162ms
+@sunco/skills-harness:test:  ✓ src/guard/__tests__/watcher.test.ts (4 tests) 16ms
+@sunco/skills-harness:test:  ✓ src/init/__tests__/presets.test.ts (9 tests) 3ms
+@sunco/skills-harness:test:  ✓ src/init/__tests__/layer-detector.test.ts (6 tests) 45ms
+@sunco/skills-harness:test:  ✓ src/init/__tests__/ecosystem-detector.test.ts (6 tests) 130ms
+@sunco/skills-harness:test:  ✓ src/guard/__tests__/analyzer.test.ts (5 tests) 46ms
 @sunco/skills-harness:test:  ✓ src/lint/__tests__/eslint-config.test.ts (8 tests) 4ms
-@sunco/skills-harness:test:  ✓ src/lint/__tests__/fixer.test.ts (3 tests) 236ms
-@sunco/skills-harness:test:  ✓ src/guard/__tests__/incremental-linter.test.ts (3 tests) 27ms
+@sunco/skills-harness:test:  ✓ src/lint/__tests__/runner.test.ts (4 tests) 342ms
+@sunco/skills-harness:test:  ✓ src/guard/__tests__/incremental-linter.test.ts (3 tests) 24ms
+@sunco/skills-harness:test:  ✓ src/lint/__tests__/fixer.test.ts (3 tests) 289ms
 @sunco/skills-harness:test: 
 @sunco/skills-harness:test:  Test Files  22 passed (22)
 @sunco/skills-harness:test:       Tests  146 passed (146)
-@sunco/skills-harness:test:    Start at  21:36:19
-@sunco/skills-harness:test:    Duration  2.29s (transform 309ms, setup 0ms, collect 6.24s, tests 1.19s, environment 2ms, prepare 2.16s)
+@sunco/skills-harness:test:    Start at  21:44:05
+@sunco/skills-harness:test:    Duration  2.43s (transform 412ms, setup 0ms, collect 6.41s, tests 1.28s, environment 5ms, prepare 2.22s)
 @sunco/skills-harness:test: 
-@sunco/skills-workflow:build: cache hit, replaying logs 523ec19da69379b7
+@sunco/runtime:test: cache hit, replaying logs dedb209c9d1035d4
+@sunco/runtime:test: 
+@sunco/runtime:test: > @sunco/runtime@0.0.1 test
+@sunco/runtime:test: > vitest run
+@sunco/runtime:test: 
+@sunco/runtime:test: 
+@sunco/runtime:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/runtime
+@sunco/runtime:test: 
+@sunco/runtime:test:  ✓ src/__tests__/done-gate.test.ts (6 tests) 4ms
+@sunco/runtime:test:  ✓ src/__tests__/runtime-loop.test.ts (4 tests) 1138ms
+@sunco/runtime:test:    ✓ Runtime Loop MVP > records diff and rollback evidence for untracked added files  446ms
+@sunco/runtime:test: 
+@sunco/runtime:test:  Test Files  2 passed (2)
+@sunco/runtime:test:       Tests  10 passed (10)
+@sunco/runtime:test:    Start at  21:44:08
+@sunco/runtime:test:    Duration  1.43s (transform 52ms, setup 0ms, collect 100ms, tests 1.14s, environment 0ms, prepare 74ms)
+@sunco/runtime:test: 
+@sunco/skills-workflow:build: cache hit, replaying logs c966f00a4a3f4757
 @sunco/skills-workflow:build: 
 @sunco/skills-workflow:build: > @sunco/skills-workflow@0.0.1 build
 @sunco/skills-workflow:build: > tsup
@@ -357,116 +358,116 @@ stdout:
 @sunco/skills-workflow:build: CLI Target: node22
 @sunco/skills-workflow:build: CLI Cleaning output folder
 @sunco/skills-workflow:build: ESM Build start
+@sunco/skills-workflow:build: DTS Build start
 @sunco/skills-workflow:build: ESM dist/query-snapshot-FAT64F2F.js     1.75 KB
 @sunco/skills-workflow:build: ESM dist/note-lists-3CVB623Z.js         7.96 KB
 @sunco/skills-workflow:build: ESM dist/context-view-SDZYTK2V.js       4.86 KB
+@sunco/skills-workflow:build: ESM dist/assumption-preview-OJMCUDB3.js 6.10 KB
 @sunco/skills-workflow:build: ESM dist/advisor-prompt-7VR5ONNL.js     2.17 KB
 @sunco/skills-workflow:build: ESM dist/test-generator-Z54JJWEK.js     5.51 KB
 @sunco/skills-workflow:build: ESM dist/coverage-audit-FROPWNZY.js     3.27 KB
-@sunco/skills-workflow:build: ESM dist/verify.skill.js                258.00 B
 @sunco/skills-workflow:build: ESM dist/ultraplan.skill.js             264.00 B
-@sunco/skills-workflow:build: ESM dist/assumption-preview-OJMCUDB3.js 6.10 KB
-@sunco/skills-workflow:build: ESM dist/html-report-RNVNWMPL.js        17.97 KB
+@sunco/skills-workflow:build: ESM dist/status.skill.js                199.00 B
+@sunco/skills-workflow:build: ESM dist/verify.skill.js                258.00 B
 @sunco/skills-workflow:build: ESM dist/forensics-analyzer-CQWNNRPW.js 5.86 KB
+@sunco/skills-workflow:build: ESM dist/diagnostics-runner-3MRBS7FG.js 229.00 B
 @sunco/skills-workflow:build: ESM dist/quick.skill.js                 136.00 B
-@sunco/skills-workflow:build: ESM dist/release.skill.js               200.00 B
+@sunco/skills-workflow:build: ESM dist/html-report-RNVNWMPL.js        17.97 KB
+@sunco/skills-workflow:build: ESM dist/debug-ironlaw-JBEVW7DX.js      133.00 B
 @sunco/skills-workflow:build: ESM dist/research.skill.js              172.00 B
-@sunco/skills-workflow:build: ESM dist/execa-QO536OVM.js              238.50 KB
 @sunco/skills-workflow:build: ESM dist/resume.skill.js                198.00 B
-@sunco/skills-workflow:build: ESM dist/review.skill.js                224.00 B
+@sunco/skills-workflow:build: ESM dist/release.skill.js               200.00 B
 @sunco/skills-workflow:build: ESM dist/scan.skill.js                  164.00 B
-@sunco/skills-workflow:build: ESM dist/ship.skill.js                  224.00 B
 @sunco/skills-workflow:build: ESM dist/settings.skill.js              214.00 B
+@sunco/skills-workflow:build: ESM dist/execa-QO536OVM.js              238.50 KB
+@sunco/skills-workflow:build: ESM dist/ship.skill.js                  224.00 B
+@sunco/skills-workflow:build: ESM dist/review.skill.js                224.00 B
+@sunco/skills-workflow:build: ESM dist/note.skill.js                  134.00 B
 @sunco/skills-workflow:build: ESM dist/new-skill.skill.js             388.00 B
 @sunco/skills-workflow:build: ESM dist/new.skill.js                   522.00 B
-@sunco/skills-workflow:build: ESM dist/next.skill.js                  194.00 B
-@sunco/skills-workflow:build: ESM dist/note.skill.js                  134.00 B
+@sunco/skills-workflow:build: ESM dist/phase.skill.js                 196.00 B
 @sunco/skills-workflow:build: ESM dist/orchestrate.skill.js           148.00 B
 @sunco/skills-workflow:build: ESM dist/pause.skill.js                 226.00 B
-@sunco/skills-workflow:build: ESM dist/phase.skill.js                 196.00 B
 @sunco/skills-workflow:build: ESM dist/plan.skill.js                  284.00 B
-@sunco/skills-workflow:build: ESM dist/discuss.skill.js               260.00 B
+@sunco/skills-workflow:build: ESM dist/next.skill.js                  194.00 B
 @sunco/skills-workflow:build: ESM dist/do.skill.js                    130.00 B
 @sunco/skills-workflow:build: ESM dist/doc.skill.js                   132.00 B
 @sunco/skills-workflow:build: ESM dist/eng-review.skill.js            236.00 B
-@sunco/skills-workflow:build: ESM dist/execute.skill.js               290.00 B
+@sunco/skills-workflow:build: ESM dist/discuss.skill.js               260.00 B
 @sunco/skills-workflow:build: ESM dist/graph.skill.js                 136.00 B
-@sunco/skills-workflow:build: ESM dist/index.js                       42.37 KB
 @sunco/skills-workflow:build: ESM dist/chunk-M5X62GRG.js              8.54 KB
+@sunco/skills-workflow:build: ESM dist/chunk-P3NMF6TY.js              1.52 KB
 @sunco/skills-workflow:build: ESM dist/chunk-5IUUQF4L.js              10.95 KB
 @sunco/skills-workflow:build: ESM dist/chunk-U7MWH72J.js              61.07 KB
-@sunco/skills-workflow:build: ESM dist/chunk-BABA22IT.js              4.21 KB
-@sunco/skills-workflow:build: ESM dist/chunk-JMIR3BWE.js              3.52 KB
-@sunco/skills-workflow:build: ESM dist/chunk-P3NMF6TY.js              1.52 KB
-@sunco/skills-workflow:build: ESM dist/debug-ironlaw-JBEVW7DX.js      133.00 B
-@sunco/skills-workflow:build: ESM dist/status.skill.js                199.00 B
-@sunco/skills-workflow:build: ESM dist/chunk-TSMIXBFZ.js              3.12 KB
+@sunco/skills-workflow:build: ESM dist/index.js                       42.37 KB
+@sunco/skills-workflow:build: ESM dist/chunk-DYFNPECM.js              5.41 KB
 @sunco/skills-workflow:build: ESM dist/chunk-ZYRZSZ56.js              10.84 KB
-@sunco/skills-workflow:build: ESM dist/chunk-SSMIY73F.js              8.04 KB
+@sunco/skills-workflow:build: ESM dist/chunk-BABA22IT.js              4.21 KB
+@sunco/skills-workflow:build: ESM dist/chunk-TSMIXBFZ.js              3.12 KB
+@sunco/skills-workflow:build: ESM dist/chunk-AS2JGWVZ.js              5.44 KB
+@sunco/skills-workflow:build: ESM dist/chunk-JMIR3BWE.js              3.52 KB
 @sunco/skills-workflow:build: ESM dist/chunk-RVWOLWQ5.js              10.84 KB
 @sunco/skills-workflow:build: ESM dist/chunk-HUFBO2EO.js              4.16 KB
+@sunco/skills-workflow:build: ESM dist/chunk-SSMIY73F.js              8.04 KB
 @sunco/skills-workflow:build: ESM dist/chunk-CCV7DXHC.js              7.67 KB
-@sunco/skills-workflow:build: ESM dist/chunk-VDYSAMMU.js              2.61 KB
-@sunco/skills-workflow:build: ESM dist/chunk-MMLQDZUO.js              5.92 KB
 @sunco/skills-workflow:build: ESM dist/chunk-ZZDSJLAE.js              3.46 KB
-@sunco/skills-workflow:build: ESM dist/chunk-AQCH6336.js              13.28 KB
-@sunco/skills-workflow:build: ESM dist/chunk-RM7FKUTA.js              2.82 KB
-@sunco/skills-workflow:build: ESM dist/chunk-AS2JGWVZ.js              5.44 KB
-@sunco/skills-workflow:build: ESM dist/chunk-XBY552RK.js              16.02 KB
 @sunco/skills-workflow:build: ESM dist/chunk-V3547SN6.js              4.69 KB
-@sunco/skills-workflow:build: ESM dist/chunk-HY7PLMQR.js              1.04 KB
-@sunco/skills-workflow:build: ESM dist/chunk-YUM476PH.js              2.55 KB
-@sunco/skills-workflow:build: ESM dist/chunk-D4DQQ5BF.js              12.05 KB
 @sunco/skills-workflow:build: ESM dist/chunk-M4OU77SU.js              6.47 KB
-@sunco/skills-workflow:build: ESM dist/chunk-KFXPHDSH.js              12.55 KB
 @sunco/skills-workflow:build: ESM dist/chunk-DTF2BBFC.js              3.65 KB
-@sunco/skills-workflow:build: ESM dist/chunk-2SXZ3SVK.js              121.29 KB
+@sunco/skills-workflow:build: ESM dist/chunk-RM7FKUTA.js              2.82 KB
+@sunco/skills-workflow:build: ESM dist/chunk-YUM476PH.js              2.55 KB
+@sunco/skills-workflow:build: ESM dist/chunk-HY7PLMQR.js              1.04 KB
 @sunco/skills-workflow:build: ESM dist/chunk-IOJAX7B6.js              2.41 KB
-@sunco/skills-workflow:build: ESM dist/chunk-X6KUB73Y.js              24.39 KB
+@sunco/skills-workflow:build: ESM dist/chunk-2SXZ3SVK.js              121.29 KB
 @sunco/skills-workflow:build: ESM dist/chunk-EJHOHNN6.js              6.54 KB
+@sunco/skills-workflow:build: ESM dist/chunk-X6KUB73Y.js              24.39 KB
 @sunco/skills-workflow:build: ESM dist/chunk-TG2CGTZV.js              9.69 KB
+@sunco/skills-workflow:build: ESM dist/chunk-L5DDLS3S.js              10.90 KB
+@sunco/skills-workflow:build: ESM dist/chunk-KFXPHDSH.js              12.55 KB
+@sunco/skills-workflow:build: ESM dist/chunk-KIJLVTGF.js              5.63 KB
 @sunco/skills-workflow:build: ESM dist/chunk-K25HRPJ4.js              9.13 KB
 @sunco/skills-workflow:build: ESM dist/chunk-5A6LS557.js              23.89 KB
-@sunco/skills-workflow:build: ESM dist/chunk-L5DDLS3S.js              10.90 KB
 @sunco/skills-workflow:build: ESM dist/chunk-PP3YYCCY.js              8.18 KB
-@sunco/skills-workflow:build: ESM dist/chunk-KIJLVTGF.js              5.63 KB
+@sunco/skills-workflow:build: ESM dist/chunk-MMLQDZUO.js              5.92 KB
+@sunco/skills-workflow:build: ESM dist/chunk-VDYSAMMU.js              2.61 KB
+@sunco/skills-workflow:build: ESM dist/chunk-D4DQQ5BF.js              12.05 KB
+@sunco/skills-workflow:build: ESM dist/chunk-RZFXGYS3.js              20.08 KB
 @sunco/skills-workflow:build: ESM dist/chunk-NQFZC5HS.js              4.34 KB
-@sunco/skills-workflow:build: ESM dist/chunk-EHUXZN37.js              2.22 KB
 @sunco/skills-workflow:build: ESM dist/chunk-MN2XCZQJ.js              508.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-EHUXZN37.js              2.22 KB
 @sunco/skills-workflow:build: ESM dist/chunk-YKKD6XFS.js              5.09 KB
 @sunco/skills-workflow:build: ESM dist/chunk-AZRYD422.js              18.08 KB
+@sunco/skills-workflow:build: ESM dist/milestone.skill.js             204.00 B
 @sunco/skills-workflow:build: ESM dist/chunk-FOIA4FOV.js              14.39 KB
 @sunco/skills-workflow:build: ESM dist/chunk-ZXFOR573.js              7.42 KB
-@sunco/skills-workflow:build: ESM dist/chunk-RZFXGYS3.js              20.08 KB
-@sunco/skills-workflow:build: ESM dist/advisor.skill.js               140.00 B
-@sunco/skills-workflow:build: ESM dist/milestone.skill.js             204.00 B
-@sunco/skills-workflow:build: ESM dist/chunk-DYFNPECM.js              5.41 KB
-@sunco/skills-workflow:build: ESM dist/diagnostics-runner-3MRBS7FG.js 229.00 B
 @sunco/skills-workflow:build: ESM dist/chunk-D4RLNNW4.js              35.62 KB
+@sunco/skills-workflow:build: ESM dist/advisor.skill.js               140.00 B
 @sunco/skills-workflow:build: ESM dist/chunk-CR5HK4LJ.js              27.79 KB
-@sunco/skills-workflow:build: ESM dist/chunk-DK7OSXRH.js              6.42 KB
 @sunco/skills-workflow:build: ESM dist/chunk-JUF7H74L.js              1.48 KB
+@sunco/skills-workflow:build: ESM dist/chunk-DK7OSXRH.js              6.42 KB
 @sunco/skills-workflow:build: ESM dist/brainstorming.skill.js         302.00 B
-@sunco/skills-workflow:build: ESM dist/auto.skill.js                  254.00 B
-@sunco/skills-workflow:build: ESM dist/chunk-BFKVWFP2.js              7.40 KB
 @sunco/skills-workflow:build: ESM dist/ceo-review.skill.js            236.00 B
-@sunco/skills-workflow:build: ESM dist/compound.skill.js              202.00 B
-@sunco/skills-workflow:build: ESM dist/chunk-RIZA2HN4.js              16.60 KB
-@sunco/skills-workflow:build: ESM dist/dashboard-tui.js               8.86 KB
-@sunco/skills-workflow:build: ESM dist/debug.skill.js                 236.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-BFKVWFP2.js              7.40 KB
 @sunco/skills-workflow:build: ESM dist/chunk-OSWLFLNC.js              8.09 KB
+@sunco/skills-workflow:build: ESM dist/chunk-RIZA2HN4.js              16.60 KB
+@sunco/skills-workflow:build: ESM dist/compound.skill.js              202.00 B
+@sunco/skills-workflow:build: ESM dist/debug.skill.js                 236.00 B
 @sunco/skills-workflow:build: ESM dist/chunk-V2BX4DJ5.js              2.63 KB
-@sunco/skills-workflow:build: ESM dist/design-review.skill.js         242.00 B
-@sunco/skills-workflow:build: ESM dist/chunk-7XWW6WVY.js              11.75 KB
+@sunco/skills-workflow:build: ESM dist/auto.skill.js                  254.00 B
 @sunco/skills-workflow:build: ESM dist/chunk-7CKDHQTO.js              24.23 KB
-@sunco/skills-workflow:build: ESM dist/chunk-CQWKHWQ5.js              3.25 KB
-@sunco/skills-workflow:build: ESM dist/chunk-TEASRJPX.js              3.07 KB
+@sunco/skills-workflow:build: ESM dist/dashboard-tui.js               8.86 KB
+@sunco/skills-workflow:build: ESM dist/design-review.skill.js         242.00 B
 @sunco/skills-workflow:build: ESM dist/chunk-Q2LHVNQT.js              797.00 B
-@sunco/skills-workflow:build: ESM dist/chunk-QGM4M3NI.js              1.70 KB
+@sunco/skills-workflow:build: ESM dist/chunk-CQWKHWQ5.js              3.25 KB
+@sunco/skills-workflow:build: ESM dist/chunk-7XWW6WVY.js              11.75 KB
 @sunco/skills-workflow:build: ESM dist/chunk-3T7CYMOF.js              5.95 KB
-@sunco/skills-workflow:build: ESM ⚡️ Build success in 137ms
-@sunco/skills-workflow:build: DTS Build start
-@sunco/skills-workflow:build: DTS ⚡️ Build success in 2818ms
+@sunco/skills-workflow:build: ESM dist/chunk-TEASRJPX.js              3.07 KB
+@sunco/skills-workflow:build: ESM dist/chunk-QGM4M3NI.js              1.70 KB
+@sunco/skills-workflow:build: ESM dist/execute.skill.js               290.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-XBY552RK.js              16.02 KB
+@sunco/skills-workflow:build: ESM dist/chunk-AQCH6336.js              13.28 KB
+@sunco/skills-workflow:build: ESM ⚡️ Build success in 312ms
+@sunco/skills-workflow:build: DTS ⚡️ Build success in 3202ms
 @sunco/skills-workflow:build: DTS dist/dashboard-tui.d.ts        1.41 KB
 @sunco/skills-workflow:build: DTS dist/index.d.ts                73.90 KB
 @sunco/skills-workflow:build: DTS dist/advisor.skill.d.ts        1.03 KB
@@ -503,7 +504,7 @@ stdout:
 @sunco/skills-workflow:build: DTS dist/verify.skill.d.ts         1.07 KB
 @sunco/skills-workflow:build: DTS dist/debug.skill.d.ts          103.00 B
 @sunco/skills-workflow:build: DTS dist/debug.skill-B5ilI2nt.d.ts 5.92 KB
-@sunco/skills-workflow:test: cache hit, replaying logs 0c67749e053d95c5
+@sunco/skills-workflow:test: cache hit, replaying logs a13fe1e5e5a5b0df
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test: > @sunco/skills-workflow@0.0.1 test
 @sunco/skills-workflow:test: > vitest run
@@ -511,31 +512,31 @@ stdout:
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test:  RUN  v3.1.2 /Users/a0000/SUN/sunco-harness/packages/skills-workflow
 @sunco/skills-workflow:test: 
-@sunco/skills-workflow:test:  ✓ src/__tests__/code-graph.test.ts (28 tests) 7ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-engine.test.ts (49 tests) 13ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/verify.test.ts (12 tests) 334ms
-@sunco/skills-workflow:test:    ✓ verifySkill > has correct skill metadata with id, kind, and options  327ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/delivery-slice.test.ts (16 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/execute.test.ts (11 tests) 9ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/research-skill.test.ts (11 tests) 368ms
-@sunco/skills-workflow:test:    ✓ researchSkill > has correct skill metadata  361ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/discuss.test.ts (7 tests) 11ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/plan.test.ts (10 tests) 9ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/milestone.test.ts (11 tests) 441ms
-@sunco/skills-workflow:test:    ✓ milestone skill > metadata > has correct id and command  430ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-golden-scenarios.test.ts (18 tests) 20ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/session-recorder.test.ts (19 tests) 23ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-dogfood.test.ts (14 tests) 9ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/alias-backcompat.test.ts (22 tests) 7ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/diagnostics-runner.test.ts (7 tests) 14ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/release.test.ts (14 tests) 560ms
-@sunco/skills-workflow:test:    ✓ releaseSkill > has correct skill metadata  390ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/ultraplan.test.ts (10 tests) 9ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-classifier.test.ts (23 tests) 7ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/status.test.ts (11 tests) 17ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/phase.test.ts (18 tests) 346ms
-@sunco/skills-workflow:test:    ✓ phase skill > metadata > has correct id and command  332ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/pause-resume.test.ts (12 tests) 10ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/code-graph.test.ts (28 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-engine.test.ts (49 tests) 16ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/delivery-slice.test.ts (16 tests) 6ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/verify.test.ts (12 tests) 385ms
+@sunco/skills-workflow:test:    ✓ verifySkill > has correct skill metadata with id, kind, and options  377ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/execute.test.ts (11 tests) 8ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/research-skill.test.ts (11 tests) 365ms
+@sunco/skills-workflow:test:    ✓ researchSkill > has correct skill metadata  356ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/discuss.test.ts (7 tests) 7ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/milestone.test.ts (11 tests) 434ms
+@sunco/skills-workflow:test:    ✓ milestone skill > metadata > has correct id and command  419ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/plan.test.ts (10 tests) 35ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-golden-scenarios.test.ts (18 tests) 7ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-dogfood.test.ts (14 tests) 13ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/session-recorder.test.ts (19 tests) 14ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/alias-backcompat.test.ts (22 tests) 8ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/release.test.ts (14 tests) 538ms
+@sunco/skills-workflow:test:    ✓ releaseSkill > has correct skill metadata  356ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/diagnostics-runner.test.ts (7 tests) 13ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/ultraplan.test.ts (10 tests) 11ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/status.test.ts (11 tests) 18ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-classifier.test.ts (23 tests) 16ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/phase.test.ts (18 tests) 403ms
+@sunco/skills-workflow:test:    ✓ phase skill > metadata > has correct id and command  394ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/pause-resume.test.ts (12 tests) 49ms
 @sunco/skills-workflow:test: stdout | src/__tests__/review.test.ts > reviewSkill (auto-routing front-door) > auto-detects eng-review when diff has implementation files
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test:   Auto-selected: eng-review (implementation diff detected)
@@ -591,27 +592,29 @@ stdout:
 @sunco/skills-workflow:test:   Auto-selected: ceo-review (active phase step is verify)
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test: 
-@sunco/skills-workflow:test:  ✓ src/__tests__/review.test.ts (12 tests) 362ms
-@sunco/skills-workflow:test:    ✓ reviewSkill (auto-routing front-door) > has correct skill metadata including tier: user (D-08)  353ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/plan-parser.test.ts (17 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/feature-tracker.test.ts (16 tests) 10ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/ship.test.ts (9 tests) 687ms
-@sunco/skills-workflow:test:    ✓ shipSkill > has correct skill metadata  320ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/new.test.ts (9 tests) 7ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/note-lists.test.ts (13 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-promotion.test.ts (30 tests) 6ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/active-work-rendering.test.ts (7 tests) 14ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/lifecycle-hooks.test.ts (18 tests) 332ms
-@sunco/skills-workflow:test:    ✓ registerActiveWorkHook > writes a recent_skill_calls entry to .sun/active-work.json  317ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/brainstorming.test.ts (12 tests) 8ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-postaction-hook.test.ts (15 tests) 12ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-auto.test.ts (8 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/artifact-summarizer.test.ts (11 tests) 2ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/ultraplan-prompt.test.ts (11 tests) 6ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/changelog-writer.test.ts (13 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/orchestration-router.test.ts (21 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/review.test.ts (12 tests) 348ms
+@sunco/skills-workflow:test:    ✓ reviewSkill (auto-routing front-door) > has correct skill metadata including tier: user (D-08)  335ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/plan-parser.test.ts (17 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/feature-tracker.test.ts (16 tests) 9ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/ship.test.ts (9 tests) 792ms
+@sunco/skills-workflow:test:    ✓ shipSkill > has correct skill metadata  370ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/new.test.ts (9 tests) 18ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/active-work-rendering.test.ts (7 tests) 7ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-promotion.test.ts (30 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/lifecycle-hooks.test.ts (18 tests) 321ms
+@sunco/skills-workflow:test:    ✓ registerActiveWorkHook > writes a recent_skill_calls entry to .sun/active-work.json  314ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/note-lists.test.ts (13 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/brainstorming.test.ts (12 tests) 6ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-postaction-hook.test.ts (15 tests) 9ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/artifact-summarizer.test.ts (11 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-auto.test.ts (8 tests) 1ms
 @sunco/skills-workflow:test:  ✓ src/__tests__/review-arsenal.test.ts (6 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/settings-writer.test.ts (14 tests) 55ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/ultraplan-prompt.test.ts (11 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/changelog-writer.test.ts (13 tests) 7ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/orchestration-router.test.ts (21 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-ambient-hook.test.ts (15 tests) 7ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/settings-writer.test.ts (14 tests) 46ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/worktree-manager.test.ts (11 tests) 3ms
 @sunco/skills-workflow:test: stdout | src/__tests__/review-fix-loop.test.ts > review --fix loop > routes each agreed issue through workflow.quick and then re-verifies
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test:   Auto-selected: eng-review (--type flag)
@@ -632,28 +635,24 @@ stdout:
 @sunco/skills-workflow:test:   Auto-selected: eng-review (--type flag)
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test: 
-@sunco/skills-workflow:test:  ✓ src/__tests__/review-fix-loop.test.ts (11 tests) 25ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-ambient-hook.test.ts (15 tests) 13ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/worktree-manager.test.ts (11 tests) 7ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/review-fix-loop.test.ts (11 tests) 7ms
 @sunco/skills-workflow:test:  ✓ src/__tests__/hwpx-writer.test.ts (11 tests) 21ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/skill-profile.test.ts (11 tests) 11ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/scan.test.ts (7 tests) 22ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/scan.test.ts (7 tests) 10ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/skill-profile.test.ts (11 tests) 19ms
 @sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-evidence.test.ts (13 tests) 5ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/coverage-parser.test.ts (4 tests) 2ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-skill.test.ts (9 tests) 105ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/catch-rules.test.ts (14 tests) 5ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase-reader.test.ts (12 tests) 58ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/do-classifier.test.ts (19 tests) 6ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/roadmap-parser.test.ts (12 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/orchestrate.test.ts (7 tests) 8ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/stuck-detector.test.ts (11 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/new-skill.test.ts (14 tests) 105ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/version-bumper.test.ts (11 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-confidence.test.ts (13 tests) 5ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-contract.test.ts (12 tests) 9ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/iron-law-gate.test.ts (12 tests) 9ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/roadmap-writer.test.ts (13 tests) 6ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/auto-lock.test.ts (10 tests) 103ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/coverage-parser.test.ts (4 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/catch-rules.test.ts (14 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/orchestrate.test.ts (7 tests) 17ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase-reader.test.ts (12 tests) 35ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-skill.test.ts (9 tests) 64ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/do-classifier.test.ts (19 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/roadmap-parser.test.ts (12 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/stuck-detector.test.ts (11 tests) 3ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/advisor-contract.test.ts (12 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/version-bumper.test.ts (11 tests) 16ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/router-confidence.test.ts (13 tests) 8ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/new-skill.test.ts (14 tests) 15ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/auto-lock.test.ts (10 tests) 45ms
 @sunco/skills-workflow:test: stdout | src/__tests__/do-delegation.test.ts > do.skill.ts delegation > deep category delegates to workflow.quick with full=true
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test:   → deep: implement, phase, implement phase
@@ -664,6 +663,7 @@ stdout:
 @sunco/skills-workflow:test:   → quick: fix, typo
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test: 
+@sunco/skills-workflow:test:  ✓ src/__tests__/iron-law-gate.test.ts (12 tests) 5ms
 @sunco/skills-workflow:test: stdout | src/__tests__/do-delegation.test.ts > do.skill.ts delegation > debug category delegates to workflow.debug
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test:   → debug: why is
@@ -684,56 +684,57 @@ stdout:
 @sunco/skills-workflow:test:   → deep: build, feature
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test: 
-@sunco/skills-workflow:test:  ✓ src/__tests__/do-delegation.test.ts (8 tests) 7ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/tdd-gate.test.ts (13 tests) 2ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/handoff.test.ts (10 tests) 8ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/do-delegation.test.ts (8 tests) 21ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/roadmap-writer.test.ts (13 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/tdd-gate.test.ts (13 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/handoff.test.ts (10 tests) 11ms
 @sunco/skills-workflow:test:  ✓ src/__tests__/bug-patterns.test.ts (13 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/budget-guard.test.ts (17 tests) 7ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/learnings.test.ts (9 tests) 86ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/skill-timeline.test.ts (8 tests) 26ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/debug-learnings.test.ts (10 tests) 22ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/specialist-gate.test.ts (8 tests) 8ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/context-rotator.test.ts (14 tests) 1ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/budget-guard.test.ts (17 tests) 3ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/learnings.test.ts (9 tests) 65ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/skill-timeline.test.ts (8 tests) 30ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/debug-learnings.test.ts (10 tests) 45ms
 @sunco/skills-workflow:test:  ✓ src/shared/__tests__/layer6-behavior.test.ts (5 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/model-selector.test.ts (13 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/spec-approval-gate.test.ts (6 tests) 42ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/dashboard-tui.test.tsx (10 tests) 5ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/harness-budget.test.ts (13 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/context-rotator.test.ts (14 tests) 3ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/specialist-gate.test.ts (8 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/model-selector.test.ts (13 tests) 2ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/harness-budget.test.ts (13 tests) 7ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/spec-approval-gate.test.ts (6 tests) 86ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/dashboard-tui.test.tsx (10 tests) 4ms
 @sunco/skills-workflow:test:  ✓ src/__tests__/adaptive-timeout.test.ts (14 tests) 1ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/skill-router.test.ts (12 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-cross-domain-conflict.test.ts (3 tests) 38ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/intent-classifier.test.ts (8 tests) 18ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/debug.skill.test.ts (7 tests) 2ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/error-sanitizer.test.ts (10 tests) 2ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/skill-router.test.ts (12 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-cross-domain-conflict.test.ts (3 tests) 47ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/intent-classifier.test.ts (8 tests) 6ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/debug.skill.test.ts (7 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/state-reader.test.ts (8 tests) 2ms
 @sunco/skills-workflow:test:  ✓ src/__tests__/plan-completion-auditor.test.ts (10 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/state-reader.test.ts (8 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-proceed-gate-lifecycle.test.ts (4 tests) 7ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/test-stub-generator.test.ts (8 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/confidence-gate.test.ts (6 tests) 4ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/context-recovery.test.ts (5 tests) 19ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/scope-drift-detector.test.ts (8 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/context-zones.test.ts (7 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/keyword-matcher.test.ts (8 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/plan-coverage.test.ts (5 tests) 7ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/test-stub-generator.test.ts (8 tests) 2ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/error-sanitizer.test.ts (10 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-proceed-gate-lifecycle.test.ts (4 tests) 3ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/context-recovery.test.ts (5 tests) 20ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/confidence-gate.test.ts (6 tests) 3ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/context-zones.test.ts (7 tests) 10ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/scope-drift-detector.test.ts (8 tests) 4ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/keyword-matcher.test.ts (8 tests) 5ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/plan-coverage.test.ts (5 tests) 22ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/cross-family-selection.test.ts (5 tests) 3ms
 @sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-ui-review-regression.test.ts (7 tests) 3ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/cross-family-selection.test.ts (5 tests) 2ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/verify-layers-layer2.test.ts (1 test) 2ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-backend-rest.test.ts (3 tests) 25ms
-@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-frontend-web.test.ts (2 tests) 131ms
-@sunco/skills-workflow:test:  ✓ src/__tests__/e2e-integration.test.ts (6 tests) 3416ms
-@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco --help shows redirect to help command (D-06)  1134ms
-@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco with no args outputs help content (D-10, D-12)  541ms
-@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco --version outputs a valid semver string  423ms
-@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > CLI boots in under 3000ms (target <500ms)  438ms
-@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco query completes without crashing (no LLM required)  425ms
-@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco graph --stats works on a minimal project  428ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/verify-layers-layer2.test.ts (1 test) 3ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-frontend-web.test.ts (2 tests) 188ms
+@sunco/skills-workflow:test:  ✓ src/shared/__tests__/phase51-backend-rest.test.ts (3 tests) 22ms
+@sunco/skills-workflow:test:  ✓ src/__tests__/e2e-integration.test.ts (6 tests) 3580ms
+@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco --help shows redirect to help command (D-06)  1361ms
+@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco with no args outputs help content (D-10, D-12)  464ms
+@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco --version outputs a valid semver string  436ms
+@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > CLI boots in under 3000ms (target <500ms)  424ms
+@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco query completes without crashing (no LLM required)  441ms
+@sunco/skills-workflow:test:    ✓ E2E: deterministic skill chain > sunco graph --stats works on a minimal project  447ms
 @sunco/skills-workflow:test: 
 @sunco/skills-workflow:test:  Test Files  97 passed (97)
 @sunco/skills-workflow:test:       Tests  1121 passed (1121)
-@sunco/skills-workflow:test:    Start at  21:36:22
-@sunco/skills-workflow:test:    Duration  6.69s (transform 1.90s, setup 0ms, collect 11.03s, tests 8.20s, environment 8ms, prepare 4.95s)
+@sunco/skills-workflow:test:    Start at  21:44:09
+@sunco/skills-workflow:test:    Duration  6.93s (transform 1.89s, setup 0ms, collect 11.14s, tests 8.48s, environment 20ms, prepare 5.01s)
 @sunco/skills-workflow:test: 
-popcoru:build: cache hit, replaying logs 8cf1b36185464ee6
+popcoru:build: cache hit, replaying logs e02d132f825e30dc
 popcoru:build: 
 popcoru:build: > popcoru@0.14.0 build
 popcoru:build: > tsup
@@ -745,65 +746,65 @@ popcoru:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/cl
 popcoru:build: CLI Target: node22
 popcoru:build: CLI Cleaning output folder
 popcoru:build: ESM Build start
-popcoru:build: ESM dist/debug-ironlaw-JBEVW7DX-2FP24HPF.js      292.00 B
-popcoru:build: ESM dist/diagnostics-runner-3MRBS7FG-RLUR4RPW.js 388.00 B
-popcoru:build: ESM dist/coverage-audit-FROPWNZY-2V2PL76Y.js     3.44 KB
 popcoru:build: ESM dist/test-generator-Z54JJWEK-MDK2DHHW.js     5.70 KB
+popcoru:build: ESM dist/diagnostics-runner-3MRBS7FG-RLUR4RPW.js 388.00 B
 popcoru:build: ESM dist/forensics-analyzer-CQWNNRPW-2VJYYF5M.js 6.05 KB
-popcoru:build: ESM dist/advisor-HDPNBWUQ.js                     4.25 KB
-popcoru:build: ESM dist/advisor-prompt-7VR5ONNL-W6SEQKL6.js     2.35 KB
-popcoru:build: ESM dist/html-report-RNVNWMPL-XWCHFZ3W.js        18.15 KB
-popcoru:build: ESM dist/note-lists-3CVB623Z-PEFUUD4O.js         8.14 KB
+popcoru:build: ESM dist/debug-ironlaw-JBEVW7DX-2FP24HPF.js      292.00 B
+popcoru:build: ESM dist/coverage-audit-FROPWNZY-2V2PL76Y.js     3.44 KB
 popcoru:build: ESM dist/assumption-preview-OJMCUDB3-MAIAWU4F.js 6.24 KB
-popcoru:build: ESM dist/execa-QO536OVM-3P5SAUCF.js              230.10 KB
+popcoru:build: ESM dist/note-lists-3CVB623Z-PEFUUD4O.js         8.14 KB
+popcoru:build: ESM dist/advisor-prompt-7VR5ONNL-W6SEQKL6.js     2.35 KB
+popcoru:build: ESM dist/advisor-HDPNBWUQ.js                     4.25 KB
+popcoru:build: ESM dist/html-report-RNVNWMPL-XWCHFZ3W.js        18.15 KB
+popcoru:build: ESM dist/dist-SCB7GOF4.js                        5.38 KB
 popcoru:build: ESM dist/engine-ACC4MOOJ-7XDYZY2I.js             292.00 B
-popcoru:build: ESM dist/dist-I3PIIZME.js                        5.38 KB
-popcoru:build: ESM dist/query-snapshot-FAT64F2F-VWMDTIYD.js     1.93 KB
-popcoru:build: ESM dist/dashboard-tui-XS4UZH3N.js               9.45 KB
+popcoru:build: ESM dist/dashboard-tui-QYDRZAKW.js               9.45 KB
+popcoru:build: ESM dist/execa-QO536OVM-3P5SAUCF.js              230.10 KB
 popcoru:build: ESM dist/context-view-SDZYTK2V-T6QVCO7D.js       5.17 KB
+popcoru:build: ESM dist/query-snapshot-FAT64F2F-VWMDTIYD.js     1.93 KB
+popcoru:build: ESM dist/codex-cli-RYQ4U2PN-HVDCUPQG.js          338.00 B
 popcoru:build: ESM dist/esm-MOE37W43.js                         719.00 B
 popcoru:build: ESM dist/chunk-6NMTNAUS.js                       2.96 KB
 popcoru:build: ESM dist/chunk-NGEHO6UN.js                       3.66 KB
 popcoru:build: ESM dist/chunk-6IAJ4EC6.js                       4.34 KB
-popcoru:build: ESM dist/chunk-ZTLEFBHK.js                       3.57 KB
-popcoru:build: ESM dist/chunk-Q5SBTUFP.js                       1.66 KB
 popcoru:build: ESM dist/esm-4HAK7ECL-X6JOLOPN.js                157.51 KB
+popcoru:build: ESM dist/chunk-Q5SBTUFP.js                       1.66 KB
+popcoru:build: ESM dist/chunk-ZTLEFBHK.js                       3.57 KB
 popcoru:build: ESM dist/chunk-KALYS6IV.js                       1.94 KB
 popcoru:build: ESM dist/chunk-AV5NJAHR.js                       3.31 KB
 popcoru:build: ESM dist/chunk-KBKRZZDA.js                       3.85 KB
 popcoru:build: ESM dist/chunk-73HKOLTF.js                       935.00 B
-popcoru:build: ESM dist/chunk-IRHTEIYM.js                       32.57 KB
-popcoru:build: ESM dist/chunk-ZT5F4DOV.js                       196.85 KB
-popcoru:build: ESM dist/chunk-3KGUDGGX.js                       3.39 KB
+popcoru:build: ESM dist/chunk-VL5KUCW3.js                       1.46 KB
 popcoru:build: ESM dist/chunk-EGTDIVOX.js                       3.22 KB
-popcoru:build: ESM dist/codex-cli-RYQ4U2PN-HVDCUPQG.js          338.00 B
-popcoru:build: ESM dist/chunk-VDLRYTER.js                       14.58 KB
+popcoru:build: ESM dist/chunk-GH2RNZHX.js                       87.62 KB
+popcoru:build: ESM dist/chunk-3KGUDGGX.js                       3.39 KB
 popcoru:build: ESM dist/chunk-EOEHCX5J.js                       1.94 KB
 popcoru:build: ESM dist/runtime-cli.js                          31.08 KB
 popcoru:build: ESM dist/SkillEntry-JCA3JHB4-JKFHDZSD.js         266.00 B
-popcoru:build: ESM dist/chunk-TY4X5PK2.js                       1.01 KB
-popcoru:build: ESM dist/InteractiveChoice-QP5G2S72-3HMMMJNU.js  310.00 B
-popcoru:build: ESM dist/SkillProgress-6NTZOJQG-TWJJPBGH.js      272.00 B
-popcoru:build: ESM dist/chunk-JI4D53UB.js                       157.94 KB
-popcoru:build: ESM dist/chunk-2LEE345N.js                       3.16 KB
-popcoru:build: ESM dist/chunk-6XQFXK2T.js                       2.21 KB
-popcoru:build: ESM dist/chunk-IRWB7ZMO.js                       464.00 B
-popcoru:build: ESM dist/claude-cli-5A5CX2BD-IN6QJKU7.js         340.00 B
-popcoru:build: ESM dist/chunk-VJC4ZAPA.js                       848.00 B
-popcoru:build: ESM dist/chunk-GRX2DJFL.js                       2.25 KB
-popcoru:build: ESM dist/chunk-APHUJNVP.js                       3.02 KB
-popcoru:build: ESM dist/chunk-5HJBGSMV.js                       238.37 KB
-popcoru:build: ESM dist/chunk-7PBJV4DE.js                       2.49 KB
-popcoru:build: ESM dist/chunk-B2VSEQ6S.js                       1.77 KB
+popcoru:build: ESM dist/chunk-IRHTEIYM.js                       32.57 KB
 popcoru:build: ESM dist/chunk-GIGCRXZS.js                       1.72 KB
-popcoru:build: ESM dist/chunk-3UQITMEG.js                       1.82 KB
 popcoru:build: ESM dist/chunk-4Q2ZZDEW.js                       128.42 KB
+popcoru:build: ESM dist/chunk-TY4X5PK2.js                       1.01 KB
+popcoru:build: ESM dist/chunk-VDLRYTER.js                       14.58 KB
+popcoru:build: ESM dist/chunk-JI4D53UB.js                       157.94 KB
+popcoru:build: ESM dist/SkillProgress-6NTZOJQG-TWJJPBGH.js      272.00 B
+popcoru:build: ESM dist/InteractiveChoice-QP5G2S72-3HMMMJNU.js  310.00 B
+popcoru:build: ESM dist/chunk-2LEE345N.js                       3.16 KB
 popcoru:build: ESM dist/SkillResult-ZU73A7TU-WQ2KOBRP.js        298.00 B
-popcoru:build: ESM dist/cli.js                                  796.67 KB
+popcoru:build: ESM dist/chunk-VJC4ZAPA.js                       848.00 B
+popcoru:build: ESM dist/chunk-IRWB7ZMO.js                       464.00 B
+popcoru:build: ESM dist/chunk-6XQFXK2T.js                       2.21 KB
+popcoru:build: ESM dist/chunk-APHUJNVP.js                       3.02 KB
+popcoru:build: ESM dist/chunk-GRX2DJFL.js                       2.25 KB
+popcoru:build: ESM dist/claude-cli-5A5CX2BD-IN6QJKU7.js         340.00 B
+popcoru:build: ESM dist/chunk-B2VSEQ6S.js                       1.77 KB
+popcoru:build: ESM dist/chunk-7PBJV4DE.js                       2.49 KB
 popcoru:build: ESM dist/claude-sdk-WQX44DZA-LT7RO7RP.js         310.00 B
-popcoru:build: ESM dist/chunk-VL5KUCW3.js                       1.46 KB
-popcoru:build: ESM ⚡️ Build success in 211ms
-popcoru:test: cache hit, replaying logs d24a4575f93e62d5
+popcoru:build: ESM dist/chunk-5HJBGSMV.js                       238.37 KB
+popcoru:build: ESM dist/chunk-3UQITMEG.js                       1.82 KB
+popcoru:build: ESM dist/cli.js                                  906.38 KB
+popcoru:build: ESM ⚡️ Build success in 153ms
+popcoru:test: cache hit, replaying logs c98f2bc4f52fe744
 popcoru:test: 
 popcoru:test: > popcoru@0.14.0 test
 popcoru:test: > node bin/smoke-test.cjs --runtime claude
@@ -1702,7 +1703,7 @@ popcoru:test:
 
  Tasks:    18 successful, 18 total
 Cached:    18 cached, 18 total
-  Time:    73ms >>> FULL TURBO
+  Time:    71ms >>> FULL TURBO
 
 
 
