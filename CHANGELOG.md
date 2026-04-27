@@ -6,6 +6,58 @@ Prior releases (v1.0 through v1.3) are summarized from git history and `ROADMAP.
 
 ---
 
+## [0.14.0] — 2026-04-27 — SUNCO v1.6 Proof-first Runtime + M8 Productization Gate
+
+**Internal milestone**: v1.6 Proof-first Runtime Foundation (M7) plus M8 Productization Gate. M7 delivers the runtime contract and implementation slice; M8 proves the packaged and installed product executes the same runtime path.
+
+**npm version rationale**: per the v1.4/v1.5 policy, v1.6 milestone → `0.14.0` (minor bump, pre-stable). `popcoru` remains pre-1.0; `1.0.0` is still reserved for a stable-API declaration.
+
+### Added
+
+**M7 — Proof-first Runtime Foundation**
+- `@sunco/evidence` — task/evidence/check/decision storage under `.sunco/tasks/<task-id>/`.
+- `@sunco/verifier` — JS/TS workspace check detection, execution, timeout/log capture, and verification evidence updates.
+- `@sunco/runtime` — runtime loop MVP: task creation, edit evidence, verifier execution, Done Gate, and status transitions.
+- `@sunco/edit-engine` — changed-file hashes, changed-file evidence, diff patches, and rollback patches.
+- `packages/cli/src/runtime-cli.ts` + `bin/sunco-runtime.cjs` — installed front door for `sunco-runtime do/status/verify/ship`.
+- Benchmark seeds for false-done prevention and a basic bugfix flow.
+
+**M8 — Productization Gate**
+- `sunco-runtime` is now an npm bin in `popcoru` and is installed into Claude, Codex, Cursor, and Antigravity runtime homes.
+- The CLI bundle includes the runtime implementation; installed runtime directories do not depend on unpublished workspace packages.
+- `packages/cli/bin/release-artifact-smoke.cjs` validates `npm pack -> clean npm prefix install -> temp HOME runtime install -> installed sunco-runtime do/status/verify/ship` across all supported runtimes.
+- The artifact smoke also supports `--registry popcoru@<version>` so the published registry artifact can be verified with the same installed-product path.
+- Root `npm run release:gate` now composes build, typecheck, tests, lint, whitespace, audit, and artifact smoke.
+- GitHub Actions now runs Node 22/24 across Ubuntu/macOS, includes Antigravity smoke, runs the release artifact gate, triggers on `v*` tags, and verifies the registry artifact after publish.
+
+### Fixed
+
+- Package-level TypeScript checks now cover the runtime packages and tests.
+- Untracked added files now produce non-empty diff and rollback evidence before Done Gate can pass.
+- A `repo_mutate` task with zero changed files is blocked instead of being marked DONE.
+- Dummy lint placeholders were removed; workspace lint now runs real checks.
+- npm audit was reduced to 0 vulnerabilities.
+- Package repository/homepage/bugs metadata now points at the actual `kwmin122/sunco-harness` repository.
+
+### Verification
+
+Release gate expected at the release commit:
+
+| Suite | Result |
+|-------|--------|
+| `npm run build -- --force` | PASS |
+| `npm run typecheck` | PASS |
+| `npm test -- --force` | PASS |
+| `npm run lint -- --force` | PASS |
+| `npm run format:check` | PASS |
+| `npm audit --json` | PASS, 0 vulnerabilities |
+| `npm run test:codex --workspace popcoru` | PASS against installed Codex runtime |
+| `npm run test:artifact --workspace popcoru` | PASS, packaged artifact across Claude/Codex/Cursor/Antigravity |
+
+### Scope boundary
+
+v0.14.0 closes the proof-first runtime foundation and installed-product release path. Approval UX, true stale-edit preflight authority, loop guardrails, evidence hash-chain durability, benchmark runner depth, and semantic PR/release ship integration are intentionally tracked as M9-M12 work rather than claimed as finished here.
+
 ## [0.13.0] — 2026-04-22 — SUNCO v1.5 SUNCO Workflow Router
 
 **Internal milestone**: v1.5 SUNCO Workflow Router (7/7 phases committed: 52a + 52b + 53 + 54 + 55 + 56 + 57; M6 committed set complete). Design captured at commit `30e2041` in `.planning/router/DESIGN-v1.md` (678 lines, 4-round convergent review: plan-verifier + Codex; no v2 divergence relay; clean-room design inspired only by the general workflow idea of recurring stages).

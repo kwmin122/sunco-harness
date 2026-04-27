@@ -609,14 +609,15 @@ Indicative: 3-5 weeks (52a small / 52b medium / 53 medium / 54 medium / 55 mediu
 
 ### Milestone M8 — Productization
 
-**In progress locally**:
+**Delivered locally**:
 - **Phase 68**: Runtime front-door productization — npm `sunco-runtime` bin, bundled runtime CLI, installer fan-out to Claude/Codex/Cursor/Antigravity runtime homes, installed smoke coverage. REQ: IF-34, IF-35.
+- **Phase 69**: Release Artifact Gate CI — `npm run test:artifact --workspace popcoru` promoted into the official release gate on clean HOME + clean npm prefix, with registry-mode smoke after publish. REQ: IF-35.
+- **Phase 70**: Version/Release Truth — package semver, README, STATE, release notes, changelog, release gate scripts, and package metadata aligned to `popcoru@0.14.0`. REQ: IF-36.
+- **Phase 71**: Install Matrix — CI covers Node 22/24 across Ubuntu/macOS plus clean HOME artifact smoke for every supported runtime. REQ: IF-37.
+- **Phase 72**: Dogfood Release Evidence — this repo's own release evidence is recorded under `.sunco/tasks/release-v0.14.0/` before publish. REQ: IF-38.
 
-**Pending**:
-- **Phase 69**: Release Artifact Gate CI — promote `npm run test:artifact --workspace popcoru` into the official release gate on clean HOME + clean npm prefix. REQ: IF-35.
-- **Phase 70**: Version/Release Truth — align package semver, README, STATE, release notes, changelog, tag, publish, registry verification, and canary language. REQ: IF-36.
-- **Phase 71**: Install Matrix — validate Node version, OS, package-manager, and clean HOME install variants. REQ: IF-37.
-- **Phase 72**: Dogfood Release Evidence — this repo's own release must pass through `.sunco/tasks/<release-id>/` evidence before publish. REQ: IF-38.
+**Blocked externally**:
+- **Publish boundary**: npm publish and registry verification require npm credentials or a GitHub `NPM_TOKEN` secret.
 
 ### Success criteria (Done for M8)
 
@@ -624,4 +625,4 @@ Indicative: 3-5 weeks (52a small / 52b medium / 53 medium / 54 medium / 55 mediu
 2. A clean npm prefix install exposes the `sunco-runtime` bin.
 3. A temp HOME install copies `sunco-runtime.cjs` into each supported runtime directory.
 4. Installed Claude, Codex, Cursor, and Antigravity runtimes can run `sunco-runtime do/status/verify/ship`.
-5. The release claim distinguishes local RC, published npm version, git tag, registry verification, and canary evidence.
+5. The release claim distinguishes source-tree gate, packed artifact gate, published npm version, git tag, registry verification, and canary evidence.

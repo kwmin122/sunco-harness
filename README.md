@@ -48,6 +48,15 @@ SUNCO는 세 가지를 강제합니다.
 - **다모델 디자인 핑퐁** — Claude + Codex 병렬 디자인과 병합
 - **한국어 i18n** — 한국어 설명, 대화형 설치기, proof-first 작업 흐름
 
+### v0.14.0의 새 기능 (v1.6 Proof-first Runtime + M8 Productization Gate)
+
+- **`sunco-runtime` 설치 제품화** — npm bin으로 `sunco-runtime`을 노출하고, 설치기가 Claude, Codex, Cursor, Antigravity 홈에 `sunco-runtime.cjs`를 복사합니다. 설치된 런타임은 unpublished workspace package 없이 실행됩니다.
+- **Proof-first runtime vertical slice** — task/evidence/check/edit/done 계약, Evidence Store, Verify Engine, Done Gate, Hash Edit Engine, runtime loop MVP가 `No evidence, no done` 규칙을 코드로 강제합니다.
+- **False-done 차단** — 변경 없는 `repo_mutate` 작업은 DONE이 될 수 없고, untracked 파일도 diff/rollback evidence를 남겨야 Done Gate를 통과합니다.
+- **Release Artifact Gate** — `npm pack -> clean npm prefix install -> temp HOME runtime install -> installed sunco-runtime do/status/verify/ship`를 Claude, Codex, Cursor, Antigravity 전체에서 실행합니다.
+- **Registry-ready gate** — CI tag workflow가 Node 22/24 + Ubuntu/macOS에서 build/typecheck/test/lint/audit/artifact smoke를 실행하고, publish 후 `popcoru@<tag>`를 다시 clean install해 registry artifact를 검증하도록 구성했습니다.
+- **릴리스 진실성 정리** — npm package metadata, changelog, release docs, STATE, ROADMAP/REQUIREMENTS가 `popcoru@0.14.0`과 v1.6/M8 범위를 같은 말로 설명합니다.
+
 ### v0.13.0의 새 기능 (v1.5 SUNCO Workflow Router)
 
 - **`/sunco:router` — 결정적 워크플로 라우터** — 10단계 스테이지(`BRAINSTORM → PLAN → WORK → REVIEW → VERIFY → PROCEED → SHIP → RELEASE → COMPOUND → PAUSE`) 상태 머신. 증거 기반 분류기 + 동결 가중치 confidence + 7-point Freshness Gate. LLM 비용 0(확정적). 결과는 `.sun/router/session/*.json`(ephemeral)과 promotion 기준 충족 시 `.planning/router/decisions/*.json`(durable)에 원자적으로 기록.
@@ -117,6 +126,12 @@ npx popcoru
 # 플래그로 바로 설치
 npx popcoru --all --lang ko          # 모든 런타임, 한국어
 npx popcoru --claude --codex         # Claude Code + Codex만
+
+# 설치된 proof-first runtime
+sunco-runtime do "fix the failing test" --task fix-test
+sunco-runtime status fix-test
+sunco-runtime verify fix-test
+sunco-runtime ship fix-test
 
 # Claude Code에서
 /sunco:mode              # SUNCO Mode 활성화 (모든 입력 자동 라우팅)

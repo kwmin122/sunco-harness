@@ -18,6 +18,7 @@
     "format:check": "git diff --check && git diff --cached --check",
     "format:check:base": "git diff --check origin/main..HEAD",
     "lint": "turbo lint",
+    "release:gate": "npm run build -- --force && npm run typecheck && npm test -- --force && npm run lint -- --force && npm run format:check && npm audit --json && npm run test:artifact --workspace popcoru",
     "clean": "turbo clean"
   },
   "devDependencies": {

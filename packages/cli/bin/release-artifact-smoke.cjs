@@ -5,8 +5,9 @@
  * Release artifact smoke gate.
  *
  * Validates the product path rather than the source tree path:
- *   npm pack -> temp npm prefix install -> temp HOME runtime install
- *   -> installed sunco-runtime do/status/verify/ship.
+ *   local mode:    npm pack -> temp npm prefix install -> temp HOME runtime install
+ *   registry mode: npm install <spec> -> temp HOME runtime install
+ *   both modes:    installed sunco-runtime do/status/verify/ship.
  */
 
 const fs = require('fs');
@@ -31,15 +32,22 @@ let failed = 0;
 function parseArgs(argv) {
   const args = argv.slice(2);
   const runtimes = [];
+  let registrySpec = '';
   for (let i = 0; i < args.length; i += 1) {
     if (args[i] === '--runtime' && args[i + 1]) {
       const value = args[++i];
       if (value === 'all') runtimes.push(...DEFAULT_RUNTIMES);
       else runtimes.push(...value.split(',').map((part) => part.trim()).filter(Boolean));
+    } else if (args[i] === '--registry') {
+      const next = args[i + 1];
+      registrySpec = next && !next.startsWith('--') ? args[++i] : 'popcoru';
+    } else if (args[i].startsWith('--registry=')) {
+      registrySpec = args[i].slice('--registry='.length);
     }
   }
   return {
     runtimes: runtimes.length > 0 ? [...new Set(runtimes)] : DEFAULT_RUNTIMES,
+    registrySpec,
   };
 }
 
@@ -147,7 +155,7 @@ function findInstalledPackageRoot(prefix) {
 }
 
 async function main() {
-  const { runtimes } = parseArgs(process.argv);
+  const { runtimes, registrySpec } = parseArgs(process.argv);
   const unknown = runtimes.filter((runtime) => !RUNTIME_DIRS[runtime]);
   if (unknown.length > 0) {
     throw new Error(`Unknown runtime(s): ${unknown.join(', ')}`);
@@ -163,19 +171,25 @@ async function main() {
 
   console.log(`\n${BOLD}SUNCO Release Artifact Smoke${RESET}`);
   console.log(`  ${DIM}${root}${RESET}\n`);
+  console.log(`  source: ${registrySpec || 'local npm pack'}\n`);
 
-  run('npm', ['pack', '--pack-destination', packDir], { cwd: pkgRoot, timeout: 180000 });
-  const tarball = findTarball(packDir);
-  check('npm pack creates release tarball', fs.existsSync(tarball), path.basename(tarball));
+  let installTarget = registrySpec;
+  if (!installTarget) {
+    run('npm', ['pack', '--pack-destination', packDir], { cwd: pkgRoot, timeout: 180000 });
+    installTarget = findTarball(packDir);
+    check('npm pack creates release tarball', fs.existsSync(installTarget), path.basename(installTarget));
+  } else {
+    check('registry package spec selected', installTarget.length > 0, installTarget);
+  }
 
   const installEnv = { ...process.env, HOME: home };
-  run('npm', ['install', '--global', '--prefix', prefix, tarball], {
+  run('npm', ['install', '--global', '--prefix', prefix, installTarget], {
     cwd: root,
     env: installEnv,
     timeout: 180000,
   });
   const installedPackageRoot = findInstalledPackageRoot(prefix);
-  check('tarball installs into clean npm prefix', fs.existsSync(installedPackageRoot));
+  check(`${registrySpec ? 'registry package' : 'tarball'} installs into clean npm prefix`, fs.existsSync(installedPackageRoot));
 
   const globalRuntimeBin = path.join(prefix, 'bin', 'sunco-runtime');
   check('package exposes sunco-runtime bin', fs.existsSync(globalRuntimeBin));

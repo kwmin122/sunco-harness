@@ -385,6 +385,8 @@ M7 excluded surfaces: TUI, Studio/web UI, full LSP, multi-agent runtime, marketp
 
 Source: M7 verification review and Phase 68 productization context. M8 closes the gap between source-tree runtime correctness and installed-product runtime correctness.
 
+Status on 2026-04-27: IF-34 through IF-38 are implemented locally. External npm publish and registry verification remain blocked until npm credentials or a GitHub `NPM_TOKEN` secret exists.
+
 ### Productization Core (M8)
 
 - **IF-34**: Runtime Front Door Productization — `sunco-runtime` must be exposed as an npm bin and installed into each runtime home as an executable front door. Installed runtime directories must not require unpublished workspace packages. Covered by Phase 68.

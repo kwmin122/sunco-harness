@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: M8
 milestone_name: Productization Gate
-status: phase-68-runtime-productization-in-progress
+status: v0.14.0-release-gate-ready-external-publish-blocked
 stopped_at: ""
-last_updated: "2026-04-27T21:20:00+09:00"
+last_updated: "2026-04-27T21:30:00+09:00"
 last_activity: 2026-04-27
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
-  percent: 20
+  completed_phases: 5
+  total_plans: 5
+  completed_plans: 5
+  percent: 90
 previous_milestone:
   label: v1.5
   name: SUNCO Workflow Router
@@ -31,20 +31,20 @@ previous_milestone:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** 에이전트가 끝났다고 말하기 전에 증거를 요구하는 proof-first runtime
-**Current focus:** M8 Productization Gate — source-tree M7 is locally green; the active work is proving the packaged and installed product runs the same proof-first runtime path.
+**Current focus:** M8 Productization Gate — package, install, runtime, CI, and release truth are prepared for `popcoru@0.14.0`; external npm publish is blocked by missing npm credentials.
 
 ## Current Position
 
 Milestone: M8 Productization Gate
-Current phase: Phase 68 Runtime Front Door Productization in progress. M7 source-tree runtime is complete; Phase 68 makes `sunco-runtime` a packaged npm bin and installed runtime front door.
-Status: local branch contains the M7 architecture/runtime/hardening commits plus uncommitted M8 productization changes. `npm pack -> clean npm prefix -> temp HOME -> Claude/Codex/Cursor/Antigravity sunco-runtime do/status/verify/ship` passes locally.
+Current phase: external publish boundary. M7 source-tree runtime is complete and M8 productization is implemented for the installed product path.
+Status: local release gate is prepared for `popcoru@0.14.0`. `npm pack -> clean npm prefix -> temp HOME -> Claude/Codex/Cursor/Antigravity sunco-runtime do/status/verify/ship` is the release artifact gate. `npm whoami` returns `E401` and no GitHub `NPM_TOKEN` secret is configured, so npm publish/tag release must wait for registry credentials.
 Design source: `docs/architecture/runtime-foundation.md`
 Last activity: 2026-04-27
 
-Progress (M8): [##--------] 20% (1/5 phases complete)
-Delivered locally: Phase 68 installed runtime front door, bundled runtime CLI, release artifact smoke gate, and current-machine all-runtime install refresh
-Pending: Phase 69 CI artifact gate, Phase 70 version/release truth, Phase 71 install matrix, Phase 72 dogfood release evidence
-Next: decide whether to continue with Phase 69 CI artifact gate or Phase 70 version/release truth first.
+Progress (M8): [#########-] 90% (5/5 local phases complete; external publish blocked)
+Delivered locally: installed runtime front door, bundled runtime CLI, release artifact smoke gate, CI release gate, version/release truth, clean installed-product smoke coverage, and dogfood release evidence
+Pending: external npm credential provisioning for publish and registry verification
+Next: run full `npm run release:gate`, then commit. Tag/publish only after npm credentials or a GitHub `NPM_TOKEN` secret exists.
 
 ## v1.4 retrospective
 

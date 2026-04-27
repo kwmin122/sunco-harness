@@ -1,0 +1,421 @@
+command: npm run build
+status: pass
+exitCode: 0
+startedAt: 2026-04-27T12:31:37.381Z
+completedAt: 2026-04-27T12:31:38.246Z
+
+stdout:
+
+> sunco-monorepo@0.0.1 build
+> turbo build
+
+• Packages in scope: @sunco/core, @sunco/edit-engine, @sunco/evidence, @sunco/runtime, @sunco/skills-extension, @sunco/skills-harness, @sunco/skills-workflow, @sunco/verifier, popcoru
+• Running build in 9 packages
+• Remote caching disabled
+@sunco/core:build: cache hit, replaying logs 0093c7bc5c83782e
+@sunco/core:build: 
+@sunco/core:build: > @sunco/core@0.0.1 build
+@sunco/core:build: > tsup
+@sunco/core:build: 
+@sunco/core:build: CLI Building entry: src/index.ts, src/agent/advisor.ts, src/runtime/index.ts
+@sunco/core:build: CLI Using tsconfig: tsconfig.json
+@sunco/core:build: CLI tsup v8.5.0
+@sunco/core:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/core/tsup.config.ts
+@sunco/core:build: CLI Target: node22
+@sunco/core:build: CLI Cleaning output folder
+@sunco/core:build: ESM Build start
+@sunco/core:build: ESM dist/chunk-CUEO7O3Q.js             2.11 KB
+@sunco/core:build: ESM dist/chunk-CRCD6VAF.js             3.15 KB
+@sunco/core:build: ESM dist/chunk-FLNO3DPL.js             8.43 KB
+@sunco/core:build: ESM dist/runtime/index.js              1.73 KB
+@sunco/core:build: ESM dist/chunk-V4WTU3W5.js             32.46 KB
+@sunco/core:build: ESM dist/agent/advisor.js              4.07 KB
+@sunco/core:build: ESM dist/claude-sdk-WQX44DZA.js        151.00 B
+@sunco/core:build: ESM dist/chunk-7FSE7WCI.js             2.37 KB
+@sunco/core:build: ESM dist/codex-cli-RYQ4U2PN.js         149.00 B
+@sunco/core:build: ESM dist/chunk-UQZ5E2QY.js             1.32 KB
+@sunco/core:build: ESM dist/SkillEntry-JCA3JHB4.js        107.00 B
+@sunco/core:build: ESM dist/chunk-LZ3TVZ23.js             1.63 KB
+@sunco/core:build: ESM dist/claude-cli-5A5CX2BD.js        151.00 B
+@sunco/core:build: ESM dist/chunk-UTQGFW62.js             908.00 B
+@sunco/core:build: ESM dist/chunk-H2UZVEXC.js             2.90 KB
+@sunco/core:build: ESM dist/chunk-GN2CQJII.js             1.59 KB
+@sunco/core:build: ESM dist/SkillResult-ZU73A7TU.js       139.00 B
+@sunco/core:build: ESM dist/SkillProgress-6NTZOJQG.js     113.00 B
+@sunco/core:build: ESM dist/InteractiveChoice-QP5G2S72.js 151.00 B
+@sunco/core:build: ESM dist/chunk-LGPLJRTO.js             2.09 KB
+@sunco/core:build: ESM dist/index.js                      66.02 KB
+@sunco/core:build: ESM dist/chunk-I6PAORPR.js             332.00 B
+@sunco/core:build: ESM dist/engine-ACC4MOOJ.js            133.00 B
+@sunco/core:build: ESM dist/chunk-5K3LWGPF.js             710.00 B
+@sunco/core:build: ESM ⚡️ Build success in 21ms
+@sunco/core:build: DTS Build start
+@sunco/core:build: DTS ⚡️ Build success in 1172ms
+@sunco/core:build: DTS dist/agent/advisor.d.ts  825.00 B
+@sunco/core:build: DTS dist/index.d.ts          93.30 KB
+@sunco/core:build: DTS dist/runtime/index.d.ts  1.53 KB
+@sunco/core:build: DTS dist/types-DVARqpEA.d.ts 7.23 KB
+@sunco/core:build: DTS dist/index-0hIsCjTs.d.ts 36.89 KB
+@sunco/skills-extension:build: cache hit, replaying logs ffa841d581c3384f
+@sunco/skills-extension:build: 
+@sunco/skills-extension:build: > @sunco/skills-extension@0.0.1 build
+@sunco/skills-extension:build: > tsup
+@sunco/skills-extension:build: 
+@sunco/skills-extension:build: CLI Building entry: src/index.ts
+@sunco/skills-extension:build: CLI Using tsconfig: tsconfig.json
+@sunco/skills-extension:build: CLI tsup v8.5.0
+@sunco/skills-extension:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/skills-extension/tsup.config.ts
+@sunco/skills-extension:build: CLI Target: node22
+@sunco/skills-extension:build: CLI Cleaning output folder
+@sunco/skills-extension:build: ESM Build start
+@sunco/skills-extension:build: ESM dist/index.js 0 B
+@sunco/skills-extension:build: ESM ⚡️ Build success in 8ms
+@sunco/skills-extension:build: DTS Build start
+@sunco/skills-extension:build: DTS ⚡️ Build success in 782ms
+@sunco/skills-extension:build: DTS dist/index.d.ts 13.00 B
+@sunco/evidence:build: cache hit, replaying logs 444e45ea80ee1a32
+@sunco/evidence:build: 
+@sunco/evidence:build: > @sunco/evidence@0.0.1 build
+@sunco/evidence:build: > tsup
+@sunco/evidence:build: 
+@sunco/evidence:build: CLI Building entry: src/index.ts
+@sunco/evidence:build: CLI Using tsconfig: tsconfig.json
+@sunco/evidence:build: CLI tsup v8.5.0
+@sunco/evidence:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/evidence/tsup.config.ts
+@sunco/evidence:build: CLI Target: node22
+@sunco/evidence:build: CLI Cleaning output folder
+@sunco/evidence:build: ESM Build start
+@sunco/evidence:build: ESM dist/index.js 5.14 KB
+@sunco/evidence:build: ESM ⚡️ Build success in 11ms
+@sunco/evidence:build: DTS Build start
+@sunco/evidence:build: DTS ⚡️ Build success in 1558ms
+@sunco/evidence:build: DTS dist/index.d.ts 1.60 KB
+@sunco/edit-engine:build: cache hit, replaying logs dbc218b5dadc3f35
+@sunco/edit-engine:build: 
+@sunco/edit-engine:build: > @sunco/edit-engine@0.0.1 build
+@sunco/edit-engine:build: > tsup
+@sunco/edit-engine:build: 
+@sunco/edit-engine:build: CLI Building entry: src/index.ts
+@sunco/edit-engine:build: CLI Using tsconfig: tsconfig.json
+@sunco/edit-engine:build: CLI tsup v8.5.0
+@sunco/edit-engine:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/edit-engine/tsup.config.ts
+@sunco/edit-engine:build: CLI Target: node22
+@sunco/edit-engine:build: CLI Cleaning output folder
+@sunco/edit-engine:build: ESM Build start
+@sunco/edit-engine:build: ESM dist/index.js 7.36 KB
+@sunco/edit-engine:build: ESM ⚡️ Build success in 6ms
+@sunco/edit-engine:build: DTS Build start
+@sunco/edit-engine:build: DTS ⚡️ Build success in 458ms
+@sunco/edit-engine:build: DTS dist/index.d.ts 1.16 KB
+@sunco/verifier:build: cache hit, replaying logs 82dabd49205f1149
+@sunco/verifier:build: 
+@sunco/verifier:build: > @sunco/verifier@0.0.1 build
+@sunco/verifier:build: > tsup
+@sunco/verifier:build: 
+@sunco/verifier:build: CLI Building entry: src/index.ts
+@sunco/verifier:build: CLI Using tsconfig: tsconfig.json
+@sunco/verifier:build: CLI tsup v8.5.0
+@sunco/verifier:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/verifier/tsup.config.ts
+@sunco/verifier:build: CLI Target: node22
+@sunco/verifier:build: CLI Cleaning output folder
+@sunco/verifier:build: ESM Build start
+@sunco/verifier:build: ESM dist/index.js 6.66 KB
+@sunco/verifier:build: ESM ⚡️ Build success in 7ms
+@sunco/verifier:build: DTS Build start
+@sunco/verifier:build: DTS ⚡️ Build success in 460ms
+@sunco/verifier:build: DTS dist/index.d.ts 1.13 KB
+@sunco/runtime:build: cache hit, replaying logs 8cddd1513758a531
+@sunco/runtime:build: 
+@sunco/runtime:build: > @sunco/runtime@0.0.1 build
+@sunco/runtime:build: > tsup
+@sunco/runtime:build: 
+@sunco/runtime:build: CLI Building entry: src/index.ts
+@sunco/runtime:build: CLI Using tsconfig: tsconfig.json
+@sunco/runtime:build: CLI tsup v8.5.0
+@sunco/runtime:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/runtime/tsup.config.ts
+@sunco/runtime:build: CLI Target: node22
+@sunco/runtime:build: CLI Cleaning output folder
+@sunco/runtime:build: ESM Build start
+@sunco/runtime:build: ESM dist/index.js 9.12 KB
+@sunco/runtime:build: ESM ⚡️ Build success in 160ms
+@sunco/runtime:build: DTS Build start
+@sunco/runtime:build: DTS ⚡️ Build success in 1399ms
+@sunco/runtime:build: DTS dist/index.d.ts 1.61 KB
+@sunco/skills-harness:build: cache hit, replaying logs 755ea24d39d65ec8
+@sunco/skills-harness:build: 
+@sunco/skills-harness:build: > @sunco/skills-harness@0.0.1 build
+@sunco/skills-harness:build: > tsup
+@sunco/skills-harness:build: 
+@sunco/skills-harness:build: CLI Building entry: src/agents.skill.ts, src/guard.skill.ts, src/health.skill.ts, src/index.ts, src/init.skill.ts, src/lint.skill.ts
+@sunco/skills-harness:build: CLI Using tsconfig: tsconfig.json
+@sunco/skills-harness:build: CLI tsup v8.5.0
+@sunco/skills-harness:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/skills-harness/tsup.config.ts
+@sunco/skills-harness:build: CLI Target: node22
+@sunco/skills-harness:build: CLI Cleaning output folder
+@sunco/skills-harness:build: ESM Build start
+@sunco/skills-harness:build: ESM dist/chunk-EXI54775.js 13.02 KB
+@sunco/skills-harness:build: ESM dist/agents.skill.js   138.00 B
+@sunco/skills-harness:build: ESM dist/init.skill.js     164.00 B
+@sunco/skills-harness:build: ESM dist/chunk-UORI5Q3U.js 23.83 KB
+@sunco/skills-harness:build: ESM dist/chunk-XVNLXWZI.js 15.96 KB
+@sunco/skills-harness:build: ESM dist/guard.skill.js    166.00 B
+@sunco/skills-harness:build: ESM dist/health.skill.js   168.00 B
+@sunco/skills-harness:build: ESM dist/esm-4HAK7ECL.js   157.83 KB
+@sunco/skills-harness:build: ESM dist/chunk-QGM4M3NI.js 1.70 KB
+@sunco/skills-harness:build: ESM dist/index.js          4.18 KB
+@sunco/skills-harness:build: ESM dist/chunk-F4JRSS7L.js 1.75 KB
+@sunco/skills-harness:build: ESM dist/lint.skill.js     164.00 B
+@sunco/skills-harness:build: ESM dist/chunk-5CICN3YQ.js 6.31 KB
+@sunco/skills-harness:build: ESM dist/chunk-DIYQLLCS.js 17.11 KB
+@sunco/skills-harness:build: ESM dist/chunk-M2L6Q2EY.js 9.10 KB
+@sunco/skills-harness:build: ESM ⚡️ Build success in 38ms
+@sunco/skills-harness:build: DTS Build start
+@sunco/skills-harness:build: DTS ⚡️ Build success in 2368ms
+@sunco/skills-harness:build: DTS dist/index.d.ts        15.62 KB
+@sunco/skills-harness:build: DTS dist/agents.skill.d.ts 714.00 B
+@sunco/skills-harness:build: DTS dist/guard.skill.d.ts  751.00 B
+@sunco/skills-harness:build: DTS dist/health.skill.d.ts 599.00 B
+@sunco/skills-harness:build: DTS dist/init.skill.d.ts   614.00 B
+@sunco/skills-harness:build: DTS dist/lint.skill.d.ts   912.00 B
+@sunco/skills-workflow:build: cache hit, replaying logs 8447b8095df78b4e
+@sunco/skills-workflow:build: 
+@sunco/skills-workflow:build: > @sunco/skills-workflow@0.0.1 build
+@sunco/skills-workflow:build: > tsup
+@sunco/skills-workflow:build: 
+@sunco/skills-workflow:build: CLI Building entry: src/advisor.skill.ts, src/auto.skill.ts, src/brainstorming.skill.ts, src/ceo-review.skill.ts, src/compound.skill.ts, src/dashboard-tui.tsx, src/debug.skill.ts, src/design-review.skill.ts, src/discuss.skill.ts, src/do.skill.ts, src/doc.skill.ts, src/eng-review.skill.ts, src/execute.skill.ts, src/graph.skill.ts, src/index.ts, src/milestone.skill.ts, src/new-skill.skill.ts, src/new.skill.ts, src/next.skill.ts, src/note.skill.ts, src/orchestrate.skill.ts, src/pause.skill.ts, src/phase.skill.ts, src/plan.skill.ts, src/quick.skill.ts, src/release.skill.ts, src/research.skill.ts, src/resume.skill.ts, src/review.skill.ts, src/scan.skill.ts, src/settings.skill.ts, src/ship.skill.ts, src/status.skill.ts, src/ultraplan.skill.ts, src/verify.skill.ts
+@sunco/skills-workflow:build: CLI Using tsconfig: tsconfig.json
+@sunco/skills-workflow:build: CLI tsup v8.5.0
+@sunco/skills-workflow:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/skills-workflow/tsup.config.ts
+@sunco/skills-workflow:build: CLI Target: node22
+@sunco/skills-workflow:build: CLI Cleaning output folder
+@sunco/skills-workflow:build: ESM Build start
+@sunco/skills-workflow:build: ESM dist/query-snapshot-FAT64F2F.js     1.75 KB
+@sunco/skills-workflow:build: ESM dist/note-lists-3CVB623Z.js         7.96 KB
+@sunco/skills-workflow:build: ESM dist/coverage-audit-FROPWNZY.js     3.27 KB
+@sunco/skills-workflow:build: ESM dist/context-view-SDZYTK2V.js       4.86 KB
+@sunco/skills-workflow:build: ESM dist/advisor-prompt-7VR5ONNL.js     2.17 KB
+@sunco/skills-workflow:build: ESM dist/test-generator-Z54JJWEK.js     5.51 KB
+@sunco/skills-workflow:build: ESM dist/assumption-preview-OJMCUDB3.js 6.10 KB
+@sunco/skills-workflow:build: ESM dist/diagnostics-runner-3MRBS7FG.js 229.00 B
+@sunco/skills-workflow:build: ESM dist/status.skill.js                199.00 B
+@sunco/skills-workflow:build: ESM dist/ultraplan.skill.js             264.00 B
+@sunco/skills-workflow:build: ESM dist/verify.skill.js                258.00 B
+@sunco/skills-workflow:build: ESM dist/research.skill.js              172.00 B
+@sunco/skills-workflow:build: ESM dist/debug-ironlaw-JBEVW7DX.js      133.00 B
+@sunco/skills-workflow:build: ESM dist/release.skill.js               200.00 B
+@sunco/skills-workflow:build: ESM dist/quick.skill.js                 136.00 B
+@sunco/skills-workflow:build: ESM dist/html-report-RNVNWMPL.js        17.97 KB
+@sunco/skills-workflow:build: ESM dist/execa-QO536OVM.js              238.50 KB
+@sunco/skills-workflow:build: ESM dist/forensics-analyzer-CQWNNRPW.js 5.86 KB
+@sunco/skills-workflow:build: ESM dist/new-skill.skill.js             388.00 B
+@sunco/skills-workflow:build: ESM dist/resume.skill.js                198.00 B
+@sunco/skills-workflow:build: ESM dist/review.skill.js                224.00 B
+@sunco/skills-workflow:build: ESM dist/settings.skill.js              214.00 B
+@sunco/skills-workflow:build: ESM dist/new.skill.js                   522.00 B
+@sunco/skills-workflow:build: ESM dist/note.skill.js                  134.00 B
+@sunco/skills-workflow:build: ESM dist/orchestrate.skill.js           148.00 B
+@sunco/skills-workflow:build: ESM dist/next.skill.js                  194.00 B
+@sunco/skills-workflow:build: ESM dist/phase.skill.js                 196.00 B
+@sunco/skills-workflow:build: ESM dist/do.skill.js                    130.00 B
+@sunco/skills-workflow:build: ESM dist/discuss.skill.js               260.00 B
+@sunco/skills-workflow:build: ESM dist/pause.skill.js                 226.00 B
+@sunco/skills-workflow:build: ESM dist/doc.skill.js                   132.00 B
+@sunco/skills-workflow:build: ESM dist/ship.skill.js                  224.00 B
+@sunco/skills-workflow:build: ESM dist/eng-review.skill.js            236.00 B
+@sunco/skills-workflow:build: ESM dist/plan.skill.js                  284.00 B
+@sunco/skills-workflow:build: ESM dist/scan.skill.js                  164.00 B
+@sunco/skills-workflow:build: ESM dist/execute.skill.js               290.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-5IUUQF4L.js              10.95 KB
+@sunco/skills-workflow:build: ESM dist/index.js                       42.37 KB
+@sunco/skills-workflow:build: ESM dist/chunk-M5X62GRG.js              8.54 KB
+@sunco/skills-workflow:build: ESM dist/graph.skill.js                 136.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-BABA22IT.js              4.21 KB
+@sunco/skills-workflow:build: ESM dist/chunk-P3NMF6TY.js              1.52 KB
+@sunco/skills-workflow:build: ESM dist/chunk-U7MWH72J.js              61.07 KB
+@sunco/skills-workflow:build: ESM dist/chunk-RVWOLWQ5.js              10.84 KB
+@sunco/skills-workflow:build: ESM dist/chunk-DYFNPECM.js              5.41 KB
+@sunco/skills-workflow:build: ESM dist/chunk-HUFBO2EO.js              4.16 KB
+@sunco/skills-workflow:build: ESM dist/chunk-ZYRZSZ56.js              10.84 KB
+@sunco/skills-workflow:build: ESM dist/chunk-VDYSAMMU.js              2.61 KB
+@sunco/skills-workflow:build: ESM dist/chunk-TSMIXBFZ.js              3.12 KB
+@sunco/skills-workflow:build: ESM dist/chunk-MMLQDZUO.js              5.92 KB
+@sunco/skills-workflow:build: ESM dist/chunk-AS2JGWVZ.js              5.44 KB
+@sunco/skills-workflow:build: ESM dist/chunk-CCV7DXHC.js              7.67 KB
+@sunco/skills-workflow:build: ESM dist/chunk-ZZDSJLAE.js              3.46 KB
+@sunco/skills-workflow:build: ESM dist/chunk-RM7FKUTA.js              2.82 KB
+@sunco/skills-workflow:build: ESM dist/chunk-XBY552RK.js              16.02 KB
+@sunco/skills-workflow:build: ESM dist/chunk-V3547SN6.js              4.69 KB
+@sunco/skills-workflow:build: ESM dist/chunk-D4DQQ5BF.js              12.05 KB
+@sunco/skills-workflow:build: ESM dist/chunk-DTF2BBFC.js              3.65 KB
+@sunco/skills-workflow:build: ESM dist/chunk-M4OU77SU.js              6.47 KB
+@sunco/skills-workflow:build: ESM dist/chunk-YUM476PH.js              2.55 KB
+@sunco/skills-workflow:build: ESM dist/chunk-HY7PLMQR.js              1.04 KB
+@sunco/skills-workflow:build: ESM dist/chunk-IOJAX7B6.js              2.41 KB
+@sunco/skills-workflow:build: ESM dist/chunk-KFXPHDSH.js              12.55 KB
+@sunco/skills-workflow:build: ESM dist/chunk-EJHOHNN6.js              6.54 KB
+@sunco/skills-workflow:build: ESM dist/chunk-AQCH6336.js              13.28 KB
+@sunco/skills-workflow:build: ESM dist/chunk-2SXZ3SVK.js              121.29 KB
+@sunco/skills-workflow:build: ESM dist/chunk-X6KUB73Y.js              24.39 KB
+@sunco/skills-workflow:build: ESM dist/chunk-L5DDLS3S.js              10.90 KB
+@sunco/skills-workflow:build: ESM dist/chunk-K25HRPJ4.js              9.13 KB
+@sunco/skills-workflow:build: ESM dist/chunk-KIJLVTGF.js              5.63 KB
+@sunco/skills-workflow:build: ESM dist/chunk-TG2CGTZV.js              9.69 KB
+@sunco/skills-workflow:build: ESM dist/chunk-PP3YYCCY.js              8.18 KB
+@sunco/skills-workflow:build: ESM dist/chunk-NQFZC5HS.js              4.34 KB
+@sunco/skills-workflow:build: ESM dist/chunk-RZFXGYS3.js              20.08 KB
+@sunco/skills-workflow:build: ESM dist/chunk-5A6LS557.js              23.89 KB
+@sunco/skills-workflow:build: ESM dist/chunk-AZRYD422.js              18.08 KB
+@sunco/skills-workflow:build: ESM dist/chunk-YKKD6XFS.js              5.09 KB
+@sunco/skills-workflow:build: ESM dist/chunk-EHUXZN37.js              2.22 KB
+@sunco/skills-workflow:build: ESM dist/chunk-MN2XCZQJ.js              508.00 B
+@sunco/skills-workflow:build: ESM dist/milestone.skill.js             204.00 B
+@sunco/skills-workflow:build: ESM dist/advisor.skill.js               140.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-ZXFOR573.js              7.42 KB
+@sunco/skills-workflow:build: ESM dist/chunk-D4RLNNW4.js              35.62 KB
+@sunco/skills-workflow:build: ESM dist/chunk-FOIA4FOV.js              14.39 KB
+@sunco/skills-workflow:build: ESM dist/chunk-DK7OSXRH.js              6.42 KB
+@sunco/skills-workflow:build: ESM dist/brainstorming.skill.js         302.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-CR5HK4LJ.js              27.79 KB
+@sunco/skills-workflow:build: ESM dist/chunk-JUF7H74L.js              1.48 KB
+@sunco/skills-workflow:build: ESM dist/chunk-BFKVWFP2.js              7.40 KB
+@sunco/skills-workflow:build: ESM dist/compound.skill.js              202.00 B
+@sunco/skills-workflow:build: ESM dist/ceo-review.skill.js            236.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-Q2LHVNQT.js              797.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-RIZA2HN4.js              16.60 KB
+@sunco/skills-workflow:build: ESM dist/design-review.skill.js         242.00 B
+@sunco/skills-workflow:build: ESM dist/dashboard-tui.js               8.86 KB
+@sunco/skills-workflow:build: ESM dist/chunk-JMIR3BWE.js              3.52 KB
+@sunco/skills-workflow:build: ESM dist/chunk-OSWLFLNC.js              8.09 KB
+@sunco/skills-workflow:build: ESM dist/chunk-7CKDHQTO.js              24.23 KB
+@sunco/skills-workflow:build: ESM dist/chunk-V2BX4DJ5.js              2.63 KB
+@sunco/skills-workflow:build: ESM dist/chunk-7XWW6WVY.js              11.75 KB
+@sunco/skills-workflow:build: ESM dist/debug.skill.js                 236.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-SSMIY73F.js              8.04 KB
+@sunco/skills-workflow:build: ESM dist/auto.skill.js                  254.00 B
+@sunco/skills-workflow:build: ESM dist/chunk-CQWKHWQ5.js              3.25 KB
+@sunco/skills-workflow:build: ESM dist/chunk-TEASRJPX.js              3.07 KB
+@sunco/skills-workflow:build: ESM dist/chunk-3T7CYMOF.js              5.95 KB
+@sunco/skills-workflow:build: ESM dist/chunk-QGM4M3NI.js              1.70 KB
+@sunco/skills-workflow:build: ESM ⚡️ Build success in 186ms
+@sunco/skills-workflow:build: DTS Build start
+@sunco/skills-workflow:build: DTS ⚡️ Build success in 3994ms
+@sunco/skills-workflow:build: DTS dist/dashboard-tui.d.ts        1.41 KB
+@sunco/skills-workflow:build: DTS dist/index.d.ts                73.90 KB
+@sunco/skills-workflow:build: DTS dist/advisor.skill.d.ts        1.03 KB
+@sunco/skills-workflow:build: DTS dist/auto.skill.d.ts           1.10 KB
+@sunco/skills-workflow:build: DTS dist/brainstorming.skill.d.ts  1.29 KB
+@sunco/skills-workflow:build: DTS dist/ceo-review.skill.d.ts     528.00 B
+@sunco/skills-workflow:build: DTS dist/compound.skill.d.ts       190.00 B
+@sunco/skills-workflow:build: DTS dist/design-review.skill.d.ts  480.00 B
+@sunco/skills-workflow:build: DTS dist/discuss.skill.d.ts        693.00 B
+@sunco/skills-workflow:build: DTS dist/do.skill.d.ts             487.00 B
+@sunco/skills-workflow:build: DTS dist/doc.skill.d.ts            593.00 B
+@sunco/skills-workflow:build: DTS dist/eng-review.skill.d.ts     550.00 B
+@sunco/skills-workflow:build: DTS dist/execute.skill.d.ts        845.00 B
+@sunco/skills-workflow:build: DTS dist/graph.skill.d.ts          803.00 B
+@sunco/skills-workflow:build: DTS dist/milestone.skill.d.ts      912.00 B
+@sunco/skills-workflow:build: DTS dist/new-skill.skill.d.ts      1.93 KB
+@sunco/skills-workflow:build: DTS dist/new.skill.d.ts            782.00 B
+@sunco/skills-workflow:build: DTS dist/next.skill.d.ts           451.00 B
+@sunco/skills-workflow:build: DTS dist/note.skill.d.ts           548.00 B
+@sunco/skills-workflow:build: DTS dist/orchestrate.skill.d.ts    1.18 KB
+@sunco/skills-workflow:build: DTS dist/pause.skill.d.ts          496.00 B
+@sunco/skills-workflow:build: DTS dist/phase.skill.d.ts          640.00 B
+@sunco/skills-workflow:build: DTS dist/plan.skill.d.ts           725.00 B
+@sunco/skills-workflow:build: DTS dist/quick.skill.d.ts          750.00 B
+@sunco/skills-workflow:build: DTS dist/release.skill.d.ts        594.00 B
+@sunco/skills-workflow:build: DTS dist/research.skill.d.ts       778.00 B
+@sunco/skills-workflow:build: DTS dist/resume.skill.d.ts         509.00 B
+@sunco/skills-workflow:build: DTS dist/review.skill.d.ts         1.01 KB
+@sunco/skills-workflow:build: DTS dist/scan.skill.d.ts           495.00 B
+@sunco/skills-workflow:build: DTS dist/settings.skill.d.ts       1.29 KB
+@sunco/skills-workflow:build: DTS dist/ship.skill.d.ts           575.00 B
+@sunco/skills-workflow:build: DTS dist/status.skill.d.ts         654.00 B
+@sunco/skills-workflow:build: DTS dist/ultraplan.skill.d.ts      755.00 B
+@sunco/skills-workflow:build: DTS dist/verify.skill.d.ts         1.07 KB
+@sunco/skills-workflow:build: DTS dist/debug.skill.d.ts          103.00 B
+@sunco/skills-workflow:build: DTS dist/debug.skill-B5ilI2nt.d.ts 5.92 KB
+popcoru:build: cache hit, replaying logs 37317194f1348789
+popcoru:build: 
+popcoru:build: > popcoru@0.14.0 build
+popcoru:build: > tsup
+popcoru:build: 
+popcoru:build: CLI Building entry: src/cli.ts, src/runtime-cli.ts
+popcoru:build: CLI Using tsconfig: tsconfig.json
+popcoru:build: CLI tsup v8.5.0
+popcoru:build: CLI Using tsup config: /Users/a0000/SUN/sunco-harness/packages/cli/tsup.config.ts
+popcoru:build: CLI Target: node22
+popcoru:build: CLI Cleaning output folder
+popcoru:build: ESM Build start
+popcoru:build: ESM dist/debug-ironlaw-JBEVW7DX-2FP24HPF.js      292.00 B
+popcoru:build: ESM dist/execa-QO536OVM-3P5SAUCF.js              230.10 KB
+popcoru:build: ESM dist/assumption-preview-OJMCUDB3-MAIAWU4F.js 6.24 KB
+popcoru:build: ESM dist/advisor-HDPNBWUQ.js                     4.25 KB
+popcoru:build: ESM dist/note-lists-3CVB623Z-PEFUUD4O.js         8.14 KB
+popcoru:build: ESM dist/codex-cli-RYQ4U2PN-HVDCUPQG.js          338.00 B
+popcoru:build: ESM dist/advisor-prompt-7VR5ONNL-W6SEQKL6.js     2.35 KB
+popcoru:build: ESM dist/html-report-RNVNWMPL-XWCHFZ3W.js        18.15 KB
+popcoru:build: ESM dist/engine-ACC4MOOJ-7XDYZY2I.js             292.00 B
+popcoru:build: ESM dist/dashboard-tui-ORHBPFRR.js               9.45 KB
+popcoru:build: ESM dist/dist-C5QINBGE.js                        5.38 KB
+popcoru:build: ESM dist/diagnostics-runner-3MRBS7FG-RLUR4RPW.js 388.00 B
+popcoru:build: ESM dist/query-snapshot-FAT64F2F-VWMDTIYD.js     1.93 KB
+popcoru:build: ESM dist/esm-MOE37W43.js                         719.00 B
+popcoru:build: ESM dist/context-view-SDZYTK2V-T6QVCO7D.js       5.17 KB
+popcoru:build: ESM dist/test-generator-Z54JJWEK-MDK2DHHW.js     5.70 KB
+popcoru:build: ESM dist/chunk-6IAJ4EC6.js                       4.34 KB
+popcoru:build: ESM dist/esm-4HAK7ECL-X6JOLOPN.js                157.51 KB
+popcoru:build: ESM dist/chunk-NGEHO6UN.js                       3.66 KB
+popcoru:build: ESM dist/chunk-Q5SBTUFP.js                       1.66 KB
+popcoru:build: ESM dist/chunk-ZTLEFBHK.js                       3.57 KB
+popcoru:build: ESM dist/chunk-AV5NJAHR.js                       3.31 KB
+popcoru:build: ESM dist/chunk-KBKRZZDA.js                       3.85 KB
+popcoru:build: ESM dist/chunk-6NMTNAUS.js                       2.96 KB
+popcoru:build: ESM dist/forensics-analyzer-CQWNNRPW-2VJYYF5M.js 6.05 KB
+popcoru:build: ESM dist/chunk-KALYS6IV.js                       1.94 KB
+popcoru:build: ESM dist/chunk-73HKOLTF.js                       935.00 B
+popcoru:build: ESM dist/chunk-NBD3AQQF.js                       196.51 KB
+popcoru:build: ESM dist/chunk-VL5KUCW3.js                       1.46 KB
+popcoru:build: ESM dist/chunk-IRHTEIYM.js                       32.57 KB
+popcoru:build: ESM dist/chunk-3KGUDGGX.js                       3.39 KB
+popcoru:build: ESM dist/chunk-VDLRYTER.js                       14.58 KB
+popcoru:build: ESM dist/chunk-EOEHCX5J.js                       1.94 KB
+popcoru:build: ESM dist/chunk-EGTDIVOX.js                       3.22 KB
+popcoru:build: ESM dist/coverage-audit-FROPWNZY-2V2PL76Y.js     3.44 KB
+popcoru:build: ESM dist/chunk-JI4D53UB.js                       157.94 KB
+popcoru:build: ESM dist/chunk-4Q2ZZDEW.js                       128.42 KB
+popcoru:build: ESM dist/chunk-TY4X5PK2.js                       1.01 KB
+popcoru:build: ESM dist/InteractiveChoice-QP5G2S72-3HMMMJNU.js  310.00 B
+popcoru:build: ESM dist/runtime-cli.js                          31.08 KB
+popcoru:build: ESM dist/SkillEntry-JCA3JHB4-JKFHDZSD.js         266.00 B
+popcoru:build: ESM dist/SkillProgress-6NTZOJQG-TWJJPBGH.js      272.00 B
+popcoru:build: ESM dist/chunk-GIGCRXZS.js                       1.72 KB
+popcoru:build: ESM dist/chunk-2LEE345N.js                       3.16 KB
+popcoru:build: ESM dist/SkillResult-ZU73A7TU-WQ2KOBRP.js        298.00 B
+popcoru:build: ESM dist/chunk-IRWB7ZMO.js                       464.00 B
+popcoru:build: ESM dist/chunk-VJC4ZAPA.js                       848.00 B
+popcoru:build: ESM dist/chunk-GRX2DJFL.js                       2.25 KB
+popcoru:build: ESM dist/claude-cli-5A5CX2BD-IN6QJKU7.js         340.00 B
+popcoru:build: ESM dist/claude-sdk-WQX44DZA-LT7RO7RP.js         310.00 B
+popcoru:build: ESM dist/chunk-5HJBGSMV.js                       238.37 KB
+popcoru:build: ESM dist/chunk-APHUJNVP.js                       3.02 KB
+popcoru:build: ESM dist/chunk-B2VSEQ6S.js                       1.77 KB
+popcoru:build: ESM dist/chunk-6XQFXK2T.js                       2.21 KB
+popcoru:build: ESM dist/chunk-7PBJV4DE.js                       2.49 KB
+popcoru:build: ESM dist/chunk-3UQITMEG.js                       1.82 KB
+popcoru:build: ESM dist/cli.js                                  796.67 KB
+popcoru:build: ESM ⚡️ Build success in 227ms
+
+ Tasks:    9 successful, 9 total
+Cached:    9 cached, 9 total
+  Time:    56ms >>> FULL TURBO
+
+
+
+stderr:
+turbo 2.5.4
+
+
+
+error:
+

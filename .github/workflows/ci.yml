@@ -3,14 +3,16 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
     branches: [main]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         node-version: [22, 24]
     steps:
       - uses: actions/checkout@v4
@@ -19,8 +21,12 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
-      - run: npx turbo build
-      - run: npx vitest run
+      - run: npm run build -- --force
+      - run: npm run typecheck
+      - run: npm test -- --force
+      - run: npm run lint -- --force
+      - run: npm run format:check
+      - run: npm audit --json
       - run: node packages/cli/dist/cli.js --help
 
       # --- Stop-the-line gates (required) ---
@@ -36,8 +42,14 @@ jobs:
         run: |
           node packages/cli/bin/install.cjs --cursor --lang en
           node packages/cli/bin/smoke-test.cjs --runtime cursor
+      - name: Antigravity smoke test
+        run: |
+          node packages/cli/bin/install.cjs --antigravity --lang en
+          node packages/cli/bin/smoke-test.cjs --runtime antigravity
       - name: Contract lint
         run: node packages/cli/bin/contract-lint.cjs
+      - name: Release artifact smoke
+        run: npm run test:artifact --workspace popcoru
 
   publish:
     needs: test
@@ -51,35 +63,13 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: npm
       - run: npm ci
-      - run: npx turbo build
-
-      # --- Pre-publish gates (stop-the-line, same as test job) ---
-      - name: Claude smoke test
-        run: |
-          node packages/cli/bin/install.cjs --claude --lang en
-          node packages/cli/bin/smoke-test.cjs --runtime claude
-      - name: Codex smoke test
-        run: |
-          node packages/cli/bin/install.cjs --codex --lang en
-          node packages/cli/bin/smoke-test.cjs --runtime codex
-      - name: Cursor smoke test
-        run: |
-          node packages/cli/bin/install.cjs --cursor --lang en
-          node packages/cli/bin/smoke-test.cjs --runtime cursor
-      - name: Contract lint
-        run: node packages/cli/bin/contract-lint.cjs
-
-      # NOTE: npm publish is gated by artifact-gate + fresh verify in release.skill.ts.
-      # For CI, we run the gates inline since the skill needs a running agent.
-      # If any gate fails here, publish is blocked.
-      - name: Artifact gate (tarball check)
-        run: |
-          cd packages/cli
-          npm pack --dry-run 2>&1 | grep -q 'bin/sunco-tools.cjs' || (echo "FAIL: sunco-tools.cjs missing" && exit 1)
-          npm pack --dry-run 2>&1 | grep -q 'bin/install.cjs' || (echo "FAIL: install.cjs missing" && exit 1)
-          npm pack --dry-run 2>&1 | grep -q 'dist/cli.js' || (echo "FAIL: cli.js missing" && exit 1)
-          echo "Artifact gate PASSED"
+      - run: npm run release:gate
       - name: Publish to npm
-        run: cd packages/cli && npm publish
+        run: cd packages/cli && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Verify npm registry artifact
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          npm view "popcoru@${VERSION}" version dist.tarball dist.integrity
+          npm run test:artifact --workspace popcoru -- --registry "popcoru@${VERSION}"

@@ -1,0 +1,12 @@
+{
+  "id": "release-v0.14.0",
+  "goal": "release popcoru 0.14.0",
+  "status": "done",
+  "risk": "repo_mutate",
+  "createdAt": "2026-04-27T12:31:19.660Z",
+  "updatedAt": "2026-04-27T12:31:38.250Z",
+  "activeEvidenceId": "release-v0.14.0-evidence",
+  "evidencePath": ".sunco/tasks/release-v0.14.0/evidence.json",
+  "attempt": 0,
+  "metadata": {}
+}

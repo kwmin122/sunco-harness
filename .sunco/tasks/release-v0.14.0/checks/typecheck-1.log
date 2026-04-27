@@ -1,0 +1,54 @@
+command: npm run typecheck
+status: pass
+exitCode: 0
+startedAt: 2026-04-27T12:31:31.003Z
+completedAt: 2026-04-27T12:31:35.517Z
+
+stdout:
+
+> sunco-monorepo@0.0.1 typecheck
+> npm run typecheck --workspaces --if-present
+
+
+> popcoru@0.14.0 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @sunco/core@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @sunco/edit-engine@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @sunco/evidence@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @sunco/runtime@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @sunco/skills-extension@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @sunco/skills-harness@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @sunco/skills-workflow@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+> @sunco/verifier@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.json
+
+
+
+stderr:
+
+
+error:
+
