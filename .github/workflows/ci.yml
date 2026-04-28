@@ -64,13 +64,43 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: npm
       - run: npm ci
+      - name: Resolve release version
+        id: release
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PACKAGE_VERSION="$(node -p "require('./packages/cli/package.json').version")"
+
+          if [ "$VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Tag v${VERSION} does not match package version ${PACKAGE_VERSION}" >&2
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+          if npm view "popcoru@${VERSION}" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "popcoru@${VERSION} is already published; publish step will be skipped."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "popcoru@${VERSION} is not published yet; publish step will run."
+          fi
       - run: npm run release:gate
+      - name: Check npm token
+        if: steps.release.outputs.published != 'true'
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "NPM_TOKEN is required to publish popcoru@${{ steps.release.outputs.version }}" >&2
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Publish to npm
+        if: steps.release.outputs.published != 'true'
         run: cd packages/cli && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Verify npm registry artifact
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ steps.release.outputs.version }}"
           npm view "popcoru@${VERSION}" version dist.tarball dist.integrity
           npm run test:artifact --workspace popcoru -- --registry "popcoru@${VERSION}"

@@ -1,10 +1,10 @@
 {
   "id": "release-v0.14.0",
-  "goal": "remove GitHub Actions Node 20 deprecation warning",
+  "goal": "make tag publish workflow idempotent for v0.14.0",
   "status": "done",
   "risk": "repo_mutate",
-  "createdAt": "2026-04-27T12:55:33.905Z",
-  "updatedAt": "2026-04-27T12:55:53.285Z",
+  "createdAt": "2026-04-28T06:12:21.520Z",
+  "updatedAt": "2026-04-28T06:12:43.173Z",
   "activeEvidenceId": "release-v0.14.0-evidence",
   "evidencePath": ".sunco/tasks/release-v0.14.0/evidence.json",
   "attempt": 0,
